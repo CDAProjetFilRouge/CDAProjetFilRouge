@@ -11,8 +11,7 @@ public class AnonymizationDemand {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
-    private Long id;
+    private long id;
 
     @Column(name = "request_status")
     @Enumerated(EnumType.STRING)
