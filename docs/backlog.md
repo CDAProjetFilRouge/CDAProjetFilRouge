@@ -176,7 +176,7 @@ flowchart LR
 
 | ID | User story | Prio | Pts |
 |---|---|:---:|:---:|
-| US-000 | En tant que **développeur**, je veux un projet Spring Boot 3 / Java 21 avec profils Maven `dev` et `prod`, afin de séparer les environnements. | M | 3 |
+| US-000 | En tant que **développeur**, je veux un projet Spring Boot 4 / Java 21 avec profils Maven `dev` et `prod`, afin de séparer les environnements. | M | 3 |
 | US-001 | En tant que **développeur**, je veux le modèle de données et les migrations, afin d'avoir un schéma versionné et reproductible. | M | 5 |
 | US-002 | En tant que **développeur**, je veux Swagger exposé sur l'API, afin que le front et le jury puissent explorer les endpoints. | M | 2 |
 | US-003 | En tant que **développeur**, je veux un projet Angular avec routing, layout responsive et intercepteur HTTP, afin d'avoir une base front commune. | M | 5 |
