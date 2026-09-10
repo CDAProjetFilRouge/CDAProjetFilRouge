@@ -1,4 +1,4 @@
-package fr.diginamic.hubevenementiel.entities;
+package fr.diginamic.hubevenementiel.enums;
 
 public enum EventStatus {
     DRAFT,
