@@ -15,6 +15,7 @@ public class Club {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
     @Column(name = "category", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     private Category category;
     @Column(name = "email", nullable = false)
     private String email;

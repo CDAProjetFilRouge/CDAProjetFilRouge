@@ -23,6 +23,7 @@ public class Event {
     @Column(name = "location", nullable = false)
     private String location;
     @Column(name = "category", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     private Category category;
     @Column(name = "start_date_time", nullable = false)
     private LocalDateTime startDateTime;
@@ -36,18 +37,22 @@ public class Event {
     private int maxCapacity;
 
     @OneToMany(mappedBy = "event")
-    private List<String> imageGallery = new ArrayList<>();
+    private List<Image> imageGallery = new ArrayList<>();
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private EventStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private User organizer;
 
 
 
     public Event() {
     }
 
-    public Event(Long id, String title, String description, String location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, int maxCapacity, List<String> imageGallery, EventStatus status) {
+    public Event(Long id, String title, String description, String location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, int maxCapacity, List<Image> imageGallery, EventStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -143,11 +148,11 @@ public class Event {
         this.maxCapacity = maxCapacity;
     }
 
-    public List<String> getImageGallery() {
+    public List<Image> getImageGallery() {
         return imageGallery;
     }
 
-    public void setImageGallery(List<String> imageGallery) {
+    public void setImageGallery(List<Image> imageGallery) {
         this.imageGallery = imageGallery;
     }
 
