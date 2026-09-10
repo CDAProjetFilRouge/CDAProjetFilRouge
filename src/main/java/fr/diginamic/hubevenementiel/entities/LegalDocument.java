@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "LEGAL_DOCUMENT")
 public class LegalDocument {
 
     @Id
@@ -23,7 +24,7 @@ public class LegalDocument {
     @Column(name = "version")
     private int version;
 
-    @Column(name = "version")
+    @Column(name = "update_date")
     private LocalDateTime updateDate;
 
     @Column(name = "pdf_path", length = 500)

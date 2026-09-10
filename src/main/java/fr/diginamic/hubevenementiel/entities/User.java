@@ -7,11 +7,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "NAME")
+@Table(name = "USER")
 public class User {
 
     @Id
@@ -31,7 +30,7 @@ public class User {
     @Column(name = "hashed_password")
     private String hashedPassword;
 
-    @Column(name = "")
+    @Column(name = "phone")
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -48,7 +47,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
-    private List<AnonymizationRequest> anonymizationRequestList;
+    private List<AnonymizationDemand> anonymizationDemandList;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

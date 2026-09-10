@@ -6,7 +6,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-public class AnonymizationRequest {
+@Table(name = "ANONYMIZATION_DEMAND")
+public class AnonymizationDemand {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,9 +33,9 @@ public class AnonymizationRequest {
     @JoinColumn(name = "administrator_id", nullable = true)
     private User admin;
 
-    public AnonymizationRequest(){};
+    public AnonymizationDemand(){};
 
-    public AnonymizationRequest(User admin, User requester, LocalDateTime approvedDate, LocalDateTime demandDate, RequestStatus requestStatus, Long id) {
+    public AnonymizationDemand(User admin, User requester, LocalDateTime approvedDate, LocalDateTime demandDate, RequestStatus requestStatus, Long id) {
         this.admin = admin;
         this.requester = requester;
         this.approvedDate = approvedDate;
