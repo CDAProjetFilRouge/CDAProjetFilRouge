@@ -1,0 +1,38 @@
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+
+# Angular / Node (front, a venir)
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Config locale / secrets
+.env
+application-local.properties
+application-local.yml
+*.local.properties
+
+# Visual Paradigm (fichiers verrou et sauvegardes)
+*.vpp.lck
+*.vpp.bak_*
+
+# Claude Code (config/etat local)
+.claude/
+claude.md
