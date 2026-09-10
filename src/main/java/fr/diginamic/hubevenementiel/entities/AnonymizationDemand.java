@@ -26,7 +26,6 @@ public class AnonymizationDemand {
 
     @ManyToOne
     @JoinColumn(name = "requester_id")
-    @Column(name = "requester")
     private User requester;
 
     @ManyToOne

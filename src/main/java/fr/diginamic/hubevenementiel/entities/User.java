@@ -45,9 +45,13 @@ public class User {
     @Column(name = "creatio_date")
     private LocalDate creationDate;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "requester")
     @JsonIgnore
-    private List<AnonymizationDemand> anonymizationDemandList;
+    private List<AnonymizationDemand> requesters;
+
+    @OneToMany(mappedBy = "admin")
+    @JsonIgnore
+    private List<AnonymizationDemand> admins;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
@@ -66,8 +70,6 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.id = id;
-
-
     }
 
     public LocalDate getCreationDate() {
