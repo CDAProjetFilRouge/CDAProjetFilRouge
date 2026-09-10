@@ -1,10 +1,10 @@
 package fr.diginamic;
 
 /**
- * Hello world!
- *
+ * Point d'entree temporaire, en attendant le remplacement par une classe
+ * @SpringBootApplication.
  */
-public class App 
+public class App
 {
     public static void main( String[] args )
     {
