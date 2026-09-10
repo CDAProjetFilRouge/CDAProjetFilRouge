@@ -43,9 +43,9 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "organizer_id", nullable = false)
-    private User organizer;
+    //@ManyToOne
+    //@JoinColumn(name = "organizer_id", nullable = false)
+    //private User organizer;
 
 
 
