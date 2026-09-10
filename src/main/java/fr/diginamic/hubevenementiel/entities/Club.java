@@ -26,14 +26,14 @@ public class Club {
 
     @ManyToOne
     @JoinColumn(name = "id_adress")
-    private Adress adress;
+    private Address adress;
 
 
     public Club() {
     }
 
 
-    public Club(Long id, String name, Category category, Adress adress, String email, String phone, LocalDate endValidityDate) {
+    public Club(Long id, String name, Category category, Address adress, String email, String phone, LocalDate endValidityDate) {
         this.id = id;
         this.name = name;
         this.category = category;
@@ -67,11 +67,11 @@ public class Club {
         this.category = category;
     }
 
-    public Adress getAdress() {
+    public Address getAdress() {
         return adress;
     }
 
-    public void setAdress(Adress adress) {
+    public void setAdress(Address adress) {
         this.adress = adress;
     }
 

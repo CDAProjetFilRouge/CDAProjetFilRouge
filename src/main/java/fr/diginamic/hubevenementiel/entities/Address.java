@@ -7,7 +7,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "adress")
-public class Adress {
+public class Address {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,10 +29,10 @@ public class Adress {
     @OneToMany(mappedBy = "adress")
     private List<User> users = new ArrayList<>();
 
-    public Adress() {
+    public Address() {
     }
 
-    public Adress(Long id, String street1, String street2, String postalCode, String city, String country, List<Club> clubs, List<User> users) {
+    public Address(Long id, String street1, String street2, String postalCode, String city, String country, List<Club> clubs, List<User> users) {
         this.id = id;
         Street1 = street1;
         Street2 = street2;
