@@ -11,8 +11,7 @@ public class LegalDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
-    private long id;
+    private Long id;
 
     @Column(name = "type", length = 30)
     @Enumerated(EnumType.STRING)
