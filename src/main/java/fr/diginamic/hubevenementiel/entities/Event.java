@@ -16,25 +16,36 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(name = "title", nullable = false, length = 200)
     private String title;
+
     @Column(name = "description", nullable = false, length = 65535)
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "location_id")
     @Column(name = "location", nullable = false)
-    private String location;
+    private Address location;
+
     @Column(name = "category", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private Category category;
+
     @Column(name = "start_date_time", nullable = false)
     private LocalDateTime startDateTime;
+
     @Column(name = "end_date_time", nullable = false)
     private LocalDateTime endDateTime;
+
     @Column(name = "affiliate_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal affiliatePrice;
+
     @Column(name = "non_affiliate_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal nonAffiliatePrice;
+
     @Column(name = "max_capacity", nullable = false, length = 10)
-    private int maxCapacity;
+    private Integer maxCapacity;
 
     @OneToMany(mappedBy = "event")
     private List<Image> imageGallery = new ArrayList<>();
@@ -52,7 +63,7 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String description, String location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, int maxCapacity, List<Image> imageGallery, EventStatus status) {
+    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, int maxCapacity, List<Image> imageGallery, EventStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -92,11 +103,11 @@ public class Event {
         this.description = description;
     }
 
-    public String getLocation() {
+    public Address getLocation() {
         return location;
     }
 
-    public void setLocation(String location) {
+    public void setLocation(Address location) {
         this.location = location;
     }
 
@@ -140,11 +151,11 @@ public class Event {
         this.nonAffiliatePrice = nonAffiliatePrice;
     }
 
-    public int getMaxCapacity() {
+    public Integer getMaxCapacity() {
         return maxCapacity;
     }
 
-    public void setMaxCapacity(int maxCapacity) {
+    public void setMaxCapacity(Integer maxCapacity) {
         this.maxCapacity = maxCapacity;
     }
 

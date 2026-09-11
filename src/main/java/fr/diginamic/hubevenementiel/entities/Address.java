@@ -23,16 +23,19 @@ public class Address {
     @Column(name = "country", nullable = false, length = 100)
     private String Country;
 
-    @OneToMany(mappedBy = "adress")
+    @OneToMany(mappedBy = "address")
     private List<Club> clubs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "adress")
+    @OneToMany(mappedBy = "address")
     private List<User> users = new ArrayList<>();
+
+    @OneToMany(mappedBy = "address")
+    private List<Event> events = new ArrayList<>();
 
     public Address() {
     }
 
-    public Address(Long id, String street1, String street2, String postalCode, String city, String country, List<Club> clubs, List<User> users) {
+    public Address(Long id, String street1, String street2, String postalCode, String city, String country, List<Club> clubs, List<User> users, List<Event> events) {
         this.id = id;
         Street1 = street1;
         Street2 = street2;
@@ -41,6 +44,7 @@ public class Address {
         Country = country;
         this.clubs = clubs;
         this.users = users;
+        this.events = events;
     }
 
     public Long getId() {
@@ -107,5 +111,7 @@ public class Address {
         this.users = users;
     }
 
+    public List<Event> getEvents() { return events; }
 
+    public void setEvents(List<Event> events) { this.events = events; }
 }

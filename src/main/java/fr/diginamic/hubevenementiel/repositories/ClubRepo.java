@@ -44,4 +44,6 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
      * @return a list of club with pagination info
      */
     Page<Club> findByAddress(Address address, Pageable pageable);
+
+    Page<Club> findByAddressCity(String city, Pageable pageable);
 }
