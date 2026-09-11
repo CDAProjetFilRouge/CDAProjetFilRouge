@@ -8,7 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.time.LocalDateTime;
 
-public interface LegalDocumentRepo extends JpaRepository<LegalDocumentRepo, Long> {
+public interface LegalDocumentRepo extends JpaRepository<LegalDocument, Long> {
 
     Page<LegalDocument> findByDocumentType(DocumentType type, Pageable pageable);
 
