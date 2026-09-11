@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 
 public interface AddressRepo extends JpaRepository<Address, Long> {
 
@@ -31,4 +33,6 @@ public interface AddressRepo extends JpaRepository<Address, Long> {
      * @return A list of Address as the result with pagination info
      */
     Page<Address> findByCountry(String country, Pageable pageable);
+
+    Optional<Address> findByStreet1AndPostalCodeAndCity(String street1, String postalCode, String city);
 }
