@@ -25,19 +25,18 @@ public class Club {
     private LocalDate endValidityDate;
 
     @ManyToOne
-    @JoinColumn(name = "id_adress")
-    private Address adress;
-
+    @JoinColumn(name = "address_id")
+    private Address address;
 
     public Club() {
     }
 
-
-    public Club(Long id, String name, Category category, Address adress, String email, String phone, LocalDate endValidityDate) {
+    public Club(Long id, String name, Category category, Address address, String email, String phone,
+            LocalDate endValidityDate) {
         this.id = id;
         this.name = name;
         this.category = category;
-        this.adress = adress;
+        this.address = address;
         this.email = email;
         this.phone = phone;
         this.endValidityDate = endValidityDate;
@@ -67,12 +66,12 @@ public class Club {
         this.category = category;
     }
 
-    public Address getAdress() {
-        return adress;
+    public Address getAddress() {
+        return address;
     }
 
-    public void setAdress(Address adress) {
-        this.adress = adress;
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     public String getEmail() {
@@ -98,6 +97,5 @@ public class Club {
     public void setEndValidityDate(LocalDate endValidityDate) {
         this.endValidityDate = endValidityDate;
     }
-
 
 }

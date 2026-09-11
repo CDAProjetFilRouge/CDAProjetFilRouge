@@ -54,11 +54,9 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventStatus status;
 
-    //@ManyToOne
-    //@JoinColumn(name = "organizer_id", nullable = false)
-    //private User organizer;
-
-
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private AppUser organizer;
 
     public Event() {
     }
@@ -77,7 +75,6 @@ public class Event {
         this.imageGallery = imageGallery;
         this.status = status;
     }
-
 
     public Long getId() {
         return id;
@@ -174,6 +171,5 @@ public class Event {
     public void setStatus(EventStatus status) {
         this.status = status;
     }
-
 
 }
