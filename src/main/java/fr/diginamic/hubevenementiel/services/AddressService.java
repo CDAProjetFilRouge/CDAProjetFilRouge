@@ -15,7 +15,7 @@ import java.util.Optional;
 @Service
 public class AddressService {
 
-    private final AddressRepository addressRepository
+    private final AddressRepository addressRepository;
 
     public AddressService(AddressRepository addressRepository) {
         this.addressRepository = addressRepository;
@@ -23,7 +23,7 @@ public class AddressService {
 
     public List<Address> findAllAddress(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return addressRepository.findAll(pageable).getContent;
+        return addressRepository.findAll(pageable).getContent();
     }
 
     public Address findById(Long addressId) throws HttpException {
