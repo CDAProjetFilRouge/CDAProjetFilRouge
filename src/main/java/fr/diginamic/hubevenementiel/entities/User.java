@@ -44,6 +44,10 @@ public class User {
     @Column(name = "creatio_date")
     private LocalDate creationDate;
 
+    @ManyToOne
+    @JoinColumn(name = "id_address")
+    private Address address;
+
     @OneToMany(mappedBy = "requester")
     @JsonIgnore
     private List<AnonymizationDemand> requesters;
@@ -56,9 +60,11 @@ public class User {
     @JsonIgnore
     private List<LegalDocument> legalDocumentList;
 
-    public User(){};
+    public User() {
+    };
 
-    public User(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role, String phone, String hashedPassword, String email, String firstName, String lastName, long id) {
+    public User(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role, String phone,
+            String hashedPassword, String email, String firstName, String lastName, long id) {
         this.creationDate = creationDate;
         this.suspensionEndDate = suspensionEndDate;
         this.status = status;

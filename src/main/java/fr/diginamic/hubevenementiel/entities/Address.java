@@ -6,15 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "adress")
+@Table(name = "address")
 public class Address {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "adress_line1", nullable = false)
+    @Column(name = "address_line1", nullable = false)
     private String Street1;
-    @Column(name = "adress_line2")
+    @Column(name = "address_line2")
     private String Street2;
     @Column(name = "postal_code", nullable = false, length = 10)
     private String postalCode;
@@ -23,16 +23,17 @@ public class Address {
     @Column(name = "country", nullable = false, length = 100)
     private String Country;
 
-    @OneToMany(mappedBy = "adress")
+    @OneToMany(mappedBy = "address")
     private List<Club> clubs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "adress")
+    @OneToMany(mappedBy = "address")
     private List<User> users = new ArrayList<>();
 
     public Address() {
     }
 
-    public Address(Long id, String street1, String street2, String postalCode, String city, String country, List<Club> clubs, List<User> users) {
+    public Address(Long id, String street1, String street2, String postalCode, String city, String country,
+            List<Club> clubs, List<User> users) {
         this.id = id;
         Street1 = street1;
         Street2 = street2;
@@ -106,6 +107,5 @@ public class Address {
     public void setUsers(List<User> users) {
         this.users = users;
     }
-
 
 }
