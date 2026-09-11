@@ -4,6 +4,8 @@ import fr.diginamic.hubevenementiel.enums.Category;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "club")
@@ -27,6 +29,12 @@ public class Club {
     @ManyToOne
     @JoinColumn(name = "address_id")
     private Address address;
+
+    @ManyToMany
+    @JoinTable(name = "AppUser_Club",
+            joinColumns = @JoinColumn(name = "Id_club", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "Id_appUser", referencedColumnName = "id"))
+    private List<AppUser> appUsers = new ArrayList<>();
 
     public Club() {
     }
