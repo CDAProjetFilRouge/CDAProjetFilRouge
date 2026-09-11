@@ -30,7 +30,7 @@ public class LegalDocument {
     private String pdfPath;
 
     @ManyToOne
-    @JoinColumn(name = "id_author")
+    @JoinColumn(name = "author_id")
     private User user;
 
     public LegalDocument(){};

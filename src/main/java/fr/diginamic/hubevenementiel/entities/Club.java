@@ -25,7 +25,7 @@ public class Club {
     private LocalDate endValidityDate;
 
     @ManyToOne
-    @JoinColumn(name = "id_address")
+    @JoinColumn(name = "address_id")
     private Address address;
 
     public Club() {

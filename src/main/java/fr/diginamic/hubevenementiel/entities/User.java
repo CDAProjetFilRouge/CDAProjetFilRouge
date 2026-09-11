@@ -45,7 +45,7 @@ public class User {
     private LocalDate creationDate;
 
     @ManyToOne
-    @JoinColumn(name = "id_address")
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @OneToMany(mappedBy = "requester")
