@@ -16,9 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-// canceledById reste une simple cle etrangere (pas de @ManyToOne) : il n'y a
-// pas d'identite de l'annulateur portee par les methodes cancelPerMember() /
-// cancelPerOrganizer(String motif) du diagramme.
 @Entity
 public class Inscription {
 
