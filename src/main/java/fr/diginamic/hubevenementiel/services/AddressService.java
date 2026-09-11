@@ -4,6 +4,7 @@ import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.AddressRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,9 @@ import java.util.Optional;
 @Service
 public class AddressService {
 
-    private final AddressRepository addressRepository;
+    private final AddressRepo addressRepository;
 
-    public AddressService(AddressRepository addressRepository) {
+    public AddressService(AddressRepo addressRepository) {
         this.addressRepository = addressRepository;
     }
 

@@ -8,13 +8,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 
 public interface EventRepo extends JpaRepository<Event, Long> {
 
-    Page<Event> findByTitle(String title, Pageable pageable);
+    Optional<Event> findByTitle(String title);
 
     Page<Event> findByLocationId(Long id, Pageable pageable);
 
@@ -31,5 +33,11 @@ public interface EventRepo extends JpaRepository<Event, Long> {
     Page<Event> findByEndDateTimeBetween(LocalDate dateMin, LocalDateTime dateMax);
 
     Page<Event> findByStatus(EventStatus status, Pageable pageable);
+
+    Page<Event> findByStartDateTimeGreaterThanEqualAndEndDateTimeLessThanEqual(LocalDateTime start, LocalDateTime end, Pageable pageable);
+
+    Page<Event> findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(BigDecimal lowerPrice, BigDecimal higherPrice, Pageable pageable);
+
+    boolean existsByTitle(String title);
 
 }
