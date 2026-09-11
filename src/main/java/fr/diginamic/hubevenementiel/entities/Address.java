@@ -27,13 +27,13 @@ public class Address {
     private List<Club> clubs = new ArrayList<>();
 
     @OneToMany(mappedBy = "address")
-    private List<User> users = new ArrayList<>();
+    private List<AppUser> users = new ArrayList<>();
 
     public Address() {
     }
 
     public Address(Long id, String street1, String street2, String postalCode, String city, String country,
-            List<Club> clubs, List<User> users) {
+            List<Club> clubs, List<AppUser> users) {
         this.id = id;
         Street1 = street1;
         Street2 = street2;
@@ -100,11 +100,11 @@ public class Address {
         this.clubs = clubs;
     }
 
-    public List<User> getUsers() {
+    public List<AppUser> getUsers() {
         return users;
     }
 
-    public void setUsers(List<User> users) {
+    public void setUsers(List<AppUser> users) {
         this.users = users;
     }
 

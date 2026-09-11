@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "USER")
-public class User {
+@Table(name = "APP_USER")
+public class AppUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -60,10 +60,10 @@ public class User {
     @JsonIgnore
     private List<LegalDocument> legalDocumentList;
 
-    public User() {
+    public AppUser() {
     };
 
-    public User(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role, String phone,
+    public AppUser(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role, String phone,
             String hashedPassword, String email, String firstName, String lastName, long id) {
         this.creationDate = creationDate;
         this.suspensionEndDate = suspensionEndDate;
