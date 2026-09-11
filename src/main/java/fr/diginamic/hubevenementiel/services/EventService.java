@@ -12,7 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,28 +83,30 @@ public class EventService {
     }
 
     @Transactional
-    public void createEvent(Event event) throws HttpException {
+    public Event createEvent(Event event) throws HttpException {
+
+        event.setStatus(EventStatus.DRAFT);
+        eventChecker(event);
 
         if (eventRepository.existsByTitle(event.getTitle())) {
-            throw new ConflictException("Un événement avec ce titre existe déjà");
+            throw new ConflictException("Un évènement avec ce titre existe déjà.");
         }
-        eventChecker(event);
-        event.setStatus(EventStatus.DRAFT);
-        eventRepository.save(event);
+
+        return eventRepository.save(event);
     }
 
     @Transactional
-    public void updateEvent(Long eventId, Event modifiedEvent) throws HttpException {
+    public Event updateEvent(Long eventId, Event modifiedEvent) throws HttpException {
 
-        Optional<Event> optionalEvent = eventRepository.findById(eventId);
-
-        if (optionalEvent.isEmpty()) {
-            throw new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant.");
-        }
+        Event eventToBeModified = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
 
         eventChecker(modifiedEvent);
 
-        Event eventToBeModified = optionalEvent.get();
+        if (!eventToBeModified.getTitle().equalsIgnoreCase(modifiedEvent.getTitle())
+                && eventRepository.existsByTitle(modifiedEvent.getTitle())) {
+            throw new ConflictException("Un évènement avec ce titre existe déjà.");
+        }
 
         eventToBeModified.setTitle(modifiedEvent.getTitle());
         eventToBeModified.setDescription(modifiedEvent.getDescription());
@@ -115,54 +119,87 @@ public class EventService {
         eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 
+        return eventRepository.save(eventToBeModified);
     }
 
     @Transactional
     public void deleteEvent(Long eventId) throws HttpException {
-        Optional<Event> optionalEvent = eventRepository.findById(eventId);
 
-        if (optionalEvent.isEmpty()) {
-            throw new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant.");
-        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
 
-        eventRepository.delete(optionalEvent.get());
-
+        eventRepository.delete(event);
     }
 
 
     public boolean eventChecker(Event event) throws HttpException {
 
-
-        if (event.getTitle().isBlank()) {
-            throw new BadRequestException("Le titre de l'évènement doit contenir au moins un caractère.");
+        if (event == null) {
+            throw new BadRequestException("L'évènement ne peut pas être nul.");
         }
 
-        if (event.getDescription().isBlank()) {
+        String title = event.getTitle();
+        if (title == null || title.isBlank()) {
+            throw new BadRequestException("Le titre de l'évènement doit contenir au moins un caractère.");
+        }
+        if (title.length() > 200) {
+            throw new BadRequestException("Le titre ne peut pas dépasser 200 caractères.");
+        }
+
+        String description = event.getDescription();
+        if (description == null || description.isBlank()) {
             throw new BadRequestException("L'évènement doit avoir une description.");
         }
 
-        if (event.getLocation().isBlank()){
+        String location = event.getLocation();
+        if (location == null || location.isBlank()) {
             throw new BadRequestException("L'évènement doit avoir une localisation.");
         }
 
         if (event.getCategory() == null) {
-            throw new BadRequestException("Vous devez choisir une catégorie pur l'évènement.");
+            throw new BadRequestException("Vous devez choisir une catégorie pour l'évènement.");
         }
 
-        if (event.getStartDateTime() == null) {
+        LocalDateTime start = event.getStartDateTime();
+        if (start == null) {
             throw new BadRequestException("L'évènement doit avoir une date de début.");
         }
 
-        if (event.getMaxCapacity() == null) {
+        LocalDateTime end = event.getEndDateTime();
+        if (end == null) {
+            throw new BadRequestException("L'évènement doit avoir une date de fin.");
+        }
+
+        if (!end.isAfter(start)) {
+            throw new BadRequestException("La date de fin doit être postérieure à la date de début.");
+        }
+
+        Integer maxCapacity = event.getMaxCapacity();
+        if (maxCapacity == null) {
             throw new BadRequestException("Vous devez définir une capacité maximale pour l'évènement.");
         }
-
-        if (event.getAffiliatePrice() == null) {
-            throw new BadRequestException("Vous devez déterminer un prix pour les personnes affiliée au club.");
+        if (maxCapacity <= 0) {
+            throw new BadRequestException("La capacité maximale doit être supérieure à zéro.");
         }
 
-        if (event.getNonAffiliatePrice() == null) {
-            throw new BadRequestException("Vous devez déterminer un prix pour les personnes non affiliée au club.");
+        BigDecimal affiliatePrice = event.getAffiliatePrice();
+        if (affiliatePrice == null) {
+            throw new BadRequestException("Vous devez déterminer un prix pour les personnes affiliées au club.");
+        }
+        if (affiliatePrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Le prix pour les personnes affiliées ne peut pas être négatif.");
+        }
+
+        BigDecimal nonAffiliatePrice = event.getNonAffiliatePrice();
+        if (nonAffiliatePrice == null) {
+            throw new BadRequestException("Vous devez déterminer un prix pour les personnes non affiliées au club.");
+        }
+        if (nonAffiliatePrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Le prix pour les personnes non affiliées ne peut pas être négatif.");
+        }
+
+        if (event.getStatus() == null) {
+            throw new BadRequestException("Vous devez définir un statut pour l'évènement.");
         }
 
         return true;

@@ -50,16 +50,6 @@ public class AddressService {
     }
 
     @Transactional
-    public void deleteAddress(Long id) throws HttpException {
-
-        if (!addressRepository.existsById(id)) {
-            throw new NotFoundException("Adresse introuvable avec l'id " + id);
-        }
-
-        addressRepository.deleteById(id);
-    }
-
-    @Transactional
     public Address updateAddress(Long id, Address addressDetails) throws HttpException {
 
         Address existing = addressRepository.findById(id)
@@ -68,6 +58,16 @@ public class AddressService {
         normalize(addressDetails);
         addressChecker(addressDetails);
 
+        Optional<Address> duplicate = addressRepository.findByStreet1AndPostalCodeAndCity(
+                addressDetails.getStreet1(),
+                addressDetails.getPostalCode(),
+                addressDetails.getCity()
+        );
+
+        if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
+            return duplicate.get();
+        }
+
         existing.setStreet1(addressDetails.getStreet1());
         existing.setStreet2(addressDetails.getStreet2());
         existing.setPostalCode(addressDetails.getPostalCode());
@@ -75,6 +75,15 @@ public class AddressService {
         existing.setCountry(addressDetails.getCountry());
 
         return addressRepository.save(existing);
+    }
+
+    @Transactional
+    public void deleteAddress(Long id) throws HttpException {
+
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Adresse introuvable avec l'id " + id));
+
+        addressRepository.delete(address);
     }
 
     public boolean addressChecker(Address address) throws HttpException {
