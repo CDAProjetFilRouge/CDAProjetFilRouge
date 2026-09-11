@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -59,6 +60,12 @@ public class AppUser {
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<LegalDocument> legalDocumentList;
+
+    @ManyToMany
+    @JoinTable(name = "AppUser_Club",
+    joinColumns = @JoinColumn(name = "Id_appUser", referencedColumnName = "id"),
+    inverseJoinColumns = @JoinColumn(name = "Id_club", referencedColumnName = "id"))
+    private List<Club> clubs = new ArrayList<>();
 
     public AppUser() {
     };
