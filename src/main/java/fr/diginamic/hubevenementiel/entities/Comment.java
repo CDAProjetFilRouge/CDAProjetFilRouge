@@ -21,7 +21,7 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    private User author;
+    private AppUser author;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
@@ -36,7 +36,7 @@ public class Comment {
     public Comment() {
     }
 
-    public Comment(User author, Event event, String content) {
+    public Comment(AppUser author, Event event, String content) {
         this.author = author;
         this.event = event;
         this.content = content;
@@ -51,11 +51,11 @@ public class Comment {
         this.id = id;
     }
 
-    public User getAuthor() {
+    public AppUser getAuthor() {
         return author;
     }
 
-    public void setAuthor(User author) {
+    public void setAuthor(AppUser author) {
         this.author = author;
     }
 

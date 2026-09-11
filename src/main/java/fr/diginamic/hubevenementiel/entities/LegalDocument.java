@@ -30,12 +30,12 @@ public class LegalDocument {
     private String pdfPath;
 
     @ManyToOne
-    @JoinColumn(name = "id_author")
-    private User user;
+    @JoinColumn(name = "author_id")
+    private AppUser user;
 
     public LegalDocument(){};
 
-    public LegalDocument(User user, String pdfPath, LocalDateTime updateDate, String content, DocumentType documentType, long id, int version) {
+    public LegalDocument(AppUser user, String pdfPath, LocalDateTime updateDate, String content, DocumentType documentType, long id, int version) {
         this.user = user;
         this.pdfPath = pdfPath;
         this.updateDate = updateDate;
@@ -61,11 +61,11 @@ public class LegalDocument {
         this.pdfPath = pdfPath;
     }
 
-    public User getUser() {
+    public AppUser getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(AppUser user) {
         this.user = user;
     }
 

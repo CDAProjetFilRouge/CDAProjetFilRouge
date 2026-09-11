@@ -28,7 +28,7 @@ public class Inscription {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private AppUser user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
@@ -53,7 +53,7 @@ public class Inscription {
     public Inscription() {
     }
 
-    public Inscription(User user, Event event, BigDecimal price, InscriptionStatus status) {
+    public Inscription(AppUser user, Event event, BigDecimal price, InscriptionStatus status) {
         this.user = user;
         this.event = event;
         this.price = price;
@@ -96,11 +96,11 @@ public class Inscription {
         this.id = id;
     }
 
-    public User getUser() {
+    public AppUser getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(AppUser user) {
         this.user = user;
     }
 
