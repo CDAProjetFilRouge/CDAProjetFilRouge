@@ -82,10 +82,47 @@ public class EventService {
     @Transactional
     public void createEvent(Event event) throws HttpException {
         eventChecker(event);
+        event.setStatus(EventStatus.DRAFT);
         eventRepository.save(event);
     }
 
+    @Transactional
+    public void modifyEvent(Long eventId, Event modifiedEvent) throws HttpException {
 
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+
+        if (optionalEvent.isEmpty()) {
+            throw new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant.");
+        }
+
+        eventChecker(modifiedEvent);
+
+        Event eventToBeModified = optionalEvent.get();
+
+        eventToBeModified.setTitle(modifiedEvent.getTitle());
+        eventToBeModified.setDescription(modifiedEvent.getDescription());
+        eventToBeModified.setLocation(modifiedEvent.getLocation());
+        eventToBeModified.setCategory(modifiedEvent.getCategory());
+        eventToBeModified.setStartDateTime(modifiedEvent.getStartDateTime());
+        eventToBeModified.setEndDateTime(modifiedEvent.getEndDateTime());
+        eventToBeModified.setAffiliatePrice(modifiedEvent.getAffiliatePrice());
+        eventToBeModified.setNonAffiliatePrice(modifiedEvent.getNonAffiliatePrice());
+        eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
+        eventToBeModified.setStatus(modifiedEvent.getStatus());
+
+    }
+
+    @Transactional
+    public void deleteEvent(Long eventId) throws HttpException {
+        Optional<Event> optionalEvent = eventRepository.findById(eventId);
+
+        if (optionalEvent.isEmpty()) {
+            throw new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant.");
+        }
+
+        eventRepository.delete(optionalEvent.get());
+
+    }
 
 
     public boolean eventChecker(Event event) throws HttpException {
