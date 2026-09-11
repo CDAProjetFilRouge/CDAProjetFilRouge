@@ -1,7 +1,6 @@
 package fr.diginamic.hubevenementiel.entities;
 
 import jakarta.persistence.*;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
@@ -32,8 +31,8 @@ public class Image {
     public Image() {
     }
 
-
-    public Image(Long id, String fileName, String path, String mimeType, long sizeByte, LocalDateTime uploadDate, int displayOrder) {
+    public Image(Long id, String fileName, String path, String mimeType, long sizeByte, LocalDateTime uploadDate,
+            int displayOrder) {
         this.id = id;
         this.fileName = fileName;
         this.path = path;

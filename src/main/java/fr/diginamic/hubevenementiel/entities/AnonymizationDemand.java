@@ -25,15 +25,15 @@ public class AnonymizationDemand {
 
     @ManyToOne
     @JoinColumn(name = "requester_id")
-    private User requester;
+    private AppUser requester;
 
     @ManyToOne
     @JoinColumn(name = "administrator_id", nullable = true)
-    private User admin;
+    private AppUser admin;
 
     public AnonymizationDemand(){};
 
-    public AnonymizationDemand(User admin, User requester, LocalDateTime approvedDate, LocalDateTime demandDate, RequestStatus requestStatus, Long id) {
+    public AnonymizationDemand(AppUser admin, AppUser requester, LocalDateTime approvedDate, LocalDateTime demandDate, RequestStatus requestStatus, Long id) {
         this.admin = admin;
         this.requester = requester;
         this.approvedDate = approvedDate;
@@ -50,19 +50,19 @@ public class AnonymizationDemand {
         this.id = id;
     }
 
-    public User getAdmin() {
+    public AppUser getAdmin() {
         return admin;
     }
 
-    public void setAdmin(User admin) {
+    public void setAdmin(AppUser admin) {
         this.admin = admin;
     }
 
-    public User getRequester() {
+    public AppUser getRequester() {
         return requester;
     }
 
-    public void setRequester(User requester) {
+    public void setRequester(AppUser requester) {
         this.requester = requester;
     }
 

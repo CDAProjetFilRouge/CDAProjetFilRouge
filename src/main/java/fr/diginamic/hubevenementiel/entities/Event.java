@@ -43,16 +43,16 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventStatus status;
 
-    //@ManyToOne
-    //@JoinColumn(name = "organizer_id", nullable = false)
-    //private User organizer;
-
-
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private AppUser organizer;
 
     public Event() {
     }
 
-    public Event(Long id, String title, String description, String location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, int maxCapacity, List<Image> imageGallery, EventStatus status) {
+    public Event(Long id, String title, String description, String location, Category category,
+            LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
+            BigDecimal nonAffiliatePrice, int maxCapacity, List<Image> imageGallery, EventStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -66,7 +66,6 @@ public class Event {
         this.imageGallery = imageGallery;
         this.status = status;
     }
-
 
     public Long getId() {
         return id;
@@ -163,6 +162,5 @@ public class Event {
     public void setStatus(EventStatus status) {
         this.status = status;
     }
-
 
 }
