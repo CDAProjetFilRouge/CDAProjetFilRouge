@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -151,8 +152,8 @@ public class EventService {
             throw new BadRequestException("L'évènement doit avoir une description.");
         }
 
-        String location = event.getLocation();
-        if (location == null || location.isBlank()) {
+        Address location = event.getLocation();
+        if (location == null) {
             throw new BadRequestException("L'évènement doit avoir une localisation.");
         }
 
