@@ -4,6 +4,7 @@ import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import org.springframework.data.domain.PageRequest;
@@ -65,9 +66,9 @@ public class EventService {
         return eventRepository.findByDates(startDate, endDate, pageable).getContent();
     }
 
-    public List<Event> findByPrice(int page, int size, int lowerPrice, int higherPrice) {
+    public List<Event> findByPrice(int page, int size, int lowerPrice, int higherPrice) throws HttpException {
         if (lowerPrice > higherPrice) {
-            throw new BadRequestException("Le prix minimum ne peut pas être supérieur au prix maximum")
+            throw new BadRequestException("Le prix minimum ne peut pas être supérieur au prix maximum");
         }
 
         Pageable pageable = PageRequest.of(page, size);
@@ -81,13 +82,17 @@ public class EventService {
 
     @Transactional
     public void createEvent(Event event) throws HttpException {
+
+        if (eventRepository.existsByTitle(event.getTitle())) {
+            throw new ConflictException("Un événement avec ce titre existe déjà");
+        }
         eventChecker(event);
         event.setStatus(EventStatus.DRAFT);
         eventRepository.save(event);
     }
 
     @Transactional
-    public void modifyEvent(Long eventId, Event modifiedEvent) throws HttpException {
+    public void updateEvent(Long eventId, Event modifiedEvent) throws HttpException {
 
         Optional<Event> optionalEvent = eventRepository.findById(eventId);
 
@@ -133,7 +138,7 @@ public class EventService {
         }
 
         if (event.getDescription().isBlank()) {
-            throw new BadRequestException("L'évènement doit avoir une description");
+            throw new BadRequestException("L'évènement doit avoir une description.");
         }
 
         if (event.getLocation().isBlank()){
@@ -149,15 +154,15 @@ public class EventService {
         }
 
         if (event.getMaxCapacity() == null) {
-            throw new BadRequestException("Vous devez définir une capacité maximale pour l'évènement");
+            throw new BadRequestException("Vous devez définir une capacité maximale pour l'évènement.");
         }
 
         if (event.getAffiliatePrice() == null) {
-            throw new BadRequestException("Vous devez déterminer un prix pour les personnes affiliée au club");
+            throw new BadRequestException("Vous devez déterminer un prix pour les personnes affiliée au club.");
         }
 
         if (event.getNonAffiliatePrice() == null) {
-            throw new BadRequestException("Vous devez déterminer un prix pour les personnes non affiliée au club");
+            throw new BadRequestException("Vous devez déterminer un prix pour les personnes non affiliée au club.");
         }
 
         return true;
