@@ -34,7 +34,7 @@ public class Event {
     @Column(name = "non_affiliate_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal nonAffiliatePrice;
     @Column(name = "max_capacity", nullable = false, length = 10)
-    private int maxCapacity;
+    private Integer maxCapacity;
 
     @OneToMany(mappedBy = "event")
     private List<Image> imageGallery = new ArrayList<>();
@@ -43,16 +43,16 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "organizer_id", nullable = false)
-    private AppUser organizer;
+    //@ManyToOne
+    //@JoinColumn(name = "organizer_id", nullable = false)
+    //private User organizer;
+
+
 
     public Event() {
     }
 
-    public Event(Long id, String title, String description, String location, Category category,
-            LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
-            BigDecimal nonAffiliatePrice, int maxCapacity, List<Image> imageGallery, EventStatus status) {
+    public Event(Long id, String title, String description, String location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, List<Image> imageGallery, EventStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -66,6 +66,7 @@ public class Event {
         this.imageGallery = imageGallery;
         this.status = status;
     }
+
 
     public Long getId() {
         return id;
@@ -139,11 +140,11 @@ public class Event {
         this.nonAffiliatePrice = nonAffiliatePrice;
     }
 
-    public int getMaxCapacity() {
+    public Integer getMaxCapacity() {
         return maxCapacity;
     }
 
-    public void setMaxCapacity(int maxCapacity) {
+    public void setMaxCapacity(Integer maxCapacity) {
         this.maxCapacity = maxCapacity;
     }
 
@@ -162,5 +163,6 @@ public class Event {
     public void setStatus(EventStatus status) {
         this.status = status;
     }
+
 
 }
