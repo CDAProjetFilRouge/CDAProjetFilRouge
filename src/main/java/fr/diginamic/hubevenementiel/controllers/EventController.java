@@ -69,15 +69,14 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody Event event) throws HttpException {
-        eventService.createEvent(event);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<Event> create(@RequestBody Event event) throws HttpException {
+        Event created = eventService.createEvent(event);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody Event event) throws HttpException {
-        eventService.modifyEvent(id, event);
-        return ResponseEntity.noContent().build();
+    public Event update(@PathVariable Long id, @RequestBody Event event) throws HttpException {
+        return eventService.updateEvent(id, event);
     }
 
     @DeleteMapping("/{id}")
