@@ -25,7 +25,6 @@ public class Event {
 
     @ManyToOne
     @JoinColumn(name = "location_id")
-    @Column(name = "location", nullable = false)
     private Address location;
 
     @Column(name = "category", nullable = false, length = 20)
