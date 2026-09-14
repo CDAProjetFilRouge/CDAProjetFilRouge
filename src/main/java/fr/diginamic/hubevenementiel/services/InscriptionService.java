@@ -208,35 +208,42 @@ public class InscriptionService {
                 });
     }
 
-    @Transactional
-    public void addInscription(Inscription inscription) {
-        inscriptionRepo.save(inscription);
-    }
+    // Non utilisée par le controller, remplacée par register(). Désactivée pour éviter un doublon de logique.
+    // @Transactional
+    // public void addInscription(Inscription inscription) {
+    //     inscriptionRepo.save(inscription);
+    // }
 
-    @Transactional
-    public void updateInscription(Inscription inscription) throws HttpException {
-        Optional<Inscription> inscriptionDB = inscriptionRepo.findById(inscription.getId());
-        if (inscriptionDB.isEmpty()) {
-            throw new NotFoundException("No inscription found with id: " + inscription.getId());
-        }
+    // Désactivée : aucun champ de cette entité n'a de raison d'être modifié librement.
+    // user/event référent l'inscription elle-même, inscriptionDate est posée à la création,
+    // et status/price/cancellationDate/cancelObject/canceledById sont pilotés par register()
+    // et cancelByMember()/cancelByOrganizer(). À réactiver seulement si un vrai besoin de
+    // correction générique (admin) apparaît, avec une liste de champs explicitement restreinte.
+    // @Transactional
+    // public void updateInscription(Inscription inscription) throws HttpException {
+    //     Optional<Inscription> inscriptionDB = inscriptionRepo.findById(inscription.getId());
+    //     if (inscriptionDB.isEmpty()) {
+    //         throw new NotFoundException("No inscription found with id: " + inscription.getId());
+    //     }
+    //
+    //     inscriptionDB.get().setUser(inscription.getUser());
+    //     inscriptionDB.get().setEvent(inscription.getEvent());
+    //     inscriptionDB.get().setInscriptionDate(inscription.getInscriptionDate());
+    //     inscriptionDB.get().setStatus(inscription.getStatus());
+    //     inscriptionDB.get().setPrice(inscription.getPrice());
+    //     inscriptionDB.get().setCancellationDate(inscription.getCancellationDate());
+    //     inscriptionDB.get().setCancelObject(inscription.getCancelObject());
+    //     inscriptionDB.get().setCanceledById(inscription.getCanceledById());
+    // }
 
-        inscriptionDB.get().setUser(inscription.getUser());
-        inscriptionDB.get().setEvent(inscription.getEvent());
-        inscriptionDB.get().setInscriptionDate(inscription.getInscriptionDate());
-        inscriptionDB.get().setStatus(inscription.getStatus());
-        inscriptionDB.get().setPrice(inscription.getPrice());
-        inscriptionDB.get().setCancellationDate(inscription.getCancellationDate());
-        inscriptionDB.get().setCancelObject(inscription.getCancelObject());
-        inscriptionDB.get().setCanceledById(inscription.getCanceledById());
-    }
-
-    @Transactional
-    public void deleteInscription(Long id) throws HttpException {
-        Optional<Inscription> inscription = inscriptionRepo.findById(id);
-        if (inscription.isEmpty()) {
-            throw new NotFoundException("No inscription found with id: " + id);
-        }
-
-        inscriptionRepo.delete(inscription.get());
-    }
+    // Non utilisée par le controller, remplacée par cancelByMember()/cancelByOrganizer() (annulation, pas suppression).
+    // @Transactional
+    // public void deleteInscription(Long id) throws HttpException {
+    //     Optional<Inscription> inscription = inscriptionRepo.findById(id);
+    //     if (inscription.isEmpty()) {
+    //         throw new NotFoundException("No inscription found with id: " + id);
+    //     }
+    //
+    //     inscriptionRepo.delete(inscription.get());
+    // }
 }
