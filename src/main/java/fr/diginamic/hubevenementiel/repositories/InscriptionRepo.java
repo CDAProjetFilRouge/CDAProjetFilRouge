@@ -2,7 +2,6 @@ package fr.diginamic.hubevenementiel.repositories;
 
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,11 +14,11 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
 
     Page<Inscription> findByEventId(Long id, Pageable pageable);
 
-    Page<Inscription> findByInscriptionDateBetween(LocalDateTime dateMin, LocalDateTime dateMax);
+    Page<Inscription> findByInscriptionDateBetween(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
 
     Page<Inscription> findByStatus(InscriptionStatus status, Pageable pageable);
 
-    Page<Inscription> findByCancellationDate(LocalDateTime dateMin, LocalDateTime dateMax);
+    Page<Inscription> findByCancellationDate(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
 
     Page<Inscription> findByCanceledById(Long id, Pageable pageable);
 }
