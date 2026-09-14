@@ -97,4 +97,12 @@ public class Image {
     public void setDisplayOrder(int displayOrder) {
         this.displayOrder = displayOrder;
     }
+
+    public Event getEvent() {
+        return event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
 }
