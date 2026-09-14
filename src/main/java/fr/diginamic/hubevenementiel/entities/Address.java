@@ -13,15 +13,15 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "address_line1", nullable = false)
-    private String Street1;
+    private String street1;
     @Column(name = "address_line2")
-    private String Street2;
+    private String street2;
     @Column(name = "postal_code", nullable = false, length = 10)
     private String postalCode;
     @Column(name = "city", nullable = false, length = 100)
-    private String City;
+    private String city;
     @Column(name = "country", nullable = false, length = 100)
-    private String Country;
+    private String country;
 
     @OneToMany(mappedBy = "address")
     private List<Club> clubs = new ArrayList<>();
@@ -38,11 +38,11 @@ public class Address {
     public Address(Long id, String street1, String street2, String postalCode, String city, String country,
             List<Club> clubs, List<AppUser> users, List<Event> events) {
         this.id = id;
-        Street1 = street1;
-        Street2 = street2;
+        this.street1 = street1;
+        this.street2 = street2;
         this.postalCode = postalCode;
-        City = city;
-        Country = country;
+        this.city = city;
+        this.country = country;
         this.clubs = clubs;
         this.users = users;
         this.events = events;
@@ -57,19 +57,19 @@ public class Address {
     }
 
     public String getStreet1() {
-        return Street1;
+        return street1;
     }
 
     public void setStreet1(String street1) {
-        Street1 = street1;
+        street1 = street1;
     }
 
     public String getStreet2() {
-        return Street2;
+        return street2;
     }
 
     public void setStreet2(String street2) {
-        Street2 = street2;
+        street2 = street2;
     }
 
     public String getPostalCode() {
@@ -81,19 +81,19 @@ public class Address {
     }
 
     public String getCity() {
-        return City;
+        return city;
     }
 
     public void setCity(String city) {
-        City = city;
+        city = city;
     }
 
     public String getCountry() {
-        return Country;
+        return country;
     }
 
     public void setCountry(String country) {
-        Country = country;
+        country = country;
     }
 
     public List<Club> getClubs() {
