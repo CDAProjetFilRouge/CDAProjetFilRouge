@@ -23,4 +23,6 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
     Page<Inscription> findByCanceledById(Long id, Pageable pageable);
 
     long countByEventIdAndStatus(Long eventId, InscriptionStatus status);
+
+    boolean existsByUserIdAndEventIdAndStatusNot(Long userId, Long eventId, InscriptionStatus status);
 }

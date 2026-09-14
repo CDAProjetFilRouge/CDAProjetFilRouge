@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
@@ -23,10 +24,15 @@ public class InscriptionService {
 
     private final InscriptionRepo inscriptionRepo;
     private final EventRepo eventRepo;
+    private final AppUserService appUserService;
+    private final EventService eventService;
 
-    public InscriptionService(InscriptionRepo inscriptionRepo, EventRepo eventRepo) {
+    public InscriptionService(InscriptionRepo inscriptionRepo, EventRepo eventRepo,
+            AppUserService appUserService, EventService eventService) {
         this.inscriptionRepo = inscriptionRepo;
         this.eventRepo = eventRepo;
+        this.appUserService = appUserService;
+        this.eventService = eventService;
     }
 
     @Transactional
@@ -37,6 +43,25 @@ public class InscriptionService {
         long confirmedCount = inscriptionRepo.countByEventIdAndStatus(eventId, InscriptionStatus.CONFIRMED);
 
         return confirmedCount >= event.getMaxCapacity();
+    }
+
+    @Transactional
+    public Inscription register(Long userId, Long eventId) throws HttpException {
+        AppUser user = appUserService.findById(userId);
+        Event event = eventService.findById(eventId);
+
+        if (inscriptionRepo.existsByUserIdAndEventIdAndStatusNot(userId, eventId, InscriptionStatus.CANCELED)) {
+            throw new ConflictException("Vous êtes déjà inscrit à cet évènement.");
+        }
+
+        Inscription inscription = new Inscription();
+        inscription.setUser(user);
+        inscription.setEvent(event);
+        inscription.setInscriptionDate(LocalDateTime.now());
+        inscription.setPrice(user.getClubs().isEmpty() ? event.getNonAffiliatePrice() : event.getAffiliatePrice());
+        inscription.setStatus(isEventFull(eventId) ? InscriptionStatus.WAITING_LIST : InscriptionStatus.CONFIRMED);
+
+        return inscriptionRepo.save(inscription);
     }
 
     public List<Inscription> getAllInscription() {
