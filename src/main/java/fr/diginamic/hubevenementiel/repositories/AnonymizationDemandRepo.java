@@ -17,7 +17,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable
      * @return a list of anonymization demand by status with pagination info
      */
-    Page<AnonymizationDemand> findByRequestStatus(RequestStatus status, Pageable pageable);
+    Page<AnonymizationDemand> findByRequestStatus(Pageable pageable, RequestStatus status);
 
     /**
      *
@@ -26,7 +26,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymization demand requests by a date between a min data and max date with pagination info
      */
-    List<AnonymizationDemand> findByDemandDateBetween(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
+    Page<AnonymizationDemand> findByDemandDateBetween(Pageable pageable, LocalDateTime dateMin, LocalDateTime dateMax);
 
     /**
      *
@@ -35,7 +35,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymization demand approved by a date between a min data and max date with pagination info
      */
-    List<AnonymizationDemand> findByApprovedDateBetween(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
+    Page<AnonymizationDemand> findByApprovedDateBetween(Pageable pageable, LocalDateTime dateMin, LocalDateTime dateMax);
 
     /**
      *
@@ -43,7 +43,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific requester with pagination info
      */
-    Page<AnonymizationDemand> findByRequesterId(Long id, Pageable pageable);
+    Page<AnonymizationDemand> findByRequesterId(Pageable pageable, Long id);
 
     /**
      *
@@ -51,7 +51,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific requester with pagination info
      */
-    Page<AnonymizationDemand> findByRequesterLastName(String lastName, Pageable pageable);
+    Page<AnonymizationDemand> findByRequesterLastName(Pageable pageable, String lastName);
 
     /**
      *
@@ -59,7 +59,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific requester with pagination info
      */
-    Page<AnonymizationDemand> findByRequesterFirstName(String firstName, Pageable pageable);
+    Page<AnonymizationDemand> findByRequesterFirstName(Pageable pageable, String firstName);
 
     /**
      *
@@ -67,7 +67,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific requester with pagination info
      */
-    Page<AnonymizationDemand> findByRequesterEmail(String email, Pageable pageable);
+    Page<AnonymizationDemand> findByRequesterEmail(Pageable pageable, String email);
 
     /**
      *
@@ -75,7 +75,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific admin with pagination info
      */
-    Page<AnonymizationDemand> findByAdminId(Long id, Pageable pageable);
+    Page<AnonymizationDemand> findByAdminId(Pageable pageable, Long id);
 
     /**
      *
@@ -83,7 +83,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific admin with pagination info
      */
-    Page<AnonymizationDemand> findByAdminLastName(String lastName, Pageable pageable);
+    Page<AnonymizationDemand> findByAdminLastName(Pageable pageable, String lastName);
 
     /**
      *
@@ -91,7 +91,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific admin with pagination info
      */
-    Page<AnonymizationDemand> findByAdminFirstName(String firstName, Pageable pageable);
+    Page<AnonymizationDemand> findByAdminFirstName(Pageable pageable, String firstName);
 
     /**
      *
@@ -99,7 +99,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific admin with pagination info
      */
-    Page<AnonymizationDemand> findByAdminEmail(String email, Pageable pageable);
+    Page<AnonymizationDemand> findByAdminEmail(Pageable pageable, String email);
 
 
 }
