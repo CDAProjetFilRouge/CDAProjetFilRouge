@@ -6,6 +6,7 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,10 +18,10 @@ import java.util.Optional;
 @Service
 public class ClubService {
 
-    private final ClubRepository clubRepository;
+    private final ClubRepo clubRepository;
 
 
-    public ClubService(ClubRepository clubRepository) {
+    public ClubService(ClubRepo clubRepository) {
         this.clubRepository = clubRepository;
     }
 
@@ -40,7 +41,7 @@ public class ClubService {
         return optionalClub.get();
     }
 
-    public Club findByName(Long clubName) throws HttpException {
+    public Club findByName(String clubName) throws HttpException {
         Optional<Club> optionalClub = clubRepository.findByName(clubName);
 
         if (optionalClub.isEmpty()) {
@@ -59,7 +60,7 @@ public class ClubService {
     public List<Club> findByCity(int page, int size, String cityName) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return clubRepository.findByAddress_City(cityName, pageable).getContent();
+        return clubRepository.findByAddressCity(cityName, pageable).getContent();
     }
 
     @Transactional

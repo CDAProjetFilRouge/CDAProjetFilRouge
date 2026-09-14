@@ -9,16 +9,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.CrudRepository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface ClubRepo extends JpaRepository<Club, Long> {
 
     /**
      *
      * @param name name of the club you want to do a search on
-     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of club with pagination info
      */
-    Page<Club> findByName(String name, Pageable pageable);
+    Optional<Club> findByName(String name);
 
     /**
      *
@@ -46,4 +46,6 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
     Page<Club> findByAddress(Address address, Pageable pageable);
 
     Page<Club> findByAddressCity(String city, Pageable pageable);
+
+    boolean existsByName(String name);
 }

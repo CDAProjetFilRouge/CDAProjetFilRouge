@@ -8,6 +8,7 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,10 @@ import java.util.Optional;
 @Service
 public class EventService {
 
-    private final EventRepository eventRepository;
+    private final EventRepo eventRepository;
 
 
-    public EventService(EventRepository eventRepository) {
+    public EventService(EventRepo eventRepository) {
         this.eventRepository = eventRepository;
     }
 
@@ -45,8 +46,8 @@ public class EventService {
         return optionalEvent.get();
     }
 
-    public Event findByName(String eventName) throws HttpException {
-        Optional<Event> optionalEvent = eventRepository.findByName(eventName);
+    public Event findByTitle(String eventTitle) throws HttpException {
+        Optional<Event> optionalEvent = eventRepository.findByTitle(eventTitle);
 
         if (optionalEvent.isEmpty()) {
             throw new NotFoundException("Aucun évènement trouvé avec ce nom.");
@@ -60,22 +61,31 @@ public class EventService {
         return eventRepository.findByCategory(category, pageable).getContent();
     }
 
-    public List<Event> findByDates(int page, int size, LocalDate startDate, LocalDate endDate) throws HttpException {
+    public List<Event> findByDates(int page, int size, LocalDateTime startDate, LocalDateTime endDate) throws HttpException {
+
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
-            throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin");
+            throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.findByDates(startDate, endDate, pageable).getContent();
+        return eventRepository.findByStartDateTimeGreaterThanEqualAndEndDateTimeLessThanEqual(
+                startDate, endDate, pageable
+        ).getContent();
     }
 
     public List<Event> findByPrice(int page, int size, int lowerPrice, int higherPrice) throws HttpException {
+
         if (lowerPrice > higherPrice) {
-            throw new BadRequestException("Le prix minimum ne peut pas être supérieur au prix maximum");
+            throw new BadRequestException("Le prix minimum ne peut pas être supérieur au prix maximum.");
         }
 
+        BigDecimal lower = BigDecimal.valueOf(lowerPrice);
+        BigDecimal higher = BigDecimal.valueOf(higherPrice);
+
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.findByPrice(lowerPrice, higherPrice, pageable).getContent();
+        return eventRepository.findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(
+                lower, higher, pageable
+        ).getContent();
     }
 
     public List<Event> findByStatus(int page, int size, EventStatus EventStatus) {
