@@ -10,6 +10,7 @@ import fr.diginamic.hubevenementiel.repositories.AnonymizationDemandRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -174,6 +175,42 @@ public class AnonymizationDemandService {
         appUserService.findById(requester.getId());
 
         return true;
+    }
+
+    @Transactional
+    public AnonymizationDemand createDemand(AnonymizationDemand anonymizationDemand) throws HttpException {
+
+        anonymizationDemand.setRequestStatus(RequestStatus.PENDING);
+        anonymizationDemand.setDemandDate(LocalDateTime.now());
+        anonymizationDemand.setAdmin(null);
+        anonymizationDemand.setApprovedDate(null);
+
+        anonymizationDemandChecker(anonymizationDemand);
+
+        return anonymizationDemandRepository.save(anonymizationDemand);
+    }
+
+    @Transactional
+    public AnonymizationDemand updateDemand(Long demandId, AnonymizationDemand modifiedDemand) throws HttpException {
+
+        AnonymizationDemand existingDemand = findById(demandId);
+
+        anonymizationDemandChecker(modifiedDemand);
+
+        existingDemand.setRequester(modifiedDemand.getRequester());
+        existingDemand.setAdmin(modifiedDemand.getAdmin());
+        existingDemand.setRequestStatus(modifiedDemand.getRequestStatus());
+        existingDemand.setApprovedDate(modifiedDemand.getApprovedDate());
+
+        return anonymizationDemandRepository.save(existingDemand);
+    }
+
+    @Transactional
+    public void deleteDemand(Long demandId) throws HttpException {
+
+        AnonymizationDemand demand = findById(demandId);
+
+        anonymizationDemandRepository.delete(demand);
     }
 
 }
