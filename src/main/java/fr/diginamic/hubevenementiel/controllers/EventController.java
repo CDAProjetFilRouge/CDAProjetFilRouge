@@ -1,6 +1,5 @@
 package fr.diginamic.hubevenementiel.controllers;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -14,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
 
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -41,21 +42,7 @@ public class EventController {
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) EventStatus status) throws HttpException {
-
-        if (category != null) {
-            return eventService.findByCategory(page, size, category);
-        }
-        if (startDate != null || endDate != null) {
-            return eventService.findByDates(page, size, startDate, endDate);
-        }
-        if (minPrice != null && maxPrice != null) {
-            return eventService.findByPrice(page, size, minPrice, maxPrice);
-        }
-        if (status != null) {
-            return eventService.findByStatus(page, size, status);
-        }
-
-        return eventService.findAllEvents(page, size);
+        return eventService.search(page, size, category, startDate, endDate, minPrice, maxPrice, status);
     }
 
     @GetMapping("/{id}")
