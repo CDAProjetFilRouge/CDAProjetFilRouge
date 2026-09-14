@@ -21,4 +21,6 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
     Page<Inscription> findByCancellationDate(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
 
     Page<Inscription> findByCanceledById(Long id, Pageable pageable);
+
+    long countByEventIdAndStatus(Long eventId, InscriptionStatus status);
 }
