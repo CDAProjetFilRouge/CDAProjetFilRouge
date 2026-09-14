@@ -6,6 +6,7 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import jakarta.transaction.Transactional;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -99,5 +100,48 @@ public class AppUserService {
         }
 
         return users;
+    }
+
+    @Transactional
+    public void createApp(AppUser appUser) throws HttpException {
+        Optional <AppUser> a = userRepo.findByEmail(appUser.getEmail());
+        if(a.isEmpty()){
+            throw new NotFoundException("AppUser already exists with this email address");
+        }
+        userRepo.save(appUser);
+    }
+
+    @Transactional
+    public void updateAppUser(AppUser appUser) throws HttpException {
+        Optional<AppUser> a = userRepo.findById(appUser.getId());
+
+        if(a.isEmpty()){
+            throw new NotFoundException("No AppUser found with id: "+appUser.getId());
+        }
+
+        a.get().setLastName(appUser.getLastName());
+        a.get().setFirstName(appUser.getFirstName());
+        a.get().setEmail(appUser.getEmail());
+        a.get().setHashedPassword(appUser.getHashedPassword());
+        a.get().setPhone(appUser.getPhone());
+        a.get().setRole(appUser.getRole());
+        a.get().setStatus(appUser.getStatus());
+        a.get().setSuspensionEndDate(appUser.getSuspensionEndDate());
+        a.get().setCreationDate(appUser.getCreationDate());
+        a.get().setAddress(appUser.getAddress());
+        a.get().setRequesters(appUser.getRequesters());
+        a.get().setAdmins(appUser.getAdmins());
+        a.get().setLegalDocumentList(appUser.getLegalDocumentList());
+        a.get().setClubs(appUser.getClubs());
+    }
+
+    @Transactional
+    public void deleteAppUser(Long id) throws HttpException {
+        Optional<AppUser> a = userRepo.findById(id);
+        if(a.isEmpty()){
+            throw new NotFoundException("No AppUser was found with id: "+id);
+        }
+
+        userRepo.delete(a.get());
     }
 }

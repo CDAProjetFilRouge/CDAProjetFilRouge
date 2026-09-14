@@ -163,4 +163,48 @@ public class AppUser {
     public void setId(long id) {
         this.id = id;
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public List<AnonymizationDemand> getRequesters() {
+        return requesters;
+    }
+
+    public void setRequesters(List<AnonymizationDemand> requesters) {
+        this.requesters = requesters;
+    }
+
+    public List<AnonymizationDemand> getAdmins() {
+        return admins;
+    }
+
+    public void setAdmins(List<AnonymizationDemand> admins) {
+        this.admins = admins;
+    }
+
+    public List<LegalDocument> getLegalDocumentList() {
+        return legalDocumentList;
+    }
+
+    public void setLegalDocumentList(List<LegalDocument> legalDocumentList) {
+        this.legalDocumentList = legalDocumentList;
+    }
+
+    public List<Club> getClubs() {
+        return clubs;
+    }
+
+    public void setClubs(List<Club> clubs) {
+        this.clubs = clubs;
+    }
 }
