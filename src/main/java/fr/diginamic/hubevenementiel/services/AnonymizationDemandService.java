@@ -29,6 +29,30 @@ public class AnonymizationDemandService {
         this.appUserService = appUserService;
     }
 
+    public AnonymizationDemand request(Long id) throws HttpException {
+
+        AppUser user = appUserService.findById(id);
+
+        AnonymizationDemand anonymizationDemand = new AnonymizationDemand();
+
+        anonymizationDemand.setRequester(user);
+
+        return createDemand(anonymizationDemand);
+    }
+
+    public AnonymizationDemand validate(Long id, Long adminId) throws HttpException {
+
+        AppUser admin = appUserService.findById(adminId);
+
+        AnonymizationDemand anonymizationDemand = findById(id);
+
+        anonymizationDemand.setAdmin(admin);
+        anonymizationDemand.setApprovedDate(LocalDateTime.now());
+        anonymizationDemand.setRequestStatus(RequestStatus.VALIDATE);
+
+        return updateDemand(id, anonymizationDemand);
+    }
+
     public List<AnonymizationDemand> findAllDemands(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
