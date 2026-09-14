@@ -32,10 +32,7 @@ public class AnonymizationDemandController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) RequestStatus status) {
-        if (status != null) {
-            return anonymizationDemandService.findByStatus(page, size, status);
-        }
-        return anonymizationDemandService.findAll(page, size);
+        return anonymizationDemandService.search(page, size, status);
     }
 
     @PostMapping

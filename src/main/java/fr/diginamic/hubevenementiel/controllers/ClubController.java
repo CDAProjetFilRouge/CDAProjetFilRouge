@@ -36,14 +36,7 @@ public class ClubController {
             @RequestParam(required = false) Category category,
             @RequestParam(required = false) String city) {
 
-        if (category != null) {
-            return clubService.findByCategory(page, size, category);
-        }
-        if (city != null) {
-            return clubService.findByCity(page, size, city);
-        }
-
-        return clubService.findAllClubs(page, size);
+        return clubService.search(page, size, category, city);
     }
 
     @GetMapping("/{id}")

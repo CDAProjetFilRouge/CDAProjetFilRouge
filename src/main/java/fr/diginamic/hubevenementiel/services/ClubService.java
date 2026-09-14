@@ -62,6 +62,18 @@ public class ClubService {
         return clubRepository.findByAddress_City(cityName, pageable).getContent();
     }
 
+    public List<Club> search(int page, int size, Category category, String city) {
+
+        if (category != null) {
+            return findByCategory(page, size, category);
+        }
+        if (city != null) {
+            return findByCity(page, size, city);
+        }
+
+        return findAllClubs(page, size);
+    }
+
     @Transactional
     public Club createClub(Club club) throws HttpException {
 
