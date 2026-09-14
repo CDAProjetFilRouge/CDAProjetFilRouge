@@ -7,11 +7,13 @@ import fr.diginamic.hubevenementiel.repositories.CommentRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class CommentService {
 
     CommentRepo commentRepo;
