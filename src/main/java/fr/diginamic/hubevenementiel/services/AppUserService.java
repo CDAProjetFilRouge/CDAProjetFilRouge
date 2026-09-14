@@ -3,6 +3,8 @@ package fr.diginamic.hubevenementiel.services;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -22,16 +24,17 @@ public class AppUserService {
 
     private UserRepo userRepo;
 
-    public AppUserService(UserRepo userRepo){
+    public AppUserService(UserRepo userRepo) {
         this.userRepo = userRepo;
     }
 
-    public List<AppUser> getAll(){
-        return userRepo.findAll();
+    public List<AppUser> findAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepo.findAll(pageable).getContent();
     }
 
     public AppUser findById(Long id) throws NotFoundException {
-        AppUser user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found with id: "+id));
+        AppUser user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found with id: " + id));
 
         return user;
     }
@@ -39,34 +42,35 @@ public class AppUserService {
     public List<AppUser> findByLastName(String lastName, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByLastName(lastName, pageable).getContent();
-        if(users.isEmpty()){
-            throw new NotFoundException("No users found with last name: "+lastName);
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found with last name: " + lastName);
         }
 
-        return  users;
+        return users;
     }
 
     public List<AppUser> findByFirstName(String firstName, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByFirstName(firstName, pageable).getContent();
-        if(users.isEmpty()){
-            throw new NotFoundException("No users found with last name: "+firstName);
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found with last name: " + firstName);
         }
 
         return users;
     }
 
     public AppUser findByEmail(String email) throws HttpException {
-        AppUser user = userRepo.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with this email: "+email));
+        AppUser user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with this email: " + email));
 
         return user;
     }
 
-    public List<AppUser> findByRole(Role role, int page, int size) throws HttpException{
+    public List<AppUser> findByRole(Role role, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByRole(role, pageable).getContent();
-        if(users.isEmpty()){
-            throw new NotFoundException("No users found with role: "+role);
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found with role: " + role);
         }
 
         return users;
@@ -75,73 +79,152 @@ public class AppUserService {
     public List<AppUser> findByStatus(AccountStatus status, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByStatus(status, pageable).getContent();
-        if(users.isEmpty()){
-            throw new NotFoundException("No users found with status: "+status);
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found with status: " + status);
         }
 
         return users;
     }
 
-    public List<AppUser> findBySuspensionEndDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size) throws HttpException{
+    public List<AppUser> findBySuspensionEndDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size)
+            throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findBySuspensionEndDateBetween(dateMin, dateMax, pageable).getContent();
-        if(users.isEmpty()){
-            throw new NotFoundException("No users found with end date between "+dateMin+" and "+dateMax);
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found with end date between " + dateMin + " and " + dateMax);
         }
 
         return users;
     }
 
-    public List<AppUser> findByCreationDateBetween(LocalDate dateMin, LocalDate dateMax, int page, int size) throws HttpException {
+    public List<AppUser> findByCreationDateBetween(LocalDate dateMin, LocalDate dateMax, int page, int size)
+            throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByCreationDateBetween(dateMin, dateMax, pageable).getContent();
-        if(users.isEmpty()){
-            throw new NotFoundException("No users found with creation date between"+dateMin+" and "+dateMax);
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found with creation date between" + dateMin + " and " + dateMax);
         }
 
         return users;
     }
 
     @Transactional
-    public void createApp(AppUser appUser) throws HttpException {
-        Optional <AppUser> a = userRepo.findByEmail(appUser.getEmail());
-        if(a.isEmpty()){
-            throw new NotFoundException("AppUser already exists with this email address");
+    public AppUser createAccount(AppUser appUser) throws HttpException {
+        appUserChecker(appUser, false);
+
+        if (userRepo.existsByEmail(appUser.getEmail())) {
+            throw new ConflictException("Un compte existe déjà avec cette adresse email.");
         }
-        userRepo.save(appUser);
+
+        appUser.setStatus(AccountStatus.INACTIVE);
+        appUser.setRole(Role.MEMBER);
+
+        return userRepo.save(appUser);
+    }
+
+    // TODO securite : aucune verification que l'appelant est bien administrateur (pas d'auth branchee sur le projet pour l'instant, cf. #97)
+    @Transactional
+    public AppUser createAccountByAdmin(AppUser appUser, Role role) throws HttpException {
+        appUserChecker(appUser, true);
+
+        if (userRepo.existsByEmail(appUser.getEmail())) {
+            throw new ConflictException("Un compte existe déjà avec cette adresse email.");
+        }
+
+        appUser.setStatus(AccountStatus.INACTIVE);
+        appUser.setRole(role);
+
+        return userRepo.save(appUser);
+    }
+
+    public boolean appUserChecker(AppUser appUser, boolean phoneRequired) throws HttpException {
+
+        if (appUser == null) {
+            throw new BadRequestException("Le compte ne peut pas être nul.");
+        }
+
+        String lastName = appUser.getLastName();
+        if (lastName == null || lastName.isBlank()) {
+            throw new BadRequestException("Le nom doit contenir au moins un caractère.");
+        }
+
+        String firstName = appUser.getFirstName();
+        if (firstName == null || firstName.isBlank()) {
+            throw new BadRequestException("Le prénom doit contenir au moins un caractère.");
+        }
+
+        String email = appUser.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new BadRequestException("L'adresse email est obligatoire.");
+        }
+        if (!email.matches("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$")) {
+            throw new BadRequestException("L'adresse email n'est pas valide.");
+        }
+
+        String password = appUser.getHashedPassword();
+        if (password == null || password.isBlank()) {
+            throw new BadRequestException("Le mot de passe est obligatoire.");
+        }
+        if (password.length() < 12) {
+            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
+        }
+
+        String phone = appUser.getPhone();
+        if (phoneRequired && (phone == null || phone.isBlank())) {
+            throw new BadRequestException("Le téléphone est obligatoire pour un compte créé par un administrateur.");
+        }
+
+        return true;
     }
 
     @Transactional
-    public void updateAppUser(AppUser appUser) throws HttpException {
-        Optional<AppUser> a = userRepo.findById(appUser.getId());
+    public AppUser updateOwnAccount(Long id, AppUser modifiedUser) throws HttpException {
+        AppUser existing = findById(id);
 
-        if(a.isEmpty()){
-            throw new NotFoundException("No AppUser found with id: "+appUser.getId());
+        appUserChecker(modifiedUser, false);
+
+        if (!existing.getEmail().equalsIgnoreCase(modifiedUser.getEmail())
+                && userRepo.existsByEmail(modifiedUser.getEmail())) {
+            throw new ConflictException("Un compte existe déjà avec cette adresse email.");
         }
 
-        a.get().setLastName(appUser.getLastName());
-        a.get().setFirstName(appUser.getFirstName());
-        a.get().setEmail(appUser.getEmail());
-        a.get().setHashedPassword(appUser.getHashedPassword());
-        a.get().setPhone(appUser.getPhone());
-        a.get().setRole(appUser.getRole());
-        a.get().setStatus(appUser.getStatus());
-        a.get().setSuspensionEndDate(appUser.getSuspensionEndDate());
-        a.get().setCreationDate(appUser.getCreationDate());
-        a.get().setAddress(appUser.getAddress());
-        a.get().setRequesters(appUser.getRequesters());
-        a.get().setAdmins(appUser.getAdmins());
-        a.get().setLegalDocumentList(appUser.getLegalDocumentList());
-        a.get().setClubs(appUser.getClubs());
+        existing.setLastName(modifiedUser.getLastName());
+        existing.setFirstName(modifiedUser.getFirstName());
+        existing.setEmail(modifiedUser.getEmail());
+        existing.setHashedPassword(modifiedUser.getHashedPassword());
+        existing.setPhone(modifiedUser.getPhone());
+        existing.setAddress(modifiedUser.getAddress());
+
+        return userRepo.save(existing);
     }
 
     @Transactional
-    public void deleteAppUser(Long id) throws HttpException {
-        Optional<AppUser> a = userRepo.findById(id);
-        if(a.isEmpty()){
-            throw new NotFoundException("No AppUser was found with id: "+id);
+    public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser) throws HttpException {
+        AppUser existing = findById(id);
+
+        appUserChecker(modifiedUser, true);
+
+        if (!existing.getEmail().equalsIgnoreCase(modifiedUser.getEmail())
+                && userRepo.existsByEmail(modifiedUser.getEmail())) {
+            throw new ConflictException("Un compte existe déjà avec cette adresse email.");
         }
 
-        userRepo.delete(a.get());
+        existing.setLastName(modifiedUser.getLastName());
+        existing.setFirstName(modifiedUser.getFirstName());
+        existing.setEmail(modifiedUser.getEmail());
+        existing.setHashedPassword(modifiedUser.getHashedPassword());
+        existing.setPhone(modifiedUser.getPhone());
+        existing.setAddress(modifiedUser.getAddress());
+        existing.setRole(modifiedUser.getRole());
+        existing.setClubs(modifiedUser.getClubs());
+
+        return userRepo.save(existing);
+    }
+
+    @Transactional
+    public void deleteAccount(Long id) throws HttpException {
+        AppUser user = findById(id);
+
+        userRepo.delete(user);
     }
 }
