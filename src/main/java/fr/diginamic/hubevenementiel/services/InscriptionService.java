@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.services;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -49,6 +50,10 @@ public class InscriptionService {
     public Inscription register(Long userId, Long eventId) throws HttpException {
         AppUser user = appUserService.findById(userId);
         Event event = eventService.findById(eventId);
+
+        if (event.getStatus() != EventStatus.PUBLISHED || event.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new ConflictException("Les inscriptions à cet évènement sont closes.");
+        }
 
         if (inscriptionRepo.existsByUserIdAndEventIdAndStatusNot(userId, eventId, InscriptionStatus.CANCELED)) {
             throw new ConflictException("Vous êtes déjà inscrit à cet évènement.");
