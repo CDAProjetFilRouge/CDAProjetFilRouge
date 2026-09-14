@@ -83,25 +83,6 @@ public class EventService {
         return eventRepository.findByStatus(EventStatus, pageable).getContent();
     }
 
-    public List<Event> search(int page, int size, Category category, LocalDate startDate, LocalDate endDate,
-                              Integer minPrice, Integer maxPrice, EventStatus status) throws HttpException {
-
-        if (category != null) {
-            return findByCategory(page, size, category);
-        }
-        if (startDate != null || endDate != null) {
-            return findByDates(page, size, startDate, endDate);
-        }
-        if (minPrice != null && maxPrice != null) {
-            return findByPrice(page, size, minPrice, maxPrice);
-        }
-        if (status != null) {
-            return findByStatus(page, size, status);
-        }
-
-        return findAllEvents(page, size);
-    }
-
     @Transactional
     public Event createEvent(Event event) throws HttpException {
 

@@ -42,7 +42,20 @@ public class EventController {
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) EventStatus status) throws HttpException {
 
-        return eventService.search(page, size, category, startDate, endDate, minPrice, maxPrice, status);
+        if (category != null) {
+            return eventService.findByCategory(page, size, category);
+        }
+        if (startDate != null || endDate != null) {
+            return eventService.findByDates(page, size, startDate, endDate);
+        }
+        if (minPrice != null && maxPrice != null) {
+            return eventService.findByPrice(page, size, minPrice, maxPrice);
+        }
+        if (status != null) {
+            return eventService.findByStatus(page, size, status);
+        }
+
+        return eventService.findAllEvents(page, size);
     }
 
     @GetMapping("/{id}")
