@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
 
@@ -25,4 +26,6 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
     long countByEventIdAndStatus(Long eventId, InscriptionStatus status);
 
     boolean existsByUserIdAndEventIdAndStatusNot(Long userId, Long eventId, InscriptionStatus status);
+
+    Optional<Inscription> findFirstByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
 }

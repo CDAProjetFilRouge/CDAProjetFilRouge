@@ -158,9 +158,16 @@ public class InscriptionService {
             throw new ConflictException("Cette inscription est déjà annulée.");
         }
 
-        inscription.cancelPerMember();
+        boolean freesASpot = inscription.getStatus() == InscriptionStatus.CONFIRMED;
 
-        return inscriptionRepo.save(inscription);
+        inscription.cancelPerMember();
+        Inscription saved = inscriptionRepo.save(inscription);
+
+        if (freesASpot) {
+            promoteNextInWaitingList(inscription.getEvent().getId());
+        }
+
+        return saved;
     }
 
     @Transactional
@@ -171,9 +178,28 @@ public class InscriptionService {
             throw new ConflictException("Cette inscription est déjà annulée.");
         }
 
-        inscription.cancelPerOrganizer(motif);
+        boolean freesASpot = inscription.getStatus() == InscriptionStatus.CONFIRMED;
 
-        return inscriptionRepo.save(inscription);
+        inscription.cancelPerOrganizer(motif);
+        Inscription saved = inscriptionRepo.save(inscription);
+
+        if (freesASpot) {
+            promoteNextInWaitingList(inscription.getEvent().getId());
+        }
+
+        return saved;
+    }
+
+    @Transactional
+    public void promoteNextInWaitingList(Long eventId) throws HttpException {
+        eventRepo.findByIdForUpdate(eventId)
+                .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
+
+        inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(eventId, InscriptionStatus.WAITING_LIST)
+                .ifPresent(next -> {
+                    next.setStatus(InscriptionStatus.CONFIRMED);
+                    inscriptionRepo.save(next);
+                });
     }
 
     @Transactional
