@@ -63,6 +63,12 @@ public class ClubService {
         return clubRepository.findByAddressCity(cityName, pageable).getContent();
     }
 
+    public List<Club> search(int page, int size, Category category, String city) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return clubRepository.search(category, city, pageable).getContent();
+    }
+
     @Transactional
     public Club createClub(Club club) throws HttpException {
 

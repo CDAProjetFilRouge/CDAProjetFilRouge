@@ -40,6 +40,14 @@ public class AnonymizationDemandService {
         return optionalDemand.get();
     }
 
+    public List<AnonymizationDemand> search(int page, int size, RequestStatus status) throws HttpException {
+        if (status != null) {
+            return findByStatus(page, size, status);
+        }
+
+        return findAllDemands(page, size);
+    }
+
     public List<AnonymizationDemand> findByStatus(int page, int size, RequestStatus status) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
