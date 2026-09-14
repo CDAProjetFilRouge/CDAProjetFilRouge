@@ -63,7 +63,8 @@ public class InscriptionService {
         inscription.setUser(user);
         inscription.setEvent(event);
         inscription.setInscriptionDate(LocalDateTime.now());
-        inscription.setPrice(user.getClubs().isEmpty() ? event.getNonAffiliatePrice() : event.getAffiliatePrice());
+        boolean isAffiliated = user.getClubs().stream().anyMatch(club -> club.getEndValidityDate() == null);
+        inscription.setPrice(isAffiliated ? event.getAffiliatePrice() : event.getNonAffiliatePrice());
         inscription.setStatus(isEventFull(eventId) ? InscriptionStatus.WAITING_LIST : InscriptionStatus.CONFIRMED);
 
         return inscriptionRepo.save(inscription);
