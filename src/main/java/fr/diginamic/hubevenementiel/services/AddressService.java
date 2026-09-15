@@ -37,7 +37,7 @@ public class AddressService {
      *
      * @param addressId id of the address you want to find
      * @return an object of address
-     * @throws HttpException error in case no address is found
+     * @throws HttpException
      */
     public Address findById(Long addressId) throws HttpException {
         Optional<Address> optionalAddress = addressRepository.findById(addressId);
@@ -106,7 +106,7 @@ public class AddressService {
     /**
      *
      * @param id id of the address to delete
-     * @throws HttpException if address is not found
+     * @throws HttpException
      */
     @Transactional
     public void deleteAddress(Long id) throws HttpException {
