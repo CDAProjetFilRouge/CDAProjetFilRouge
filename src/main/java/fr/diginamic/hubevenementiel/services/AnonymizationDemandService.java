@@ -29,6 +29,12 @@ public class AnonymizationDemandService {
         this.appUserService = appUserService;
     }
 
+    /**
+     *
+     * @param id id of the demand to find
+     * @return a single object of anonymizationDemand
+     * @throws HttpException
+     */
     public AnonymizationDemand request(Long id) throws HttpException {
 
         AppUser user = appUserService.findById(id);
@@ -40,6 +46,13 @@ public class AnonymizationDemandService {
         return createDemand(anonymizationDemand);
     }
 
+    /**
+     *
+     * @param id id of the demand to validate
+     * @param adminId id of the admin validating the demand
+     * @return object o0f type demande
+     * @throws HttpException
+     */
     public AnonymizationDemand validate(Long id, Long adminId) throws HttpException {
 
         AppUser admin = appUserService.findById(adminId);
@@ -53,12 +66,24 @@ public class AnonymizationDemandService {
         return updateDemand(id, anonymizationDemand);
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per pages
+     * @return a list of demands
+     */
     public List<AnonymizationDemand> findAllDemands(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         return anonymizationDemandRepository.findAll(pageable).getContent();
     }
 
+    /**
+     *
+     * @param demandId id of the demand to find
+     * @return object of type anonymizationDemand
+     * @throws HttpException
+     */
     public AnonymizationDemand findById(Long demandId) throws HttpException {
         Optional<AnonymizationDemand> optionalDemand = anonymizationDemandRepository.findById(demandId);
 
@@ -69,6 +94,14 @@ public class AnonymizationDemandService {
         return optionalDemand.get();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param status status to search demand associated with it
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> search(int page, int size, RequestStatus status) throws HttpException {
         if (status != null) {
             return findByStatus(page, size, status);
@@ -77,6 +110,14 @@ public class AnonymizationDemandService {
         return findAllDemands(page, size);
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per pages
+     * @param status
+     * @return
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByStatus(int page, int size, RequestStatus status) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -87,6 +128,15 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByRequestStatus(pageable, status).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size  number of entries per page
+     * @param startDate starting date at which we search demands
+     * @param endDate maximum date at which we search demands
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByDemandBetweenDates(int page, int size, LocalDateTime startDate,
             LocalDateTime endDate) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
@@ -98,6 +148,15 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByDemandDateBetween(pageable, startDate, endDate).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param startDate starting date at which we search demands
+     * @param endDate maximum date at which we search demands
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findApprovedDemandBetweenDates(int page, int size, LocalDateTime startDate,
             LocalDateTime endDate) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
@@ -109,6 +168,14 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByApprovedDateBetween(pageable, startDate, endDate).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param id id of the user that made the demand
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByRequesterId(int page, int size, Long id) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -129,6 +196,14 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByRequesterLastName(pageable, lastName).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param firstName search demands by the first name of the requester
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByRequesterFirstName(int page, int size, String firstName)
             throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
@@ -140,6 +215,14 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByRequesterFirstName(pageable, firstName).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param email email of the requester we want to find demand associated with
+     * @return
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByRequesterEmail(int page, int size, String email) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -152,6 +235,15 @@ public class AnonymizationDemandService {
 
     // ajouter liste déroulante sur le front pour gérer les admins sur la recherche
     // de quel admin a gérée quelles demandes
+
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param id id of the admin we want to find the demands associated with
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByAdminId(int page, int size, Long id) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -162,6 +254,14 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByAdminId(pageable, id).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param lastName last name of the admin we want to find the demands associated with
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByAdminLastName(int page, int size, String lastName) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -171,7 +271,14 @@ public class AnonymizationDemandService {
 
         return anonymizationDemandRepository.findByAdminLastName(pageable, lastName).getContent();
     }
-
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param firstName first name of the admin we want to find the demands associated with
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByAdminFirstName(int page, int size, String firstName) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -182,6 +289,14 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByAdminFirstName(pageable, firstName).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param email email of the admin we want to find the demands associated with
+     * @return a list of demands
+     * @throws HttpException
+     */
     public List<AnonymizationDemand> findByAdminEmail(int page, int size, String email) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -192,6 +307,12 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.findByAdminEmail(pageable, email).getContent();
     }
 
+    /**
+     *
+     * @param anonymizationDemand demand we want to do checks on
+     * @return true if all check passed or false if not
+     * @throws HttpException
+     */
     public boolean anonymizationDemandChecker(AnonymizationDemand anonymizationDemand) throws HttpException {
 
         if (anonymizationDemand == null) {
@@ -209,6 +330,12 @@ public class AnonymizationDemandService {
         return true;
     }
 
+    /**
+     *
+     * @param anonymizationDemand demand to save in the DB
+     * @return demand saved
+     * @throws HttpException
+     */
     @Transactional
     public AnonymizationDemand createDemand(AnonymizationDemand anonymizationDemand) throws HttpException {
 
@@ -222,6 +349,13 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.save(anonymizationDemand);
     }
 
+    /**
+     *
+     * @param demandId if of the demand to update
+     * @param modifiedDemand details of the demand to update
+     * @return the updated demand
+     * @throws HttpException
+     */
     @Transactional
     public AnonymizationDemand updateDemand(Long demandId, AnonymizationDemand modifiedDemand) throws HttpException {
 
@@ -237,6 +371,11 @@ public class AnonymizationDemandService {
         return anonymizationDemandRepository.save(existingDemand);
     }
 
+    /**
+     *
+     * @param demandId id of the demand to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteDemand(Long demandId) throws HttpException {
 
