@@ -50,7 +50,7 @@ public class InscriptionController {
     public List<Inscription> getByEvent(
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size) throws HttpException {
         return inscriptionService.findByEvent(eventId, page, size);
     }
 
@@ -58,7 +58,7 @@ public class InscriptionController {
     public List<Inscription> getByUser(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size) throws HttpException {
         return inscriptionService.findByUser(userId, page, size);
     }
 }
