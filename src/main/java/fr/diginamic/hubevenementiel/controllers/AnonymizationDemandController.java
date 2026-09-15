@@ -31,7 +31,7 @@ public class AnonymizationDemandController {
     public List<AnonymizationDemand> getDemands(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) RequestStatus status) {
+            @RequestParam(required = false) RequestStatus status) throws HttpException {
         return anonymizationDemandService.search(page, size, status);
     }
 
