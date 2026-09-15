@@ -30,7 +30,7 @@ public class CommentController {
     public List<Comment> getByEvent(
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size) throws HttpException {
         return commentService.findByEvent(eventId, page, size);
     }
 
@@ -39,13 +39,13 @@ public class CommentController {
             @PathVariable Long eventId,
             @RequestParam Long authorId,
             @RequestParam String content) throws HttpException {
-        Comment created = commentService.create(eventId, authorId, content);
+        Comment created = commentService.createComment(eventId, authorId, content);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable Long id) throws HttpException {
-        commentService.delete(id);
+        commentService.deleteComment(id);
         return ResponseEntity.noContent().build();
     }
 }

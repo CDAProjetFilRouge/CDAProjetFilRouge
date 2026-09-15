@@ -28,7 +28,7 @@ public class ImageController {
     }
 
     @GetMapping
-    public List<Image> getByEvent(@PathVariable Long eventId) {
+    public List<Image> getByEvent(@PathVariable Long eventId) throws HttpException {
         return imageService.findByEvent(eventId);
     }
 

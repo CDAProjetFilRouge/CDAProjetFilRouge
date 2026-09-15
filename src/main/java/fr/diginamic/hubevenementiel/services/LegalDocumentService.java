@@ -6,10 +6,13 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,6 +22,55 @@ public class LegalDocumentService {
 
     public LegalDocumentService(LegalDocumentRepo legalDocumentRepo) {
         this.legalDocumentRepo = legalDocumentRepo;
+    }
+
+    public List<LegalDocument> getAllDocuments() {
+        return legalDocumentRepo.findAll();
+    }
+
+    public LegalDocument getDocumentById(Long id) throws HttpException {
+        Optional<LegalDocument> document = legalDocumentRepo.findById(id);
+
+        if (document.isEmpty()) {
+            throw new NotFoundException("No legal document found with id " + id);
+        }
+
+        return document.get();
+    }
+
+    public List<LegalDocument> getDocumentByType(DocumentType type, int page, int size) throws HttpException {
+        Pageable pageable = PageRequest.of(page, size);
+        List<LegalDocument> documents = legalDocumentRepo.findByDocumentType(type, pageable).getContent();
+
+        if (documents.isEmpty()) {
+            throw new NotFoundException("No documents found of type: " + type);
+        }
+
+        return documents;
+    }
+
+    public List<LegalDocument> getDocumentByDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size)
+            throws HttpException {
+        Pageable pageable = PageRequest.of(page, size);
+        List<LegalDocument> documents = legalDocumentRepo.findByUpdateDateBetween(dateMin, dateMax, pageable)
+                .getContent();
+
+        if (documents.isEmpty()) {
+            throw new NotFoundException("No document found with an update date between " + dateMin + " and " + dateMax);
+        }
+
+        return documents;
+    }
+
+    public List<LegalDocument> getDocumentUserId(Long id, int page, int size) throws HttpException {
+        Pageable pageable = PageRequest.of(page, size);
+        List<LegalDocument> documents = legalDocumentRepo.findByUserId(id, pageable).getContent();
+
+        if (documents.isEmpty()) {
+            throw new NotFoundException("No legal document found with user id: " + id);
+        }
+
+        return documents;
     }
 
     public LegalDocument findLatestByType(DocumentType type) throws HttpException {
@@ -31,6 +83,12 @@ public class LegalDocumentService {
         return document.get();
     }
 
+    // pas de create/update classique ici : le MLD a une contrainte unique sur
+    // (type, version),
+    // donc chaque modif doit ajouter une nouvelle ligne, jamais ecraser l'ancienne.
+    // createNewVersion
+    // gere les deux cas (premiere creation = version 1, sinon version = derniere +
+    // 1).
     @Transactional
     public LegalDocument createNewVersion(LegalDocument document) throws HttpException {
         legalDocumentChecker(document);
@@ -43,6 +101,13 @@ public class LegalDocumentService {
         document.setUpdateDate(LocalDateTime.now());
 
         return legalDocumentRepo.save(document);
+    }
+
+    @Transactional
+    public void deleteDocument(Long id) throws HttpException {
+        LegalDocument document = getDocumentById(id);
+
+        legalDocumentRepo.delete(document);
     }
 
     public boolean legalDocumentChecker(LegalDocument document) throws HttpException {
