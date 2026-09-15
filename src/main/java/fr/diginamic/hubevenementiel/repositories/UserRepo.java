@@ -26,4 +26,6 @@ public interface UserRepo extends JpaRepository<AppUser, Long> {
     Page<AppUser> findBySuspensionEndDateBetween(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
 
     Page<AppUser> findByCreationDateBetween(LocalDate dateMin, LocalDate dateMax, Pageable pageable);
+
+    boolean existsByEmail(String email);
 }
