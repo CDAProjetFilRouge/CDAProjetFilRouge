@@ -93,6 +93,23 @@ public class EventService {
         return eventRepository.findByStatus(EventStatus, pageable).getContent();
     }
 
+    public List<Event> search(int page, int size, Category category, LocalDateTime startDate, LocalDateTime endDate,
+            Integer minPrice, Integer maxPrice, EventStatus status) throws HttpException {
+
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");
+        }
+        if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+            throw new BadRequestException("Le prix minimum ne peut pas être supérieur au prix maximum.");
+        }
+
+        BigDecimal minPriceValue = minPrice != null ? BigDecimal.valueOf(minPrice) : null;
+        BigDecimal maxPriceValue = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
+
+        Pageable pageable = PageRequest.of(page, size);
+        return eventRepository.search(category, startDate, endDate, minPriceValue, maxPriceValue, status, pageable).getContent();
+    }
+
     @Transactional
     public Event createEvent(Event event) throws HttpException {
 
