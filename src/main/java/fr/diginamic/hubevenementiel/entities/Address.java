@@ -85,7 +85,7 @@ public class Address {
     }
 
     public void setCity(String city) {
-        city = city;
+        this.city = city;
     }
 
     public String getCountry() {
@@ -93,7 +93,7 @@ public class Address {
     }
 
     public void setCountry(String country) {
-        country = country;
+        this.country = country;
     }
 
     public List<Club> getClubs() {
