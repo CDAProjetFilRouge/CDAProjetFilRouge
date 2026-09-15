@@ -26,7 +26,7 @@ public class Club {
     @Column(name = "end_validity_date")
     private LocalDate endValidityDate;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "address_id")
     private Address address;
 
