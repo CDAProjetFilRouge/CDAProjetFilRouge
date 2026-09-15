@@ -24,15 +24,23 @@ public class TokenService {
     }
 
     public Token findTokenById(Long id) throws HttpException {
-        if(tokenRepo.findById(id).isEmpty()){
+        Optional<Token> token = tokenRepo.findById(id);
+        if(token.isEmpty()){
             throw new NotFoundException("No token found with id: "+id);
         }
 
-        return tokenRepo.findById(id).get();
+        return token.get();
     }
 
     @Transactional
-    public void createToken(Token token) {
+    public void createToken(Token token) throws HttpException {
+        if(token.getValue().isEmpty() || token.getValue() == null){
+            throw new NotFoundException("Value for this token is empty");
+        }else if(token.getTokenType() == null){
+            throw new NotFoundException("Token has no type");
+        }else if(token.getUser() == null){
+            throw new NotFoundException("No user is associated with this token");
+        }
         tokenRepo.save(token);
     }
 
