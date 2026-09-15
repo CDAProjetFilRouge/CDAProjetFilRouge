@@ -7,7 +7,7 @@ public class AppUserUpdateRequestDto {
     private String firstName;
     private String lastName;
     private String email;
-    private String phoneNumber;
+    private String phone;
     private AddressRequestDto address;
 
     public AppUserUpdateRequestDto() {
@@ -17,7 +17,7 @@ public class AppUserUpdateRequestDto {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.phoneNumber = phoneNumber;
+        this.phone = phoneNumber;
         this.address = address;
     }
 
@@ -45,12 +45,12 @@ public class AppUserUpdateRequestDto {
         this.email = email;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public AddressRequestDto getAddress() {
