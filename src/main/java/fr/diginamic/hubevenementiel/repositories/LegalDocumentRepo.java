@@ -15,4 +15,6 @@ public interface LegalDocumentRepo extends JpaRepository<LegalDocument, Long> {
     Page<LegalDocument> findByUpdateDateBetween(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
 
     Page<LegalDocument> findByUserId(Long id, Pageable pageable);
+
+    java.util.Optional<LegalDocument> findFirstByDocumentTypeOrderByVersionDesc(DocumentType type);
 }

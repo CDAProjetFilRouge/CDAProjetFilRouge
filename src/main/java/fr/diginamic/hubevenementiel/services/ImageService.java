@@ -121,36 +121,41 @@ public class ImageService {
     public Image getImageById(Long id) throws HttpException {
         Optional<Image> i = imageRepo.findById(id);
 
-        if(i.isEmpty()){
-            throw new NotFoundException("No image found with id: "+id);
+        if (i.isEmpty()) {
+            throw new NotFoundException("No image found with id: " + id);
         }
 
         return i.get();
     }
 
-    // Non utilisée par le controller, remplacée par upload() (gère aussi l'écriture du fichier). Désactivée pour éviter un doublon de logique.
+    // Non utilisée par le controller, remplacée par upload() (gère aussi l'écriture
+    // du fichier). Désactivée pour éviter un doublon de logique.
     // @Transactional
     // public void createImage(Image image){
-    //     imageRepo.save(image);
+    // imageRepo.save(image);
     // }
 
-    // Désactivée : aucun champ de cette entité n'a de raison d'être modifié librement une fois l'image
-    // uploadée (fileName/path/mimeType/sizeByte décrivent le fichier réellement écrit sur disque,
-    // uploadDate est posée à la création, event ne doit pas changer). À réactiver seulement si un
-    // vrai besoin apparaît (ex: réordonner displayOrder), avec une liste de champs restreinte.
+    // Désactivée : aucun champ de cette entité n'a de raison d'être modifié
+    // librement une fois l'image
+    // uploadée (fileName/path/mimeType/sizeByte décrivent le fichier réellement
+    // écrit sur disque,
+    // uploadDate est posée à la création, event ne doit pas changer). À réactiver
+    // seulement si un
+    // vrai besoin apparaît (ex: réordonner displayOrder), avec une liste de champs
+    // restreinte.
     // @Transactional
     // public void updateImage(Image image) throws HttpException {
-    //     Optional<Image> i = imageRepo.findById(image.getId());
-    //     if(i.isEmpty()){
-    //         throw new NotFoundException("No image found with this id: "+image.getId());
-    //     }
+    // Optional<Image> i = imageRepo.findById(image.getId());
+    // if(i.isEmpty()){
+    // throw new NotFoundException("No image found with this id: "+image.getId());
+    // }
     //
-    //     i.get().setFileName(image.getFileName());
-    //     i.get().setPath(image.getPath());
-    //     i.get().setMimeType(image.getMimeType());
-    //     i.get().setSizeByte(image.getSizeByte());
-    //     i.get().setUploadDate(image.getUploadDate());
-    //     i.get().setDisplayOrder(image.getDisplayOrder());
-    //     i.get().setEvent(image.getEvent());
+    // i.get().setFileName(image.getFileName());
+    // i.get().setPath(image.getPath());
+    // i.get().setMimeType(image.getMimeType());
+    // i.get().setSizeByte(image.getSizeByte());
+    // i.get().setUploadDate(image.getUploadDate());
+    // i.get().setDisplayOrder(image.getDisplayOrder());
+    // i.get().setEvent(image.getEvent());
     // }
 }

@@ -19,81 +19,111 @@ public class LegalDocumentService {
 
     private final LegalDocumentRepo legalDocumentRepo;
 
-    public LegalDocumentService(LegalDocumentRepo legalDocumentRepo){
+    public LegalDocumentService(LegalDocumentRepo legalDocumentRepo) {
         this.legalDocumentRepo = legalDocumentRepo;
     }
 
-    public List<LegalDocument> getAllDocuments (){
+    public List<LegalDocument> getAllDocuments() {
         return legalDocumentRepo.findAll();
     }
 
     public LegalDocument getDocumentById(Long id) throws HttpException {
-        if(legalDocumentRepo.findById(id).isEmpty()){
-            throw new NotFoundException("No legal document found with id"+ id);
+        Optional<LegalDocument> document = legalDocumentRepo.findById(id);
+
+        if (document.isEmpty()) {
+            throw new NotFoundException("No legal document found with id " + id);
         }
 
-        return legalDocumentRepo.findById(id).get();
+        return document.get();
     }
 
     public List<LegalDocument> getDocumentByType(DocumentType type, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
+        List<LegalDocument> documents = legalDocumentRepo.findByDocumentType(type, pageable).getContent();
 
-        if(legalDocumentRepo.findByDocumentType(type, pageable).getContent().isEmpty()){
-            throw new NotFoundException("No documents found of type: "+type);
+        if (documents.isEmpty()) {
+            throw new NotFoundException("No documents found of type: " + type);
         }
 
-        return legalDocumentRepo.findByDocumentType(type, pageable).getContent();
+        return documents;
     }
 
-    public List<LegalDocument> getDocumentByDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size) throws HttpException {
+    public List<LegalDocument> getDocumentByDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size)
+            throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
+        List<LegalDocument> documents = legalDocumentRepo.findByUpdateDateBetween(dateMin, dateMax, pageable)
+                .getContent();
 
-        if(legalDocumentRepo.findByUpdateDateBetween(dateMin, dateMax, pageable).getContent().isEmpty()){
-            throw new NotFoundException("No document found with an update date between "+dateMin+" and "+dateMax);
+        if (documents.isEmpty()) {
+            throw new NotFoundException("No document found with an update date between " + dateMin + " and " + dateMax);
         }
 
-        return legalDocumentRepo.findByUpdateDateBetween(dateMin, dateMax, pageable).getContent();
+        return documents;
     }
 
     public List<LegalDocument> getDocumentUserId(Long id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
+        List<LegalDocument> documents = legalDocumentRepo.findByUserId(id, pageable).getContent();
 
-        if(legalDocumentRepo.findByUserId(id, pageable).getContent().isEmpty()){
-            throw new NotFoundException("No legal document found with user id: "+id);
+        if (documents.isEmpty()) {
+            throw new NotFoundException("No legal document found with user id: " + id);
         }
 
-        return legalDocumentRepo.findByUserId(id, pageable).getContent();
+        return documents;
     }
 
-    @Transactional
-    public void createDocument(LegalDocument legalDocument) {
-        legalDocumentRepo.save(legalDocument);
-    }
+    public LegalDocument findLatestByType(DocumentType type) throws HttpException {
+        Optional<LegalDocument> document = legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(type);
 
-    @Transactional
-    public void updateDocument(LegalDocument legalDocument) throws HttpException {
-        Optional<LegalDocument> legalDocumentDB = legalDocumentRepo.findById(legalDocument.getId());
-
-        if(legalDocumentDB.isEmpty()){
-            throw new NotFoundException("Not legal document found with id: "+legalDocument.getId());
+        if (document.isEmpty()) {
+            throw new NotFoundException("Aucun document trouvé pour ce type.");
         }
 
-        legalDocumentDB.get().setDocumentType(legalDocument.getDocumentType());
-        legalDocumentDB.get().setContent(legalDocument.getContent());
-        legalDocumentDB.get().setVersion(legalDocument.getVersion());
-        legalDocumentDB.get().setUpdateDate(legalDocument.getUpdateDate());
-        legalDocumentDB.get().setPdfPath(legalDocument.getPdfPath());
-        legalDocumentDB.get().setUser(legalDocument.getUser());
+        return document.get();
+    }
+
+    // pas de create/update classique ici : le MLD a une contrainte unique sur
+    // (type, version),
+    // donc chaque modif doit ajouter une nouvelle ligne, jamais ecraser l'ancienne.
+    // createNewVersion
+    // gere les deux cas (premiere creation = version 1, sinon version = derniere +
+    // 1).
+    @Transactional
+    public LegalDocument createNewVersion(LegalDocument document) throws HttpException {
+        legalDocumentChecker(document);
+
+        int previousVersion = legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(document.getDocumentType())
+                .map(LegalDocument::getVersion)
+                .orElse(0);
+
+        document.setVersion(previousVersion + 1);
+        document.setUpdateDate(LocalDateTime.now());
+
+        return legalDocumentRepo.save(document);
     }
 
     @Transactional
     public void deleteDocument(Long id) throws HttpException {
-        Optional<LegalDocument> legalDocument = legalDocumentRepo.findById(id);
+        LegalDocument document = getDocumentById(id);
 
-        if(legalDocument.isEmpty()){
-            throw new NotFoundException("No legal document found with id: "+id);
+        legalDocumentRepo.delete(document);
+    }
+
+    public boolean legalDocumentChecker(LegalDocument document) throws HttpException {
+
+        if (document == null) {
+            throw new BadRequestException("Le document ne peut pas être nul.");
         }
 
-        legalDocumentRepo.delete(legalDocument.get());
+        if (document.getDocumentType() == null) {
+            throw new BadRequestException("Vous devez choisir un type de document.");
+        }
+
+        String content = document.getContent();
+        if (content == null || content.isBlank()) {
+            throw new BadRequestException("Le contenu du document ne peut pas être vide.");
+        }
+
+        return true;
     }
 }
