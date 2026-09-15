@@ -16,7 +16,7 @@ import java.util.Optional;
 @Service
 public class CommentService {
 
-    CommentRepo commentRepo;
+    private final CommentRepo commentRepo;
 
     public CommentService(CommentRepo commentRepo){
         this.commentRepo = commentRepo;
