@@ -22,11 +22,23 @@ public class AddressService {
         this.addressRepository = addressRepository;
     }
 
+    /**
+     *
+     * @param page page at which you want to start
+     * @param size number of entries per page
+     * @return a list of address
+     */
     public List<Address> findAllAddress(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return addressRepository.findAll(pageable).getContent();
     }
 
+    /**
+     *
+     * @param addressId id of the address you want to find
+     * @return an object of address
+     * @throws HttpException
+     */
     public Address findById(Long addressId) throws HttpException {
         Optional<Address> optionalAddress = addressRepository.findById(addressId);
 
@@ -37,6 +49,12 @@ public class AddressService {
         return optionalAddress.get();
     }
 
+    /**
+     *
+     * @param address object of type address to add in the DB
+     * @return the object address created
+     * @throws HttpException
+     */
     @Transactional
     public Address createAddress(Address address) throws HttpException {
 
@@ -50,6 +68,13 @@ public class AddressService {
         ).orElseGet(() -> addressRepository.save(address));
     }
 
+    /**
+     *
+     * @param id id of the address to updated
+     * @param addressDetails objecting containing the update info
+     * @return the updated object
+     * @throws HttpException
+     */
     @Transactional
     public Address updateAddress(Long id, Address addressDetails) throws HttpException {
 
@@ -78,6 +103,11 @@ public class AddressService {
         return addressRepository.save(existing);
     }
 
+    /**
+     *
+     * @param id id of the address to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteAddress(Long id) throws HttpException {
 
@@ -87,6 +117,12 @@ public class AddressService {
         addressRepository.delete(address);
     }
 
+    /**
+     *
+     * @param address object of type address to check
+     * @return true if all check passed else false
+     * @throws HttpException
+     */
     public boolean addressChecker(Address address) throws HttpException {
 
         if (address == null) {
@@ -122,6 +158,10 @@ public class AddressService {
         return true;
     }
 
+    /**
+     *
+     * @param address object address to normalize
+     */
     private void normalize(Address address) {
         if (address.getStreet1() != null) address.setStreet1(address.getStreet1().trim());
         if (address.getStreet2() != null) address.setStreet2(address.getStreet2().trim());
