@@ -34,10 +34,9 @@ public class ImageService {
         this.eventService = eventService;
     }
 
-    // Non utilisée par le controller, remplacée par findByEvent(). Désactivée pour
-    // éviter un doublon de logique.
+    // Non utilisée par le controller, remplacée par findByEvent(). Désactivée pour éviter un doublon de logique.
     // public List<Image> getAllImage(){
-    // return imageRepo.findAll();
+    //     return imageRepo.findAll();
     // }
 
     public List<Image> findByEvent(Long eventId) throws HttpException {

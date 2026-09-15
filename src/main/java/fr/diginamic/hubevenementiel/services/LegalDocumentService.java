@@ -2,14 +2,13 @@ package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
-import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
