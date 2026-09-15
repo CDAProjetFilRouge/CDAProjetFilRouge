@@ -61,7 +61,7 @@ public class Address {
     }
 
     public void setStreet1(String street1) {
-        street1 = street1;
+        this.street1 = street1;
     }
 
     public String getStreet2() {
@@ -69,7 +69,7 @@ public class Address {
     }
 
     public void setStreet2(String street2) {
-        street2 = street2;
+        this.street2 = street2;
     }
 
     public String getPostalCode() {
