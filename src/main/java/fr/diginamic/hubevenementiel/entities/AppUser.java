@@ -45,7 +45,7 @@ public class AppUser {
     @Column(name = "creatio_date")
     private LocalDate creationDate;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "address_id")
     private Address address;
 

@@ -9,7 +9,7 @@ import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import jakarta.transaction.Transactional;
-import org.aspectj.weaver.ast.Not;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AppUserService {
@@ -122,7 +121,8 @@ public class AppUserService {
         return userRepo.save(appUser);
     }
 
-    // TODO securite : aucune verification que l'appelant est bien administrateur (pas d'auth branchee sur le projet pour l'instant, cf. #97)
+    // TODO securite : aucune verification que l'appelant est bien administrateur
+    // (pas d'auth branchee sur le projet pour l'instant, cf. #97)
     @Transactional
     public AppUser createAccountByAdmin(AppUser appUser, Role role) throws HttpException {
         appUserChecker(appUser, true);

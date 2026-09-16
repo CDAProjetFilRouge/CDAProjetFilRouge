@@ -1,7 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.appUser;
 
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
-import fr.diginamic.hubevenementiel.entities.Address;
 
 public class AppUserRequestDto {
 
@@ -15,7 +14,8 @@ public class AppUserRequestDto {
     public AppUserRequestDto() {
     }
 
-    public AppUserRequestDto(String firstName, String lastName, String email, String password, String phone, AddressRequestDto address) {
+    public AppUserRequestDto(String firstName, String lastName, String email, String password, String phone,
+            AddressRequestDto address) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
