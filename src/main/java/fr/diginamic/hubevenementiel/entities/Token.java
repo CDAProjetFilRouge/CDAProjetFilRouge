@@ -35,7 +35,7 @@ public class Token {
 
     @Column(name = "expiration_date_time", nullable = false)
     private LocalDateTime expirationDateTime;
-    @Column(name = "use_date", nullable = false)
+    @Column(name = "use_date")
     private LocalDateTime useDate;
     @Column(name = "pending_data", nullable = false)
     private String pendingData;
