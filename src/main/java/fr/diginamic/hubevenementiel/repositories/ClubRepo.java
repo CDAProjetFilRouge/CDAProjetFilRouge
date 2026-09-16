@@ -38,7 +38,7 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
      *                 PageRequest.of()
      * @return a list of club with pagination info
      */
-    Page<Club> findByEndValidiyDateBetween(LocalDate dateMin, LocalDate dateMax, Pageable pageable);
+    Page<Club> findByEndValidityDateBetween(LocalDate dateMin, LocalDate dateMax, Pageable pageable);
 
     /**
      *

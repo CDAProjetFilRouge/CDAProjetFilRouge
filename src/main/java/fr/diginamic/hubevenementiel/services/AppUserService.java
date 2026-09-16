@@ -1,12 +1,15 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
+import fr.diginamic.hubevenementiel.entities.Token;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.enums.TokenType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import jakarta.transaction.Transactional;
 
@@ -18,15 +21,21 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AppUserService {
 
-    private UserRepo userRepo;
-    private PasswordEncoder passwordEncoder;
+    private final UserRepo userRepo;
+    private final TokenRepo tokenRepo;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AppUserService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
+    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, EmailService emailService, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
+        this.tokenRepo = tokenRepo;
+        this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -122,7 +131,20 @@ public class AppUserService {
         appUser.setRole(Role.MEMBER);
         appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
 
-        return userRepo.save(appUser);
+        AppUser savedUser = userRepo.save(appUser);
+
+        Token token = new Token();
+        token.setValue(UUID.randomUUID().toString());
+        token.setTokenType(TokenType.ENABLE_ACCOUNT);
+        token.setUser(savedUser);
+        token.setCreationDateTime(LocalDateTime.now());
+        token.setExpirationDateTime(LocalDateTime.now().plusHours(24));
+        token.setPendingData("");
+        tokenRepo.save(token);
+
+        emailService.sendVerificationEmail(savedUser.getEmail(), token.getValue());
+
+        return savedUser;
     }
 
     // TODO securite : aucune verification que l'appelant est bien administrateur
@@ -196,7 +218,6 @@ public class AppUserService {
         existing.setLastName(modifiedUser.getLastName());
         existing.setFirstName(modifiedUser.getFirstName());
         existing.setEmail(modifiedUser.getEmail());
-        existing.setHashedPassword(modifiedUser.getHashedPassword());
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
 
@@ -217,13 +238,104 @@ public class AppUserService {
         existing.setLastName(modifiedUser.getLastName());
         existing.setFirstName(modifiedUser.getFirstName());
         existing.setEmail(modifiedUser.getEmail());
-        existing.setHashedPassword(modifiedUser.getHashedPassword());
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
         existing.setRole(modifiedUser.getRole());
         existing.setClubs(modifiedUser.getClubs());
 
         return userRepo.save(existing);
+    }
+
+    @Transactional
+    public void requestPasswordChange(Long userId, String currentPassword, String newPassword) throws HttpException {
+        AppUser user = findById(userId);
+
+        if (!passwordEncoder.matches(currentPassword, user.getHashedPassword())) {
+            throw new BadRequestException("Mot de passe actuel incorrect.");
+        }
+
+        createPasswordChangeToken(user, newPassword);
+    }
+
+    @Transactional
+    public void requestPasswordReset(String email) {
+        Optional<AppUser> userOptional = userRepo.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            return;
+        }
+
+        createPasswordChangeToken(userOptional.get(), null);
+    }
+
+    private void createPasswordChangeToken(AppUser user, String newPassword) {
+        Token token = new Token();
+        token.setValue(UUID.randomUUID().toString());
+        token.setTokenType(TokenType.CHANGE_PWD);
+        token.setUser(user);
+        token.setCreationDateTime(LocalDateTime.now());
+        token.setExpirationDateTime(LocalDateTime.now().plusHours(1));
+        token.setPendingData(newPassword != null ? passwordEncoder.encode(newPassword) : "");
+        tokenRepo.save(token);
+
+        emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+    }
+
+    @Transactional
+    public void submitNewPasswordAfterReset(String tokenValue, String newPassword) throws HttpException {
+        Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
+
+        token.setPendingData(passwordEncoder.encode(newPassword));
+        tokenRepo.save(token);
+
+        emailService.sendPasswordChangeConfirmationEmail(token.getUser().getEmail(), token.getValue());
+    }
+
+    @Transactional
+    public void confirmPasswordReset(String tokenValue) throws HttpException {
+        Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
+
+        if (token.getPendingData() == null || token.getPendingData().isBlank()) {
+            throw new BadRequestException("Aucun mot de passe en attente pour ce token.");
+        }
+
+        AppUser user = token.getUser();
+        user.setHashedPassword(token.getPendingData());
+        userRepo.save(user);
+
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
+    }
+
+    private Token getValidToken(String tokenVaue, TokenType expectedType) throws HttpException {
+        Token token = tokenRepo.findByValue(tokenVaue)
+                .orElseThrow(() -> new BadRequestException("Token invalide."));
+
+        if (token.getTokenType() != expectedType) {
+            throw new BadRequestException("Type de token incorrect.");
+        }
+
+        if (token.getUseDate() != null) {
+            throw new BadRequestException("Ce token a déjà été utilisé.");
+        }
+
+        if (token.getExpirationDateTime().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Ce token a expiré.");
+        }
+
+        return token;
+    }
+
+    @Transactional
+    public void confirmAccountVerification(String tokenValue) throws HttpException {
+        Token token = getValidToken(tokenValue, TokenType.ENABLE_ACCOUNT);
+
+        AppUser user = token.getUser();
+        user.setStatus(AccountStatus.ACTIVE);
+        userRepo.save(user);
+
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
     }
 
     @Transactional
