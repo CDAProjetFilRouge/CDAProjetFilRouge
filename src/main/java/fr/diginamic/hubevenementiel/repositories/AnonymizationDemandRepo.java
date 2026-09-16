@@ -7,13 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDemand, Long> {
 
     /**
      *
-     * @param status status of the request (e.g. ACCEPTED)
+     * @param status   status of the request (e.g. ACCEPTED)
      * @param pageable
      * @return a list of anonymization demand by status with pagination info
      */
@@ -35,7 +34,8 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymization demand approved by a date between a min data and max date with pagination info
      */
-    Page<AnonymizationDemand> findByApprovedDateBetween(Pageable pageable, LocalDateTime dateMin, LocalDateTime dateMax);
+    Page<AnonymizationDemand> findByApprovedDateBetween(Pageable pageable, LocalDateTime dateMin,
+            LocalDateTime dateMax);
 
     /**
      *
@@ -100,6 +100,5 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @return a list of anonymmizationDemand from a specific admin with pagination info
      */
     Page<AnonymizationDemand> findByAdminEmail(Pageable pageable, String email);
-
 
 }

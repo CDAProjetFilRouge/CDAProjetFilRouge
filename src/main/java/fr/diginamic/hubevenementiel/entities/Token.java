@@ -16,6 +16,23 @@ public class Token {
     private String value;
     @Column(name = "creation_date_time", nullable = false)
     private LocalDateTime creationDateTime;
+
+    public TokenType getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(TokenType tokenType) {
+        this.tokenType = tokenType;
+    }
+
+    public AppUser getUser() {
+        return user;
+    }
+
+    public void setUser(AppUser user) {
+        this.user = user;
+    }
+
     @Column(name = "expiration_date_time", nullable = false)
     private LocalDateTime expirationDateTime;
     @Column(name = "use_date", nullable = false)

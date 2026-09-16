@@ -1,4 +1,5 @@
 package fr.diginamic.hubevenementiel.repositories;
+
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import org.springframework.data.domain.Page;

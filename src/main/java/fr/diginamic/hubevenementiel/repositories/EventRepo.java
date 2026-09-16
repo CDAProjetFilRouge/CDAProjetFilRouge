@@ -3,7 +3,7 @@ package fr.diginamic.hubevenementiel.repositories;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
-import org.springframework.cglib.core.Local;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +16,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 
 public interface EventRepo extends JpaRepository<Event, Long> {
 
@@ -43,9 +42,9 @@ public interface EventRepo extends JpaRepository<Event, Long> {
      */
     Page<Event> findByCategory(Category category, Pageable pageable);
 
-    Page<Event> findByStartDateTimeBetween(LocalDateTime dateMin, LocalDate dateMax);
+    Page<Event> findByStartDateTimeBetween(Pageable pageable, LocalDateTime dateMin, LocalDate dateMax);
 
-    Page<Event> findByEndDateTimeBetween(LocalDate dateMin, LocalDateTime dateMax);
+    Page<Event> findByEndDateTimeBetween(Pageable pageable, LocalDate dateMin, LocalDateTime dateMax);
 
     /**
      *
@@ -74,19 +73,19 @@ public interface EventRepo extends JpaRepository<Event, Long> {
     Page<Event> findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(BigDecimal lowerPrice, BigDecimal higherPrice, Pageable pageable);
 
     @Query("SELECT e FROM Event e WHERE " +
-           "(:category IS NULL OR e.category = :category) AND " +
-           "(:startDate IS NULL OR e.startDateTime >= :startDate) AND " +
-           "(:endDate IS NULL OR e.endDateTime <= :endDate) AND " +
-           "(:minPrice IS NULL OR e.nonAffiliatePrice >= :minPrice) AND " +
-           "(:maxPrice IS NULL OR e.nonAffiliatePrice <= :maxPrice) AND " +
-           "(:status IS NULL OR e.status = :status)")
+            "(:category IS NULL OR e.category = :category) AND " +
+            "(:startDate IS NULL OR e.startDateTime >= :startDate) AND " +
+            "(:endDate IS NULL OR e.endDateTime <= :endDate) AND " +
+            "(:minPrice IS NULL OR e.nonAffiliatePrice >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR e.nonAffiliatePrice <= :maxPrice) AND " +
+            "(:status IS NULL OR e.status = :status)")
     Page<Event> search(@Param("category") Category category,
-                        @Param("startDate") LocalDateTime startDate,
-                        @Param("endDate") LocalDateTime endDate,
-                        @Param("minPrice") BigDecimal minPrice,
-                        @Param("maxPrice") BigDecimal maxPrice,
-                        @Param("status") EventStatus status,
-                        Pageable pageable);
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("status") EventStatus status,
+            Pageable pageable);
 
     /**
      *
