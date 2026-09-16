@@ -3,6 +3,17 @@ spring:
     name: hub-evenementiel
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${BREVO_SMTP_LOGIN}
+    password: ${BREVO_SMTP_KEY}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   port: ${SERVER_PORT:8080}

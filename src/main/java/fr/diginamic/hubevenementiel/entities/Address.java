@@ -29,7 +29,7 @@ public class Address {
     @OneToMany(mappedBy = "address")
     private List<AppUser> users = new ArrayList<>();
 
-    @OneToMany(mappedBy = "address")
+    @OneToMany(mappedBy = "location")
     private List<Event> events = new ArrayList<>();
 
     public Address() {
