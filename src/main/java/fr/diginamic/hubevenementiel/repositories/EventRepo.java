@@ -31,9 +31,9 @@ public interface EventRepo extends JpaRepository<Event, Long> {
 
     Page<Event> findByCategory(Category category, Pageable pageable);
 
-    Page<Event> findByStartDateTimeBetween(LocalDateTime dateMin, LocalDate dateMax);
+    Page<Event> findByStartDateTimeBetween(Pageable pageable, LocalDateTime dateMin, LocalDate dateMax);
 
-    Page<Event> findByEndDateTimeBetween(LocalDate dateMin, LocalDateTime dateMax);
+    Page<Event> findByEndDateTimeBetween(Pageable pageable, LocalDate dateMin, LocalDateTime dateMax);
 
     Page<Event> findByStatus(EventStatus status, Pageable pageable);
 
