@@ -163,6 +163,20 @@ public class AppUserService {
         return userRepo.save(appUser);
     }
 
+    @Transactional
+    public void anonymizeAccount(AppUser user) {
+        String randomSuffix = UUID.randomUUID().toString();
+
+        user.setLastName("ANONYME-" + randomSuffix);
+        user.setFirstName("ANONYME-" + randomSuffix);
+        user.setEmail("anonyme-" + randomSuffix + "@anonymise.local");
+        user.setPhone(randomSuffix);
+        user.setHashedPassword(UUID.randomUUID().toString());
+        user.setStatus(AccountStatus.ANONYMIZE);
+
+        userRepo.save(user);
+    }
+
     public boolean appUserChecker(AppUser appUser, boolean phoneRequired) throws HttpException {
 
         if (appUser == null) {
