@@ -36,6 +36,12 @@ public class InscriptionService {
         this.eventService = eventService;
     }
 
+    /**
+     *
+     * @param eventId id of the event to perform the check on
+     * @return true if the check passed else false
+     * @throws HttpException
+     */
     @Transactional
     public boolean isEventFull(Long eventId) throws HttpException {
         Event event = eventRepo.findByIdForUpdate(eventId)
@@ -46,6 +52,13 @@ public class InscriptionService {
         return confirmedCount >= event.getMaxCapacity();
     }
 
+    /**
+     *
+     * @param userId id of the user to associate the inscription with
+     * @param eventId id of the event to associate the inscription with
+     * @return inscription saved in the DB
+     * @throws HttpException
+     */
     @Transactional
     public Inscription register(Long userId, Long eventId) throws HttpException {
         AppUser user = appUserService.findById(userId);
@@ -74,6 +87,12 @@ public class InscriptionService {
         return inscriptionRepo.findAll();
     }
 
+    /**
+     *
+     * @param id id of the inscription to find
+     * @return object of type inscription
+     * @throws HttpException
+     */
     public Inscription getInscriptionById(Long id) throws HttpException {
         Optional<Inscription> inscription = inscriptionRepo.findById(id);
 
@@ -84,6 +103,14 @@ public class InscriptionService {
         return inscription.get();
     }
 
+    /**
+     *
+     * @param id id of the user to find inscription associated with
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of inscription
+     * @throws HttpException
+     */
     public List<Inscription> findByUser(Long id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Inscription> inscriptions = inscriptionRepo.findByUserId(id, pageable).getContent();
@@ -95,6 +122,14 @@ public class InscriptionService {
         return inscriptions;
     }
 
+    /**
+     *
+     * @param id id of the event to find inscription associated with
+     * @param page starting page
+     * @param size number of entries
+     * @return a list of inscription
+     * @throws HttpException
+     */
     public List<Inscription> findByEvent(Long id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Inscription> inscriptions = inscriptionRepo.findByEventId(id, pageable).getContent();
@@ -156,6 +191,12 @@ public class InscriptionService {
         return inscriptions;
     }
 
+    /**
+     *
+     * @param id id of the inscription to cancel
+     * @return inscription with the updated status
+     * @throws HttpException
+     */
     @Transactional
     public Inscription cancelByMember(Long id) throws HttpException {
         Inscription inscription = getInscriptionById(id);
@@ -176,6 +217,13 @@ public class InscriptionService {
         return saved;
     }
 
+    /**
+     *
+     * @param id id of the inscription to cancel
+     * @param motif reason of the cancel
+     * @return inscription with the updated status
+     * @throws HttpException
+     */
     @Transactional
     public Inscription cancelByOrganizer(Long id, String motif) throws HttpException {
         Inscription inscription = getInscriptionById(id);
@@ -196,6 +244,11 @@ public class InscriptionService {
         return saved;
     }
 
+    /**
+     *
+     * @param eventId id of the event to find inscription associated with
+     * @throws HttpException
+     */
     @Transactional
     public void promoteNextInWaitingList(Long eventId) throws HttpException {
         eventRepo.findByIdForUpdate(eventId)

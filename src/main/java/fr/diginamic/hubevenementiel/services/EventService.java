@@ -30,12 +30,24 @@ public class EventService {
         this.eventRepository = eventRepository;
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of events
+     */
     public List<Event> findAllEvents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         return eventRepository.findAll(pageable).getContent();
     }
 
+    /**
+     *
+     * @param eventId id of the event to find
+     * @return an object of type Event
+     * @throws HttpException
+     */
     public Event findById(Long eventId) throws HttpException {
         Optional<Event> optionalEvent = eventRepository.findById(eventId);
 
@@ -46,6 +58,12 @@ public class EventService {
         return optionalEvent.get();
     }
 
+    /**
+     *
+     * @param eventTitle title of the events to do the search on
+     * @return a list of Events
+     * @throws HttpException
+     */
     public Event findByTitle(String eventTitle) throws HttpException {
         Optional<Event> optionalEvent = eventRepository.findByTitle(eventTitle);
 
@@ -93,6 +111,19 @@ public class EventService {
         return eventRepository.findByStatus(EventStatus, pageable).getContent();
     }
 
+    /**
+     *
+     * @param page
+     * @param size
+     * @param category
+     * @param startDate
+     * @param endDate
+     * @param minPrice
+     * @param maxPrice
+     * @param status
+     * @return
+     * @throws HttpException
+     */
     public List<Event> search(int page, int size, Category category, LocalDateTime startDate, LocalDateTime endDate,
             Integer minPrice, Integer maxPrice, EventStatus status) throws HttpException {
 
@@ -110,6 +141,12 @@ public class EventService {
         return eventRepository.search(category, startDate, endDate, minPriceValue, maxPriceValue, status, pageable).getContent();
     }
 
+    /**
+     *
+     * @param event Event to save in the DB
+     * @return Event saved
+     * @throws HttpException
+     */
     @Transactional
     public Event createEvent(Event event) throws HttpException {
 
@@ -123,6 +160,13 @@ public class EventService {
         return eventRepository.save(event);
     }
 
+    /**
+     *
+     * @param eventId id of the event to update
+     * @param modifiedEvent updated Event information
+     * @return updated Event
+     * @throws HttpException
+     */
     @Transactional
     public Event updateEvent(Long eventId, Event modifiedEvent) throws HttpException {
 
@@ -150,6 +194,11 @@ public class EventService {
         return eventRepository.save(eventToBeModified);
     }
 
+    /**
+     *
+     * @param eventId id of the event to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteEvent(Long eventId) throws HttpException {
 
@@ -160,6 +209,12 @@ public class EventService {
     }
 
 
+    /**
+     *
+     * @param event event to perform the checks on
+     * @return true if the event passed
+     * @throws HttpException
+     */
     public boolean eventChecker(Event event) throws HttpException {
 
         if (event == null) {

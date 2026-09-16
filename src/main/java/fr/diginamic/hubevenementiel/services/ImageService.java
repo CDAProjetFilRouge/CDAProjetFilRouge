@@ -39,6 +39,12 @@ public class ImageService {
     //     return imageRepo.findAll();
     // }
 
+    /**
+     *
+     * @param eventId id of the event to search all images associated with
+     * @return a list of images
+     * @throws HttpException
+     */
     public List<Image> findByEvent(Long eventId) throws HttpException {
         eventService.findById(eventId);
 
@@ -48,6 +54,13 @@ public class ImageService {
     private static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
     private static final int MAX_IMAGES_PER_EVENT = 10;
 
+    /**
+     *
+     * @param eventId id of the event to search all images associated with
+     * @param file fle to perform the checks on
+     * @return true if all checks passed else false
+     * @throws HttpException
+     */
     public boolean imageChecker(Long eventId, MultipartFile file) throws HttpException {
 
         if (file == null || file.isEmpty()) {
@@ -70,6 +83,13 @@ public class ImageService {
         return true;
     }
 
+    /**
+     *
+     * @param eventId id of the event to associate the image with
+     * @param file file of the image
+     * @return image saved in the DB
+     * @throws HttpException
+     */
     @Transactional
     public Image upload(Long eventId, MultipartFile file) throws HttpException {
         Event event = eventService.findById(eventId);
@@ -105,6 +125,11 @@ public class ImageService {
         return imageRepo.save(image);
     }
 
+    /**
+     *
+     * @param id id of the image to delete
+     * @throws HttpException
+     */
     @Transactional
     public void delete(Long id) throws HttpException {
         Image image = getImageById(id);
@@ -118,6 +143,12 @@ public class ImageService {
         imageRepo.delete(image);
     }
 
+    /**
+     *
+     * @param id id of the image to search for
+     * @return object of type Image
+     * @throws HttpException
+     */
     public Image getImageById(Long id) throws HttpException {
         Optional<Image> i = imageRepo.findById(id);
 
