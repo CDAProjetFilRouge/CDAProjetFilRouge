@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.mappers;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
@@ -44,7 +45,24 @@ public class AppUserMapper {
         entity.setLastName(requestDto.getLastName());
         entity.setEmail(requestDto.getEmail());
         entity.setPhone(requestDto.getPhone());
-        entity.setAddress(addressMapper.toEntity(requestDto.getAddress()));
+        entity.setHashedPassword(requestDto.getPassword());
+        if (requestDto.getAddress() != null) {
+            entity.setAddress(addressMapper.toEntity(requestDto.getAddress()));
+        }
+
+        return entity;
+    }
+
+    public AppUser toEntityForAdminUpdate(AppUserAdminUpdateRequestDto dto) {
+        AppUser entity = new AppUser();
+        entity.setFirstName(dto.getFirstName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmail(dto.getEmail());
+        entity.setPhone(dto.getPhone());
+        entity.setRole(dto.getRole());
+        if (dto.getAddress() != null) {
+            entity.setAddress(addressMapper.toEntity(dto.getAddress()));
+        }
 
         return entity;
     }
