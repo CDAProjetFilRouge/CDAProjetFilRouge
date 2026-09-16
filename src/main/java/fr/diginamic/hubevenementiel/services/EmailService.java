@@ -59,4 +59,14 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendInscriptionCancellationEmail(String toEmail, String eventTitle, String motif) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Votre inscription a été annulée");
+        message.setText("Votre inscription à l'évènement \"" + eventTitle + "\" a été annulée par l'organisateur.\n\n"
+                + "Motif : " + motif);
+
+        mailSender.send(message);
+    }
 }
