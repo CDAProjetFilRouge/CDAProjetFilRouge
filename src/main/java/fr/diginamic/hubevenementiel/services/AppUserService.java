@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,9 +23,11 @@ import java.util.List;
 public class AppUserService {
 
     private UserRepo userRepo;
+    private PasswordEncoder passwordEncoder;
 
-    public AppUserService(UserRepo userRepo) {
+    public AppUserService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<AppUser> findAllUsers(int page, int size) {
@@ -117,6 +120,7 @@ public class AppUserService {
 
         appUser.setStatus(AccountStatus.INACTIVE);
         appUser.setRole(Role.MEMBER);
+        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
 
         return userRepo.save(appUser);
     }
@@ -133,6 +137,7 @@ public class AppUserService {
 
         appUser.setStatus(AccountStatus.INACTIVE);
         appUser.setRole(role);
+        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
 
         return userRepo.save(appUser);
     }
