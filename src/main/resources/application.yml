@@ -9,3 +9,5 @@ server:
 
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
+  jwt:
+    expiration-ms: 900000
