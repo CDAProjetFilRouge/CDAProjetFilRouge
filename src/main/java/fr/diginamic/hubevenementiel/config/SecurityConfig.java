@@ -29,6 +29,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/account/verify").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/account/password/forgot").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/account/password/reset").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/account/password/confirm").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
