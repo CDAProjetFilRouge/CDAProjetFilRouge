@@ -5,6 +5,7 @@ import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
@@ -26,13 +27,15 @@ public class InscriptionService {
     private final EventRepo eventRepo;
     private final AppUserService appUserService;
     private final EventService eventService;
+    private final EmailService emailService;
 
     public InscriptionService(InscriptionRepo inscriptionRepo, EventRepo eventRepo,
-            AppUserService appUserService, EventService eventService) {
+            AppUserService appUserService, EventService eventService, EmailService emailService) {
         this.inscriptionRepo = inscriptionRepo;
         this.eventRepo = eventRepo;
         this.appUserService = appUserService;
         this.eventService = eventService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -177,6 +180,10 @@ public class InscriptionService {
 
     @Transactional
     public Inscription cancelByOrganizer(Long id, String motif) throws HttpException {
+        if (motif == null || motif.isBlank()) {
+            throw new BadRequestException("Un motif est obligatoire pour annuler une inscription en tant qu'organisateur.");
+        }
+
         Inscription inscription = getInscriptionById(id);
 
         if (inscription.getStatus() == InscriptionStatus.CANCELED) {
@@ -187,6 +194,9 @@ public class InscriptionService {
 
         inscription.cancelPerOrganizer(motif);
         Inscription saved = inscriptionRepo.save(inscription);
+
+        emailService.sendInscriptionCancellationEmail(
+                inscription.getUser().getEmail(), inscription.getEvent().getTitle(), motif);
 
         if (freesASpot) {
             promoteNextInWaitingList(inscription.getEvent().getId());

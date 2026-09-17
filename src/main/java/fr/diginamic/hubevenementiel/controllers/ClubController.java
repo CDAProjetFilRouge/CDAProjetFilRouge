@@ -14,9 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.diginamic.hubevenementiel.dtos.club.ClubRequestDto;
+import fr.diginamic.hubevenementiel.dtos.club.ClubResponseDto;
+import fr.diginamic.hubevenementiel.dtos.club.ClubSummaryResponseDto;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.mappers.ClubMapper;
+import fr.diginamic.hubevenementiel.mappers.ClubSummaryMapper;
 import fr.diginamic.hubevenementiel.services.ClubService;
 
 @RestController
@@ -24,34 +29,43 @@ import fr.diginamic.hubevenementiel.services.ClubService;
 public class ClubController {
 
     private final ClubService clubService;
+    private final ClubMapper clubMapper;
+    private final ClubSummaryMapper clubSummaryMapper;
 
-    public ClubController(ClubService clubService) {
+    public ClubController(ClubService clubService, ClubMapper clubMapper, ClubSummaryMapper clubSummaryMapper) {
         this.clubService = clubService;
+        this.clubMapper = clubMapper;
+        this.clubSummaryMapper = clubSummaryMapper;
     }
 
     @GetMapping
-    public List<Club> getClubs(
+    public List<ClubSummaryResponseDto> getClubs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Category category,
             @RequestParam(required = false) String city) {
-        return clubService.search(page, size, category, city);
+        return clubService.search(page, size, category, city).stream()
+                .map(clubSummaryMapper::toDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Club getById(@PathVariable Long id) throws HttpException {
-        return clubService.findById(id);
+    public ClubResponseDto getById(@PathVariable Long id) throws HttpException {
+        return clubMapper.toDto(clubService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Club> create(@RequestBody Club club) throws HttpException {
+    public ResponseEntity<ClubResponseDto> create(@RequestBody ClubRequestDto requestDto) throws HttpException {
+        Club club = clubMapper.toEntity(requestDto);
         Club created = clubService.createClub(club);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(clubMapper.toDto(created));
     }
 
     @PutMapping("/{id}")
-    public Club update(@PathVariable Long id, @RequestBody Club club) throws HttpException {
-        return clubService.updateClub(id, club);
+    public ClubResponseDto update(@PathVariable Long id, @RequestBody ClubRequestDto requestDto) throws HttpException {
+        Club club = clubMapper.toEntity(requestDto);
+        Club updated = clubService.updateClub(id, club);
+        return clubMapper.toDto(updated);
     }
 
     @DeleteMapping("/{id}")

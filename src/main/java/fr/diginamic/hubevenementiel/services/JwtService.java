@@ -1,27 +1,68 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-// Squelette pour demain (issue #97). Rien n'est implemente : juste les methodes
-// qu'on sait deja qu'il faudra, pour ne pas avoir a re-reflechir a la forme
-// avant de coder le contenu.
-//
-// A trancher demain avant de remplir :
-// - duree d'expiration du token (et refresh token ou pas)
-// - quelles infos dans les claims (id, email, role ? juste l'email ?)
-// - ou stocker la cle secrete (application.yml / variable d'environnement)
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
 @Service
 public class JwtService {
 
-    public String generateToken(String email) {
-        throw new UnsupportedOperationException("A implementer");
+    private static final String ROLE_CLAIM = "role";
+    private static final String ID_CLAIM = "id";
+
+    private final SecretKey key;
+    private final long expirationMs;
+
+    public JwtService(@Value("${app.jwt.secret}") String secret,
+            @Value("${app.jwt.expiration-ms}") long expirationMs) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMs = expirationMs;
+    }
+
+    public String generateToken(AppUser appUser) {
+        return Jwts.builder()
+                .subject(appUser.getEmail())
+                .claim(ROLE_CLAIM, appUser.getRole().name())
+                .claim(ID_CLAIM, String.valueOf(appUser.getId()))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(key)
+                .compact();
     }
 
     public String extractEmail(String token) {
-        throw new UnsupportedOperationException("A implementer");
+        return extractClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return extractClaims(token).get(ROLE_CLAIM, String.class);
+    }
+
+    public Long extractUserId(String token) {
+        return Long.parseLong(extractClaims(token).get(ID_CLAIM, String.class));
     }
 
     public boolean isTokenValid(String token) {
-        throw new UnsupportedOperationException("A implementer");
+        try {
+            extractClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
