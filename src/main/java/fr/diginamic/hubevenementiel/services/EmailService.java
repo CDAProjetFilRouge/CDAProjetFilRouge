@@ -10,7 +10,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${app.frontend-url:http://localhost:4200}")
+    @Value("${app.frontend-url}")
     private String frontendUrl;
 
     @Value("${spring.mail.username}")
@@ -62,6 +62,16 @@ public class EmailService {
                 + confirmLink
                 + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n"
                 + "Ce lien expire dans 1h.");
+
+        mailSender.send(message);
+    }
+
+    public void sendInscriptionCancellationEmail(String toEmail, String eventTitle, String motif) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Votre inscription a été annulée");
+        message.setText("Votre inscription à l'évènement \"" + eventTitle + "\" a été annulée par l'organisateur.\n\n"
+                + "Motif : " + motif);
 
         mailSender.send(message);
     }

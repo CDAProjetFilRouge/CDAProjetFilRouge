@@ -32,19 +32,17 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
 
     /**
      *
-     * @param dateMin  minimal date at which you want to do the search on
-     * @param dateMax  maximal date at which you want to do the serach on
-     * @param pageable settings for the pagination, create a peagble object using
-     *                 PageRequest.of()
+     * @param dateMin starting date at which you want to do the search on
+     * @param dateMax maximal date at which you want to do the serach on
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of club with pagination info
      */
     Page<Club> findByEndValidityDateBetween(LocalDate dateMin, LocalDate dateMax, Pageable pageable);
 
     /**
      *
-     * @param address  address object to search club possessing it
-     * @param pageable settings for the pagination, create a peagble object using
-     *                 PageRequest.of()
+     * @param address address object to search club possessing associated with it
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of club with pagination info
      */
     Page<Club> findByAddress(Address address, Pageable pageable);

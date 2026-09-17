@@ -19,6 +19,11 @@ import java.util.Optional;
 
 public interface EventRepo extends JpaRepository<Event, Long> {
 
+    /**
+     *
+     * @param title title of the event
+     * @return an optional of type event
+     */
     Optional<Event> findByTitle(String title);
 
     Page<Event> findByLocationId(Long id, Pageable pageable);
@@ -29,19 +34,43 @@ public interface EventRepo extends JpaRepository<Event, Long> {
 
     Page<Event> findByLocationCountry(String country, Pageable pageable);
 
+    /**
+     *
+     * @param category
+     * @param pageable
+     * @return
+     */
     Page<Event> findByCategory(Category category, Pageable pageable);
 
     Page<Event> findByStartDateTimeBetween(Pageable pageable, LocalDateTime dateMin, LocalDate dateMax);
 
     Page<Event> findByEndDateTimeBetween(Pageable pageable, LocalDate dateMin, LocalDateTime dateMax);
 
+    /**
+     *
+     * @param status status of the event you want to do the search on
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
+     * @return a list of event with pagination info
+     */
     Page<Event> findByStatus(EventStatus status, Pageable pageable);
 
-    Page<Event> findByStartDateTimeGreaterThanEqualAndEndDateTimeLessThanEqual(LocalDateTime start, LocalDateTime end,
-            Pageable pageable);
+    /**
+     *
+     * @param start starting date of the event you want to do the search on
+     * @param end maximum date of the event you want to do the search on
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
+     * @return a list of events with pagination info
+     */
+    Page<Event> findByStartDateTimeGreaterThanEqualAndEndDateTimeLessThanEqual(LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-    Page<Event> findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(BigDecimal lowerPrice,
-            BigDecimal higherPrice, Pageable pageable);
+    /**
+     *
+     * @param lowerPrice starting price of the event you want to search on
+     * @param higherPrice maximum price of the event you want to search on
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
+     * @return a list of events with pagination info
+     */
+    Page<Event> findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(BigDecimal lowerPrice, BigDecimal higherPrice, Pageable pageable);
 
     @Query("SELECT e FROM Event e WHERE " +
             "(:category IS NULL OR e.category = :category) AND " +
@@ -58,8 +87,18 @@ public interface EventRepo extends JpaRepository<Event, Long> {
             @Param("status") EventStatus status,
             Pageable pageable);
 
+    /**
+     *
+     * @param title title of the event you want to search
+     * @return true or false depending if the event exists or not
+     */
     boolean existsByTitle(String title);
 
+    /**
+     *
+     * @param id id of the event you want to search
+     * @return an optional of type event
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Event e WHERE e.id = :id")
     Optional<Event> findByIdForUpdate(@Param("id") Long id);
