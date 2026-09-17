@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +57,7 @@ public class InscriptionService {
 
     /**
      *
-     * @param userId id of the user to associate the inscription with
+     * @param userId  id of the user to associate the inscription with
      * @param eventId id of the event to associate the inscription with
      * @return inscription saved in the DB
      * @throws HttpException
@@ -78,7 +79,8 @@ public class InscriptionService {
         inscription.setUser(user);
         inscription.setEvent(event);
         inscription.setInscriptionDate(LocalDateTime.now());
-        boolean isAffiliated = user.getClubs().stream().anyMatch(club -> club.getEndValidityDate() == null);
+        boolean isAffiliated = user.getClubs().stream().anyMatch(
+                club -> club.getEndValidityDate() == null || club.getEndValidityDate().isAfter(LocalDate.now()));
         inscription.setPrice(isAffiliated ? event.getAffiliatePrice() : event.getNonAffiliatePrice());
         inscription.setStatus(isEventFull(eventId) ? InscriptionStatus.WAITING_LIST : InscriptionStatus.CONFIRMED);
 
@@ -107,7 +109,7 @@ public class InscriptionService {
 
     /**
      *
-     * @param id id of the user to find inscription associated with
+     * @param id   id of the user to find inscription associated with
      * @param page starting page
      * @param size number of entries per page
      * @return a list of inscription
@@ -126,7 +128,7 @@ public class InscriptionService {
 
     /**
      *
-     * @param id id of the event to find inscription associated with
+     * @param id   id of the event to find inscription associated with
      * @param page starting page
      * @param size number of entries
      * @return a list of inscription
@@ -221,7 +223,7 @@ public class InscriptionService {
 
     /**
      *
-     * @param id id of the inscription to cancel
+     * @param id    id of the inscription to cancel
      * @param motif reason of the cancel
      * @return inscription with the updated status
      * @throws HttpException
@@ -229,7 +231,8 @@ public class InscriptionService {
     @Transactional
     public Inscription cancelByOrganizer(Long id, String motif) throws HttpException {
         if (motif == null || motif.isBlank()) {
-            throw new BadRequestException("Un motif est obligatoire pour annuler une inscription en tant qu'organisateur.");
+            throw new BadRequestException(
+                    "Un motif est obligatoire pour annuler une inscription en tant qu'organisateur.");
         }
 
         Inscription inscription = getInscriptionById(id);

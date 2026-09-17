@@ -261,6 +261,7 @@ public class AppUserService {
         user.setPhone(randomSuffix);
         user.setHashedPassword(UUID.randomUUID().toString());
         user.setStatus(AccountStatus.ANONYMIZE);
+        user.setAddress(null);
 
         userRepo.save(user);
     }

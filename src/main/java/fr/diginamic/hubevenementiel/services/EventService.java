@@ -7,15 +7,20 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
+import fr.diginamic.hubevenementiel.repositories.EventSpecifications;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +59,28 @@ public class EventService {
         }
 
         return optionalEvent.get();
+    }
+
+    /**
+     * Recherche par id unique : pas de Specification ici (reservee aux listes), juste
+     * la meme regle RG14/RG15 verifiee en Java sur l'unique ligne chargee.
+     *
+     * @param eventId id of the event to find
+     * @param principal the authenticated caller (id/role used to check draft visibility)
+     * @return an object of type Event, only if visible to this caller
+     * @throws HttpException
+     */
+    public Event findVisibleById(Long eventId, AppUserPrincipal principal) throws HttpException {
+        Event event = findById(eventId);
+
+        boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
+
+        if (event.getStatus() == EventStatus.DRAFT && !isAdmin && !isOwner) {
+            throw new NotFoundException("Aucun évènement trouvé avec cet identifiant.");
+        }
+
+        return event;
     }
 
     /**
@@ -122,7 +149,7 @@ public class EventService {
      * @throws HttpException
      */
     public List<Event> search(int page, int size, Category category, LocalDateTime startDate, LocalDateTime endDate,
-            Integer minPrice, Integer maxPrice, EventStatus status) throws HttpException {
+            Integer minPrice, Integer maxPrice, EventStatus status, AppUserPrincipal principal) throws HttpException {
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");
@@ -134,9 +161,21 @@ public class EventService {
         BigDecimal minPriceValue = minPrice != null ? BigDecimal.valueOf(minPrice) : null;
         BigDecimal maxPriceValue = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
 
+        Specification<Event> spec = EventSpecifications.visibleTo(principal);
+        for (Specification<Event> filter : Arrays.asList(
+                EventSpecifications.hasCategory(category),
+                EventSpecifications.startsOnOrAfter(startDate),
+                EventSpecifications.endsOnOrBefore(endDate),
+                EventSpecifications.nonAffiliatePriceAtLeast(minPriceValue),
+                EventSpecifications.nonAffiliatePriceAtMost(maxPriceValue),
+                EventSpecifications.hasStatus(status))) {
+            if (filter != null) {
+                spec = spec.and(filter);
+            }
+        }
+
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.search(category, startDate, endDate, minPriceValue, maxPriceValue, status, pageable)
-                .getContent();
+        return eventRepository.findAll(spec, pageable).getContent();
     }
 
     /**
@@ -166,10 +205,16 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event updateEvent(Long eventId, Event modifiedEvent) throws HttpException {
+    public Event updateEvent(Long eventId, Event modifiedEvent, AppUserPrincipal principal) throws HttpException {
 
         Event eventToBeModified = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
+
+        checkOwnership(eventToBeModified, principal);
+
+        if (eventToBeModified.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new ConflictException("Un évènement passé ne peut plus être modifié.");
+        }
 
         eventChecker(modifiedEvent);
 
@@ -198,12 +243,30 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteEvent(Long eventId) throws HttpException {
+    public void deleteEvent(Long eventId, AppUserPrincipal principal) throws HttpException {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
 
+        checkOwnership(event, principal);
+
+        if (!event.getStartDateTime().isAfter(LocalDateTime.now())) {
+            throw new ConflictException("Seul un évènement futur peut être supprimé.");
+        }
+
         eventRepository.delete(event);
+    }
+
+    /**
+     * RG15 : seul le propriétaire de l'évènement ou un administrateur peut le modifier/supprimer.
+     */
+    private void checkOwnership(Event event, AppUserPrincipal principal) throws HttpException {
+        boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
+
+        if (!isAdmin && !isOwner) {
+            throw new ForbiddenException("Seul le propriétaire de cet évènement peut le modifier ou le supprimer.");
+        }
     }
 
 
