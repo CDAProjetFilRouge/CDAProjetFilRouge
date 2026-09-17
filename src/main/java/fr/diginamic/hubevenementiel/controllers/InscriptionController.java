@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +45,7 @@ public class InscriptionController {
         return ResponseEntity.noContent().build();
     }
 
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}/organizer")
     public ResponseEntity<Void> cancelByOrganizer(@PathVariable Long id, @RequestParam String motif)
             throws HttpException {
