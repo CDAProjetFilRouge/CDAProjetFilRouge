@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.mappers.ImageGaleryMapper;
 import fr.diginamic.hubevenementiel.services.ImageService;
 
 @RestController
@@ -22,21 +24,25 @@ import fr.diginamic.hubevenementiel.services.ImageService;
 public class ImageController {
 
     private final ImageService imageService;
+    private final ImageGaleryMapper imageGaleryMapper;
 
-    public ImageController(ImageService imageService) {
+    public ImageController(ImageService imageService, ImageGaleryMapper imageGaleryMapper) {
         this.imageService = imageService;
+        this.imageGaleryMapper = imageGaleryMapper;
     }
 
     @GetMapping
-    public List<Image> getByEvent(@PathVariable Long eventId) throws HttpException {
-        return imageService.findByEvent(eventId);
+    public List<ImageSummaryResponseDto> getByEvent(@PathVariable Long eventId) throws HttpException {
+        return imageService.findByEvent(eventId).stream()
+                .map(imageGaleryMapper::toDto)
+                .toList();
     }
 
     @PostMapping
-    public ResponseEntity<Image> upload(@PathVariable Long eventId, @RequestParam MultipartFile file)
+    public ResponseEntity<ImageSummaryResponseDto> upload(@PathVariable Long eventId, @RequestParam MultipartFile file)
             throws HttpException {
         Image created = imageService.upload(eventId, file);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(imageGaleryMapper.toDto(created));
     }
 
     @DeleteMapping("/{id}")

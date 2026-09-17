@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.diginamic.hubevenementiel.dtos.inscription.InscriptionEventResponseDto;
+import fr.diginamic.hubevenementiel.dtos.inscription.InscriptionResponseDto;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.mappers.InscriptionMapper;
 import fr.diginamic.hubevenementiel.services.InscriptionService;
 
 @RestController
@@ -21,16 +24,18 @@ import fr.diginamic.hubevenementiel.services.InscriptionService;
 public class InscriptionController {
 
     private final InscriptionService inscriptionService;
+    private final InscriptionMapper inscriptionMapper;
 
-    public InscriptionController(InscriptionService inscriptionService) {
+    public InscriptionController(InscriptionService inscriptionService, InscriptionMapper inscriptionMapper) {
         this.inscriptionService = inscriptionService;
+        this.inscriptionMapper = inscriptionMapper;
     }
 
     @PostMapping
-    public ResponseEntity<Inscription> register(@RequestParam Long userId, @RequestParam Long eventId)
+    public ResponseEntity<InscriptionResponseDto> register(@RequestParam Long userId, @RequestParam Long eventId)
             throws HttpException {
         Inscription inscription = inscriptionService.register(userId, eventId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(inscription);
+        return ResponseEntity.status(HttpStatus.CREATED).body(inscriptionMapper.toDto(inscription));
     }
 
     @DeleteMapping("/{id}")
@@ -47,18 +52,22 @@ public class InscriptionController {
     }
 
     @GetMapping("/event/{eventId}")
-    public List<Inscription> getByEvent(
+    public List<InscriptionEventResponseDto> getByEvent(
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
-        return inscriptionService.findByEvent(eventId, page, size);
+        return inscriptionService.findByEvent(eventId, page, size).stream()
+                .map(inscriptionMapper::toEventDto)
+                .toList();
     }
 
     @GetMapping("/user/{userId}")
-    public List<Inscription> getByUser(
+    public List<InscriptionResponseDto> getByUser(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
-        return inscriptionService.findByUser(userId, page, size);
+        return inscriptionService.findByUser(userId, page, size).stream()
+                .map(inscriptionMapper::toDto)
+                .toList();
     }
 }

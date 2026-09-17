@@ -42,7 +42,9 @@ public class ClubMapper {
         entity.setEmail(dto.getEmail());
         entity.setPhone(dto.getPhone());
         entity.setEndValidityDate(dto.getEndValidityDate());
-        entity.setAddress(addressMapper.toEntity(dto.getAddress()));
+        if (dto.getAddress() != null) {
+            entity.setAddress(addressMapper.toEntity(dto.getAddress()));
+        }
 
         return entity;
     }

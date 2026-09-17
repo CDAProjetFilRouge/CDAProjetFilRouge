@@ -9,6 +9,7 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import jakarta.transaction.Transactional;
@@ -29,12 +30,15 @@ public class AppUserService {
 
     private final UserRepo userRepo;
     private final TokenRepo tokenRepo;
+    private final ClubRepo clubRepo;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, EmailService emailService, PasswordEncoder passwordEncoder) {
+    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, ClubRepo clubRepo, EmailService emailService,
+            PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.tokenRepo = tokenRepo;
+        this.clubRepo = clubRepo;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -121,7 +125,7 @@ public class AppUserService {
 
     @Transactional
     public AppUser createAccount(AppUser appUser) throws HttpException {
-        appUserChecker(appUser, false);
+        appUserChecker(appUser, false, true);
 
         if (userRepo.existsByEmail(appUser.getEmail())) {
             throw new ConflictException("Un compte existe déjà avec cette adresse email.");
@@ -152,7 +156,7 @@ public class AppUserService {
     // (pas d'auth branchee sur le projet pour l'instant, cf. #97)
     @Transactional
     public AppUser createAccountByAdmin(AppUser appUser, Role role) throws HttpException {
-        appUserChecker(appUser, true);
+        appUserChecker(appUser, true, true);
 
         if (userRepo.existsByEmail(appUser.getEmail())) {
             throw new ConflictException("Un compte existe déjà avec cette adresse email.");
@@ -166,7 +170,7 @@ public class AppUserService {
         return userRepo.save(appUser);
     }
 
-    public boolean appUserChecker(AppUser appUser, boolean phoneRequired) throws HttpException {
+    public boolean appUserChecker(AppUser appUser, boolean phoneRequired, boolean passwordRequired) throws HttpException {
 
         if (appUser == null) {
             throw new BadRequestException("Le compte ne peut pas être nul.");
@@ -190,12 +194,14 @@ public class AppUserService {
             throw new BadRequestException("L'adresse email n'est pas valide.");
         }
 
-        String password = appUser.getHashedPassword();
-        if (password == null || password.isBlank()) {
-            throw new BadRequestException("Le mot de passe est obligatoire.");
-        }
-        if (password.length() < 12) {
-            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
+        if (passwordRequired) {
+            String password = appUser.getHashedPassword();
+            if (password == null || password.isBlank()) {
+                throw new BadRequestException("Le mot de passe est obligatoire.");
+            }
+            if (password.length() < 12) {
+                throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
+            }
         }
 
         String phone = appUser.getPhone();
@@ -210,7 +216,7 @@ public class AppUserService {
     public AppUser updateOwnAccount(Long id, AppUser modifiedUser) throws HttpException {
         AppUser existing = findById(id);
 
-        appUserChecker(modifiedUser, false);
+        appUserChecker(modifiedUser, false, false);
 
         if (!existing.getEmail().equalsIgnoreCase(modifiedUser.getEmail())
                 && userRepo.existsByEmail(modifiedUser.getEmail())) {
@@ -227,10 +233,10 @@ public class AppUserService {
     }
 
     @Transactional
-    public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser) throws HttpException {
+    public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser, List<Long> clubIds) throws HttpException {
         AppUser existing = findById(id);
 
-        appUserChecker(modifiedUser, true);
+        appUserChecker(modifiedUser, true, false);
 
         if (!existing.getEmail().equalsIgnoreCase(modifiedUser.getEmail())
                 && userRepo.existsByEmail(modifiedUser.getEmail())) {
@@ -243,7 +249,7 @@ public class AppUserService {
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
         existing.setRole(modifiedUser.getRole());
-        existing.setClubs(modifiedUser.getClubs());
+        existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : List.of());
 
         return userRepo.save(existing);
     }
