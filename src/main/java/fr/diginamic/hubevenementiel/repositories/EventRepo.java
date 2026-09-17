@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface EventRepo extends JpaRepository<Event, Long> {
+public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationExecutor<Event> {
 
     /**
      *
@@ -71,22 +72,6 @@ public interface EventRepo extends JpaRepository<Event, Long> {
      * @return a list of events with pagination info
      */
     Page<Event> findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(BigDecimal lowerPrice, BigDecimal higherPrice, Pageable pageable);
-
-    @Query("SELECT e FROM Event e WHERE " +
-            "(:category IS NULL OR e.category = :category) AND " +
-            "(:startDate IS NULL OR e.startDateTime >= :startDate) AND " +
-            "(:endDate IS NULL OR e.endDateTime <= :endDate) AND " +
-            "(:minPrice IS NULL OR e.nonAffiliatePrice >= :minPrice) AND " +
-            "(:maxPrice IS NULL OR e.nonAffiliatePrice <= :maxPrice) AND " +
-            "(:status IS NULL OR e.status = :status) AND " +
-            "e.status <> fr.diginamic.hubevenementiel.enums.EventStatus.DRAFT")
-    Page<Event> search(@Param("category") Category category,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
-            @Param("minPrice") BigDecimal minPrice,
-            @Param("maxPrice") BigDecimal maxPrice,
-            @Param("status") EventStatus status,
-            Pageable pageable);
 
     /**
      *
