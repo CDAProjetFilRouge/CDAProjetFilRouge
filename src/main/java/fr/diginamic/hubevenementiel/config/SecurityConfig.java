@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/account/password/forgot").permitAll()
                         .requestMatchers(HttpMethod.POST, "/account/password/reset").permitAll()
                         .requestMatchers(HttpMethod.GET, "/account/password/confirm").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/PDF/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -29,7 +29,7 @@ public class PDFController {
      * @throws IOException
      * @throws NotFoundException
      */
-    @GetMapping("/event/{id}")
+    @GetMapping("/event/{idEvent}")
     public ResponseEntity<byte[]> eventPDF(@PathVariable Long idEvent) throws IOException, NotFoundException {
         byte[] pdf = pdfService.generateEventPDF(idEvent);
 
@@ -43,7 +43,7 @@ public class PDFController {
      * @throws IOException
      * @throws NotFoundException
      */
-    @GetMapping("/legalDocument/{id}")
+    @GetMapping("/legalDocument/{idDocument}")
     public ResponseEntity<byte[]> legalDocumentPDF(@PathVariable Long idDocument) throws IOException, NotFoundException {
         byte[] pdf = pdfService.generateCUPDF(idDocument);
 

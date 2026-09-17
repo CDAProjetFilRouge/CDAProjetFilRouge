@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.AnonymizationDemandRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,22 +23,24 @@ public class AnonymizationDemandService {
     private final AnonymizationDemandRepo anonymizationDemandRepository;
 
     private final AppUserService appUserService;
+    private final AddressService addressService;
 
     public AnonymizationDemandService(AnonymizationDemandRepo anonymizationDemandRepository,
-            AppUserService appUserService) {
+            AppUserService appUserService, AddressService addressService) {
         this.anonymizationDemandRepository = anonymizationDemandRepository;
         this.appUserService = appUserService;
+        this.addressService = addressService;
     }
 
     /**
      *
-     * @param id id of the demand to find
+     * @param principal the authenticated caller, requesting their own anonymization
      * @return a single object of anonymizationDemand
      * @throws HttpException
      */
-    public AnonymizationDemand request(Long id) throws HttpException {
+    public AnonymizationDemand request(AppUserPrincipal principal) throws HttpException {
 
-        AppUser user = appUserService.findById(id);
+        AppUser user = appUserService.findById(principal.id());
 
         AnonymizationDemand anonymizationDemand = new AnonymizationDemand();
 
@@ -49,15 +52,18 @@ public class AnonymizationDemandService {
     /**
      *
      * @param id id of the demand to validate
-     * @param adminId id of the admin validating the demand
+     * @param principal the authenticated admin validating the demand
      * @return object of type demande
      * @throws HttpException
      */
-    public AnonymizationDemand validate(Long id, Long adminId) throws HttpException {
+    public AnonymizationDemand validate(Long id, AppUserPrincipal principal) throws HttpException {
 
-        AppUser admin = appUserService.findById(adminId);
+        AppUser admin = appUserService.findById(principal.id());
 
         AnonymizationDemand anonymizationDemand = findById(id);
+        if(anonymizationDemand.getRequester().getAddress() == null){
+
+        }
 
         appUserService.anonymizeAccount(anonymizationDemand.getRequester());
 
