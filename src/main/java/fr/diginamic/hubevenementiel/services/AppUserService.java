@@ -133,6 +133,8 @@ public class AppUserService {
 
         appUser.setStatus(AccountStatus.INACTIVE);
         appUser.setRole(Role.MEMBER);
+        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
+        appUser.setCreationDate(LocalDate.now());
 
         AppUser savedUser = userRepo.save(appUser);
 
@@ -162,6 +164,8 @@ public class AppUserService {
 
         appUser.setStatus(AccountStatus.INACTIVE);
         appUser.setRole(role);
+        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
+        appUser.setCreationDate(LocalDate.now());
 
         return userRepo.save(appUser);
     }
