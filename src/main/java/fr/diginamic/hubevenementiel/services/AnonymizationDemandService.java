@@ -50,7 +50,7 @@ public class AnonymizationDemandService {
      *
      * @param id id of the demand to validate
      * @param adminId id of the admin validating the demand
-     * @return object o0f type demande
+     * @return object of type demande
      * @throws HttpException
      */
     public AnonymizationDemand validate(Long id, Long adminId) throws HttpException {
@@ -114,8 +114,8 @@ public class AnonymizationDemandService {
      *
      * @param page starting page
      * @param size number of entries per pages
-     * @param status
-     * @return
+     * @param status to find demands associated with
+     * @return a list of status with pagination info
      * @throws HttpException
      */
     public List<AnonymizationDemand> findByStatus(int page, int size, RequestStatus status) throws HttpException {
@@ -220,7 +220,7 @@ public class AnonymizationDemandService {
      * @param page starting page
      * @param size number of entries per page
      * @param email email of the requester we want to find demand associated with
-     * @return
+     * @return a list of demands with pagination info
      * @throws HttpException
      */
     public List<AnonymizationDemand> findByRequesterEmail(int page, int size, String email) throws HttpException {
