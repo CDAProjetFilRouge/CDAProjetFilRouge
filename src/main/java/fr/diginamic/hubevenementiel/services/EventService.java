@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +23,6 @@ import java.util.Optional;
 public class EventService {
 
     private final EventRepo eventRepository;
-
 
     public EventService(EventRepo eventRepository) {
         this.eventRepository = eventRepository;
@@ -79,7 +77,8 @@ public class EventService {
         return eventRepository.findByCategory(category, pageable).getContent();
     }
 
-    public List<Event> findByDates(int page, int size, LocalDateTime startDate, LocalDateTime endDate) throws HttpException {
+    public List<Event> findByDates(int page, int size, LocalDateTime startDate, LocalDateTime endDate)
+            throws HttpException {
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");
@@ -87,8 +86,7 @@ public class EventService {
 
         Pageable pageable = PageRequest.of(page, size);
         return eventRepository.findByStartDateTimeGreaterThanEqualAndEndDateTimeLessThanEqual(
-                startDate, endDate, pageable
-        ).getContent();
+                startDate, endDate, pageable).getContent();
     }
 
     public List<Event> findByPrice(int page, int size, int lowerPrice, int higherPrice) throws HttpException {
@@ -102,8 +100,7 @@ public class EventService {
 
         Pageable pageable = PageRequest.of(page, size);
         return eventRepository.findByNonAffiliatePriceGreaterThanEqualAndNonAffiliatePriceLessThanEqual(
-                lower, higher, pageable
-        ).getContent();
+                lower, higher, pageable).getContent();
     }
 
     public List<Event> findByStatus(int page, int size, EventStatus EventStatus) {
@@ -138,7 +135,8 @@ public class EventService {
         BigDecimal maxPriceValue = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
 
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.search(category, startDate, endDate, minPriceValue, maxPriceValue, status, pageable).getContent();
+        return eventRepository.search(category, startDate, endDate, minPriceValue, maxPriceValue, status, pageable)
+                .getContent();
     }
 
     /**
@@ -287,6 +285,5 @@ public class EventService {
 
         return true;
     }
-
 
 }

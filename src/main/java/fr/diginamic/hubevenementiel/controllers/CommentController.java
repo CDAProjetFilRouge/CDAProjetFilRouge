@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.diginamic.hubevenementiel.dtos.comment.CommentResponseDto;
 import fr.diginamic.hubevenementiel.entities.Comment;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.mappers.CommentMapper;
 import fr.diginamic.hubevenementiel.services.CommentService;
 
 @RestController
@@ -21,26 +23,30 @@ import fr.diginamic.hubevenementiel.services.CommentService;
 public class CommentController {
 
     private final CommentService commentService;
+    private final CommentMapper commentMapper;
 
-    public CommentController(CommentService commentService) {
+    public CommentController(CommentService commentService, CommentMapper commentMapper) {
         this.commentService = commentService;
+        this.commentMapper = commentMapper;
     }
 
     @GetMapping
-    public List<Comment> getByEvent(
+    public List<CommentResponseDto> getByEvent(
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
-        return commentService.findByEvent(eventId, page, size);
+        return commentService.findByEvent(eventId, page, size).stream()
+                .map(commentMapper::toDto)
+                .toList();
     }
 
     @PostMapping
-    public ResponseEntity<Comment> create(
+    public ResponseEntity<CommentResponseDto> create(
             @PathVariable Long eventId,
             @RequestParam Long authorId,
             @RequestParam String content) throws HttpException {
         Comment created = commentService.createComment(eventId, authorId, content);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentMapper.toDto(created));
     }
 
     @DeleteMapping("/{id}")

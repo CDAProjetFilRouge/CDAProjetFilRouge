@@ -14,9 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.mappers.AppUserMapper;
+import fr.diginamic.hubevenementiel.mappers.AppUserSummaryMapper;
 import fr.diginamic.hubevenementiel.services.AppUserService;
 
 @RestController
@@ -24,48 +31,60 @@ import fr.diginamic.hubevenementiel.services.AppUserService;
 public class AppUserController {
 
     private final AppUserService appUserService;
+    private final AppUserMapper appUserMapper;
+    private final AppUserSummaryMapper appUserSummaryMapper;
 
-    public AppUserController(AppUserService appUserService) {
+    public AppUserController(AppUserService appUserService, AppUserMapper appUserMapper,
+            AppUserSummaryMapper appUserSummaryMapper) {
         this.appUserService = appUserService;
+        this.appUserMapper = appUserMapper;
+        this.appUserSummaryMapper = appUserSummaryMapper;
     }
 
     @GetMapping
-    public List<AppUser> getUsers(
+    public List<AppUserSummaryResponseDto> getUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return appUserService.findAllUsers(page, size);
+        return appUserService.findAllUsers(page, size).stream()
+                .map(appUserSummaryMapper::toDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public AppUser getById(@PathVariable Long id) throws HttpException {
-        return appUserService.findById(id);
+    public AppUserResponseDto getById(@PathVariable Long id) throws HttpException {
+        return appUserMapper.toDto(appUserService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Void> register(@RequestBody AppUser user) throws HttpException {
-        appUserService.createAccount(user);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<AppUserResponseDto> register(@RequestBody AppUserRequestDto requestDto) throws HttpException {
+        AppUser user = appUserMapper.toEntity(requestDto);
+        AppUser created = appUserService.createAccount(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
     }
 
     @PostMapping("/admin")
-    public ResponseEntity<Void> createByAdmin(@RequestBody AppUser user, @RequestParam Role role)
-            throws HttpException {
-        appUserService.createAccountByAdmin(user, role);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<AppUserResponseDto> createByAdmin(@RequestBody AppUserRequestDto requestDto,
+            @RequestParam Role role) throws HttpException {
+        AppUser user = appUserMapper.toEntity(requestDto);
+        AppUser created = appUserService.createAccountByAdmin(user, role);
+        return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateOwnAccount(@PathVariable Long id, @RequestBody AppUser user)
+    public AppUserResponseDto updateOwnAccount(@PathVariable Long id, @RequestBody AppUserUpdateRequestDto requestDto)
             throws HttpException {
-        appUserService.updateOwnAccount(id, user);
-        return ResponseEntity.noContent().build();
+        AppUser modifiedUser = new AppUser();
+        appUserMapper.updateEntityFromDto(requestDto, modifiedUser);
+        AppUser updated = appUserService.updateOwnAccount(id, modifiedUser);
+        return appUserMapper.toDto(updated);
     }
 
     @PutMapping("/{id}/admin")
-    public ResponseEntity<Void> updateByAdmin(@PathVariable Long id, @RequestBody AppUser user)
+    public AppUserResponseDto updateByAdmin(@PathVariable Long id, @RequestBody AppUserAdminUpdateRequestDto requestDto)
             throws HttpException {
-        appUserService.updateAccountByAdmin(id, user);
-        return ResponseEntity.noContent().build();
+        AppUser modifiedUser = appUserMapper.toEntityForAdminUpdate(requestDto);
+        AppUser updated = appUserService.updateAccountByAdmin(id, modifiedUser, requestDto.getClubIds());
+        return appUserMapper.toDto(updated);
     }
 
     @DeleteMapping("/{id}")

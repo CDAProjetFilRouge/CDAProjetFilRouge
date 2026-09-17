@@ -1,27 +1,32 @@
 package fr.diginamic.hubevenementiel.dtos.appUser;
 
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
+import fr.diginamic.hubevenementiel.enums.Role;
 
-public class AppUserRequestDto {
+import java.util.List;
+
+public class AppUserAdminUpdateRequestDto {
 
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
     private String phone;
     private AddressRequestDto address;
+    private Role role;
+    private List<Long> clubIds;
 
-    public AppUserRequestDto() {
+    public AppUserAdminUpdateRequestDto() {
     }
 
-    public AppUserRequestDto(String firstName, String lastName, String email, String password, String phone,
-            AddressRequestDto address) {
+    public AppUserAdminUpdateRequestDto(String firstName, String lastName, String email, String phone,
+            AddressRequestDto address, Role role, List<Long> clubIds) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.password = password;
         this.phone = phone;
         this.address = address;
+        this.role = role;
+        this.clubIds = clubIds;
     }
 
     public String getFirstName() {
@@ -48,20 +53,12 @@ public class AppUserRequestDto {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getPhone() {
         return phone;
     }
 
-    public void setPhone(String phoneNumber) {
-        this.phone = phoneNumber;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public AddressRequestDto getAddress() {
@@ -70,5 +67,21 @@ public class AppUserRequestDto {
 
     public void setAddress(AddressRequestDto address) {
         this.address = address;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public List<Long> getClubIds() {
+        return clubIds;
+    }
+
+    public void setClubIds(List<Long> clubIds) {
+        this.clubIds = clubIds;
     }
 }

@@ -59,6 +59,8 @@ public class AnonymizationDemandService {
 
         AnonymizationDemand anonymizationDemand = findById(id);
 
+        appUserService.anonymizeAccount(anonymizationDemand.getRequester());
+
         anonymizationDemand.setAdmin(admin);
         anonymizationDemand.setApprovedDate(LocalDateTime.now());
         anonymizationDemand.setRequestStatus(RequestStatus.VALIDATE);

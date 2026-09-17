@@ -45,7 +45,7 @@ public class AppUser {
     @Column(name = "creatio_date")
     private LocalDate creationDate;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "address_id")
     private Address address;
 
@@ -62,16 +62,15 @@ public class AppUser {
     private List<LegalDocument> legalDocumentList;
 
     @ManyToMany
-    @JoinTable(name = "AppUser_Club",
-    joinColumns = @JoinColumn(name = "Id_appUser", referencedColumnName = "id"),
-    inverseJoinColumns = @JoinColumn(name = "Id_club", referencedColumnName = "id"))
+    @JoinTable(name = "AppUser_Club", joinColumns = @JoinColumn(name = "Id_appUser", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "Id_club", referencedColumnName = "id"))
     private List<Club> clubs = new ArrayList<>();
 
     public AppUser() {
     };
 
-    public AppUser(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role, String phone,
-            String hashedPassword, String email, String firstName, String lastName, long id) {
+    public AppUser(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role,
+            String phone,
+            String hashedPassword, String email, String firstName, String lastName, Long id) {
         this.creationDate = creationDate;
         this.suspensionEndDate = suspensionEndDate;
         this.status = status;
@@ -156,12 +155,8 @@ public class AppUser {
         this.lastName = lastName;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public void setId(Long id) {

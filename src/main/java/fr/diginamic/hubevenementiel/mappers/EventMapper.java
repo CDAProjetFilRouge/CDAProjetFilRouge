@@ -45,13 +45,16 @@ public class EventMapper {
         Event entity = new Event();
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
-        entity.setLocation(addressMapper.toEntity(dto.getLocation()));
+        if (dto.getLocation() != null) {
+            entity.setLocation(addressMapper.toEntity(dto.getLocation()));
+        }
         entity.setCategory(dto.getCategory());
         entity.setStartDateTime(dto.getStartDateTime());
         entity.setEndDateTime(dto.getEndDateTime());
         entity.setAffiliatePrice(dto.getAffiliatePrice());
         entity.setNonAffiliatePrice(dto.getNonAffiliatePrice());
         entity.setMaxCapacity(dto.getMaxCapacity());
+        entity.setStatus(dto.getStatus());
 
         return entity;
     }

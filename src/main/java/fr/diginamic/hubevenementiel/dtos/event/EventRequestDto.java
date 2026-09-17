@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.dtos.event;
 
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
 import fr.diginamic.hubevenementiel.enums.Category;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,11 +18,12 @@ public class EventRequestDto {
     private BigDecimal affiliatePrice;
     private BigDecimal nonAffiliatePrice;
     private Integer maxCapacity;
+    private EventStatus status;
 
     public EventRequestDto() {
     }
 
-    public EventRequestDto(String title, String description, AddressRequestDto location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity) {
+    public EventRequestDto(String title, String description, AddressRequestDto location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, EventStatus status) {
         this.title = title;
         this.description = description;
         this.location = location;
@@ -31,6 +33,7 @@ public class EventRequestDto {
         this.affiliatePrice = affiliatePrice;
         this.nonAffiliatePrice = nonAffiliatePrice;
         this.maxCapacity = maxCapacity;
+        this.status = status;
     }
 
     public String getTitle() {
@@ -103,5 +106,13 @@ public class EventRequestDto {
 
     public void setMaxCapacity(Integer maxCapacity) {
         this.maxCapacity = maxCapacity;
+    }
+
+    public EventStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EventStatus status) {
+        this.status = status;
     }
 }
