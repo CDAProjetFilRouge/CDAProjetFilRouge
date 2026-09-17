@@ -23,11 +23,12 @@ import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.ClubMapper;
 import fr.diginamic.hubevenementiel.mappers.ClubSummaryMapper;
+import fr.diginamic.hubevenementiel.openapi.ClubApi;
 import fr.diginamic.hubevenementiel.services.ClubService;
 
 @RestController
 @RequestMapping("/clubs")
-public class ClubController {
+public class ClubController implements ClubApi {
 
     private final ClubService clubService;
     private final ClubMapper clubMapper;
@@ -39,6 +40,7 @@ public class ClubController {
         this.clubSummaryMapper = clubSummaryMapper;
     }
 
+    @Override
     @GetMapping
     public List<ClubSummaryResponseDto> getClubs(
             @RequestParam(defaultValue = "0") int page,
@@ -50,11 +52,13 @@ public class ClubController {
                 .toList();
     }
 
+    @Override
     @GetMapping("/{id}")
     public ClubResponseDto getById(@PathVariable Long id) throws HttpException {
         return clubMapper.toDto(clubService.findById(id));
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PostMapping
     public ResponseEntity<ClubResponseDto> create(@RequestBody ClubRequestDto requestDto) throws HttpException {
@@ -63,6 +67,7 @@ public class ClubController {
         return ResponseEntity.status(HttpStatus.CREATED).body(clubMapper.toDto(created));
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}")
     public ClubResponseDto update(@PathVariable Long id, @RequestBody ClubRequestDto requestDto) throws HttpException {
@@ -71,6 +76,7 @@ public class ClubController {
         return clubMapper.toDto(updated);
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
