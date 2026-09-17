@@ -23,7 +23,7 @@ public class Event {
     @Column(name = "description", nullable = false, length = 65535)
     private String description;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "location_id")
     private Address location;
 
