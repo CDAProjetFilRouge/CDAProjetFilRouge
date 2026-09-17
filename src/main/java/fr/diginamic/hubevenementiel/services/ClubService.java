@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +20,6 @@ import java.util.Optional;
 public class ClubService {
 
     private final ClubRepo clubRepository;
-
 
     public ClubService(ClubRepo clubRepository) {
         this.clubRepository = clubRepository;
@@ -71,10 +71,10 @@ public class ClubService {
 
     /**
      *
-     * @param page starting page
-     * @param size number of entries per page
+     * @param page     starting page
+     * @param size     number of entries per page
      * @param category category to find a club by
-     * @param city city to find a club by
+     * @param city     city to find a club by
      * @return a list of Club
      */
     public List<Club> search(int page, int size, Category category, String city) {
@@ -103,7 +103,7 @@ public class ClubService {
 
     /**
      *
-     * @param id if of the club to update
+     * @param id           if of the club to update
      * @param modifiedClub club with the updated information
      * @return updated club
      * @throws HttpException
@@ -125,7 +125,6 @@ public class ClubService {
         existing.setCategory(modifiedClub.getCategory());
         existing.setEmail(modifiedClub.getEmail());
         existing.setPhone(modifiedClub.getPhone());
-        existing.setEndValidityDate(modifiedClub.getEndValidityDate());
         existing.setAddress(modifiedClub.getAddress());
 
         return clubRepository.save(existing);
@@ -142,7 +141,8 @@ public class ClubService {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new NotFoundException("Aucun club n'a été trouvé avec cet identifiant."));
 
-        clubRepository.delete(club);
+        club.setEndValidityDate(LocalDate.now());
+        clubRepository.save(club);
     }
 
     /**
@@ -194,6 +194,5 @@ public class ClubService {
 
         return true;
     }
-
 
 }
