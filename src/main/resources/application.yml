@@ -20,6 +20,7 @@ server:
 
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
+  mail-sender: ${MAIL_SENDER
   jwt:
     expiration-ms: 900000
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
