@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.CommentRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -53,9 +54,9 @@ public class CommentService {
      * @throws HttpException
      */
     @Transactional
-    public Comment createComment(Long eventId, Long authorId, String content) throws HttpException {
+    public Comment createComment(Long eventId, AppUserPrincipal principal, String content) throws HttpException {
         Event event = eventService.findById(eventId);
-        AppUser author = appUserService.findById(authorId);
+        AppUser author = appUserService.findById(principal.id());
 
         if (content == null || content.isBlank()) {
             throw new BadRequestException("Le commentaire ne peut pas être vide.");
