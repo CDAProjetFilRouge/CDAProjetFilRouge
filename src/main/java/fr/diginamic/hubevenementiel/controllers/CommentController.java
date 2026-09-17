@@ -46,7 +46,7 @@ public class CommentController {
 
     @Secured({"ROLE_MEMBER", "ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PutMapping("/{id}")
-    public ResponseEntity<CommentResponseDto> update(@PathVariable Long eventId, @PathVariable Long commentId, @RequestParam String newContent) throws HttpException {
+    public ResponseEntity<CommentResponseDto> update(@PathVariable Long eventId, @PathVariable("id") Long commentId, @RequestParam String newContent) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment updatedComment = commentService.updateComment(eventId, commentId, newContent, principal);
         return ResponseEntity.status(HttpStatus.OK).body(commentMapper.toDto(updatedComment));
@@ -54,7 +54,7 @@ public class CommentController {
 
     @Secured({"ROLE_MEMBER", "ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable Long commentId) throws HttpException {
+    public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable("id") Long commentId) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         commentService.deleteComment(eventId, commentId, principal);
         return ResponseEntity.noContent().build();
