@@ -59,14 +59,16 @@ public class EventController {
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) EventStatus status) throws HttpException {
-        return eventService.search(page, size, category, startDate, endDate, minPrice, maxPrice, status).stream()
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return eventService.search(page, size, category, startDate, endDate, minPrice, maxPrice, status, principal).stream()
                 .map(eventSummaryMapper::toDto)
                 .toList();
     }
 
     @GetMapping("/{id}")
     public EventResponseDto getById(@PathVariable Long id) throws HttpException {
-        return eventMapper.toDto(eventService.findById(id));
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return eventMapper.toDto(eventService.findVisibleById(id, principal));
     }
 
     @GetMapping("/search")
