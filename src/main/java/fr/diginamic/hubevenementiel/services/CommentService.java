@@ -4,12 +4,15 @@ import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Comment;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.CommentRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -67,14 +70,52 @@ public class CommentService {
         return commentRepo.save(comment);
     }
 
+    public void checkModificationRights(Comment comment, AppUserPrincipal connectedUser) throws HttpException {
+        boolean isAuthor = comment.getAuthor().getId().equals(connectedUser.id());
+
+        if (!isAuthor) {
+            throw new ForbiddenException("Seul l'auteur peut modifier son commentaire.");
+        }
+    }
+
+    public void checkDeleteRights(Comment comment, AppUserPrincipal connectedUser) throws HttpException {
+        boolean isAdmin = "ADMINISTRATOR".equals(connectedUser.role());
+        boolean isAuthor = comment.getAuthor().getId().equals(connectedUser.id());
+        boolean isOrganizer = comment.getEvent().getOrganizer().getId().equals(connectedUser.id());
+
+        if (!(isAdmin || isAuthor || isOrganizer)) {
+            throw new ForbiddenException("Vous n'avez pas le droit de supprimer ce commentaire.");
+        }
+    }
+
+    @Transactional
+    public Comment updateComment(Long eventId, Long commentId, String newComment, AppUserPrincipal principal) throws HttpException {
+        Comment comment = findCommentById(commentId);
+
+        if (!comment.getEvent().getId().equals(eventId)) {
+            throw new NotFoundException("Commentaire introuvable.");
+        }
+
+        checkModificationRights(comment, principal);
+
+        comment.setContent(newComment);
+        return commentRepo.save(comment);
+    }
+
     /**
      *
-     * @param id id of the comment to delete
+     * @param commentId id of the comment to delete
      * @throws HttpException
      */
     @Transactional
-    public void deleteComment(Long id) throws HttpException {
-        Comment comment = findCommentById(id);
+    public void deleteComment(Long eventId, Long commentId, AppUserPrincipal principal) throws HttpException {
+        Comment comment = findCommentById(commentId);
+
+        if (!comment.getEvent().getId().equals(eventId)) {
+            throw new NotFoundException("Commentaire introuvable.");
+        }
+
+        checkDeleteRights(comment, principal);
 
         commentRepo.delete(comment);
     }
@@ -96,7 +137,7 @@ public class CommentService {
     public Comment findCommentById(Long id) throws HttpException {
         Optional<Comment> c = commentRepo.findById(id);
         if (c.isEmpty()) {
-            throw new NotFoundException("No comment found with id: " + id);
+            throw new NotFoundException("Aucun commentaire trouvé avec l'id : " + id);
         }
 
         return c.get();
