@@ -88,6 +88,15 @@
       <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
 
+    <!-- Requis au runtime par Argon2PasswordEncoder (Spring Security n'embarque pas
+         sa propre implementation de la primitive Argon2, elle delegue a Bouncy Castle). -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.84</version>
+      <scope>runtime</scope>
+    </dependency>
+
   </dependencies>
 
   <build>

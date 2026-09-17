@@ -32,7 +32,6 @@ public class AppUserService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-
     public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, EmailService emailService, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.tokenRepo = tokenRepo;
@@ -130,6 +129,7 @@ public class AppUserService {
 
         appUser.setStatus(AccountStatus.INACTIVE);
         appUser.setRole(Role.MEMBER);
+        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
         appUser.setCreationDate(LocalDate.now());
 
         AppUser savedUser = userRepo.save(appUser);
@@ -160,6 +160,7 @@ public class AppUserService {
 
         appUser.setStatus(AccountStatus.INACTIVE);
         appUser.setRole(role);
+        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
         appUser.setCreationDate(LocalDate.now());
 
         return userRepo.save(appUser);
