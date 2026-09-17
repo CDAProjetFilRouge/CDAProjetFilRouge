@@ -18,7 +18,9 @@ import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.AnonymisationDemandMapper;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.AnonymizationDemandService;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/anonymization-demands")
@@ -45,16 +47,17 @@ public class AnonymizationDemandController {
     }
 
     @PostMapping
-    public ResponseEntity<AnonymizationDemandResponseDto> request(@RequestParam Long requesterId) throws HttpException {
-        AnonymizationDemand created = anonymizationDemandService.request(requesterId);
+    public ResponseEntity<AnonymizationDemandResponseDto> request() throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        AnonymizationDemand created = anonymizationDemandService.request(principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(anonymizationDemandMapper.toDto(created));
     }
 
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/validate")
-    public AnonymizationDemandResponseDto validate(@PathVariable Long id, @RequestParam Long adminId)
-            throws HttpException {
-        AnonymizationDemand validated = anonymizationDemandService.validate(id, adminId);
+    public AnonymizationDemandResponseDto validate(@PathVariable Long id) throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        AnonymizationDemand validated = anonymizationDemandService.validate(id, principal);
         return anonymizationDemandMapper.toDto(validated);
     }
 }
