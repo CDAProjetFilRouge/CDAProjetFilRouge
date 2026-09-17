@@ -40,7 +40,7 @@ public class PDFService {
 
         StringBuilder address = new StringBuilder();
         address.append(event.getLocation().getStreet1() + ", ");
-        if(!event.getLocation().getStreet2().isEmpty()){
+        if(event.getLocation().getStreet2() != null){
             address.append(event.getLocation().getStreet2()+ ", ");
         }
         address.append(event.getLocation().getCity()+ ", ");
