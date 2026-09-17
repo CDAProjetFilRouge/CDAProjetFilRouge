@@ -184,7 +184,7 @@ public class AppUserService {
         userRepo.save(user);
     }
 
-    public boolean appUserChecker(AppUser appUser, boolean phoneRequired) throws HttpException {
+    public boolean appUserChecker(AppUser appUser, boolean phoneRequired, boolean passwordRequired) throws HttpException {
 
         if (appUser == null) {
             throw new BadRequestException("Le compte ne peut pas être nul.");
