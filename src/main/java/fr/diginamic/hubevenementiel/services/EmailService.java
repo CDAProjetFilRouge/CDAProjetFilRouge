@@ -13,8 +13,8 @@ public class EmailService {
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
-    @Value("${spring.mail.username}")
-    private String fromAddress;
+    @Value("${app.mail-sender}")
+    private String senderAddress;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -24,7 +24,7 @@ public class EmailService {
         String verificationLink = frontendUrl + "/verify?token=" + tokenValue;
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
+        message.setFrom(senderAddress);
         message.setTo(toEmail);
         message.setSubject("MyHubEvent - Vérifiez votre compte!");
         message.setText("Bienvenue !\n\nCliquez sur ce lien pour activer votre compte :\n"
@@ -38,7 +38,7 @@ public class EmailService {
         String resetLink = frontendUrl + "/reset-password?token=" + tokenValue;
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
+        message.setFrom(senderAddress);
         message.setTo(toEmail);
         message.setSubject("MyHubEvent - Confirmation de changement de mot de passe!");
         message.setText("Une demande de changement de mot de passe a été effectuée.\n\n"
@@ -54,7 +54,7 @@ public class EmailService {
         String confirmLink = frontendUrl + "/confirm-password-change?token=" + tokenValue;
 
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
+        message.setFrom(senderAddress);
         message.setTo(toEmail);
         message.setSubject("MyHubEvent - Confirmez votre nouveau mot de passe");
         message.setText("Vous avez choisi un nouveau mot de passe.\n\n"
