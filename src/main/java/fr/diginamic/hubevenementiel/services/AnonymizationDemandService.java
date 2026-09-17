@@ -22,11 +22,13 @@ public class AnonymizationDemandService {
     private final AnonymizationDemandRepo anonymizationDemandRepository;
 
     private final AppUserService appUserService;
+    private final AddressService addressService;
 
     public AnonymizationDemandService(AnonymizationDemandRepo anonymizationDemandRepository,
-            AppUserService appUserService) {
+            AppUserService appUserService, AddressService addressService) {
         this.anonymizationDemandRepository = anonymizationDemandRepository;
         this.appUserService = appUserService;
+        this.addressService = addressService;
     }
 
     /**
@@ -59,6 +61,7 @@ public class AnonymizationDemandService {
 
         AnonymizationDemand anonymizationDemand = findById(id);
 
+        addressService.anonymizeAddress(anonymizationDemand.getRequester().getAddress().getId(), anonymizationDemand.getRequester().getId());
         appUserService.anonymizeAccount(anonymizationDemand.getRequester());
 
         anonymizationDemand.setAdmin(admin);

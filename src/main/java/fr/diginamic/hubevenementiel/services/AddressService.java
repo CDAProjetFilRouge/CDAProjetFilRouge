@@ -1,10 +1,12 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.AddressRepo;
+import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,9 +19,11 @@ import java.util.Optional;
 public class AddressService {
 
     private final AddressRepo addressRepository;
+    private final UserRepo userRepo;
 
-    public AddressService(AddressRepo addressRepository) {
+    public AddressService(AddressRepo addressRepository, UserRepo userRepo) {
         this.addressRepository = addressRepository;
+        this.userRepo = userRepo;
     }
 
     /**
@@ -115,6 +119,26 @@ public class AddressService {
                 .orElseThrow(() -> new NotFoundException("Adresse introuvable avec l'id " + id));
 
         addressRepository.delete(address);
+    }
+
+    /**
+     *
+     * @param idAddress id of the address to find
+     * @param idUser id of the appUser to dissociate the address from
+     * @throws HttpException
+     */
+    @Transactional
+    public void anonymizeAddress(Long idAddress, Long idUser) throws HttpException {
+        Address address = addressRepository.findById(idAddress).orElseThrow(() -> new NotFoundException("No address found with id: "+idAddress));
+        AppUser appUser = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("No app user found with id: "+idUser));
+
+        boolean removed = address.getUsers().removeIf(u -> u.getId().equals(appUser.getId()));
+
+        if(!removed){
+            throw new NotFoundException("AppUser associated with this address");
+        }
+
+        addressRepository.save(address);
     }
 
     /**
