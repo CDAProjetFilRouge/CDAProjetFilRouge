@@ -60,8 +60,10 @@ public class AnonymizationDemandService {
         AppUser admin = appUserService.findById(adminId);
 
         AnonymizationDemand anonymizationDemand = findById(id);
+        if(anonymizationDemand.getRequester().getAddress() == null){
 
-        addressService.anonymizeAddress(anonymizationDemand.getRequester().getAddress().getId(), anonymizationDemand.getRequester().getId());
+        }
+
         appUserService.anonymizeAccount(anonymizationDemand.getRequester());
 
         anonymizationDemand.setAdmin(admin);

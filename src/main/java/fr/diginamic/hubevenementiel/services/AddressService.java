@@ -123,26 +123,6 @@ public class AddressService {
 
     /**
      *
-     * @param idAddress id of the address to find
-     * @param idUser id of the appUser to dissociate the address from
-     * @throws HttpException
-     */
-    @Transactional
-    public void anonymizeAddress(Long idAddress, Long idUser) throws HttpException {
-        Address address = addressRepository.findById(idAddress).orElseThrow(() -> new NotFoundException("No address found with id: "+idAddress));
-        AppUser appUser = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("No app user found with id: "+idUser));
-
-        boolean removed = address.getUsers().removeIf(u -> u.getId().equals(appUser.getId()));
-
-        if(!removed){
-            throw new NotFoundException("AppUser associated with this address");
-        }
-
-        addressRepository.save(address);
-    }
-
-    /**
-     *
      * @param address object of type address to check
      * @return true if all check passed else false
      * @throws HttpException
