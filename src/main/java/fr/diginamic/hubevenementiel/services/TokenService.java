@@ -34,7 +34,7 @@ public class TokenService {
 
     @Transactional
     public void createToken(Token token) throws HttpException {
-        if(token.getValue().isEmpty() || token.getValue() == null){
+        if(token.getValue() == null || token.getValue().isEmpty()){
             throw new NotFoundException("Value for this token is empty");
         }else if(token.getTokenType() == null){
             throw new NotFoundException("Token has no type");
