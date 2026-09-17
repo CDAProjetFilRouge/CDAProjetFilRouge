@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,6 +74,7 @@ public class EventController {
         return eventMapper.toDto(eventService.findByTitle(name));
     }
 
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PostMapping
     public ResponseEntity<EventResponseDto> create(@RequestBody EventRequestDto requestDto) throws HttpException {
         Event event = eventMapper.toEntity(requestDto);
@@ -85,6 +87,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toDto(created));
     }
 
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PutMapping("/{id}")
     public EventResponseDto update(@PathVariable Long id, @RequestBody EventRequestDto requestDto) throws HttpException {
         Event event = eventMapper.toEntity(requestDto);
@@ -92,6 +95,7 @@ public class EventController {
         return eventMapper.toDto(updated);
     }
 
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
         eventService.deleteEvent(id);

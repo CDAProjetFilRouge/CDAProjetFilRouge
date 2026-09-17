@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +42,7 @@ public class AppUserController {
         this.appUserSummaryMapper = appUserSummaryMapper;
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @GetMapping
     public List<AppUserSummaryResponseDto> getUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -62,6 +64,7 @@ public class AppUserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @PostMapping("/admin")
     public ResponseEntity<AppUserResponseDto> createByAdmin(@RequestBody AppUserRequestDto requestDto,
             @RequestParam Role role) throws HttpException {
@@ -79,6 +82,7 @@ public class AppUserController {
         return appUserMapper.toDto(updated);
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/admin")
     public AppUserResponseDto updateByAdmin(@PathVariable Long id, @RequestBody AppUserAdminUpdateRequestDto requestDto)
             throws HttpException {
@@ -87,6 +91,7 @@ public class AppUserController {
         return appUserMapper.toDto(updated);
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
         appUserService.deleteAccount(id);

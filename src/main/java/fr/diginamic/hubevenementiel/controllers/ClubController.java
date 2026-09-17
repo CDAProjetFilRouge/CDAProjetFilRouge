@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,6 +55,7 @@ public class ClubController {
         return clubMapper.toDto(clubService.findById(id));
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @PostMapping
     public ResponseEntity<ClubResponseDto> create(@RequestBody ClubRequestDto requestDto) throws HttpException {
         Club club = clubMapper.toEntity(requestDto);
@@ -61,6 +63,7 @@ public class ClubController {
         return ResponseEntity.status(HttpStatus.CREATED).body(clubMapper.toDto(created));
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}")
     public ClubResponseDto update(@PathVariable Long id, @RequestBody ClubRequestDto requestDto) throws HttpException {
         Club club = clubMapper.toEntity(requestDto);
@@ -68,6 +71,7 @@ public class ClubController {
         return clubMapper.toDto(updated);
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
         clubService.deleteClub(id);
