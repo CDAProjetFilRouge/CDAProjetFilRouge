@@ -78,7 +78,8 @@ public interface EventRepo extends JpaRepository<Event, Long> {
             "(:endDate IS NULL OR e.endDateTime <= :endDate) AND " +
             "(:minPrice IS NULL OR e.nonAffiliatePrice >= :minPrice) AND " +
             "(:maxPrice IS NULL OR e.nonAffiliatePrice <= :maxPrice) AND " +
-            "(:status IS NULL OR e.status = :status)")
+            "(:status IS NULL OR e.status = :status) AND " +
+            "e.status <> fr.diginamic.hubevenementiel.enums.EventStatus.DRAFT")
     Page<Event> search(@Param("category") Category category,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
