@@ -7,8 +7,10 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -166,10 +168,16 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event updateEvent(Long eventId, Event modifiedEvent) throws HttpException {
+    public Event updateEvent(Long eventId, Event modifiedEvent, AppUserPrincipal principal) throws HttpException {
 
         Event eventToBeModified = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
+
+        checkOwnership(eventToBeModified, principal);
+
+        if (eventToBeModified.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new ConflictException("Un évènement passé ne peut plus être modifié.");
+        }
 
         eventChecker(modifiedEvent);
 
@@ -198,12 +206,30 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteEvent(Long eventId) throws HttpException {
+    public void deleteEvent(Long eventId, AppUserPrincipal principal) throws HttpException {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
 
+        checkOwnership(event, principal);
+
+        if (!event.getStartDateTime().isAfter(LocalDateTime.now())) {
+            throw new ConflictException("Seul un évènement futur peut être supprimé.");
+        }
+
         eventRepository.delete(event);
+    }
+
+    /**
+     * RG15 : seul le propriétaire de l'évènement ou un administrateur peut le modifier/supprimer.
+     */
+    private void checkOwnership(Event event, AppUserPrincipal principal) throws HttpException {
+        boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
+
+        if (!isAdmin && !isOwner) {
+            throw new ForbiddenException("Seul le propriétaire de cet évènement peut le modifier ou le supprimer.");
+        }
     }
 
 

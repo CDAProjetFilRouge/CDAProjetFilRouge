@@ -91,14 +91,16 @@ public class EventController {
     @PutMapping("/{id}")
     public EventResponseDto update(@PathVariable Long id, @RequestBody EventRequestDto requestDto) throws HttpException {
         Event event = eventMapper.toEntity(requestDto);
-        Event updated = eventService.updateEvent(id, event);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Event updated = eventService.updateEvent(id, event, principal);
         return eventMapper.toDto(updated);
     }
 
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
-        eventService.deleteEvent(id);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        eventService.deleteEvent(id, principal);
         return ResponseEntity.noContent().build();
     }
 }
