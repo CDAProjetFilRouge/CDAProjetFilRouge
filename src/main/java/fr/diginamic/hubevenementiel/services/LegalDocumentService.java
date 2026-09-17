@@ -28,6 +28,12 @@ public class LegalDocumentService {
         return legalDocumentRepo.findAll();
     }
 
+    /**
+     *
+     * @param id id of the document to find
+     * @return object of type LegalDocument
+     * @throws HttpException
+     */
     public LegalDocument getDocumentById(Long id) throws HttpException {
         Optional<LegalDocument> document = legalDocumentRepo.findById(id);
 
@@ -73,6 +79,12 @@ public class LegalDocumentService {
         return documents;
     }
 
+    /**
+     *
+     * @param type type to find documents by
+     * @return object of type LegalDocument
+     * @throws HttpException
+     */
     public LegalDocument findLatestByType(DocumentType type) throws HttpException {
         Optional<LegalDocument> document = legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(type);
 
@@ -89,6 +101,13 @@ public class LegalDocumentService {
     // createNewVersion
     // gere les deux cas (premiere creation = version 1, sinon version = derniere +
     // 1).
+
+    /**
+     *
+     * @param document document to save in the DB
+     * @return document saved in the DB
+     * @throws HttpException
+     */
     @Transactional
     public LegalDocument createNewVersion(LegalDocument document) throws HttpException {
         legalDocumentChecker(document);
@@ -110,6 +129,12 @@ public class LegalDocumentService {
         legalDocumentRepo.delete(document);
     }
 
+    /**
+     *
+     * @param document document to perform the check on
+     * @return true if the checks passed else false
+     * @throws HttpException
+     */
     public boolean legalDocumentChecker(LegalDocument document) throws HttpException {
 
         if (document == null) {

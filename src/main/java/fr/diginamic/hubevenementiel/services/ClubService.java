@@ -31,6 +31,12 @@ public class ClubService {
         return clubRepository.findAll(pageable).getContent();
     }
 
+    /**
+     *
+     * @param clubId id of the club to search for
+     * @return object of type Club
+     * @throws HttpException
+     */
     public Club findById(Long clubId) throws HttpException {
         Optional<Club> optionalClub = clubRepository.findById(clubId);
 
@@ -63,12 +69,26 @@ public class ClubService {
         return clubRepository.findByAddressCity(cityName, pageable).getContent();
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @param category category to find a club by
+     * @param city city to find a club by
+     * @return a list of Club
+     */
     public List<Club> search(int page, int size, Category category, String city) {
         Pageable pageable = PageRequest.of(page, size);
 
         return clubRepository.search(category, city, pageable).getContent();
     }
 
+    /**
+     *
+     * @param club club to save in the DB
+     * @return club saved in the DB
+     * @throws HttpException
+     */
     @Transactional
     public Club createClub(Club club) throws HttpException {
 
@@ -81,6 +101,13 @@ public class ClubService {
         return clubRepository.save(club);
     }
 
+    /**
+     *
+     * @param id if of the club to update
+     * @param modifiedClub club with the updated information
+     * @return updated club
+     * @throws HttpException
+     */
     @Transactional
     public Club updateClub(Long id, Club modifiedClub) throws HttpException {
 
@@ -104,6 +131,11 @@ public class ClubService {
         return clubRepository.save(existing);
     }
 
+    /**
+     *
+     * @param clubId id of the club to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteClub(Long clubId) throws HttpException {
 
@@ -113,6 +145,12 @@ public class ClubService {
         clubRepository.delete(club);
     }
 
+    /**
+     *
+     * @param club club to perform the checks on
+     * @return true if all checks passed else false
+     * @throws HttpException
+     */
     public boolean clubChecker(Club club) throws HttpException {
 
         if (club == null) {

@@ -29,6 +29,14 @@ public class CommentService {
         this.eventService = eventService;
     }
 
+    /**
+     *
+     * @param eventId id of the event we want to get all the comment from
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of comments
+     * @throws HttpException
+     */
     public List<Comment> findByEvent(Long eventId, int page, int size) throws HttpException {
         eventService.findById(eventId);
 
@@ -36,6 +44,14 @@ public class CommentService {
         return commentRepo.findByEventId(eventId, pageable).getContent();
     }
 
+    /**
+     *
+     * @param eventId id of the event to associate the comment with
+     * @param authorId id of the author to associate the comment with
+     * @param content content of the comment
+     * @return savec comment in the DB
+     * @throws HttpException
+     */
     @Transactional
     public Comment createComment(Long eventId, Long authorId, String content) throws HttpException {
         Event event = eventService.findById(eventId);
@@ -51,6 +67,11 @@ public class CommentService {
         return commentRepo.save(comment);
     }
 
+    /**
+     *
+     * @param id id of the comment to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteComment(Long id) throws HttpException {
         Comment comment = findCommentById(id);
@@ -58,10 +79,20 @@ public class CommentService {
         commentRepo.delete(comment);
     }
 
+    /**
+     *
+     * @return return a list of comments
+     */
     public List<Comment> getAllComment() {
         return commentRepo.findAll();
     }
 
+    /**
+     *
+     * @param id id of the comment to find
+     * @return object of type Comment
+     * @throws HttpException
+     */
     public Comment findCommentById(Long id) throws HttpException {
         Optional<Comment> c = commentRepo.findById(id);
         if (c.isEmpty()) {
@@ -71,6 +102,14 @@ public class CommentService {
         return c.get();
     }
 
+    /**
+     *
+     * @param id id of the author to find all comments associated with
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of comments
+     * @throws HttpException
+     */
     public List<Comment> findByAuthorId(Long id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Comment> comments = commentRepo.findByAuthorId(id, pageable).getContent();
@@ -82,6 +121,14 @@ public class CommentService {
         return comments;
     }
 
+    /**
+     *
+     * @param id id of the event to find all comments associated with
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of comments
+     * @throws HttpException
+     */
     public List<Comment> findByEventId(Long id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Comment> comments = commentRepo.findByEventId(id, pageable).getContent();
@@ -93,6 +140,15 @@ public class CommentService {
         return comments;
     }
 
+    /**
+     *
+     * @param dateMin starting date to do the search on
+     * @param dateMax maximum date to do the search on
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of comments
+     * @throws HttpException
+     */
     public List<Comment> findByCreationDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size)
             throws HttpException {
         Pageable pageable = PageRequest.of(page, size);

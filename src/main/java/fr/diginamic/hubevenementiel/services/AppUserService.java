@@ -43,17 +43,37 @@ public class AppUserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     *
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of AppUser
+     */
     public List<AppUser> findAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return userRepo.findAll(pageable).getContent();
     }
 
+    /**
+     *
+     * @param id id of the AppUser you want to find
+     * @return a object of type AppUser
+     * @throws NotFoundException
+     */
     public AppUser findById(Long id) throws NotFoundException {
         AppUser user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found with id: " + id));
 
         return user;
     }
 
+    /**
+     *
+     * @param lastName last name to search an AppUser on
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of AppUser
+     * @throws HttpException
+     */
     public List<AppUser> findByLastName(String lastName, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByLastName(lastName, pageable).getContent();
@@ -64,6 +84,14 @@ public class AppUserService {
         return users;
     }
 
+    /**
+     *
+     * @param firstName first name to search an AppUser on
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of AppUser
+     * @throws HttpException
+     */
     public List<AppUser> findByFirstName(String firstName, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByFirstName(firstName, pageable).getContent();
@@ -74,6 +102,12 @@ public class AppUserService {
         return users;
     }
 
+    /**
+     *
+     * @param email email to search an AppUser on
+     * @return an object of AppUser
+     * @throws HttpException
+     */
     public AppUser findByEmail(String email) throws HttpException {
         AppUser user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found with this email: " + email));
@@ -81,6 +115,14 @@ public class AppUserService {
         return user;
     }
 
+    /**
+     *
+     * @param role role to search an AppUser on
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of AppUser
+     * @throws HttpException
+     */
     public List<AppUser> findByRole(Role role, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByRole(role, pageable).getContent();
@@ -91,6 +133,14 @@ public class AppUserService {
         return users;
     }
 
+    /**
+     *
+     * @param status status to search an AppUser on
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of AppUser
+     * @throws HttpException
+     */
     public List<AppUser> findByStatus(AccountStatus status, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<AppUser> users = userRepo.findByStatus(status, pageable).getContent();
@@ -101,6 +151,15 @@ public class AppUserService {
         return users;
     }
 
+    /**
+     *
+     * @param dateMin starting date to do the search on
+     * @param dateMax maximum date to do the search on
+     * @param page starting page
+     * @param size number of entries per page
+     * @return a list of AppUser
+     * @throws HttpException
+     */
     public List<AppUser> findBySuspensionEndDate(LocalDateTime dateMin, LocalDateTime dateMax, int page, int size)
             throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
@@ -112,6 +171,15 @@ public class AppUserService {
         return users;
     }
 
+    /**
+     *
+     * @param dateMin starting date to do the search on
+     * @param dateMax maximum date to do the search on
+     * @param page starting page
+     * @param size number of entries
+     * @return  a list of AppUser
+     * @throws HttpException
+     */
     public List<AppUser> findByCreationDateBetween(LocalDate dateMin, LocalDate dateMax, int page, int size)
             throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
@@ -123,6 +191,12 @@ public class AppUserService {
         return users;
     }
 
+    /**
+     *
+     * @param appUser AppUser to save in the DB
+     * @return AppUser saved in the DB
+     * @throws HttpException
+     */
     @Transactional
     public AppUser createAccount(AppUser appUser) throws HttpException {
         appUserChecker(appUser, false, true);
@@ -152,6 +226,13 @@ public class AppUserService {
         return savedUser;
     }
 
+    /**
+     *
+     * @param appUser AppUser to save in the DB as admin
+     * @param role role to assign the AppUser to
+     * @return AppUser saved in the DB
+     * @throws HttpException
+     */
     // TODO securite : aucune verification que l'appelant est bien administrateur
     // (pas d'auth branchee sur le projet pour l'instant, cf. #97)
     @Transactional
@@ -183,7 +264,14 @@ public class AppUserService {
 
         userRepo.save(user);
     }
-
+        /**
+     *
+     * @param appUser AppUser to perform the checks on
+     * @param phoneRequired set the state of the requirement
+     * @param passwordRequired set the state of the requirement
+     * @return return true if the AppUser passed all checks else return false
+     * @throws HttpException
+     */
     public boolean appUserChecker(AppUser appUser, boolean phoneRequired, boolean passwordRequired) throws HttpException {
 
         if (appUser == null) {
@@ -226,6 +314,13 @@ public class AppUserService {
         return true;
     }
 
+    /**
+     *
+     * @param id id of the AppUser to update
+     * @param modifiedUser updated AppUser information
+     * @return modified AppUser
+     * @throws HttpException
+     */
     @Transactional
     public AppUser updateOwnAccount(Long id, AppUser modifiedUser) throws HttpException {
         AppUser existing = findById(id);
@@ -246,6 +341,13 @@ public class AppUserService {
         return userRepo.save(existing);
     }
 
+    /**
+     *
+     * @param id if of the AppUser to update
+     * @param modifiedUser updated AppUser information
+     * @return modified AppUser
+     * @throws HttpException
+     */
     @Transactional
     public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser, List<Long> clubIds) throws HttpException {
         AppUser existing = findById(id);
@@ -268,6 +370,11 @@ public class AppUserService {
         return userRepo.save(existing);
     }
 
+    /**
+     *
+     * @param id id of the AppUser to deleted
+     * @throws HttpException
+     */
     @Transactional
     public void requestPasswordChange(Long userId, String currentPassword, String newPassword) throws HttpException {
         AppUser user = findById(userId);
