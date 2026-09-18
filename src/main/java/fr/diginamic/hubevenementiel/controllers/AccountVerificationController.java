@@ -1,8 +1,10 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.AccountActivationRequestDto;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.openapi.AccountVerificationApi;
 import fr.diginamic.hubevenementiel.services.AppUserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,6 +56,13 @@ public class AccountVerificationController implements AccountVerificationApi {
             @RequestParam String currentPassword,
             @RequestParam String newPassword) throws HttpException {
         appUserService.requestPasswordChange(userId, currentPassword, newPassword);
+        return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @PostMapping("/activate")
+    public ResponseEntity<Void> activateAccount(@Valid @RequestBody AccountActivationRequestDto dto) throws HttpException {
+        appUserService.activateAccount(dto.getToken(), dto.getTemporaryPassword(), dto.getNewPassword());
         return ResponseEntity.ok().build();
     }
 }

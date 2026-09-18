@@ -75,4 +75,20 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendAccountActivationEmail(String toEmail, String tokenValue, String temporaryPassword) {
+        String activationLink = frontendUrl + "/activate-account?token=" + tokenValue;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderAddress);
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Activation de votre compte");
+        message.setText("Un compte a été créé pour vous sur MyHubEvent.\n\n"
+                + "Mot de passe temporaire : " + temporaryPassword + "\n\n"
+                + "Cliquez sur ce lien pour l'activer et choisir votre mot de passe définitif :\n"
+                + activationLink
+                + "\n\nCe lien expire dans 1h.");
+
+        mailSender.send(message);
+    }
 }

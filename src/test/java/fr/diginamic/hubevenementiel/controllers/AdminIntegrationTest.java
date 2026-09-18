@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -102,16 +103,16 @@ class AdminIntegrationTest {
                 "firstName", "Nouveau",
                 "lastName", "Organisateur",
                 "email", uniqueEmail("cree-par-admin"),
-                "password", PASSWORD,
-                "phone", "0600000000"
+                "phone", "0600000000",
+                "role", "ORGANIZER"
         );
 
         mockMvc.perform(post("/users/admin")
                         .header("Authorization", "Bearer " + token)
-                        .param("role", "ORGANIZER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("ORGANIZER"));
     }
 
     @Test
@@ -123,13 +124,12 @@ class AdminIntegrationTest {
                 "firstName", "Nouveau",
                 "lastName", "Admin",
                 "email", uniqueEmail("tentative"),
-                "password", PASSWORD,
-                "phone", "0600000000"
+                "phone", "0600000000",
+                "role", "ADMINISTRATOR"
         );
 
         mockMvc.perform(post("/users/admin")
                         .header("Authorization", "Bearer " + token)
-                        .param("role", "ADMINISTRATOR")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isForbidden());
