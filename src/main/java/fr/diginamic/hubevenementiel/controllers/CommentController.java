@@ -13,11 +13,12 @@ import fr.diginamic.hubevenementiel.dtos.comment.CommentResponseDto;
 import fr.diginamic.hubevenementiel.entities.Comment;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.CommentMapper;
+import fr.diginamic.hubevenementiel.openapi.CommentApi;
 import fr.diginamic.hubevenementiel.services.CommentService;
 
 @RestController
 @RequestMapping("/events/{eventId}/comments")
-public class CommentController {
+public class CommentController implements CommentApi {
 
     private final CommentService commentService;
     private final CommentMapper commentMapper;
@@ -27,6 +28,7 @@ public class CommentController {
         this.commentMapper = commentMapper;
     }
 
+    @Override
     @GetMapping
     public List<CommentResponseDto> getByEvent(
             @PathVariable Long eventId,
@@ -37,6 +39,7 @@ public class CommentController {
                 .toList();
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<CommentResponseDto> create(@PathVariable Long eventId, @RequestParam String content) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -44,6 +47,7 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(commentMapper.toDto(created));
     }
 
+    @Override
     @Secured({"ROLE_MEMBER", "ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PutMapping("/{id}")
     public ResponseEntity<CommentResponseDto> update(@PathVariable Long eventId, @PathVariable("id") Long commentId, @RequestParam String newContent) throws HttpException {
@@ -52,6 +56,7 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.OK).body(commentMapper.toDto(updatedComment));
     }
 
+    @Override
     @Secured({"ROLE_MEMBER", "ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable("id") Long commentId) throws HttpException {

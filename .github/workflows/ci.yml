@@ -9,6 +9,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: hub_evenementiel
+          MARIADB_USER: hub_evenementiel_app
+          MARIADB_PASSWORD: changeme
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      BREVO_SMTP_LOGIN: ci-dummy@example.com
+      BREVO_SMTP_KEY: ci-dummy-key
     steps:
       - uses: actions/checkout@v4
 

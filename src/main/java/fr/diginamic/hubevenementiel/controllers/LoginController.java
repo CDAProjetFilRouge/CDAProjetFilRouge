@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.controllers;
 
 import fr.diginamic.hubevenementiel.dtos.auth.LoginRequestDto;
 import fr.diginamic.hubevenementiel.dtos.auth.LoginResponseDto;
+import fr.diginamic.hubevenementiel.openapi.LoginApi;
 import fr.diginamic.hubevenementiel.security.AppUserDetails;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class LoginController {
+public class LoginController implements LoginApi {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -23,6 +24,7 @@ public class LoginController {
         this.jwtService = jwtService;
     }
 
+    @Override
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
         Authentication authentication = authenticationManager.authenticate(

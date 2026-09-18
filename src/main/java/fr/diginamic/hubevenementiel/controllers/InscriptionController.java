@@ -18,11 +18,12 @@ import fr.diginamic.hubevenementiel.dtos.inscription.InscriptionResponseDto;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.InscriptionMapper;
+import fr.diginamic.hubevenementiel.openapi.InscriptionApi;
 import fr.diginamic.hubevenementiel.services.InscriptionService;
 
 @RestController
 @RequestMapping("/inscriptions")
-public class InscriptionController {
+public class InscriptionController implements InscriptionApi {
 
     private final InscriptionService inscriptionService;
     private final InscriptionMapper inscriptionMapper;
@@ -32,6 +33,7 @@ public class InscriptionController {
         this.inscriptionMapper = inscriptionMapper;
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<InscriptionResponseDto> register(@RequestParam Long userId, @RequestParam Long eventId)
             throws HttpException {
@@ -39,12 +41,14 @@ public class InscriptionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(inscriptionMapper.toDto(inscription));
     }
 
+    @Override
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelByMember(@PathVariable Long id) throws HttpException {
         inscriptionService.cancelByMember(id);
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}/organizer")
     public ResponseEntity<Void> cancelByOrganizer(@PathVariable Long id, @RequestParam String motif)
@@ -53,6 +57,7 @@ public class InscriptionController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @GetMapping("/event/{eventId}")
     public List<InscriptionEventResponseDto> getByEvent(
             @PathVariable Long eventId,
@@ -63,6 +68,7 @@ public class InscriptionController {
                 .toList();
     }
 
+    @Override
     @GetMapping("/user/{userId}")
     public List<InscriptionResponseDto> getByUser(
             @PathVariable Long userId,

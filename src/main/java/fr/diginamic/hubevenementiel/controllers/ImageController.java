@@ -18,11 +18,12 @@ import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.ImageGaleryMapper;
+import fr.diginamic.hubevenementiel.openapi.ImageApi;
 import fr.diginamic.hubevenementiel.services.ImageService;
 
 @RestController
 @RequestMapping("/events/{eventId}/images")
-public class ImageController {
+public class ImageController implements ImageApi {
 
     private final ImageService imageService;
     private final ImageGaleryMapper imageGaleryMapper;
@@ -32,6 +33,7 @@ public class ImageController {
         this.imageGaleryMapper = imageGaleryMapper;
     }
 
+    @Override
     @GetMapping
     public List<ImageSummaryResponseDto> getByEvent(@PathVariable Long eventId) throws HttpException {
         return imageService.findByEvent(eventId).stream()
@@ -39,6 +41,7 @@ public class ImageController {
                 .toList();
     }
 
+    @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PostMapping
     public ResponseEntity<ImageSummaryResponseDto> upload(@PathVariable Long eventId, @RequestParam MultipartFile file)
@@ -47,6 +50,7 @@ public class ImageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(imageGaleryMapper.toDto(created));
     }
 
+    @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable Long id) throws HttpException {
