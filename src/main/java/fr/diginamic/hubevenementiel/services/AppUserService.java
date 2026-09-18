@@ -7,11 +7,13 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.enums.TokenType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.PageRequest;
@@ -323,7 +325,11 @@ public class AppUserService {
      * @throws HttpException
      */
     @Transactional
-    public AppUser updateOwnAccount(Long id, AppUser modifiedUser) throws HttpException {
+    public AppUser updateOwnAccount(Long id, AppUser modifiedUser, AppUserPrincipal principal) throws HttpException {
+        if (!id.equals(principal.id())) {
+            throw new ForbiddenException("Vous ne pouvez modifier que votre propre compte.");
+        }
+
         AppUser existing = findById(id);
 
         appUserChecker(modifiedUser, false, false);
