@@ -17,7 +17,7 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
     /**
      *
      * @param name name of the club you want to do a search on
-     * @return a list of club with pagination info
+     * @return an optional of type Club
      */
     Optional<Club> findByName(String name);
 

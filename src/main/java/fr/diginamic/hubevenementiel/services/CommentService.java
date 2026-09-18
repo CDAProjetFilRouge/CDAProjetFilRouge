@@ -52,7 +52,7 @@ public class CommentService {
      * @param eventId id of the event to associate the comment with
      * @param authorId id of the author to associate the comment with
      * @param content content of the comment
-     * @return savec comment in the DB
+     * @return saved comment in the DB
      * @throws HttpException
      */
     @Transactional
@@ -104,7 +104,9 @@ public class CommentService {
 
     /**
      *
+     * @param eventId id of the event the comment must belong to
      * @param commentId id of the comment to delete
+     * @param principal the authenticated caller, must be the author, the event's organizer or an admin
      * @throws HttpException
      */
     @Transactional

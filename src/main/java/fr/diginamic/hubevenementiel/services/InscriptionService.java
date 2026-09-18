@@ -201,6 +201,7 @@ public class InscriptionService {
     /**
      *
      * @param id id of the inscription to cancel
+     * @param principal the authenticated caller, must be the inscription's owner
      * @return inscription with the updated status
      * @throws HttpException
      */
