@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
@@ -7,6 +8,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
+import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,9 +22,11 @@ import java.util.Optional;
 public class ClubService {
 
     private final ClubRepo clubRepository;
+    private final UserRepo userRepo;
 
-    public ClubService(ClubRepo clubRepository) {
+    public ClubService(ClubRepo clubRepository, UserRepo userRepo) {
         this.clubRepository = clubRepository;
+        this.userRepo = userRepo;
     }
 
     public List<Club> findAllClubs(int page, int size) {
@@ -99,6 +103,21 @@ public class ClubService {
         }
 
         return clubRepository.save(club);
+    }
+
+    /**
+     *
+     * @param idClub id of the club we want to associate the AppUser with
+     * @param idUser id of the AppUser we want to associate the club with
+     * @throws HttpException
+     */
+    @Transactional
+    public void associateUserToClub(Long idClub, Long idUser) throws HttpException {
+        AppUser user = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("No AppUser found with id: "+idUser));
+        Club club = clubRepository.findById(idClub).orElseThrow(() -> new NotFoundException("No Club found with id: "+idClub));
+
+        user.getClubs().add(club);
+        club.getAppUsers().add(user);
     }
 
     /**

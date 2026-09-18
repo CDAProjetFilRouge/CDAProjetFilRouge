@@ -65,4 +65,15 @@ public interface ClubApi {
             @ApiResponse(responseCode = "404", description = "Club introuvable")
     })
     ResponseEntity<Void> delete(@Parameter(description = "Identifiant du club", required = true) Long id) throws HttpException;
+
+    @Operation(summary = "Assigne un AppUser à un Club vie leurs id respectif", description = "Réversé aux organizateurs et admins")
+    @ApiResponses({
+            @ApiResponse(responseCode = "205", description = "Membre assigné avec succés!"),
+            @ApiResponse(responseCode = "401", description = "Non autenthifié"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER requis"),
+            @ApiResponse(responseCode = "404", description = "Club ou AppUser introuvable")
+    })
+    ResponseEntity<Void> associateUser(@Parameter(description = "id of the Appuser we want to associate to a club", required = true) Long idUser,
+                                       @Parameter(description = "id of the Club we want to associate the AppUser with", required = true) Long idClub) throws HttpException;
+
 }

@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -82,5 +83,12 @@ public class ClubController implements ClubApi {
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
         clubService.deleteClub(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Secured("ROLE_ORGANIZER")
+    @PostMapping("associateUser/{idUser}/club/{idClub}")
+    public ResponseEntity<String> associateUser(@PathVariable Long idUser, @PathVariable Long idClub) throws HttpException{
+        clubService.associateUserToClub(idClub, idUser);
+        return ResponseEntity.ok("Le member avec l'id: "+idUser+" a bien été ajouté au club avec l'id: "+idClub);
     }
 }
