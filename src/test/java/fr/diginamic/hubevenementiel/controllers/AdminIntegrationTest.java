@@ -25,6 +25,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -102,16 +106,16 @@ class AdminIntegrationTest {
                 "firstName", "Nouveau",
                 "lastName", "Organisateur",
                 "email", uniqueEmail("cree-par-admin"),
-                "password", PASSWORD,
-                "phone", "0600000000"
+                "phone", "0600000000",
+                "role", "ORGANIZER"
         );
 
         mockMvc.perform(post("/users/admin")
                         .header("Authorization", "Bearer " + token)
-                        .param("role", "ORGANIZER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("ORGANIZER"));
     }
 
     @Test
@@ -123,16 +127,69 @@ class AdminIntegrationTest {
                 "firstName", "Nouveau",
                 "lastName", "Admin",
                 "email", uniqueEmail("tentative"),
-                "password", PASSWORD,
-                "phone", "0600000000"
+                "phone", "0600000000",
+                "role", "ADMINISTRATOR"
         );
 
         mockMvc.perform(post("/users/admin")
                         .header("Authorization", "Bearer " + token)
-                        .param("role", "ADMINISTRATOR")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------------------------------------------------------------
+    // Email d'information lors d'une modification hors mot de passe
+    // ---------------------------------------------------------------
+
+    @Test
+    void updateOwnAccount_sendsInfoEmailWithoutPasswordEmail() throws Exception {
+        AppUser member = createUser("member", Role.MEMBER);
+        String token = loginAndGetToken(member.getEmail());
+        String newEmail = uniqueEmail("member-modifie");
+
+        Map<String, Object> payload = Map.of(
+                "firstName", "Modifie",
+                "lastName", member.getLastName(),
+                "email", newEmail,
+                "phone", member.getPhone()
+        );
+
+        mockMvc.perform(put("/users/" + member.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        verify(emailService).sendAccountInfoUpdatedEmail(newEmail);
+        verify(emailService, never()).sendPasswordResetEmail(any(), any());
+        verify(emailService, never()).sendPasswordChangeConfirmationEmail(any(), any());
+    }
+
+    @Test
+    void updateByAdmin_sendsInfoEmailWithoutPasswordEmail() throws Exception {
+        AppUser admin = createUser("admin", Role.ADMINISTRATOR);
+        String token = loginAndGetToken(admin.getEmail());
+        AppUser target = createUser("cible", Role.MEMBER);
+        String newEmail = uniqueEmail("cible-modifiee");
+
+        Map<String, Object> payload = Map.of(
+                "firstName", target.getFirstName(),
+                "lastName", target.getLastName(),
+                "email", newEmail,
+                "phone", target.getPhone(),
+                "role", "ORGANIZER"
+        );
+
+        mockMvc.perform(put("/users/" + target.getId() + "/admin")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk());
+
+        verify(emailService).sendAccountInfoUpdatedEmail(newEmail);
+        verify(emailService, never()).sendPasswordResetEmail(any(), any());
+        verify(emailService, never()).sendPasswordChangeConfirmationEmail(any(), any());
     }
 
     // ---------------------------------------------------------------

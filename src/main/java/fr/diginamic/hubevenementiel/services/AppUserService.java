@@ -239,19 +239,28 @@ public class AppUserService {
     // TODO securite : aucune verification que l'appelant est bien administrateur
     // (pas d'auth branchee sur le projet pour l'instant, cf. #97)
     @Transactional
-    public AppUser createAccountByAdmin(AppUser appUser, Role role) throws HttpException {
+    public AppUser createAccountByAdmin(AppUser appUser, Role role, List<Long> clubIds) throws HttpException {
+
+        String temporaryPassword = generateTemporaryPassword();
+        appUser.setHashedPassword(temporaryPassword);
+
         appUserChecker(appUser, true, true);
 
         if (userRepo.existsByEmail(appUser.getEmail())) {
             throw new ConflictException("Un compte existe déjà avec cette adresse email.");
         }
 
-        appUser.setStatus(AccountStatus.INACTIVE);
+        appUser.setStatus(AccountStatus.PENDING_ACTIVATION);
         appUser.setRole(role);
-        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
+        appUser.setHashedPassword(passwordEncoder.encode(temporaryPassword));
         appUser.setCreationDate(LocalDate.now());
+        appUser.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : List.of());
 
-        return userRepo.save(appUser);
+        AppUser savedUser = userRepo.save(appUser);
+
+        createAccountActivationToken(savedUser, temporaryPassword);
+
+        return savedUser;
     }
 
     @Transactional
@@ -346,7 +355,11 @@ public class AppUserService {
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
 
-        return userRepo.save(existing);
+        AppUser savedUser = userRepo.save(existing);
+
+        emailService.sendAccountInfoUpdatedEmail(savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
@@ -375,7 +388,11 @@ public class AppUserService {
         existing.setRole(modifiedUser.getRole());
         existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : new ArrayList<>());
 
-        return userRepo.save(existing);
+        AppUser savedUser = userRepo.save(existing);
+
+        emailService.sendAccountInfoUpdatedEmail(savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
@@ -416,6 +433,23 @@ public class AppUserService {
         tokenRepo.save(token);
 
         emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+    }
+
+    private void createAccountActivationToken(AppUser user, String temporaryPassword) {
+        Token token = new Token();
+        token.setValue(UUID.randomUUID().toString());
+        token.setTokenType(TokenType.ACCOUNT_ACTIVATION);
+        token.setUser(user);
+        token.setCreationDateTime(LocalDateTime.now());
+        token.setExpirationDateTime(LocalDateTime.now().plusHours(1));
+        token.setPendingData("");
+        tokenRepo.save(token);
+
+        emailService.sendAccountActivationEmail(user.getEmail(), token.getValue(), temporaryPassword);
+    }
+
+    private String generateTemporaryPassword() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 
     @Transactional
@@ -468,6 +502,24 @@ public class AppUserService {
         Token token = getValidToken(tokenValue, TokenType.ENABLE_ACCOUNT);
 
         AppUser user = token.getUser();
+        user.setStatus(AccountStatus.ACTIVE);
+        userRepo.save(user);
+
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
+    }
+
+    @Transactional
+    public void activateAccount(String tokenValue, String temporaryPassword, String newPassword) throws HttpException {
+        Token token = getValidToken(tokenValue, TokenType.ACCOUNT_ACTIVATION);
+
+        AppUser user = token.getUser();
+
+        if (!passwordEncoder.matches(temporaryPassword, user.getHashedPassword())) {
+            throw new BadRequestException("Mot de passe temporaire incorrect.");
+        }
+
+        user.setHashedPassword(passwordEncoder.encode(newPassword));
         user.setStatus(AccountStatus.ACTIVE);
         userRepo.save(user);
 
