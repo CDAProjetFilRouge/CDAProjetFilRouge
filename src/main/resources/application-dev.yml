@@ -17,4 +17,4 @@ logging:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dev-only-secret-do-not-use-in-production-change-me}
+    secret: ${JWT_SECRET}
