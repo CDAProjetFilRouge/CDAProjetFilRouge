@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -372,7 +373,7 @@ public class AppUserService {
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
         existing.setRole(modifiedUser.getRole());
-        existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : List.of());
+        existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : new ArrayList<>());
 
         return userRepo.save(existing);
     }
