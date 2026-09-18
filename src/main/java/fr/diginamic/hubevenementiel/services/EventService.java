@@ -137,15 +137,16 @@ public class EventService {
 
     /**
      *
-     * @param page
-     * @param size
-     * @param category
-     * @param startDate
-     * @param endDate
-     * @param minPrice
-     * @param maxPrice
-     * @param status
-     * @return
+     * @param page starting page
+     * @param size number of entries per page
+     * @param category category to filter events by, or null to not filter on it
+     * @param startDate minimum start date to filter events by, or null to not filter on it
+     * @param endDate maximum end date to filter events by, or null to not filter on it
+     * @param minPrice minimum non-affiliate price to filter events by, or null to not filter on it
+     * @param maxPrice maximum non-affiliate price to filter events by, or null to not filter on it
+     * @param status status to filter events by, or null to not filter on it
+     * @param principal the authenticated caller (used to include their own DRAFT events)
+     * @return a list of events matching the given filters and visible to the caller
      * @throws HttpException
      */
     public List<Event> search(int page, int size, Category category, LocalDateTime startDate, LocalDateTime endDate,
@@ -201,6 +202,7 @@ public class EventService {
      *
      * @param eventId id of the event to update
      * @param modifiedEvent updated Event information
+     * @param principal the authenticated caller, must be the event's organizer or an admin
      * @return updated Event
      * @throws HttpException
      */
@@ -240,6 +242,7 @@ public class EventService {
     /**
      *
      * @param eventId id of the event to delete
+     * @param principal the authenticated caller, must be the event's organizer or an admin
      * @throws HttpException
      */
     @Transactional

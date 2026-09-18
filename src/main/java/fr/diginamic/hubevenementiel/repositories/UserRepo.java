@@ -23,7 +23,7 @@ public interface UserRepo extends JpaRepository<AppUser, Long> {
 
     /**
      *
-     * @param firstName
+     * @param firstName first name of the user you want to find
      * @param pageable status you want to find inscription associated with
      * @return a list of users with pagination info
      */

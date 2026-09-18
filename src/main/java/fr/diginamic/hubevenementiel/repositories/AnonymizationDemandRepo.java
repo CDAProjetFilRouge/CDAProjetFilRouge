@@ -13,7 +13,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
     /**
      *
      * @param status   status of the request (e.g. ACCEPTED)
-     * @param pageable
+     * @param pageable settings for the pagination, create a pageable object using PageRequest.of()
      * @return a list of anonymization demand by status with pagination info
      */
     Page<AnonymizationDemand> findByRequestStatus(Pageable pageable, RequestStatus status);
