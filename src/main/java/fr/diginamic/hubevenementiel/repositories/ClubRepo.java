@@ -1,0 +1,58 @@
+package fr.diginamic.hubevenementiel.repositories;
+
+import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.Club;
+import fr.diginamic.hubevenementiel.enums.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+public interface ClubRepo extends JpaRepository<Club, Long> {
+
+    /**
+     *
+     * @param name name of the club you want to do a search on
+     * @return an optional of type Club
+     */
+    Optional<Club> findByName(String name);
+
+    /**
+     *
+     * @param category category of club you want to do a search on
+     * @param pageable settings for the pagination, create a peagble object using
+     *                 PageRequest.of()
+     * @return a list of club with pagnation info
+     */
+    Page<Club> findByCategory(Category category, Pageable pageable);
+
+    /**
+     *
+     * @param dateMin starting date at which you want to do the search on
+     * @param dateMax maximal date at which you want to do the serach on
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
+     * @return a list of club with pagination info
+     */
+    Page<Club> findByEndValidityDateBetween(LocalDate dateMin, LocalDate dateMax, Pageable pageable);
+
+    /**
+     *
+     * @param address address object to search club possessing associated with it
+     * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
+     * @return a list of club with pagination info
+     */
+    Page<Club> findByAddress(Address address, Pageable pageable);
+
+    Page<Club> findByAddressCity(String city, Pageable pageable);
+
+    @Query("SELECT c FROM Club c WHERE " +
+            "(:category IS NULL OR c.category = :category) AND " +
+            "(:city IS NULL OR c.address.city = :city)")
+    Page<Club> search(@Param("category") Category category, @Param("city") String city, Pageable pageable);
+
+    boolean existsByName(String name);
+}
