@@ -12,6 +12,7 @@ import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -265,8 +266,9 @@ class InscriptionServiceTest {
         Inscription inscription = confirmedInscription();
         inscription.setStatus(InscriptionStatus.CANCELED);
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
+        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
 
-        assertThrows(ConflictException.class, () -> inscriptionService.cancelByMember(1L));
+        assertThrows(ConflictException.class, () -> inscriptionService.cancelByMember(1L, principal));
     }
 
     @Test
@@ -277,8 +279,9 @@ class InscriptionServiceTest {
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
         when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
                 .thenReturn(Optional.empty());
+        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
 
-        inscriptionService.cancelByMember(1L);
+        inscriptionService.cancelByMember(1L, principal);
 
         verify(eventRepo).findByIdForUpdate(2L);
     }
@@ -289,8 +292,9 @@ class InscriptionServiceTest {
         inscription.setStatus(InscriptionStatus.WAITING_LIST);
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
 
-        inscriptionService.cancelByMember(1L);
+        inscriptionService.cancelByMember(1L, principal);
 
         verify(eventRepo, never()).findByIdForUpdate(anyLong());
     }

@@ -13,6 +13,7 @@ import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -197,8 +198,9 @@ class AppUserServiceTest {
     @Test
     void updateOwnAccount_unknownId_throwsNotFound() {
         when(userRepo.findById(1L)).thenReturn(Optional.empty());
+        AppUserPrincipal principal = new AppUserPrincipal(1L, "alice@example.com", "MEMBER");
 
-        assertThrows(NotFoundException.class, () -> appUserService.updateOwnAccount(1L, validUser));
+        assertThrows(NotFoundException.class, () -> appUserService.updateOwnAccount(1L, validUser, principal));
     }
 
     @Test
@@ -207,8 +209,9 @@ class AppUserServiceTest {
         existing.setEmail("ancien@example.com");
         when(userRepo.findById(1L)).thenReturn(Optional.of(existing));
         when(userRepo.existsByEmail(validUser.getEmail())).thenReturn(true);
+        AppUserPrincipal principal = new AppUserPrincipal(1L, "alice@example.com", "MEMBER");
 
-        assertThrows(ConflictException.class, () -> appUserService.updateOwnAccount(1L, validUser));
+        assertThrows(ConflictException.class, () -> appUserService.updateOwnAccount(1L, validUser, principal));
     }
 
     @Test
@@ -217,8 +220,9 @@ class AppUserServiceTest {
         existing.setEmail(validUser.getEmail().toUpperCase());
         when(userRepo.findById(1L)).thenReturn(Optional.of(existing));
         when(userRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AppUserPrincipal principal = new AppUserPrincipal(1L, "alice@example.com", "MEMBER");
 
-        appUserService.updateOwnAccount(1L, validUser);
+        appUserService.updateOwnAccount(1L, validUser, principal);
 
         verify(userRepo, never()).existsByEmail(anyString());
     }
@@ -231,8 +235,9 @@ class AppUserServiceTest {
         existing.setClubs(List.of(new Club()));
         when(userRepo.findById(1L)).thenReturn(Optional.of(existing));
         when(userRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AppUserPrincipal principal = new AppUserPrincipal(1L, "alice@example.com", "MEMBER");
 
-        AppUser result = appUserService.updateOwnAccount(1L, validUser);
+        AppUser result = appUserService.updateOwnAccount(1L, validUser, principal);
 
         assertThat(result.getRole()).isEqualTo(Role.MEMBER);
         assertThat(result.getClubs()).hasSize(1);
