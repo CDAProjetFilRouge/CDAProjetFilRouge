@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.controllers;
 
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.openapi.PdfApi;
 import fr.diginamic.hubevenementiel.services.PDFService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,7 +15,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/PDF")
-public class PDFController {
+public class PDFController implements PdfApi {
 
     private final PDFService pdfService;
 
@@ -22,13 +23,7 @@ public class PDFController {
         this.pdfService = pdfService;
     }
 
-    /**
-     *
-     * @param idEvent id of the event we want to download a PDF of
-     * @return a responseEntity containing the file
-     * @throws IOException
-     * @throws NotFoundException
-     */
+    @Override
     @GetMapping("/event/{idEvent}")
     public ResponseEntity<byte[]> eventPDF(@PathVariable Long idEvent) throws IOException, NotFoundException {
         byte[] pdf = pdfService.generateEventPDF(idEvent);
@@ -36,13 +31,7 @@ public class PDFController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=\"Event-"+idEvent+".pdf\"").body(pdf);
     }
 
-    /**
-     *
-     * @param idDocument id of the document we want to download a PDF of
-     * @return
-     * @throws IOException
-     * @throws NotFoundException
-     */
+    @Override
     @GetMapping("/legalDocument/{idDocument}")
     public ResponseEntity<byte[]> legalDocumentPDF(@PathVariable Long idDocument) throws IOException, NotFoundException {
         byte[] pdf = pdfService.generateCUPDF(idDocument);
