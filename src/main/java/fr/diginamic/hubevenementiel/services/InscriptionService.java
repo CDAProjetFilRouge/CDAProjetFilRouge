@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,7 +63,7 @@ public class InscriptionService {
      * @return inscription saved in the DB
      * @throws HttpException
      */
-    @Transactional
+    @org.springframework.transaction.annotation.Transactional(isolation = Isolation.READ_COMMITTED)
     public Inscription register(Long userId, Long eventId) throws HttpException {
         AppUser user = appUserService.findById(userId);
         Event event = eventService.findById(eventId);
