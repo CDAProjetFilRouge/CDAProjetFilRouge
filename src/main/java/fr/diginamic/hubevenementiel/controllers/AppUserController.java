@@ -25,11 +25,12 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.AppUserMapper;
 import fr.diginamic.hubevenementiel.mappers.AppUserSummaryMapper;
+import fr.diginamic.hubevenementiel.openapi.AppUserApi;
 import fr.diginamic.hubevenementiel.services.AppUserService;
 
 @RestController
 @RequestMapping("/users")
-public class AppUserController {
+public class AppUserController implements AppUserApi {
 
     private final AppUserService appUserService;
     private final AppUserMapper appUserMapper;
@@ -42,6 +43,7 @@ public class AppUserController {
         this.appUserSummaryMapper = appUserSummaryMapper;
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @GetMapping
     public List<AppUserSummaryResponseDto> getUsers(
@@ -52,11 +54,13 @@ public class AppUserController {
                 .toList();
     }
 
+    @Override
     @GetMapping("/{id}")
     public AppUserResponseDto getById(@PathVariable Long id) throws HttpException {
         return appUserMapper.toDto(appUserService.findById(id));
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<AppUserResponseDto> register(@RequestBody AppUserRequestDto requestDto) throws HttpException {
         AppUser user = appUserMapper.toEntity(requestDto);
@@ -64,6 +68,7 @@ public class AppUserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PostMapping("/admin")
     public ResponseEntity<AppUserResponseDto> createByAdmin(@RequestBody AppUserRequestDto requestDto,
@@ -73,6 +78,7 @@ public class AppUserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
     }
 
+    @Override
     @PutMapping("/{id}")
     public AppUserResponseDto updateOwnAccount(@PathVariable Long id, @RequestBody AppUserUpdateRequestDto requestDto)
             throws HttpException {
@@ -82,6 +88,7 @@ public class AppUserController {
         return appUserMapper.toDto(updated);
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/admin")
     public AppUserResponseDto updateByAdmin(@PathVariable Long id, @RequestBody AppUserAdminUpdateRequestDto requestDto)
@@ -91,6 +98,7 @@ public class AppUserController {
         return appUserMapper.toDto(updated);
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {

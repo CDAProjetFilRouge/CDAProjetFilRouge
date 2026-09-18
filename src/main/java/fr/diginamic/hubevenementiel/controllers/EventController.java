@@ -27,6 +27,7 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.EventMapper;
 import fr.diginamic.hubevenementiel.mappers.EventSummaryMapper;
+import fr.diginamic.hubevenementiel.openapi.EventApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.AppUserService;
 import fr.diginamic.hubevenementiel.services.EventService;
@@ -34,7 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/events")
-public class EventController {
+public class EventController implements EventApi {
 
     private final EventService eventService;
     private final EventMapper eventMapper;
@@ -49,6 +50,7 @@ public class EventController {
         this.appUserService = appUserService;
     }
 
+    @Override
     @GetMapping
     public List<EventSummaryResponseDto> getEvents(
             @RequestParam(defaultValue = "0") int page,
@@ -65,17 +67,20 @@ public class EventController {
                 .toList();
     }
 
+    @Override
     @GetMapping("/{id}")
     public EventResponseDto getById(@PathVariable Long id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return eventMapper.toDto(eventService.findVisibleById(id, principal));
     }
 
+    @Override
     @GetMapping("/search")
     public EventResponseDto getByName(@RequestParam String name) throws HttpException {
         return eventMapper.toDto(eventService.findByTitle(name));
     }
 
+    @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PostMapping
     public ResponseEntity<EventResponseDto> create(@RequestBody EventRequestDto requestDto) throws HttpException {
@@ -89,6 +94,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toDto(created));
     }
 
+    @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PutMapping("/{id}")
     public EventResponseDto update(@PathVariable Long id, @RequestBody EventRequestDto requestDto) throws HttpException {
@@ -98,6 +104,7 @@ public class EventController {
         return eventMapper.toDto(updated);
     }
 
+    @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {

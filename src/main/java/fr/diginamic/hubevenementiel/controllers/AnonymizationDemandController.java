@@ -18,13 +18,14 @@ import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.AnonymisationDemandMapper;
+import fr.diginamic.hubevenementiel.openapi.AnonymizationDemandApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.AnonymizationDemandService;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/anonymization-demands")
-public class AnonymizationDemandController {
+public class AnonymizationDemandController implements AnonymizationDemandApi {
 
     private final AnonymizationDemandService anonymizationDemandService;
     private final AnonymisationDemandMapper anonymizationDemandMapper;
@@ -35,6 +36,7 @@ public class AnonymizationDemandController {
         this.anonymizationDemandMapper = anonymizationDemandMapper;
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @GetMapping
     public List<AnonymizationDemandResponseDto> getDemands(
@@ -46,6 +48,7 @@ public class AnonymizationDemandController {
                 .toList();
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<AnonymizationDemandResponseDto> request() throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -53,6 +56,7 @@ public class AnonymizationDemandController {
         return ResponseEntity.status(HttpStatus.CREATED).body(anonymizationDemandMapper.toDto(created));
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/validate")
     public AnonymizationDemandResponseDto validate(@PathVariable Long id) throws HttpException {
