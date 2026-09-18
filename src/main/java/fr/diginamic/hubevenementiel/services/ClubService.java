@@ -1,28 +1,32 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
-import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
-import fr.diginamic.hubevenementiel.exceptions.ConflictException;
-import fr.diginamic.hubevenementiel.exceptions.HttpException;
-import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.exceptions.*;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
+import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class ClubService {
 
     private final ClubRepo clubRepository;
+    private final UserRepo userRepo;
 
-    public ClubService(ClubRepo clubRepository) {
+    public ClubService(ClubRepo clubRepository, UserRepo userRepo) {
         this.clubRepository = clubRepository;
+        this.userRepo = userRepo;
     }
 
     public List<Club> findAllClubs(int page, int size) {
@@ -99,6 +103,31 @@ public class ClubService {
         }
 
         return clubRepository.save(club);
+    }
+
+    /**
+     *
+     * @param idClub id of the club we want to associate the AppUser with
+     * @param idUser id of the AppUser we want to associate the club with
+     * @throws HttpException
+     */
+    @Transactional
+    public void associateUserToClub(Long idClub, Long idUser) throws HttpException {
+        AppUserPrincipal appUserPrincipal = (AppUserPrincipal) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
+        AppUser user = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("No AppUser found with id: "+idUser));
+        Club club = clubRepository.findById(idClub).orElseThrow(() -> new NotFoundException("No Club found with id: "+idClub));
+
+        if(user.getClubs().stream().anyMatch(c -> c.getId().equals(idClub)) || club.getAppUsers().stream().anyMatch(u -> u.getId().equals(idUser))){
+            throw new ForbiddenException("Le membre est déjà assigné à ce club!");
+        }
+
+
+        if(!club.getOwner().getId().equals(appUserPrincipal.id())){
+            throw new ForbiddenException("Seul le propriétaire du club peut effectuer cette manipulation!");
+        }
+
+        club.getAppUsers().add(user);
+        clubRepository.save(club);
     }
 
     /**
