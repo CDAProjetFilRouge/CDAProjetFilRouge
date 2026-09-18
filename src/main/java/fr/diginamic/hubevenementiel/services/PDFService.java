@@ -68,8 +68,8 @@ public class PDFService {
 
     /**
      *
-     * @param id of the legal document we want to download a PDF of
-     * @return
+     * @param id id of the legal document we want to download a PDF of
+     * @return An array of byte containing our PDF data
      * @throws IOException
      * @throws NotFoundException
      */

@@ -57,7 +57,7 @@ public class ImageService {
     /**
      *
      * @param eventId id of the event to search all images associated with
-     * @param file fle to perform the checks on
+     * @param file file to perform the checks on
      * @return true if all checks passed else false
      * @throws HttpException
      */

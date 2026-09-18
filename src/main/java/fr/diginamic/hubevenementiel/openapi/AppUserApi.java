@@ -2,12 +2,7 @@ package fr.diginamic.hubevenementiel.openapi;
 
 import java.util.List;
 
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
-import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.dtos.appUser.*;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -59,8 +54,7 @@ public interface AppUserApi {
             @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
             @ApiResponse(responseCode = "409", description = "Adresse email déjà utilisée")
     })
-    ResponseEntity<AppUserResponseDto> createByAdmin(AppUserRequestDto requestDto,
-            @Parameter(description = "Rôle attribué au compte créé", required = true) Role role) throws HttpException;
+    ResponseEntity<AppUserResponseDto> createByAdmin(AppUserAdminCreateRequestDto requestDto) throws HttpException;
 
     @Operation(summary = "Modifier son propre compte",
             description = "Permet à l'utilisateur connecté de modifier ses informations personnelles, à l'exception de ses affiliations à des clubs.")

@@ -19,7 +19,9 @@ import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.InscriptionMapper;
 import fr.diginamic.hubevenementiel.openapi.InscriptionApi;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.InscriptionService;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/inscriptions")
@@ -44,7 +46,8 @@ public class InscriptionController implements InscriptionApi {
     @Override
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelByMember(@PathVariable Long id) throws HttpException {
-        inscriptionService.cancelByMember(id);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        inscriptionService.cancelByMember(id, principal);
         return ResponseEntity.noContent().build();
     }
 

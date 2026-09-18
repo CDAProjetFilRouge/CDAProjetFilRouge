@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/account/password/forgot").permitAll()
                         .requestMatchers(HttpMethod.POST, "/account/password/reset").permitAll()
                         .requestMatchers(HttpMethod.GET, "/account/password/confirm").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/account/activate").permitAll()
                         .requestMatchers(HttpMethod.GET, "/PDF/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
