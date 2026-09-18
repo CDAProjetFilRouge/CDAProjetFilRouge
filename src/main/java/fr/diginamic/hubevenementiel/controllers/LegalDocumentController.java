@@ -16,11 +16,12 @@ import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.LegalDocumentMapper;
+import fr.diginamic.hubevenementiel.openapi.LegalDocumentApi;
 import fr.diginamic.hubevenementiel.services.LegalDocumentService;
 
 @RestController
 @RequestMapping("/legal-documents")
-public class LegalDocumentController {
+public class LegalDocumentController implements LegalDocumentApi {
 
     private final LegalDocumentService legalDocumentService;
     private final LegalDocumentMapper legalDocumentMapper;
@@ -30,11 +31,13 @@ public class LegalDocumentController {
         this.legalDocumentMapper = legalDocumentMapper;
     }
 
+    @Override
     @GetMapping("/{type}")
     public LegalDocumentResponseDto getLatest(@PathVariable DocumentType type) throws HttpException {
         return legalDocumentMapper.toDto(legalDocumentService.findLatestByType(type));
     }
 
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PostMapping
     public ResponseEntity<LegalDocumentResponseDto> createNewVersion(@RequestBody LegalDocumentRequestDto requestDto)
