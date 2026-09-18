@@ -85,6 +85,7 @@ public class ClubController implements ClubApi {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @Secured("ROLE_ORGANIZER")
     @PostMapping("associateUser/{idUser}/club/{idClub}")
     public ResponseEntity<String> associateUser(@PathVariable Long idUser, @PathVariable Long idClub) throws HttpException{
