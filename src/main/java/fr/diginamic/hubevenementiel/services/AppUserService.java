@@ -7,11 +7,13 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.enums.TokenType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -230,27 +233,41 @@ public class AppUserService {
      *
      * @param appUser AppUser to save in the DB as admin
      * @param role role to assign the AppUser to
+     * @param clubIds ids of the clubs to affiliate the AppUser with
      * @return AppUser saved in the DB
      * @throws HttpException
      */
     // TODO securite : aucune verification que l'appelant est bien administrateur
     // (pas d'auth branchee sur le projet pour l'instant, cf. #97)
     @Transactional
-    public AppUser createAccountByAdmin(AppUser appUser, Role role) throws HttpException {
+    public AppUser createAccountByAdmin(AppUser appUser, Role role, List<Long> clubIds) throws HttpException {
+
+        String temporaryPassword = generateTemporaryPassword();
+        appUser.setHashedPassword(temporaryPassword);
+
         appUserChecker(appUser, true, true);
 
         if (userRepo.existsByEmail(appUser.getEmail())) {
             throw new ConflictException("Un compte existe déjà avec cette adresse email.");
         }
 
-        appUser.setStatus(AccountStatus.INACTIVE);
+        appUser.setStatus(AccountStatus.PENDING_ACTIVATION);
         appUser.setRole(role);
-        appUser.setHashedPassword(passwordEncoder.encode(appUser.getHashedPassword()));
+        appUser.setHashedPassword(passwordEncoder.encode(temporaryPassword));
         appUser.setCreationDate(LocalDate.now());
+        appUser.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : List.of());
 
-        return userRepo.save(appUser);
+        AppUser savedUser = userRepo.save(appUser);
+
+        createAccountActivationToken(savedUser, temporaryPassword);
+
+        return savedUser;
     }
 
+    /**
+     *
+     * @param user AppUser to anonymize (irreversibly scrambles identifying fields)
+     */
     @Transactional
     public void anonymizeAccount(AppUser user) {
         String randomSuffix = UUID.randomUUID().toString();
@@ -265,7 +282,8 @@ public class AppUserService {
 
         userRepo.save(user);
     }
-        /**
+
+    /**
      *
      * @param appUser AppUser to perform the checks on
      * @param phoneRequired set the state of the requirement
@@ -319,11 +337,16 @@ public class AppUserService {
      *
      * @param id id of the AppUser to update
      * @param modifiedUser updated AppUser information
+     * @param principal the authenticated caller, must match id
      * @return modified AppUser
      * @throws HttpException
      */
     @Transactional
-    public AppUser updateOwnAccount(Long id, AppUser modifiedUser) throws HttpException {
+    public AppUser updateOwnAccount(Long id, AppUser modifiedUser, AppUserPrincipal principal) throws HttpException {
+        if (!id.equals(principal.id())) {
+            throw new ForbiddenException("Vous ne pouvez modifier que votre propre compte.");
+        }
+
         AppUser existing = findById(id);
 
         appUserChecker(modifiedUser, false, false);
@@ -339,13 +362,18 @@ public class AppUserService {
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
 
-        return userRepo.save(existing);
+        AppUser savedUser = userRepo.save(existing);
+
+        emailService.sendAccountInfoUpdatedEmail(savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
      *
      * @param id if of the AppUser to update
      * @param modifiedUser updated AppUser information
+     * @param clubIds ids of the clubs to affiliate the AppUser with
      * @return modified AppUser
      * @throws HttpException
      */
@@ -366,15 +394,21 @@ public class AppUserService {
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
         existing.setRole(modifiedUser.getRole());
-        existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : List.of());
+        existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : new ArrayList<>());
 
-        return userRepo.save(existing);
+        AppUser savedUser = userRepo.save(existing);
+
+        emailService.sendAccountInfoUpdatedEmail(savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
      *
-     * @param id id of the AppUser to deleted
-     * @throws HttpException
+     * @param userId id of the AppUser requesting the password change
+     * @param currentPassword current password, verified before issuing the change token
+     * @param newPassword new password to apply once the change is confirmed
+     * @throws HttpException if the AppUser cannot be found or currentPassword doesn't match
      */
     @Transactional
     public void requestPasswordChange(Long userId, String currentPassword, String newPassword) throws HttpException {
@@ -387,6 +421,10 @@ public class AppUserService {
         createPasswordChangeToken(user, newPassword);
     }
 
+    /**
+     *
+     * @param email email of the AppUser requesting a password reset; silently ignored if unknown
+     */
     @Transactional
     public void requestPasswordReset(String email) {
         Optional<AppUser> userOptional = userRepo.findByEmail(email);
@@ -411,6 +449,29 @@ public class AppUserService {
         emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
     }
 
+    private void createAccountActivationToken(AppUser user, String temporaryPassword) {
+        Token token = new Token();
+        token.setValue(UUID.randomUUID().toString());
+        token.setTokenType(TokenType.ACCOUNT_ACTIVATION);
+        token.setUser(user);
+        token.setCreationDateTime(LocalDateTime.now());
+        token.setExpirationDateTime(LocalDateTime.now().plusHours(1));
+        token.setPendingData("");
+        tokenRepo.save(token);
+
+        emailService.sendAccountActivationEmail(user.getEmail(), token.getValue(), temporaryPassword);
+    }
+
+    private String generateTemporaryPassword() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+    }
+
+    /**
+     *
+     * @param tokenValue value of the pending CHANGE_PWD token
+     * @param newPassword new password to store as the token's pending data
+     * @throws HttpException if the token is invalid, of the wrong type, already used or expired
+     */
     @Transactional
     public void submitNewPasswordAfterReset(String tokenValue, String newPassword) throws HttpException {
         Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
@@ -421,6 +482,11 @@ public class AppUserService {
         emailService.sendPasswordChangeConfirmationEmail(token.getUser().getEmail(), token.getValue());
     }
 
+    /**
+     *
+     * @param tokenValue value of the CHANGE_PWD token to confirm
+     * @throws HttpException if the token is invalid, of the wrong type, already used, expired, or has no pending password
+     */
     @Transactional
     public void confirmPasswordReset(String tokenValue) throws HttpException {
         Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
@@ -456,6 +522,11 @@ public class AppUserService {
         return token;
     }
 
+    /**
+     *
+     * @param tokenValue value of the ENABLE_ACCOUNT token to confirm
+     * @throws HttpException if the token is invalid, of the wrong type, already used or expired
+     */
     @Transactional
     public void confirmAccountVerification(String tokenValue) throws HttpException {
         Token token = getValidToken(tokenValue, TokenType.ENABLE_ACCOUNT);
@@ -468,6 +539,36 @@ public class AppUserService {
         tokenRepo.save(token);
     }
 
+    /**
+     *
+     * @param tokenValue value of the ACCOUNT_ACTIVATION token to confirm
+     * @param temporaryPassword temporary password sent to the AppUser, verified before activation
+     * @param newPassword new password to set once the account is activated
+     * @throws HttpException if the token is invalid, of the wrong type, already used, expired, or temporaryPassword doesn't match
+     */
+    @Transactional
+    public void activateAccount(String tokenValue, String temporaryPassword, String newPassword) throws HttpException {
+        Token token = getValidToken(tokenValue, TokenType.ACCOUNT_ACTIVATION);
+
+        AppUser user = token.getUser();
+
+        if (!passwordEncoder.matches(temporaryPassword, user.getHashedPassword())) {
+            throw new BadRequestException("Mot de passe temporaire incorrect.");
+        }
+
+        user.setHashedPassword(passwordEncoder.encode(newPassword));
+        user.setStatus(AccountStatus.ACTIVE);
+        userRepo.save(user);
+
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
+    }
+
+    /**
+     *
+     * @param id id of the AppUser to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteAccount(Long id) throws HttpException {
         AppUser user = findById(id);

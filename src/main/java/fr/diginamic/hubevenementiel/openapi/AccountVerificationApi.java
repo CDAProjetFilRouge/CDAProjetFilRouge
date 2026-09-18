@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.AccountActivationRequestDto;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -62,4 +63,12 @@ public interface AccountVerificationApi {
             @Parameter(description = "Identifiant de l'utilisateur", required = true) Long userId,
             @Parameter(description = "Mot de passe actuel", required = true) String currentPassword,
             @Parameter(description = "Nouveau mot de passe (12 caractères minimum)", required = true) String newPassword) throws HttpException;
+
+    @Operation(summary = "Activer un compte créé par un administrateur",
+            description = "Vérifie le token d'activation et le mot de passe temporaire, puis applique le nouveau mot de passe choisi et active le compte.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Compte activé"),
+            @ApiResponse(responseCode = "400", description = "Token invalide, expiré, déjà utilisé, ou mot de passe temporaire incorrect")
+    })
+    ResponseEntity<Void> activateAccount(AccountActivationRequestDto dto) throws HttpException;
 }

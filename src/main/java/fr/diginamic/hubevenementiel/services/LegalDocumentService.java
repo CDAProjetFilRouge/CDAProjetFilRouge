@@ -122,6 +122,11 @@ public class LegalDocumentService {
         return legalDocumentRepo.save(document);
     }
 
+    /**
+     *
+     * @param id id of the legal document to delete
+     * @throws HttpException
+     */
     @Transactional
     public void deleteDocument(Long id) throws HttpException {
         LegalDocument document = getDocumentById(id);

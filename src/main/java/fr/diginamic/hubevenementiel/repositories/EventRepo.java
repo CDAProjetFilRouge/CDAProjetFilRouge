@@ -37,9 +37,9 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
 
     /**
      *
-     * @param category
-     * @param pageable
-     * @return
+     * @param category category of the event you want to do the search on
+     * @param pageable settings for the pagination, create a pageable object using PageRequest.of()
+     * @return a list of events with pagination info
      */
     Page<Event> findByCategory(Category category, Pageable pageable);
 
