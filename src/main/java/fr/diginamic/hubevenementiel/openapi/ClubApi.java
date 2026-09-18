@@ -68,7 +68,7 @@ public interface ClubApi {
 
     @Operation(summary = "Assigne un AppUser à un Club vie leurs id respectif", description = "Réversé aux organizateurs et admins")
     @ApiResponses({
-            @ApiResponse(responseCode = "205", description = "Membre assigné avec succés!"),
+            @ApiResponse(responseCode = "200", description = "Membre assigné avec succés!"),
             @ApiResponse(responseCode = "401", description = "Non autenthifié"),
             @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER requis"),
             @ApiResponse(responseCode = "404", description = "Club ou AppUser introuvable")
