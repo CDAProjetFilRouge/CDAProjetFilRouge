@@ -7,10 +7,12 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -203,8 +205,12 @@ public class InscriptionService {
      * @throws HttpException
      */
     @Transactional
-    public Inscription cancelByMember(Long id) throws HttpException {
+    public Inscription cancelByMember(Long id, AppUserPrincipal principal) throws HttpException {
         Inscription inscription = getInscriptionById(id);
+
+        if (!inscription.getUser().getId().equals(principal.id())) {
+            throw new ForbiddenException("Vous ne pouvez annuler que vos propres inscriptions.");
+        }
 
         if (inscription.getStatus() == InscriptionStatus.CANCELED) {
             throw new ConflictException("Cette inscription est déjà annulée.");

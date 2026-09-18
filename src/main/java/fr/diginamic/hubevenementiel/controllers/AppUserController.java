@@ -26,7 +26,9 @@ import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.AppUserMapper;
 import fr.diginamic.hubevenementiel.mappers.AppUserSummaryMapper;
 import fr.diginamic.hubevenementiel.openapi.AppUserApi;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.AppUserService;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/users")
@@ -84,7 +86,8 @@ public class AppUserController implements AppUserApi {
             throws HttpException {
         AppUser modifiedUser = new AppUser();
         appUserMapper.updateEntityFromDto(requestDto, modifiedUser);
-        AppUser updated = appUserService.updateOwnAccount(id, modifiedUser);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        AppUser updated = appUserService.updateOwnAccount(id, modifiedUser, principal);
         return appUserMapper.toDto(updated);
     }
 
