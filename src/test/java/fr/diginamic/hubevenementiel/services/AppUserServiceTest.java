@@ -178,7 +178,7 @@ class AppUserServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashed");
         when(userRepo.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AppUser result = appUserService.createAccountByAdmin(validUser, Role.ORGANIZER);
+        AppUser result = appUserService.createAccountByAdmin(validUser, Role.ORGANIZER, List.of());
 
         assertThat(result.getStatus()).isEqualTo(AccountStatus.INACTIVE);
         assertThat(result.getRole()).isEqualTo(Role.ORGANIZER);
@@ -188,7 +188,7 @@ class AppUserServiceTest {
     void createAccountByAdmin_missingPhone_throwsBadRequest() {
         validUser.setPhone(null);
 
-        assertThrows(BadRequestException.class, () -> appUserService.createAccountByAdmin(validUser, Role.ORGANIZER));
+        assertThrows(BadRequestException.class, () -> appUserService.createAccountByAdmin(validUser, Role.ORGANIZER, List.of()));
     }
 
     // ---------------------------------------------------------------
