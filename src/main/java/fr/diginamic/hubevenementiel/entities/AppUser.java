@@ -62,7 +62,6 @@ public class AppUser {
     private List<LegalDocument> legalDocumentList;
 
     @ManyToMany
-    @JoinTable(name = "AppUser_Club", joinColumns = @JoinColumn(name = "Id_appUser", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "Id_club", referencedColumnName = "id"))
     private List<Club> clubs = new ArrayList<>();
 
     public AppUser() {

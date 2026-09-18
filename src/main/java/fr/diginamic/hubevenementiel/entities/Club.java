@@ -26,14 +26,14 @@ public class Club {
     @Column(name = "end_validity_date")
     private LocalDate endValidityDate;
 
+    @Column(name = "owner")
+    private AppUser owner;
+
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "address_id")
     private Address address;
 
-    @ManyToMany
-    @JoinTable(name = "AppUser_Club",
-            joinColumns = @JoinColumn(name = "Id_club", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "Id_appUser", referencedColumnName = "id"))
+    @ManyToMany(mappedBy = "clubs")
     private List<AppUser> appUsers = new ArrayList<>();
 
     public Club() {
@@ -112,5 +112,13 @@ public class Club {
 
     public void setAppUsers(List<AppUser> appUsers) {
         this.appUsers = appUsers;
+    }
+
+    public AppUser getOwner() {
+        return owner;
+    }
+
+    public void setOwner(AppUser owner) {
+        this.owner = owner;
     }
 }

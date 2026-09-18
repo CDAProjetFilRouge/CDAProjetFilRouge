@@ -3,14 +3,13 @@ package fr.diginamic.hubevenementiel.services;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
-import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
-import fr.diginamic.hubevenementiel.exceptions.ConflictException;
-import fr.diginamic.hubevenementiel.exceptions.HttpException;
-import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.exceptions.*;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,11 +112,21 @@ public class ClubService {
      */
     @Transactional
     public void associateUserToClub(Long idClub, Long idUser) throws HttpException {
+        AppUserPrincipal appUserPrincipal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         AppUser user = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("No AppUser found with id: "+idUser));
         Club club = clubRepository.findById(idClub).orElseThrow(() -> new NotFoundException("No Club found with id: "+idClub));
 
-        user.getClubs().add(club);
+        if(user.getClubs().stream().anyMatch(c -> c.getId().equals(idClub)) || club.getAppUsers().stream().anyMatch(u -> u.getId().equals(idUser))){
+            throw new ForbiddenException("Le membre est déjà assigné à ce club!");
+        }
+
+
+        if(!club.getOwner().equals(appUserPrincipal.id())){
+            throw new ForbiddenException("Seul le propriétaire du club peut effectuer cette manipulation!");
+        }
+
         club.getAppUsers().add(user);
+        clubRepository.save(club);
     }
 
     /**
