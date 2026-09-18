@@ -62,6 +62,7 @@ public class AppUser {
     private List<LegalDocument> legalDocumentList;
 
     @ManyToMany
+
     private List<Club> clubs = new ArrayList<>();
 
     public AppUser() {
