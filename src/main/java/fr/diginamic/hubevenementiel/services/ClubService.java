@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -112,7 +113,7 @@ public class ClubService {
      */
     @Transactional
     public void associateUserToClub(Long idClub, Long idUser) throws HttpException {
-        AppUserPrincipal appUserPrincipal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        AppUserPrincipal appUserPrincipal = (AppUserPrincipal) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
         AppUser user = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("No AppUser found with id: "+idUser));
         Club club = clubRepository.findById(idClub).orElseThrow(() -> new NotFoundException("No Club found with id: "+idClub));
 
@@ -121,7 +122,7 @@ public class ClubService {
         }
 
 
-        if(!club.getOwner().equals(appUserPrincipal.id())){
+        if(!club.getOwner().getId().equals(appUserPrincipal.id())){
             throw new ForbiddenException("Seul le propriétaire du club peut effectuer cette manipulation!");
         }
 
