@@ -180,7 +180,7 @@ class AppUserServiceTest {
 
         AppUser result = appUserService.createAccountByAdmin(validUser, Role.ORGANIZER, List.of());
 
-        assertThat(result.getStatus()).isEqualTo(AccountStatus.INACTIVE);
+        assertThat(result.getStatus()).isEqualTo(AccountStatus.PENDING_ACTIVATION);
         assertThat(result.getRole()).isEqualTo(Role.ORGANIZER);
     }
 
