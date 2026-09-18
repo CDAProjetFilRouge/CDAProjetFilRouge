@@ -2,6 +2,8 @@ package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.*;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -15,11 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -73,10 +70,9 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PostMapping("/admin")
-    public ResponseEntity<AppUserResponseDto> createByAdmin(@RequestBody AppUserRequestDto requestDto,
-            @RequestParam Role role) throws HttpException {
-        AppUser user = appUserMapper.toEntity(requestDto);
-        AppUser created = appUserService.createAccountByAdmin(user, role);
+    public ResponseEntity<AppUserResponseDto> createByAdmin(@Valid @RequestBody AppUserAdminCreateRequestDto requestDto) throws HttpException {
+        AppUser user = appUserMapper.toEntityForAdminCreate(requestDto);
+        AppUser created = appUserService.createAccountByAdmin(user, requestDto.getRole(), requestDto.getClubIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
     }
 

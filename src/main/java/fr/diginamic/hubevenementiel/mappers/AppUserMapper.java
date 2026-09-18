@@ -1,9 +1,6 @@
 package fr.diginamic.hubevenementiel.mappers;
 
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.*;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -84,5 +81,16 @@ public class AppUserMapper {
             user.setAddress(addressMapper.toEntity(dto.getAddress()));
         }
 
+    }
+
+    public AppUser toEntityForAdminCreate(AppUserAdminCreateRequestDto dto) {
+        AppUser entity = new AppUser();
+        entity.setFirstName(dto.getFirstName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmail(dto.getEmail());
+        entity.setPhone(dto.getPhone());
+        entity.setRole(dto.getRole());
+
+        return entity;
     }
 }
