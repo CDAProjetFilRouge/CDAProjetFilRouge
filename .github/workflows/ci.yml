@@ -27,6 +27,7 @@ jobs:
     env:
       BREVO_SMTP_LOGIN: ci-dummy@example.com
       BREVO_SMTP_KEY: ci-dummy-key
+      JWT_SECRET: ci-dummy-jwt-secret-not-for-production-use
     steps:
       - uses: actions/checkout@v4
 
