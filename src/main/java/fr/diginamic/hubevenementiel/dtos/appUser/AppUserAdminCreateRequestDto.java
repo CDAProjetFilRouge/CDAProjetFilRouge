@@ -19,6 +19,7 @@ public class AppUserAdminCreateRequestDto {
     @Email
     private String email;
 
+    @NotBlank
     private String phone;
 
     @NotNull

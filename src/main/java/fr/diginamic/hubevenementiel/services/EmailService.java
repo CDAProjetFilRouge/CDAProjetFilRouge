@@ -76,6 +76,18 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendAccountInfoUpdatedEmail(String toEmail) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderAddress);
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Vos informations ont été modifiées");
+        message.setText("Les informations générales de votre compte (nom, prénom, email, téléphone ou adresse) "
+                + "viennent d'être modifiées.\n\n"
+                + "Si vous n'êtes pas à l'origine de cette modification, contactez-nous au plus vite.");
+
+        mailSender.send(message);
+    }
+
     public void sendAccountActivationEmail(String toEmail, String tokenValue, String temporaryPassword) {
         String activationLink = frontendUrl + "/activate-account?token=" + tokenValue;
 

@@ -355,7 +355,11 @@ public class AppUserService {
         existing.setPhone(modifiedUser.getPhone());
         existing.setAddress(modifiedUser.getAddress());
 
-        return userRepo.save(existing);
+        AppUser savedUser = userRepo.save(existing);
+
+        emailService.sendAccountInfoUpdatedEmail(savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
@@ -384,7 +388,11 @@ public class AppUserService {
         existing.setRole(modifiedUser.getRole());
         existing.setClubs(clubIds != null ? clubRepo.findAllById(clubIds) : new ArrayList<>());
 
-        return userRepo.save(existing);
+        AppUser savedUser = userRepo.save(existing);
+
+        emailService.sendAccountInfoUpdatedEmail(savedUser.getEmail());
+
+        return savedUser;
     }
 
     /**
