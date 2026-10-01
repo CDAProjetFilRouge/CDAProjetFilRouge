@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -34,7 +35,14 @@ export class LoginComponent {
 
     this.authService.login(email, password).subscribe({
       next: () => this.router.navigateByUrl('/account'),
-      error: () => this.errorMessage.set('Email ou mot de passe incorrect.'),
+      error: (error: HttpErrorResponse) => {
+        this.isSubmitting.set(false);
+        this.errorMessage.set(
+          error.status === 401 || error.status === 403
+            ? 'Email ou mot de passe incorrect.'
+            : 'Impossible de joindre le serveur.',
+        );
+      },
     });
   }
 }
