@@ -5,6 +5,7 @@
   padding-left: 2rem;
   padding-right: 2rem;
   column-gap: 20rem;
+  row-gap: 3rem;
 }
 
 h2 {
@@ -57,7 +58,7 @@ button:hover {
 
 .copyright{
   grid-column: 1 / -1;
-
+  padding-top: 3rem;
   border-top-style: solid;
   border-top-color: gray;
   grid-row: 2;
