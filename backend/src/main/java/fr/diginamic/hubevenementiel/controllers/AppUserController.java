@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -87,6 +88,28 @@ public class AppUserController implements AppUserApi {
         AppUser user = appUserMapper.toEntityForAdminCreate(requestDto);
         AppUser created = appUserService.createAccountByAdmin(user, requestDto.getRole(), requestDto.getClubIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
+    }
+
+    
+    @Secured("ROLE_ADMINISTRATOR")
+    @PutMapping("/{id}/suspend")
+    public AppUserResponseDto suspendAccount(@PathVariable Long id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
+        LocalDateTime endDate = null;
+        if (requestDto != null) {
+            endDate = requestDto.getEndSuspensionDate();            
+        }
+        
+        appUserService.suspend(id, endDate);
+        AppUser suspendedAppUser = appUserService.findById(id);
+        return appUserMapper.toDto(suspendedAppUser); 
+    }
+
+    @Secured("ROLE_ADMINISTRATOR")
+    @PutMapping("/{id}/reactivate")
+    public AppUserResponseDto reactivateAccount(@PathVariable Long id) throws HttpException {
+        appUserService.reactivate(id);
+        AppUser reactivatedAppUser = appUserService.findById(id);
+        return appUserMapper.toDto(reactivatedAppUser);
     }
 
     @Override

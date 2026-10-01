@@ -174,6 +174,38 @@ public class AppUserService {
         return users;
     }
 
+    @Transactional
+    public void suspend(Long id, LocalDateTime endDate) throws HttpException {
+        AppUser user = findById(id);
+
+        if (endDate != null && endDate.isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Impossible de définir une date de suspension dans le passé");
+        }
+
+        if (user.getStatus() != AccountStatus.ACTIVE) {
+            throw new BadRequestException("Impossible de suspendre un compte qui n'a pas le statut Actif");
+        }
+        
+        user.setStatus(AccountStatus.SUSPENDED);
+        user.setSuspensionEndDate(endDate);
+    
+        userRepo.save(user);
+    }
+
+    @Transactional
+    public void reactivate(Long id) throws HttpException {
+        AppUser user = findById(id);
+
+        if (user.getStatus() != AccountStatus.SUSPENDED) {
+            throw new BadRequestException("Le statut du compte que vous avez sélectionné n'est pas suspendu.");
+        }
+
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setSuspensionEndDate(null);
+
+        userRepo.save(user);
+    }
+
     /**
      *
      * @param dateMin starting date to do the search on
