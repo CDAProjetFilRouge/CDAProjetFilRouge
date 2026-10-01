@@ -7,4 +7,7 @@ import { RouterLink } from '@angular/router';
   styleUrl: './header.scss',
   templateUrl: './header.html',
 })
-export class Header {}
+export class Header {
+  readonly role: string = "ORGANIZER";
+  readonly loggedIn: boolean = true;
+}
