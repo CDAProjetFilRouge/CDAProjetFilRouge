@@ -43,3 +43,6 @@ claude.md
 # Codex code
 .codex/
 AGENTS.MD
+
+# Playwright MCP (captures et journaux locaux)
+.playwright-mcp/
