@@ -4,21 +4,21 @@ import java.time.LocalDateTime;
 
 public class AppUserSuspensionRequestDto {
     
-    private LocalDateTime endSuspensionDate;
+    private LocalDateTime suspensionEndDate;
 
     public AppUserSuspensionRequestDto() {
     }
 
-    public AppUserSuspensionRequestDto(LocalDateTime endSuspensionDate) {
-        this.endSuspensionDate = endSuspensionDate;
+    public AppUserSuspensionRequestDto(LocalDateTime suspensionEndDate) {
+        this.suspensionEndDate = suspensionEndDate;
     }
 
-    public LocalDateTime getEndSuspensionDate() {
-        return endSuspensionDate;
+    public LocalDateTime getSuspensionEndDate() {
+        return suspensionEndDate;
     }
 
-    public void setEndSuspensionDate(LocalDateTime endSuspensionDate) {
-        this.endSuspensionDate = endSuspensionDate;
+    public void setSuspensionEndDate(LocalDateTime suspensionEndDate) {
+        this.suspensionEndDate = suspensionEndDate;
     }
 
     

@@ -96,7 +96,7 @@ public class AppUserController implements AppUserApi {
     public AppUserResponseDto suspendAccount(@PathVariable Long id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
         LocalDateTime endDate = null;
         if (requestDto != null) {
-            endDate = requestDto.getEndSuspensionDate();            
+            endDate = requestDto.getSuspensionEndDate();            
         }
         
         appUserService.suspend(id, endDate);
