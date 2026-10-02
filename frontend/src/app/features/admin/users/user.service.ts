@@ -11,4 +11,16 @@ export class UserService {
   getUsers(): Observable<AppUser[]> {
     return this.http.get<AppUser[]>(`${URL_BACKEND}/users`);
   }
+
+  deleteUser(id: number): Observable<void> {
+    return this.http.delete<void>(`${URL_BACKEND}/users/${id}`);
+  }
+
+  suspendUser(id: number, suspensionEndDate?: Date): Observable<AppUser> {
+    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/suspend`, {suspensionEndDate})
+  }
+
+  reactivateUser(id: number): Observable<AppUser> {
+    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/reactivate`, {})
+  }
 }

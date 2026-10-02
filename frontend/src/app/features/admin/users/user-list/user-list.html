@@ -29,14 +29,20 @@
         <button>
           Modifier
         </button>
-        <button>
-          @if (user.status === 'SUSPENDED') {
-          Réactiver
+
+        @if (user.status === 'SUSPENDED') {
+          <button (click)="onReactivate(user.id)">
+            Réactiver
+          </button>
           } @else {
-          Suspendre
-          }
-        </button>
-        <button>
+          <button (click)="onSuspend(user.id)">
+            Suspendre
+          </button>
+
+        }
+
+
+        <button (click)="onDelete(user.id)">
           Supprimer
         </button>
       </td>

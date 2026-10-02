@@ -17,5 +17,32 @@ export class UserList {
   constructor() {
     this.appUserService.getUsers().subscribe(list => this.users.set(list));
   }
+
+  protected onDelete(id: number): void {
+    if (!confirm('Supprimer cet utilisateur ?')) {
+      return;
+    }
+    this.appUserService.deleteUser(id).subscribe(() => {
+      this.users.update(list => list.filter(u => u.id !== id));
+    });
+  }
+
+  protected onSuspend(id: number, endDate?: Date): void {
+    if (!confirm('Voulez-vous vraiment suspendre cet utilisateur ?')) {
+      return;
+    }
+    this.appUserService.suspendUser(id, endDate).subscribe(updated => {
+      this.users.update(list => list.map(u => u.id === id ? updated : u))
+    });
+  }
+
+  protected onReactivate(id: number): void {
+    if (!confirm('Voulez-vous vraiment réhabiliter cet utilisateur ?')) {
+      return;
+    }
+    this.appUserService.reactivateUser(id).subscribe(updated => {
+      this.users.update(list => list.map(u => u.id === id ? updated : u))
+    });
+  }
 }
 
