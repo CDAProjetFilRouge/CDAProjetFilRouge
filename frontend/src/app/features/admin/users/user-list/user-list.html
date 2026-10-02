@@ -34,10 +34,15 @@
           <button (click)="onReactivate(user.id)">
             Réactiver
           </button>
-          } @else {
-          <button (click)="onSuspend(user.id)">
-            Suspendre
-          </button>
+        } @else {
+          <button (click)="startSuspension(user.id)">Suspendre</button>
+
+          @if (suspendingId() === user.id) {
+            <input type="datetime-local" #suspensionEndDate>
+            <small>Laisser vide pour une suspension définitive.</small>
+            <button (click)="confirmSuspension(user.id, suspensionEndDate.value)">Confirmer</button>
+            <button (click)="suspendingId.set(null)">Annuler</button>
+          }
 
         }
 

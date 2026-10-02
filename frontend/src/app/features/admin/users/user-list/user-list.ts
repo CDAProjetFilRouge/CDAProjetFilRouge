@@ -19,6 +19,8 @@ export class UserList {
 
   protected readonly accountStatusLabels = ACCOUNT_STATUS_LABELS;
 
+  protected readonly suspendingId = signal<number | null>(null);
+
   constructor() {
     this.appUserService.getUsers().subscribe(list => this.users.set(list));
   }
@@ -32,21 +34,23 @@ export class UserList {
     });
   }
 
-  protected onSuspend(id: number, endDate?: Date): void {
-    if (!confirm('Voulez-vous vraiment suspendre cet utilisateur ?')) {
-      return;
-    }
-    this.appUserService.suspendUser(id, endDate).subscribe(updated => {
-      this.users.update(list => list.map(u => u.id === id ? updated : u))
-    });
-  }
-
   protected onReactivate(id: number): void {
     if (!confirm('Voulez-vous vraiment réhabiliter cet utilisateur ?')) {
       return;
     }
     this.appUserService.reactivateUser(id).subscribe(updated => {
       this.users.update(list => list.map(u => u.id === id ? updated : u))
+    });
+  }
+
+  protected startSuspension(id: number): void {
+    this.suspendingId.set(id);
+  }
+
+  protected confirmSuspension(id: number, suspensionEndDate: string): void {
+    this.appUserService.suspendUser(id, suspensionEndDate || undefined).subscribe(updated => {
+      this.users.update(list => list.map(u => u.id === id ? updated : u));
+      this.suspendingId.set(null);
     });
   }
 }

@@ -16,7 +16,7 @@ export class UserService {
     return this.http.delete<void>(`${URL_BACKEND}/users/${id}`);
   }
 
-  suspendUser(id: number, suspensionEndDate?: Date): Observable<AppUser> {
+  suspendUser(id: number, suspensionEndDate?: string): Observable<AppUser> {
     return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/suspend`, {suspensionEndDate})
   }
 
