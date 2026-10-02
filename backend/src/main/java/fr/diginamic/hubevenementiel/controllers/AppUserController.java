@@ -45,15 +45,16 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @GetMapping
-    public List<AppUserSummaryResponseDto> getUsers(
+    public List<AppUserResponseDto> getUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return appUserService.findAllUsers(page, size).stream()
-                .map(appUserSummaryMapper::toDto)
+                .map(appUserMapper::toDto)
                 .toList();
     }
 
     @Override
+    @Secured("ROLE_ADMINISTRATOR")
     @GetMapping("/{id}")
     public AppUserResponseDto getById(@PathVariable Long id) throws HttpException {
         return appUserMapper.toDto(appUserService.findById(id));
