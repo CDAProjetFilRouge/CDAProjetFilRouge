@@ -7,9 +7,23 @@ export interface AppUserSummary {
 
 export type Role = 'MEMBER' | 'ORGANIZER' | 'ADMINISTRATOR';
 
+export const ROLE_LABELS: Record<Role, string> = {
+  MEMBER: 'Membre',
+  ORGANIZER: 'Organisateur',
+  ADMINISTRATOR: 'Administrateur',
+}
+
 export type Category = 'CULTURE' | 'SPORT' | 'HOBBIES';
 
 export type AccountStatus = 'INACTIVE' | 'ACTIVE' | 'SUSPENDED' | 'ANONYMIZE' | 'PENDING_ACTIVATION';
+
+export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
+  INACTIVE: 'Inactif',
+  ACTIVE: 'Actif',
+  SUSPENDED: 'Suspendu',
+  ANONYMIZE: 'Anonymisé',
+  PENDING_ACTIVATION:'En attente d\'activation'
+}
 
 export interface Address {
   id: number;
