@@ -1,0 +1,33 @@
+<div class="layout-header">
+  <button class="Logo">MuHubEvent</button>
+  <div class="page-space">
+      <button class="page-select" routerLink="/catalogue">Catalogue</button>
+      @if(loggedIn == true && (role == "USER" || role == "ORGANIZER" || role == "ADMIN")){
+        <button class="page-select" routerLink="/">Mon club</button>
+      }@else {
+        <button class="page-select" routerLink="/clubs">Clubs</button>
+      }
+
+      @if (loggedIn == true) {
+        <button class="page-select" routerLink="/">Tableau de bord</button>
+        <button class="page-select" routerLink="/">Mon calendrier</button>
+      }
+
+      @if(loggedIn == true && role == "ORGANIZER"){
+        <button class="page-select" routerLink="/">Gérer les évènements</button>
+      }
+      @if(loggedIn == true && role == "ADMIN"){
+        <button class="page-select" routerLink="/">Gestion</button>
+      }
+  </div>
+  <div class="login-space">
+    @if (loggedIn == false) {
+      <button class="login-btn" routerLink="/login">Se connecter</button>
+      <button id="create-acc-btn" routerLink="/createAccount">Créer un compte</button>
+    }@else {
+      <p>{{userName}} - @if(role == "USER" || role == "ORGANIZER" || role == "ADMIN"){ {{role}} }@else{ Non affilié}</p>
+      <button class="logout-btn" routerLink="/">Déconnexion</button>
+    }
+  </div>
+</div>
+
