@@ -1,0 +1,41 @@
+.layout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.page-space {
+  display: flex;
+  gap: 2rem;
+}
+
+.login-space {
+  display: flex;
+  gap: 1rem;
+}
+
+* {
+  background-color: pink;
+}
+
+#create-acc-btn {
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  background-color: lightcoral;
+  color: white;
+}
+
+
+
+button {
+  border-style: hidden;
+}
+
+button:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
