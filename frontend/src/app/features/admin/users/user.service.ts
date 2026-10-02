@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AppUser } from './user.models';
 import { URL_BACKEND } from '../../../core/api/api.config';
+import { AppUser } from '../../../core/models/user.models';
 
 @Service()
 export class UserService {
@@ -17,10 +17,10 @@ export class UserService {
   }
 
   suspendUser(id: number, suspensionEndDate?: string): Observable<AppUser> {
-    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/suspend`, {suspensionEndDate})
+    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/suspend`, { suspensionEndDate });
   }
 
   reactivateUser(id: number): Observable<AppUser> {
-    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/reactivate`, {})
+    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/reactivate`, {});
   }
 }
