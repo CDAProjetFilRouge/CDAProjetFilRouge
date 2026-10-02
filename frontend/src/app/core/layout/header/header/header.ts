@@ -8,6 +8,7 @@ import { RouterLink } from '@angular/router';
   templateUrl: './header.html',
 })
 export class Header {
-  readonly role: string = "ORGANIZER";
+  readonly role: string = "";
   readonly loggedIn: boolean = true;
+  readonly userName: string = "Jhon D."
 }
