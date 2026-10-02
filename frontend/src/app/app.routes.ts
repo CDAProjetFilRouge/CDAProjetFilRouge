@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { Event } from './features/events/event/event';
 import { LoginComponent } from './features/auth/login/login/login.component';
 
 export const routes: Routes = [
@@ -12,7 +13,6 @@ export const routes: Routes = [
   },
   {
     path: '',
-    pathMatch: 'full',
-    redirectTo: 'login',
+    component: Event
   },
 ];

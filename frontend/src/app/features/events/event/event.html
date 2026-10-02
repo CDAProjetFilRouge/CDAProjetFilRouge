@@ -1,0 +1,74 @@
+<div class="event-main">
+  <div class="title-section">
+    <h1>Les évènement de la fédération</h1>
+    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
+  </div>
+  <div class="filter-section">
+    <div class="filter">
+      <p>Mot-clé</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Catégorie</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Club oragnisateur</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Lieu</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Date de début</p>
+      <input type="date">
+    </div>
+    <div class="filter">
+      <p>Date de fin</p>
+      <input type="date">
+    </div>
+    <div class="filter">
+      <p>Status</p>
+      <select>
+        <option>Publié</option>
+        <option>Annulé</option>
+      </select>
+    </div>
+    <button>Réinitialiser</button>
+    <button>Rechercher</button>
+  </div>
+  <div class="event-section">
+    <div class="event-sub-section">
+      <p id="counter">X évènements trouvés</p>
+      <p>Trier par: Date croissante</p>
+    </div>
+    <div class="carousel">
+      @for (event of displayEvents; track event){
+        <div class="event-card">
+          <img alt="galerie - image">
+          <p>{{ event.type}} - places</p>
+          <h3>{{ event.name}}</h3>
+          <p>Date: {{ event.dateDebut}} - {{ event.dateFin}}</p>
+          <p>Lieu: {{ event.address}}</p>
+          <p>Places: {{ event.placeDispo}}/{{ event.placeMax}} inscrits</p>
+          <p>{{ event.price}}€ affilié - 14€</p>
+          <button>Voir le détails</button>
+        </div>
+      }
+    </div>
+    <div class="pagination">
+      @if (currentPage > 1){
+        <button (click)="previousPage()"> Précédent</button>
+      }
+
+      <span>
+        Page {{ currentPage }} / {{ totalPages}}
+      </span>
+
+      @if (currentPage < totalPages) {
+        <button (click)="nextPage()">Suivant</button>
+      }
+    </div>
+  </div>
+</div>
