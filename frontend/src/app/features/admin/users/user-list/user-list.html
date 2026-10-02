@@ -1,3 +1,7 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
 <table>
   <thead>
     <tr>
@@ -15,7 +19,7 @@
     <tr>
       <td>{{ user.firstName }} {{ user.lastName }}</td>
       <td>{{ user.email }}</td>
-      <td>{{ user.role }}</td>
+      <td>{{ roleLabels[user.role] }}</td>
       <td>
         @for (club of user.clubs; track club.id) {
         <span>{{ club.name }}</span>
@@ -23,20 +27,31 @@
           —
         }
       </td>
-      <td>{{ user.status }}</td>
-      <td>{{ user.creationDate }}</td>
+      <td>{{ accountStatusLabels[user.status] }}</td>
+      <td>{{ user.creationDate | date: 'dd/MM/yyyy' }}</td>
       <td>
         <button>
           Modifier
         </button>
-        <button>
-          @if (user.status === 'SUSPENDED') {
-          Réactiver
-          } @else {
-          Suspendre
+
+        @if (user.status === 'SUSPENDED') {
+          <button (click)="onReactivate(user.id)">
+            Réactiver
+          </button>
+        } @else {
+          <button (click)="startSuspension(user.id)">Suspendre</button>
+
+          @if (suspendingId() === user.id) {
+            <input type="datetime-local" #suspensionEndDate>
+            <small>Laisser vide pour une suspension définitive.</small>
+            <button (click)="confirmSuspension(user.id, suspensionEndDate.value)">Confirmer</button>
+            <button (click)="suspendingId.set(null)">Annuler</button>
           }
-        </button>
-        <button>
+
+        }
+
+
+        <button (click)="onDelete(user.id)">
           Supprimer
         </button>
       </td>

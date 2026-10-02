@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminCreateRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSuspensionRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -87,6 +89,28 @@ public class AppUserController implements AppUserApi {
         AppUser user = appUserMapper.toEntityForAdminCreate(requestDto);
         AppUser created = appUserService.createAccountByAdmin(user, requestDto.getRole(), requestDto.getClubIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
+    }
+
+    
+    @Secured("ROLE_ADMINISTRATOR")
+    @PutMapping("/{id}/suspend")
+    public AppUserResponseDto suspendAccount(@PathVariable Long id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
+        LocalDateTime suspenstionEndDate = null;
+        if (requestDto != null) {
+            suspenstionEndDate = requestDto.getSuspensionEndDate();            
+        }
+        
+        appUserService.suspend(id, suspenstionEndDate);
+        AppUser suspendedAppUser = appUserService.findById(id);
+        return appUserMapper.toDto(suspendedAppUser); 
+    }
+
+    @Secured("ROLE_ADMINISTRATOR")
+    @PutMapping("/{id}/reactivate")
+    public AppUserResponseDto reactivateAccount(@PathVariable Long id) throws HttpException {
+        appUserService.reactivate(id);
+        AppUser reactivatedAppUser = appUserService.findById(id);
+        return appUserMapper.toDto(reactivatedAppUser);
     }
 
     @Override
