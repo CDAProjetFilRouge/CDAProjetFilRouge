@@ -39,3 +39,7 @@ application-local.yml
 # Claude Code (config/etat local)
 .claude/
 claude.md
+
+# Codex code
+.codex/
+AGENTS.MD

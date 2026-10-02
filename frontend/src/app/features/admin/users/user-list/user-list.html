@@ -1,0 +1,46 @@
+<table>
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Adresse e-mail</th>
+      <th>Rôle</th>
+      <th>Club affilié</th>
+      <th>Statut</th>
+      <th>Créé le</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (user of users(); track user.id) {
+    <tr>
+      <td>{{ user.firstName }} {{ user.lastName }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.role }}</td>
+      <td>
+        @for (club of user.clubs; track club.id) {
+        <span>{{ club.name }}</span>
+        } @empty {
+          —
+        }
+      </td>
+      <td>{{ user.status }}</td>
+      <td>{{ user.creationDate }}</td>
+      <td>
+        <button>
+          Modifier
+        </button>
+        <button>
+          @if (user.status === 'SUSPENDED') {
+          Réactiver
+          } @else {
+          Suspendre
+          }
+        </button>
+        <button>
+          Supprimer
+        </button>
+      </td>
+    </tr>
+    }
+  </tbody>
+</table>

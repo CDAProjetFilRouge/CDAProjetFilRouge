@@ -23,7 +23,7 @@ public interface AppUserApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis")
     })
-    List<AppUserSummaryResponseDto> getUsers(
+    List<AppUserResponseDto> getUsers(
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size);
 
