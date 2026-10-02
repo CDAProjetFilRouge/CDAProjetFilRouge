@@ -21,6 +21,7 @@ import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminCreateRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSuspensionRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -94,12 +95,12 @@ public class AppUserController implements AppUserApi {
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/suspend")
     public AppUserResponseDto suspendAccount(@PathVariable Long id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
-        LocalDateTime endDate = null;
+        LocalDateTime suspenstionEndDate = null;
         if (requestDto != null) {
-            endDate = requestDto.getSuspensionEndDate();            
+            suspenstionEndDate = requestDto.getSuspensionEndDate();            
         }
         
-        appUserService.suspend(id, endDate);
+        appUserService.suspend(id, suspenstionEndDate);
         AppUser suspendedAppUser = appUserService.findById(id);
         return appUserMapper.toDto(suspendedAppUser); 
     }
