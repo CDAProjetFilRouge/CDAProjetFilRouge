@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { Event } from './features/events/event/event';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
 
@@ -6,11 +7,6 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-  },
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'login',
   },
   {
     path: 'admin',
@@ -28,4 +24,8 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/account/profile-edit/profile-edit').then((m) => m.ProfileEdit),
   },
+    {
+    path: '',
+    component: Event
+  }
 ];
