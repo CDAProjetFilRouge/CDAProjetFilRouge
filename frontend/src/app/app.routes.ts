@@ -35,4 +35,13 @@ export const routes: Routes = [
         (m) => m.ConfirmPasswordChange,
       ),
   },
+    path: 'account/password',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/account/password-change/password-change').then((m) => m.PasswordChange),
+  },
+  {
+    path: '',
+    component: Event,
+  },
 ];
