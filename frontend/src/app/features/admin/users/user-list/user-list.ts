@@ -1,8 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
-import { UserService } from '../user.service';
-import { ACCOUNT_STATUS_LABELS, AppUser, ROLE_LABELS } from '../user.models';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject, signal } from '@angular/core';
+import { ACCOUNT_STATUS_LABELS, AppUser, ROLE_LABELS } from '../../../../core/models/user.models';
+import { UserService } from '../user.service';
 
 @Component({
   imports: [DatePipe],
@@ -11,7 +11,6 @@ import { HttpErrorResponse } from '@angular/common/http';
   templateUrl: './user-list.html',
 })
 export class UserList {
-
   private readonly appUserService = inject(UserService);
 
   protected readonly users = signal<AppUser[]>([]);
@@ -26,8 +25,8 @@ export class UserList {
 
   constructor() {
     this.appUserService.getUsers().subscribe({
-      next: list => this.users.set(list),
-      error: err => this.handleError(err),
+      next: (list) => this.users.set(list),
+      error: (err) => this.handleError(err),
     });
   }
 
@@ -41,10 +40,10 @@ export class UserList {
     }
     this.appUserService.deleteUser(id).subscribe({
       next: () => {
-        this.users.update(list => list.filter(u => u.id !== id));
+        this.users.update((list) => list.filter((u) => u.id !== id));
         this.errorMessage.set(null);
       },
-      error: err => this.handleError(err),
+      error: (err) => this.handleError(err),
     });
   }
 
@@ -53,11 +52,11 @@ export class UserList {
       return;
     }
     this.appUserService.reactivateUser(id).subscribe({
-      next: updated => {
-        this.users.update(list => list.map(u => u.id === id ? updated : u));
+      next: (updated) => {
+        this.users.update((list) => list.map((u) => (u.id === id ? updated : u)));
         this.errorMessage.set(null);
       },
-      error: err => this.handleError(err),
+      error: (err) => this.handleError(err),
     });
   }
 
@@ -67,13 +66,12 @@ export class UserList {
 
   protected confirmSuspension(id: number, suspensionEndDate: string): void {
     this.appUserService.suspendUser(id, suspensionEndDate || undefined).subscribe({
-      next: updated => {
-        this.users.update(list => list.map(u => u.id === id ? updated : u));
+      next: (updated) => {
+        this.users.update((list) => list.map((u) => (u.id === id ? updated : u)));
         this.suspendingId.set(null);
         this.errorMessage.set(null);
       },
-      error: err => this.handleError(err),
+      error: (err) => this.handleError(err),
     });
   }
 }
-
