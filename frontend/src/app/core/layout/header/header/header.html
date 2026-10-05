@@ -2,32 +2,32 @@
   <button class="Logo">MuHubEvent</button>
   <div class="page-space">
       <button class="page-select" routerLink="/catalogue">Catalogue</button>
-      @if(loggedIn == true && (role == "USER" || role == "ORGANIZER" || role == "ADMIN")){
+      @if (isAffiliated()) {
         <button class="page-select" routerLink="/">Mon club</button>
-      }@else {
+      } @else {
         <button class="page-select" routerLink="/clubs">Clubs</button>
       }
 
-      @if (loggedIn == true) {
+      @if (user()) {
         <button class="page-select" routerLink="/">Tableau de bord</button>
         <button class="page-select" routerLink="/">Mon calendrier</button>
+        <button class="page-select" routerLink="/account">Mon compte</button>
       }
 
-      @if(loggedIn == true && role == "ORGANIZER"){
+      @if (user()?.role === 'ORGANIZER') {
         <button class="page-select" routerLink="/">Gérer les évènements</button>
       }
-      @if(loggedIn == true && role == "ADMIN"){
+      @if (user()?.role === 'ADMINISTRATOR') {
         <button class="page-select" routerLink="/">Gestion</button>
       }
   </div>
   <div class="login-space">
-    @if (loggedIn == false) {
+    @if (user(); as u) {
+      <p>{{ u.firstName }} {{ u.lastName }} - {{ roleLabels[u.role] }}</p>
+      <button class="logout-btn" (click)="logout()">Déconnexion</button>
+    } @else {
       <button class="login-btn" routerLink="/login">Se connecter</button>
       <button id="create-acc-btn" routerLink="/createAccount">Créer un compte</button>
-    }@else {
-      <p>{{userName}} - @if(role == "USER" || role == "ORGANIZER" || role == "ADMIN"){ {{role}} }@else{ Non affilié}</p>
-      <button class="logout-btn" routerLink="/">Déconnexion</button>
     }
   </div>
 </div>
-

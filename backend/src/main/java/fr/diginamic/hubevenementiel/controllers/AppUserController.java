@@ -1,12 +1,12 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import fr.diginamic.hubevenementiel.dtos.appUser.*;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,15 +17,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminCreateRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSuspensionRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
-import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.AppUserMapper;
 import fr.diginamic.hubevenementiel.mappers.AppUserSummaryMapper;
 import fr.diginamic.hubevenementiel.openapi.AppUserApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.AppUserService;
-import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
@@ -54,6 +59,14 @@ public class AppUserController implements AppUserApi {
     }
 
     @Override
+    @GetMapping("/me")
+    public AppUserResponseDto getMe() throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        return appUserMapper.toDto(appUserService.findById(principal.id()));
+    }
+
+    @Override
     @Secured("ROLE_ADMINISTRATOR")
     @GetMapping("/{id}")
     public AppUserResponseDto getById(@PathVariable Long id) throws HttpException {
@@ -71,10 +84,33 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PostMapping("/admin")
-    public ResponseEntity<AppUserResponseDto> createByAdmin(@Valid @RequestBody AppUserAdminCreateRequestDto requestDto) throws HttpException {
+    public ResponseEntity<AppUserResponseDto> createByAdmin(@Valid @RequestBody AppUserAdminCreateRequestDto requestDto)
+            throws HttpException {
         AppUser user = appUserMapper.toEntityForAdminCreate(requestDto);
         AppUser created = appUserService.createAccountByAdmin(user, requestDto.getRole(), requestDto.getClubIds());
         return ResponseEntity.status(HttpStatus.CREATED).body(appUserMapper.toDto(created));
+    }
+
+    
+    @Secured("ROLE_ADMINISTRATOR")
+    @PutMapping("/{id}/suspend")
+    public AppUserResponseDto suspendAccount(@PathVariable Long id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
+        LocalDateTime suspenstionEndDate = null;
+        if (requestDto != null) {
+            suspenstionEndDate = requestDto.getSuspensionEndDate();            
+        }
+        
+        appUserService.suspend(id, suspenstionEndDate);
+        AppUser suspendedAppUser = appUserService.findById(id);
+        return appUserMapper.toDto(suspendedAppUser); 
+    }
+
+    @Secured("ROLE_ADMINISTRATOR")
+    @PutMapping("/{id}/reactivate")
+    public AppUserResponseDto reactivateAccount(@PathVariable Long id) throws HttpException {
+        appUserService.reactivate(id);
+        AppUser reactivatedAppUser = appUserService.findById(id);
+        return appUserMapper.toDto(reactivatedAppUser);
     }
 
     @Override
@@ -83,7 +119,8 @@ public class AppUserController implements AppUserApi {
             throws HttpException {
         AppUser modifiedUser = new AppUser();
         appUserMapper.updateEntityFromDto(requestDto, modifiedUser);
-        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         AppUser updated = appUserService.updateOwnAccount(id, modifiedUser, principal);
         return appUserMapper.toDto(updated);
     }

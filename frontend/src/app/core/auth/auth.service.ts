@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Service, inject } from '@angular/core';
-import { tap } from 'rxjs';
+import { Service, inject, signal } from '@angular/core';
+import { switchMap, tap } from 'rxjs';
 import { URL_BACKEND } from '../api/api.config';
+import { AppUser } from '../models/user.models';
 
 interface LoginResponse {
   token: string;
@@ -11,12 +12,21 @@ interface LoginResponse {
 export class AuthService {
   private readonly http = inject(HttpClient);
 
+  readonly currentUser = signal<AppUser | null>(null);
+
   login(email: string, password: string) {
     return this.http.post<LoginResponse>(`${URL_BACKEND}/login`, { email, password }).pipe(
       tap((response) => {
         sessionStorage.setItem('token', response.token);
       }),
+      switchMap(() => this.loadCurrentUser()),
     );
+  }
+
+  loadCurrentUser() {
+    return this.http
+      .get<AppUser>(`${URL_BACKEND}/users/me`)
+      .pipe(tap((user) => this.currentUser.set(user)));
   }
 
   getToken(): string | null {
@@ -25,5 +35,6 @@ export class AuthService {
 
   logout(): void {
     sessionStorage.removeItem('token');
+    this.currentUser.set(null);
   }
 }
