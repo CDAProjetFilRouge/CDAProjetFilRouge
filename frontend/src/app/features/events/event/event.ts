@@ -114,7 +114,7 @@ export class Event {
       dateDebut: "xx/xx/xxxx",
       dateFin: "yy/yy/yyyy",
       address: 'xxxxxxxxxx',
-      placeDispo: 1,
+      placeDispo: 0,
       placeMax: 20,
       type: "loisir"
     },

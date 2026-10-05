@@ -36,24 +36,38 @@
       </select>
     </div>
     <button>Réinitialiser</button>
-    <button>Rechercher</button>
+    <button id="search-btn">Rechercher</button>
   </div>
   <div class="event-section">
     <div class="event-sub-section">
       <p id="counter">X évènements trouvés</p>
-      <p>Trier par: Date croissante</p>
+      <div class="sort">
+        <p>Trier par: </p>
+        <select>
+          <option>Date croissante</option>
+          <option>Date décroissante</option>
+      </select>
+      </div>
+
     </div>
     <div class="carousel">
       @for (event of displayEvents; track event){
         <div class="event-card">
           <img alt="galerie - image">
-          <p>{{ event.type}} - places</p>
+          @if(event.placeDispo > 0){
+            <p class="event-card-header">{{event.type}} - <span style="color: green">Place disponibles</span></p>
+          }@else {
+            <p class="event-card-header">{{event.type}} - <span style="color: red">Complet - Liste d'attente</span></p>
+          }
           <h3>{{ event.name}}</h3>
           <p>Date: {{ event.dateDebut}} - {{ event.dateFin}}</p>
           <p>Lieu: {{ event.address}}</p>
           <p>Places: {{ event.placeDispo}}/{{ event.placeMax}} inscrits</p>
-          <p>{{ event.price}}€ affilié - 14€</p>
-          <button>Voir le détails</button>
+          <div class="event-card-footer">
+            <p>{{ event.price}}€ affilié - 14€</p>
+            <button>Voir le détails</button>
+          </div>
+
         </div>
       }
     </div>

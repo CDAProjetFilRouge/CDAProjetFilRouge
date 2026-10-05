@@ -1,10 +1,77 @@
+.event-main{
+  margin-left: 3rem;
+  margin-right: 3rem;
+}
+
+.title-section{
+  margin-bottom: 3rem;
+}
 .carousel {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px
+  gap: 5rem;
 }
 
 .event-card {
-  border-style: solid;
-  border-color: red;
+  display: flex;
+  flex-direction: column;
+  background-color: lightgray;
+  border-radius: 5px;
+  padding: 1rem 1rem 1rem 1rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+}
+
+.event-sub-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.event-card-header {
+  align-self: center;
+}
+
+.event-card-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.event-card-footer button{
+  border-style: hidden;
+  border-radius: 5px;
+}
+
+.event-card-footer p{
+  color: black;
+}
+
+#search-btn {
+  border-style: hidden;
+  border-radius: 5px;
+  background-color: rgb(250, 109, 109);
+}
+
+.sort{
+  display: flex;
+  flex-direction: row;
+}
+
+.sort select{
+  border-style: hidden;
+  background: transparent;
 }
