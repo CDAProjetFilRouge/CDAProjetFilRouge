@@ -1,0 +1,88 @@
+<div class="event-main">
+  <div class="title-section">
+    <h1>Les évènement de la fédération</h1>
+    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
+  </div>
+  <div class="filter-section">
+    <div class="filter">
+      <p>Mot-clé</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Catégorie</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Club oragnisateur</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Lieu</p>
+      <input type="text">
+    </div>
+    <div class="filter">
+      <p>Date de début</p>
+      <input type="date">
+    </div>
+    <div class="filter">
+      <p>Date de fin</p>
+      <input type="date">
+    </div>
+    <div class="filter">
+      <p>Status</p>
+      <select>
+        <option>Publié</option>
+        <option>Annulé</option>
+      </select>
+    </div>
+    <button>Réinitialiser</button>
+    <button id="search-btn">Rechercher</button>
+  </div>
+  <div class="event-section">
+    <div class="event-sub-section">
+      <p id="counter">X évènements trouvés</p>
+      <div class="sort">
+        <p>Trier par: </p>
+        <select>
+          <option>Date croissante</option>
+          <option>Date décroissante</option>
+      </select>
+      </div>
+
+    </div>
+    <div class="carousel">
+      @for (event of displayEvents; track event){
+        <div class="event-card">
+          <img alt="galerie - image">
+          @if(event.placeDispo > 0){
+            <p class="event-card-header">{{event.type}} - <span style="color: green">Place disponibles</span></p>
+          }@else {
+            <p class="event-card-header">{{event.type}} - <span style="color: red">Complet - Liste d'attente</span></p>
+          }
+          <h3>{{ event.name}}</h3>
+          <p>Date: {{ event.dateDebut}} - {{ event.dateFin}}</p>
+          <p>Lieu: {{ event.address}}</p>
+          <p>Places: {{ event.placeDispo}}/{{ event.placeMax}} inscrits</p>
+          <div class="event-card-footer">
+            <p>{{ event.price}}€ affilié - 14€</p>
+            <button>Voir le détails</button>
+          </div>
+
+        </div>
+      }
+    </div>
+    <div class="pagination">
+      @if (currentPage > 1){
+        <button (click)="previousPage()"> Précédent</button>
+      }
+
+      <span>
+        Page {{ currentPage }} / {{ totalPages}}
+      </span>
+
+      @if (currentPage < totalPages) {
+        <button (click)="nextPage()">Suivant</button>
+      }
+    </div>
+  </div>
+</div>

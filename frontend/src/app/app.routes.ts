@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { Event } from './features/events/event/event';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
 
@@ -8,11 +9,6 @@ export const routes: Routes = [
     component: LoginComponent,
   },
   {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'login',
-  },
-  {
     path: 'admin',
     canActivate: [authGuard],
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
@@ -20,6 +16,16 @@ export const routes: Routes = [
   {
     path: 'account',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/account/account/account').then((m) => m.Account),
+    loadComponent: () => import('./features/account/account').then((m) => m.Account),
   },
+  {
+    path: 'account/edit',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/account/profile-edit/profile-edit').then((m) => m.ProfileEdit),
+  },
+    {
+    path: '',
+    component: Event
+  }
 ];

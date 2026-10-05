@@ -1,10 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth.service';
-import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../../../core/models/user.models';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+import { ACCOUNT_STATUS_LABELS, ROLE_LABELS } from '../../core/models/user.models';
 
 @Component({
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-account',
   styleUrl: './account.scss',
   templateUrl: './account.html',
@@ -18,6 +18,6 @@ export class Account {
 
   protected logout(): void {
     this.authService.logout();
-    this.router.navigateByUrl('/login');
+    void this.router.navigateByUrl('/login');
   }
 }
