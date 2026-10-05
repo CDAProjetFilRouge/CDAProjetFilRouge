@@ -29,8 +29,8 @@ public class LegalDocument {
     @Column(name = "pdf_path", length = 500)
     private String pdfPath;
 
-    @ManyToOne
-    @JoinColumn(name = "author_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "author_id", nullable = false)
     private AppUser user;
 
     public LegalDocument(){};

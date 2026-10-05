@@ -11,4 +11,9 @@ export const ADMIN_ROUTES: Routes = [
     path: 'users',
     loadComponent: () => import('./users/user-list/user-list').then((m) => m.UserList),
   },
+
+  {
+    path: 'legal-documents',
+    loadComponent: () => import('./legal-document/legal-document').then((m) => m.LegalDocumentPage)
+  },
 ]
