@@ -486,7 +486,12 @@ public class AppUserService {
         token.setPendingData(newPassword != null ? passwordEncoder.encode(newPassword) : "");
         tokenRepo.save(token);
 
-        emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+        if (newPassword != null) {
+            emailService.sendPasswordChangeConfirmationEmail(user.getEmail(), token.getValue());
+        } else {
+            emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+        }
+
     }
 
     private void createAccountActivationToken(AppUser user, String temporaryPassword) {
