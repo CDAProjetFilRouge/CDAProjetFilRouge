@@ -4,7 +4,7 @@ import { Observable, tap } from 'rxjs';
 import { URL_BACKEND } from '../../core/api/api.config';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppUser } from '../../core/models/user.models';
-import { ProfileUpdate } from './account.models';
+import { PasswordChange, ProfileUpdate } from './account.models';
 
 @Service()
 export class AccountService {
@@ -15,5 +15,9 @@ export class AccountService {
     return this.http
       .put<AppUser>(`${URL_BACKEND}/users/${id}`, profile)
       .pipe(tap((user) => this.authService.currentUser.set(user)));
+  }
+
+  changePassword(request: PasswordChange): Observable<void> {
+    return this.http.post<void>(`${URL_BACKEND}/account/password/change`, request);
   }
 }
