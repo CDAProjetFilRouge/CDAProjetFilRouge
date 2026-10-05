@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { Event } from './features/events/event/event';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
+import { Event } from './features/events/event/event';
 
 export const routes: Routes = [
   {
@@ -24,8 +24,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/account/profile-edit/profile-edit').then((m) => m.ProfileEdit),
   },
-    {
+  {
     path: '',
-    component: Event
-  }
+    component: Event,
+  },
+  {
+    path: 'confirm-password-change',
+    loadComponent: () =>
+      import('./features/auth/confirm-password-change/confirm-password-change').then(
+        (m) => m.ConfirmPasswordChange,
+      ),
+  },
 ];
