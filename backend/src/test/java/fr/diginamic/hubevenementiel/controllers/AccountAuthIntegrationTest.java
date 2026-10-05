@@ -273,9 +273,22 @@ class AccountAuthIntegrationTest {
 
         mockMvc.perform(post("/account/password/change")
                         .header("Authorization", "Bearer " + token)
-                        .param("userId", String.valueOf(user.getId()))
-                        .param("currentPassword", "mauvaisMotDePasse")
-                        .param("newPassword", "nouveauMotDePasse123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("currentPassword", "mauvaisMotDePasse", "newPassword", "nouveauMotDePasse123"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void changePassword_newPasswordTooShort_returns400() throws Exception {
+        AppUser user = createUser(uniqueEmail("change-trop-court"), AccountStatus.ACTIVE);
+        String token = loginAndGetToken(user.getEmail());
+
+        mockMvc.perform(post("/account/password/change")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("currentPassword", PASSWORD, "newPassword", "court"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -286,9 +299,9 @@ class AccountAuthIntegrationTest {
 
         mockMvc.perform(post("/account/password/change")
                         .header("Authorization", "Bearer " + token)
-                        .param("userId", String.valueOf(user.getId()))
-                        .param("currentPassword", PASSWORD)
-                        .param("newPassword", "nouveauMotDePasse123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("currentPassword", PASSWORD, "newPassword", "nouveauMotDePasse123"))))
                 .andExpect(status().isOk());
 
         // La confirmation email n'est envoyee qu'apres confirmation du changement
