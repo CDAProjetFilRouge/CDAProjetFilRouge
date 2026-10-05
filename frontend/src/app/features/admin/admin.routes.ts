@@ -4,16 +4,30 @@ export const ADMIN_ROUTES: Routes = [
 
   {
     path: '',
-    redirectTo: 'users', pathMatch: 'full'
+    loadComponent: () => import('./admin-layout/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        redirectTo: 'users', pathMatch: 'full'
+      },
+
+      {
+        path: 'users',
+        loadComponent: () => import('./users/user-list/user-list').then((m) => m.UserList),
+      },
+
+      {
+        path: 'terms-of-use',
+        loadComponent: () => import('./legal-document/legal-document').then((m) => m.LegalDocumentPage),
+        data: { documentType: 'TERM_OF_USE' }
+      },
+
+      {
+        path: 'gdpr-policy',
+        loadComponent: () => import('./legal-document/legal-document').then((m) => m.LegalDocumentPage),
+        data: { documentType: 'GDPR_POLICY' }
+      },
+    ]
   },
 
-  {
-    path: 'users',
-    loadComponent: () => import('./users/user-list/user-list').then((m) => m.UserList),
-  },
-
-  {
-    path: 'legal-documents',
-    loadComponent: () => import('./legal-document/legal-document').then((m) => m.LegalDocumentPage)
-  },
 ]
