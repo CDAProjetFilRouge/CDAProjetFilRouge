@@ -27,6 +27,11 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./legal-document/legal-document').then((m) => m.LegalDocumentPage),
         data: { documentType: 'GDPR_POLICY' }
       },
+
+      {
+        path: 'anonymisation-demands',
+        loadComponent: () => import('./anonymization-demand/anonymization-demand').then((m) => m.AnonymizationDemandList)
+      }
     ]
   },
 
