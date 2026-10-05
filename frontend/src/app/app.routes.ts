@@ -1,16 +1,12 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
+import { Event } from './features/events/event/event';
 
 export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-  },
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: 'login',
   },
   {
     path: 'admin',
@@ -33,5 +29,9 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/account/password-change/password-change').then((m) => m.PasswordChange),
+  },
+  {
+    path: '',
+    component: Event,
   },
 ];

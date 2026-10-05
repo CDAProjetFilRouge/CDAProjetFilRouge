@@ -65,6 +65,9 @@ export class UserList {
   }
 
   protected confirmSuspension(id: number, suspensionEndDate: string): void {
+    if (!confirm('Voulez-vous vraiment suspendre cet utilisateur ?')) {
+      return;
+    }
     this.appUserService.suspendUser(id, suspensionEndDate || undefined).subscribe({
       next: (updated) => {
         this.users.update((list) => list.map((u) => (u.id === id ? updated : u)));
