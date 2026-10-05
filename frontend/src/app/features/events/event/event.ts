@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { EventService } from './event-service';
+import { EventModel } from './event-model';
 
 @Component({
   imports: [],
@@ -7,131 +9,24 @@ import { Component } from '@angular/core';
   templateUrl: './event.html',
 })
 export class Event {
-  readonly events = [
-    {
-      name: "Event 1",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 2",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 3",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 4",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 5",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 6",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 7",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 8",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 9",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 10",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 11",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 0,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 12",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    }
-  ]
+  private readonly eventService = inject(EventService);
+  events: EventModel[] = [];
 
-   currentPage = 1;
-   eventsPerPages = 6;
+  ngOnInit(): void{
+    console.log(this.eventService.getEvents)
+    this.eventService.getEvents().subscribe({
+      next: (events) => {
+        this.events = this.events;
+      },
+      error: (error) => {
+        console.error('Failed to load events', error);
+      }
+    })
+  }
+
+  currentPage = 1;
+  eventsPerPages = 6;
+
   get displayEvents(){
     const start = (this.currentPage - 1) * this.eventsPerPages;
     const end = start + this.eventsPerPages;

@@ -28,7 +28,19 @@ public interface EventApi {
             @ApiResponse(responseCode = "200", description = "Liste paginée des évènements"),
             @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
-    List<EventSummaryResponseDto> getEvents(
+    List<EventResponseDto> getEvents(
+            @Parameter(description = "Numéro de page (0-indexé)") int page,
+            @Parameter(description = "Taille de page") int size
+            ) throws HttpException;
+
+    @Operation(summary = "Consulter le détail d'un évènement",
+            description = "Un évènement au statut DRAFT n'est visible que par son organisateur et les administrateurs.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Évènement trouvé"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "404", description = "Évènement introuvable ou non visible pour l'appelant")
+    })
+    List<EventSummaryResponseDto> getEventsSummary(
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size,
             @Parameter(description = "Filtre optionnel par catégorie") Category category,
@@ -38,7 +50,7 @@ public interface EventApi {
             @Parameter(description = "Prix maximum") Integer maxPrice,
             @Parameter(description = "Filtre optionnel par statut") EventStatus status) throws HttpException;
 
-    @Operation(summary = "Consulter le détail d'un évènement",
+    @Operation(summary = "Consulter le détail d'un évènement en résumé",
             description = "Un évènement au statut DRAFT n'est visible que par son organisateur et les administrateurs.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Évènement trouvé"),

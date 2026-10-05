@@ -52,7 +52,19 @@ public class EventController implements EventApi {
 
     @Override
     @GetMapping
-    public List<EventSummaryResponseDto> getEvents(
+    public List<EventResponseDto> getEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+            ) throws HttpException {
+        //AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return eventService.findAllEvents(page, size).stream()
+                .map(eventMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    @GetMapping("/summary")
+    public List<EventSummaryResponseDto> getEventsSummary(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Category category,
