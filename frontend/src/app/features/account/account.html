@@ -1,0 +1,31 @@
+<h1>Mon compte</h1>
+
+@if (user(); as u) {
+  <dl>
+    <dt>Nom</dt>
+    <dd>{{ u.firstName }} {{ u.lastName }}</dd>
+
+    <dt>Email</dt>
+    <dd>{{ u.email }}</dd>
+
+    <dt>Téléphone</dt>
+    <dd>{{ u.phone ?? 'Non renseigné' }}</dd>
+
+    <dt>Rôle</dt>
+    <dd>{{ roleLabels[u.role] }}</dd>
+
+    <dt>Statut</dt>
+    <dd>{{ statusLabels[u.status] }}</dd>
+
+    <dt>Membre depuis</dt>
+    <dd>{{ u.creationDate }}</dd>
+
+    @if (u.address) {
+      <dt>Adresse</dt>
+      <dd>{{ u.address.street1 }}, {{ u.address.postalCode }} {{ u.address.city }}, {{ u.address.country }}</dd>
+    }
+  </dl>
+}
+<button type="button" routerLink="/account/edit">Modifier mes informations</button>
+
+<button type="button" (click)="logout()">Se déconnecter</button>

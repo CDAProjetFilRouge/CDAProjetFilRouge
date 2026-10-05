@@ -1,5 +1,17 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Token;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
@@ -15,18 +27,6 @@ import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
-
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class AppUserService {
@@ -72,8 +72,8 @@ public class AppUserService {
     /**
      *
      * @param lastName last name to search an AppUser on
-     * @param page starting page
-     * @param size number of entries per page
+     * @param page     starting page
+     * @param size     number of entries per page
      * @return a list of AppUser
      * @throws HttpException
      */
@@ -90,8 +90,8 @@ public class AppUserService {
     /**
      *
      * @param firstName first name to search an AppUser on
-     * @param page starting page
-     * @param size number of entries per page
+     * @param page      starting page
+     * @param size      number of entries per page
      * @return a list of AppUser
      * @throws HttpException
      */
@@ -139,8 +139,8 @@ public class AppUserService {
     /**
      *
      * @param status status to search an AppUser on
-     * @param page starting page
-     * @param size number of entries per page
+     * @param page   starting page
+     * @param size   number of entries per page
      * @return a list of AppUser
      * @throws HttpException
      */
@@ -158,8 +158,8 @@ public class AppUserService {
      *
      * @param dateMin starting date to do the search on
      * @param dateMax maximum date to do the search on
-     * @param page starting page
-     * @param size number of entries per page
+     * @param page    starting page
+     * @param size    number of entries per page
      * @return a list of AppUser
      * @throws HttpException
      */
@@ -174,13 +174,45 @@ public class AppUserService {
         return users;
     }
 
+    @Transactional
+    public void suspend(Long id, LocalDateTime endDate) throws HttpException {
+        AppUser user = findById(id);
+
+        if (endDate != null && endDate.isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Impossible de définir une date de suspension dans le passé");
+        }
+
+        if (user.getStatus() != AccountStatus.ACTIVE) {
+            throw new BadRequestException("Impossible de suspendre un compte qui n'a pas le statut Actif");
+        }
+
+        user.setStatus(AccountStatus.SUSPENDED);
+        user.setSuspensionEndDate(endDate);
+
+        userRepo.save(user);
+    }
+
+    @Transactional
+    public void reactivate(Long id) throws HttpException {
+        AppUser user = findById(id);
+
+        if (user.getStatus() != AccountStatus.SUSPENDED) {
+            throw new BadRequestException("Le statut du compte que vous avez sélectionné n'est pas suspendu.");
+        }
+
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setSuspensionEndDate(null);
+
+        userRepo.save(user);
+    }
+
     /**
      *
      * @param dateMin starting date to do the search on
      * @param dateMax maximum date to do the search on
-     * @param page starting page
-     * @param size number of entries
-     * @return  a list of AppUser
+     * @param page    starting page
+     * @param size    number of entries
+     * @return a list of AppUser
      * @throws HttpException
      */
     public List<AppUser> findByCreationDateBetween(LocalDate dateMin, LocalDate dateMax, int page, int size)
@@ -232,7 +264,7 @@ public class AppUserService {
     /**
      *
      * @param appUser AppUser to save in the DB as admin
-     * @param role role to assign the AppUser to
+     * @param role    role to assign the AppUser to
      * @param clubIds ids of the clubs to affiliate the AppUser with
      * @return AppUser saved in the DB
      * @throws HttpException
@@ -285,13 +317,14 @@ public class AppUserService {
 
     /**
      *
-     * @param appUser AppUser to perform the checks on
-     * @param phoneRequired set the state of the requirement
+     * @param appUser          AppUser to perform the checks on
+     * @param phoneRequired    set the state of the requirement
      * @param passwordRequired set the state of the requirement
      * @return return true if the AppUser passed all checks else return false
      * @throws HttpException
      */
-    public boolean appUserChecker(AppUser appUser, boolean phoneRequired, boolean passwordRequired) throws HttpException {
+    public boolean appUserChecker(AppUser appUser, boolean phoneRequired, boolean passwordRequired)
+            throws HttpException {
 
         if (appUser == null) {
             throw new BadRequestException("Le compte ne peut pas être nul.");
@@ -335,9 +368,9 @@ public class AppUserService {
 
     /**
      *
-     * @param id id of the AppUser to update
+     * @param id           id of the AppUser to update
      * @param modifiedUser updated AppUser information
-     * @param principal the authenticated caller, must match id
+     * @param principal    the authenticated caller, must match id
      * @return modified AppUser
      * @throws HttpException
      */
@@ -371,9 +404,9 @@ public class AppUserService {
 
     /**
      *
-     * @param id if of the AppUser to update
+     * @param id           if of the AppUser to update
      * @param modifiedUser updated AppUser information
-     * @param clubIds ids of the clubs to affiliate the AppUser with
+     * @param clubIds      ids of the clubs to affiliate the AppUser with
      * @return modified AppUser
      * @throws HttpException
      */
@@ -405,13 +438,19 @@ public class AppUserService {
 
     /**
      *
-     * @param userId id of the AppUser requesting the password change
-     * @param currentPassword current password, verified before issuing the change token
-     * @param newPassword new password to apply once the change is confirmed
-     * @throws HttpException if the AppUser cannot be found or currentPassword doesn't match
+     * @param userId          id of the AppUser requesting the password change
+     * @param currentPassword current password, verified before issuing the change
+     *                        token
+     * @param newPassword     new password to apply once the change is confirmed
+     * @throws HttpException if the AppUser cannot be found or currentPassword
+     *                       doesn't match
      */
     @Transactional
     public void requestPasswordChange(Long userId, String currentPassword, String newPassword) throws HttpException {
+        if (newPassword == null || newPassword.length() < 12) {
+            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
+        }
+
         AppUser user = findById(userId);
 
         if (!passwordEncoder.matches(currentPassword, user.getHashedPassword())) {
@@ -423,7 +462,8 @@ public class AppUserService {
 
     /**
      *
-     * @param email email of the AppUser requesting a password reset; silently ignored if unknown
+     * @param email email of the AppUser requesting a password reset; silently
+     *              ignored if unknown
      */
     @Transactional
     public void requestPasswordReset(String email) {
@@ -468,9 +508,10 @@ public class AppUserService {
 
     /**
      *
-     * @param tokenValue value of the pending CHANGE_PWD token
+     * @param tokenValue  value of the pending CHANGE_PWD token
      * @param newPassword new password to store as the token's pending data
-     * @throws HttpException if the token is invalid, of the wrong type, already used or expired
+     * @throws HttpException if the token is invalid, of the wrong type, already
+     *                       used or expired
      */
     @Transactional
     public void submitNewPasswordAfterReset(String tokenValue, String newPassword) throws HttpException {
@@ -485,7 +526,8 @@ public class AppUserService {
     /**
      *
      * @param tokenValue value of the CHANGE_PWD token to confirm
-     * @throws HttpException if the token is invalid, of the wrong type, already used, expired, or has no pending password
+     * @throws HttpException if the token is invalid, of the wrong type, already
+     *                       used, expired, or has no pending password
      */
     @Transactional
     public void confirmPasswordReset(String tokenValue) throws HttpException {
@@ -525,7 +567,8 @@ public class AppUserService {
     /**
      *
      * @param tokenValue value of the ENABLE_ACCOUNT token to confirm
-     * @throws HttpException if the token is invalid, of the wrong type, already used or expired
+     * @throws HttpException if the token is invalid, of the wrong type, already
+     *                       used or expired
      */
     @Transactional
     public void confirmAccountVerification(String tokenValue) throws HttpException {
@@ -541,10 +584,12 @@ public class AppUserService {
 
     /**
      *
-     * @param tokenValue value of the ACCOUNT_ACTIVATION token to confirm
-     * @param temporaryPassword temporary password sent to the AppUser, verified before activation
-     * @param newPassword new password to set once the account is activated
-     * @throws HttpException if the token is invalid, of the wrong type, already used, expired, or temporaryPassword doesn't match
+     * @param tokenValue        value of the ACCOUNT_ACTIVATION token to confirm
+     * @param temporaryPassword temporary password sent to the AppUser, verified
+     *                          before activation
+     * @param newPassword       new password to set once the account is activated
+     * @throws HttpException if the token is invalid, of the wrong type, already
+     *                       used, expired, or temporaryPassword doesn't match
      */
     @Transactional
     public void activateAccount(String tokenValue, String temporaryPassword, String newPassword) throws HttpException {
