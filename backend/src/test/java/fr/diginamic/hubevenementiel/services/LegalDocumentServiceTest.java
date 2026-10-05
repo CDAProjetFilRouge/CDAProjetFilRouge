@@ -1,11 +1,13 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,13 +28,23 @@ class LegalDocumentServiceTest {
     @Mock
     private LegalDocumentRepo legalDocumentRepo;
 
+    @Mock
+    private AppUserService appUserService;
+
     @InjectMocks
     private LegalDocumentService legalDocumentService;
 
     private LegalDocument validDocument;
 
+    private AppUserPrincipal principal;
+
+    private AppUser administrator;
+
     @BeforeEach
     void setUp() {
+        principal = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
+        administrator = new AppUser();
+
         validDocument = new LegalDocument();
         validDocument.setDocumentType(DocumentType.TERM_OF_USE);
         validDocument.setContent("Conditions d'utilisation...");
@@ -73,9 +85,10 @@ class LegalDocumentServiceTest {
     void createNewVersion_firstVersionOfType_setsVersionOne() throws HttpException {
         when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
                 .thenReturn(Optional.empty());
+        when(appUserService.findById(1L)).thenReturn(administrator);
         when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        LegalDocument result = legalDocumentService.createNewVersion(validDocument);
+        LegalDocument result = legalDocumentService.createNewVersion(validDocument, principal);
 
         assertThat(result.getVersion()).isEqualTo(1);
     }
@@ -86,11 +99,24 @@ class LegalDocumentServiceTest {
         previous.setVersion(3);
         when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
                 .thenReturn(Optional.of(previous));
+        when(appUserService.findById(1L)).thenReturn(administrator);
         when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        LegalDocument result = legalDocumentService.createNewVersion(validDocument);
+        LegalDocument result = legalDocumentService.createNewVersion(validDocument, principal);
 
         assertThat(result.getVersion()).isEqualTo(4);
+    }
+
+    @Test
+    void createNewVersion_setsConnectedAdministratorAsAuthor() throws HttpException {
+        when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
+                .thenReturn(Optional.empty());
+        when(appUserService.findById(1L)).thenReturn(administrator);
+        when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LegalDocument result = legalDocumentService.createNewVersion(validDocument, principal);
+
+        assertThat(result.getUser()).isSameAs(administrator);
     }
 
     // ---------------------------------------------------------------
