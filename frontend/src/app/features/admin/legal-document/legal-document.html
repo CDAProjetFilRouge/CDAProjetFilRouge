@@ -1,12 +1,9 @@
-<button (click)="load('TERM_OF_USE')" [class.active]="selectedType() === 'TERM_OF_USE'">CGU</button>
-<button (click)="load('GDPR_POLICY')" [class.active]="selectedType() === 'GDPR_POLICY'">RGPD</button>
-
+<h1>{{ typeLabel[selectedType] }}</h1>
 @if (loading()) {
   <p>Chargement...</p>
 } @else if (loadError()) {
   <p role="alert">{{ loadError() }}</p>
 } @else if (document(); as doc) {
-  <h1>{{ typeLabel[doc.documentType] }}</h1>
   <h2>Version {{ doc.version }}</h2>
   <p>{{ doc.updateDate | date: 'dd/MM/yyyy'}}</p>
   <p>Publié par {{ doc.user.firstName }} {{ doc.user.lastName }}</p>

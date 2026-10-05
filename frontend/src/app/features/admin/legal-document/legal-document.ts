@@ -4,6 +4,7 @@ import { form, FormField } from '@angular/forms/signals';
 import { DOCUMENT_TYPE_LABELS, DocumentType, LegalDocument } from './legal-document.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   imports: [FormField, DatePipe],
@@ -15,7 +16,9 @@ export class LegalDocumentPage {
 
   private service = inject(LegalDocumentService);
 
-  protected readonly selectedType = signal<DocumentType>('TERM_OF_USE');
+  private route = inject(ActivatedRoute);
+
+  protected readonly selectedType = this.route.snapshot.data['documentType'] as DocumentType;
 
   protected readonly document = signal<LegalDocument | null>(null);
 
@@ -30,8 +33,9 @@ export class LegalDocumentPage {
   legalDocumentModel = signal({ content: '' });
   legalDocumentForm = form(this.legalDocumentModel);
 
+
   constructor() {
-    this.load('TERM_OF_USE');
+    this.load(this.selectedType);
   }
 
   private handleError(err: HttpErrorResponse): string {
@@ -48,7 +52,7 @@ export class LegalDocumentPage {
       return;
     }
     this.publishError.set(null);
-    this.service.createNewVersion(this.selectedType(), text).subscribe({
+    this.service.createNewVersion(this.selectedType, text).subscribe({
       next: (content) => {
         this.document.set(content);
         this.legalDocumentModel.set({ content: '' });
@@ -62,7 +66,6 @@ export class LegalDocumentPage {
   protected load(type: DocumentType): void {
     this.loading.set(true);
     this.document.set(null);
-    this.selectedType.set(type);
     this.service.getLatest(type).subscribe({
       next: (content) => {
         this.document.set(content);
