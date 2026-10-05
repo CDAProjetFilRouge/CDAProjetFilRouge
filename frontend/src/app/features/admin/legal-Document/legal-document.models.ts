@@ -1,4 +1,4 @@
-import { AppUserSummary } from "../users/user.models";
+import { AppUserSummary } from "../../../core/models/user.models";
 
 export interface LegalDocument {
   id: number;
