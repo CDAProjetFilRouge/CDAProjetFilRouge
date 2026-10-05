@@ -25,6 +25,16 @@ export const routes: Routes = [
       import('./features/account/profile-edit/profile-edit').then((m) => m.ProfileEdit),
   },
   {
+    path: '',
+    component: Event,
+  },
+  {
+    path: 'confirm-password-change',
+    loadComponent: () =>
+      import('./features/auth/confirm-password-change/confirm-password-change').then(
+        (m) => m.ConfirmPasswordChange,
+      ),
+  },
     path: 'account/password',
     canActivate: [authGuard],
     loadComponent: () =>
