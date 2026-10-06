@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import fr.diginamic.hubevenementiel.dtos.appUser.AccountActivationRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordChange;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordReset;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,10 +37,7 @@ public interface AccountVerificationApi {
                         @ApiResponse(responseCode = "400", description = "Token invalide/expiré ou mot de passe ne respectant pas la politique de sécurité"),
                         @ApiResponse(responseCode = "404", description = "Token introuvable")
         })
-        ResponseEntity<Void> submitNewPassword(
-                        @Parameter(description = "Token de réinitialisation reçu par email", required = true) String token,
-                        @Parameter(description = "Nouveau mot de passe (12 caractères minimum)", required = true) String newPassword)
-                        throws HttpException;
+        ResponseEntity<Void> submitNewPassword(AppUserPasswordReset dto) throws HttpException;
 
         @Operation(summary = "Confirmer la réinitialisation du mot de passe", description = "Lien de confirmation envoyé par email après soumission d'un nouveau mot de passe ; sans ce clic, l'ancien mot de passe reste actif. Accessible sans authentification.")
         @ApiResponses({

@@ -520,6 +520,10 @@ public class AppUserService {
      */
     @Transactional
     public void submitNewPasswordAfterReset(String tokenValue, String newPassword) throws HttpException {
+        if (newPassword == null || newPassword.length() < 12) {
+            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
+        }
+
         Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
 
         token.setPendingData(passwordEncoder.encode(newPassword));
