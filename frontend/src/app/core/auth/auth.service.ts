@@ -46,4 +46,11 @@ export class AuthService {
   verifyAccount(token: string): Observable<void> {
     return this.http.get<void>(`${URL_BACKEND}/account/verify`, { params: { token } });
   }
+
+  requestPasswordReset(email: string): Observable<void> {
+    return this.http.post<void>(
+      `${URL_BACKEND}/account/password/forgot?email=${encodeURIComponent(email)}`,
+      null,
+    );
+  }
 }
