@@ -38,6 +38,11 @@ export const routes: Routes = [
       import('./features/account/password-change/password-change').then((m) => m.PasswordChange),
   },
   {
+    path: 'createAccount',
+    loadComponent: () =>
+      import('./features/auth/create-account/create-account').then((m) => m.CreateAccount),
+  },
+  {
     path: '',
     component: Event,
   },
