@@ -24,7 +24,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/account/profile-edit/profile-edit').then((m) => m.ProfileEdit),
   },
-    {
+  {
     path: '',
     component: Event
   }
