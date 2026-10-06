@@ -1,3 +1,5 @@
+import { ProfileUpdate } from "../../features/account/account.models";
+
 export interface AppUserSummary {
   id: number;
   firstName: string;
@@ -52,5 +54,10 @@ export interface AppUser {
   creationDate: string;
   address: Address | null;
   clubs: ClubSummary[];
+}
+
+export interface AdminUserUpdate extends ProfileUpdate {
+  role: Role;
+  clubIds: number[];
 }
 

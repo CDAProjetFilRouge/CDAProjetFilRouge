@@ -30,7 +30,7 @@
       <td>{{ accountStatusLabels[user.status] }}</td>
       <td>{{ user.creationDate | date: 'dd/MM/yyyy' }}</td>
       <td>
-        <button>
+        <button [routerLink]="['/admin/users', user.id, 'edit']">
           Modifier
         </button>
 

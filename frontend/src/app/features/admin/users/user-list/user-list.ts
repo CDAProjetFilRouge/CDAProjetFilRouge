@@ -3,9 +3,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { ACCOUNT_STATUS_LABELS, AppUser, ROLE_LABELS } from '../../../../core/models/user.models';
 import { UserService } from '../user.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   selector: 'app-user-list',
   styleUrl: './user-list.scss',
   templateUrl: './user-list.html',

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
-import { AppUser } from '../../../core/models/user.models';
+import { AdminUserUpdate, AppUser } from '../../../core/models/user.models';
 
 @Service()
 export class UserService {
@@ -22,5 +22,13 @@ export class UserService {
 
   reactivateUser(id: number): Observable<AppUser> {
     return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/reactivate`, {});
+  }
+
+  getUserByAdmin(id: number): Observable<AppUser> {
+    return this.http.get<AppUser>(`${URL_BACKEND}/users/${id}`);
+  }
+
+  updateUserByAdmin(id: number, updatedUser: AdminUserUpdate): Observable<AppUser> {
+    return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/admin`, updatedUser);
   }
 }
