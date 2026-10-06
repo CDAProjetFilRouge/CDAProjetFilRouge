@@ -46,4 +46,9 @@ export const routes: Routes = [
     path: '',
     component: Event,
   },
+  {
+    path: 'verify',
+    loadComponent: () =>
+      import('./features/auth/verify-account/verify-account').then((m) => m.VerifyAccount),
+  },
 ];
