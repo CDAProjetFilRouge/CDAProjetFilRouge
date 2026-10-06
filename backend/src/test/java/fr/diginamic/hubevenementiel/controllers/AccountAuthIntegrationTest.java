@@ -334,4 +334,32 @@ class AccountAuthIntegrationTest {
                                                                 "nouveauMotDePasse123"))))
                                 .andExpect(status().isBadRequest());
         }
+
+        @Test
+        void resetPassword_validToken_changesPasswordNowAndTokenCannotBeReused() throws Exception {
+                AppUser user = createUser(uniqueEmail("reset-ok"), AccountStatus.ACTIVE);
+                String tokenValue = UUID.randomUUID().toString();
+                createToken(user, TokenType.CHANGE_PWD, tokenValue, LocalDateTime.now().plusHours(1), null);
+                String newPassword = "nouveauMotDePasse123";
+                String body = objectMapper.writeValueAsString(Map.of("token", tokenValue, "newPassword", newPassword));
+
+                mockMvc.perform(post("/account/password/reset")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isOk());
+
+                mockMvc.perform(post("/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                Map.of("email", user.getEmail(), "password", newPassword))))
+                                .andExpect(status().isOk());
+
+                verify(emailService, org.mockito.Mockito.never()).sendPasswordChangeConfirmationEmail(
+                                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+
+                mockMvc.perform(post("/account/password/reset")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                                .andExpect(status().isBadRequest());
+        }
 }

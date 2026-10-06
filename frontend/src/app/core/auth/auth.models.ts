@@ -9,3 +9,8 @@ export interface RegisterRequest {
   password: string;
   phone: string | null;
 }
+
+export interface PasswordResetRequest {
+  token: string;
+  newPassword: string;
+}
