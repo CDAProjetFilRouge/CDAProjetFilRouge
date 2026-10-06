@@ -2,6 +2,24 @@
   <p role="alert">{{ errorMessage() }}</p>
 }
 
+<input type="search" placeholder="Rechercher (nom, prénom, e-mail)" #searchInput
+       (keydown.enter)="onSearch(searchInput.value)" />
+<select id="role" #roleSelect (change)="onRoleFilter(roleSelect.value)">
+  <option value="">Tous les rôles</option>
+@for (role of roles; track role) {
+  <option [value]="role">{{ roleLabels[role] }}</option>
+}
+</select>
+<select id="status" #statusSelect (change)="onStatusFilter(statusSelect.value)">
+  <option value="">Tous les statuts</option>
+  @for (status of statuses; track status) {
+    <option [value]="status">{{ accountStatusLabels[status] }}</option>
+  }
+</select>
+<button (click)="onSearch(searchInput.value)">Rechercher</button>
+
+<p>{{ totalElements() }} utilisateur(s)</p>
+
 <table>
   <thead>
     <tr>
@@ -59,3 +77,7 @@
     }
   </tbody>
 </table>
+
+<button (click)="goToPage(page() - 1)" [disabled]="page() === 0">Précédent</button>
+<span>Page {{ page() + 1 }} sur {{ totalPages() }}</span>
+<button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()">Suivant</button>
