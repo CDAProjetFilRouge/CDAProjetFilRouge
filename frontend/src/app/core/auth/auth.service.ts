@@ -1,12 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Service, inject, signal } from '@angular/core';
-import { switchMap, tap } from 'rxjs';
+import { Observable, switchMap, tap } from 'rxjs';
 import { URL_BACKEND } from '../api/api.config';
 import { AppUser } from '../models/user.models';
-
-interface LoginResponse {
-  token: string;
-}
+import { LoginResponse, RegisterRequest } from './auth.models';
 
 @Service()
 export class AuthService {
@@ -36,5 +33,17 @@ export class AuthService {
   logout(): void {
     sessionStorage.removeItem('token');
     this.currentUser.set(null);
+  }
+
+  confirmPasswordChange(token: string): Observable<void> {
+    return this.http.get<void>(`${URL_BACKEND}/account/password/confirm`, { params: { token } });
+  }
+
+  register(request: RegisterRequest): Observable<AppUser> {
+    return this.http.post<AppUser>(`${URL_BACKEND}/users`, request);
+  }
+
+  verifyAccount(token: string): Observable<void> {
+    return this.http.get<void>(`${URL_BACKEND}/account/verify`, { params: { token } });
   }
 }
