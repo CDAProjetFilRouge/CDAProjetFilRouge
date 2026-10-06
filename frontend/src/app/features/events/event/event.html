@@ -4,39 +4,46 @@
     <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
   </div>
   <div class="filter-section">
-    <div class="filter">
-      <p>Mot-clé</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Catégorie</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Club oragnisateur</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Lieu</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Date de début</p>
-      <input type="date">
-    </div>
-    <div class="filter">
-      <p>Date de fin</p>
-      <input type="date">
-    </div>
-    <div class="filter">
-      <p>Status</p>
-      <select>
-        <option>Publié</option>
-        <option>Annulé</option>
-      </select>
-    </div>
-    <button>Réinitialiser</button>
-    <button id="search-btn">Rechercher</button>
+    <form [formGroup]="filters" (ngSubmit)="onSubmit()">
+      <div class="filter">
+        <p>Mot-clé</p>
+        <input type="text" formControlName="keyword">
+      </div>
+      <div class="filter">
+        <p>Catégorie</p>
+        <select formControlName="category">
+          <option value=""></option>
+          <option value="CULTURE">Culture</option>
+          <option value="SPORT">Sport</option>
+          <option value="HOBBIES">Hobbies</option>
+        </select>
+      </div>
+      <div class="filter">
+        <p>Club oragnisateur</p>
+        <input type="text" formControlName="organizer">
+      </div>
+      <div class="filter">
+        <p>Ville</p>
+        <input type="text" formControlName="city">
+      </div>
+      <div class="filter">
+        <p>Date de début</p>
+        <input type="date" formControlName="startDate">
+      </div>
+      <div class="filter">
+        <p>Date de fin</p>
+        <input type="date" formControlName="endDate">
+      </div>
+      <div class="filter">
+        <p>Status</p>
+        <select formControlName="status">
+          <option value="PUBLISHED">Publié</option>
+          <option value="CANCELLED">Annulé</option>
+        </select>
+      </div>
+      <button type="button" (click)="resetFilter()">Réinitialiser</button>
+      <button type="submit">Rechercher</button>
+    </form>
   </div>
   <div class="event-section">
     <div class="event-sub-section">

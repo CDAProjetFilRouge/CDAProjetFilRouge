@@ -179,6 +179,31 @@ public class EventService {
         return eventRepository.findAll(spec, pageable).getContent();
     }
 
+    public List<Event> searchFilter(int page, int size, String keyword, Category category, String organizerFirstName, String city,
+            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
+
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");
+        }
+
+        Specification<Event> spec = EventSpecifications.visibleTo(principal);
+        for (Specification<Event> filter : Arrays.asList(
+                EventSpecifications.titleOrDescription(keyword),
+                EventSpecifications.hasCategory(category),
+                EventSpecifications.organizerFirstName(organizerFirstName),
+                EventSpecifications.hasCity(city),
+                EventSpecifications.startsOnOrAfter(startDate),
+                EventSpecifications.endsOnOrBefore(endDate),
+                EventSpecifications.hasStatus(status))) {
+            if (filter != null) {
+                spec = spec.and(filter);
+            }
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        return eventRepository.findAll(spec, pageable).getContent();
+    }
+
     /**
      *
      * @param event Event to save in the DB
