@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.controllers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.LegalDocumentMapper;
 import fr.diginamic.hubevenementiel.openapi.LegalDocumentApi;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.LegalDocumentService;
 
 @RestController
@@ -43,7 +45,8 @@ public class LegalDocumentController implements LegalDocumentApi {
     public ResponseEntity<LegalDocumentResponseDto> createNewVersion(@RequestBody LegalDocumentRequestDto requestDto)
             throws HttpException {
         LegalDocument document = legalDocumentMapper.toEntity(requestDto);
-        LegalDocument created = legalDocumentService.createNewVersion(document);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        LegalDocument created = legalDocumentService.createNewVersion(document, principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(legalDocumentMapper.toDto(created));
     }
 }

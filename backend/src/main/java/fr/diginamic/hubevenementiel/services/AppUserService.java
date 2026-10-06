@@ -3,12 +3,16 @@ package fr.diginamic.hubevenementiel.services;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +26,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.AppUserSpecifications;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -172,6 +177,20 @@ public class AppUserService {
         }
 
         return users;
+    }
+
+    public Page<AppUser> searchUsers(String q, Role role, AccountStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("lastName", "firstName"));
+        Specification<AppUser> spec = Specification.unrestricted();
+        for (Specification<AppUser> filter : Arrays.asList(
+                AppUserSpecifications.matchesSearch(q),
+                AppUserSpecifications.hasRole(role),
+                AppUserSpecifications.hasStatus(status))) {
+            if (filter != null) {
+                spec = spec.and(filter);
+            }
+        }
+        return userRepo.findAll(spec, pageable);
     }
 
     @Transactional
@@ -486,7 +505,12 @@ public class AppUserService {
         token.setPendingData(newPassword != null ? passwordEncoder.encode(newPassword) : "");
         tokenRepo.save(token);
 
-        emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+        if (newPassword != null) {
+            emailService.sendPasswordChangeConfirmationEmail(user.getEmail(), token.getValue());
+        } else {
+            emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+        }
+
     }
 
     private void createAccountActivationToken(AppUser user, String temporaryPassword) {
@@ -515,12 +539,18 @@ public class AppUserService {
      */
     @Transactional
     public void submitNewPasswordAfterReset(String tokenValue, String newPassword) throws HttpException {
+        if (newPassword == null || newPassword.length() < 12) {
+            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
+        }
+
         Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
 
-        token.setPendingData(passwordEncoder.encode(newPassword));
-        tokenRepo.save(token);
+        AppUser user = token.getUser();
+        user.setHashedPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
 
-        emailService.sendPasswordChangeConfirmationEmail(token.getUser().getEmail(), token.getValue());
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
     }
 
     /**

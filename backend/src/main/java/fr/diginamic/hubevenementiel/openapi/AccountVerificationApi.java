@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import fr.diginamic.hubevenementiel.dtos.appUser.AccountActivationRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordChange;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordReset;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,16 +31,13 @@ public interface AccountVerificationApi {
         ResponseEntity<Void> requesPasswordReset(
                         @Parameter(description = "Adresse email du compte concerné", required = true) String email);
 
-        @Operation(summary = "Soumettre un nouveau mot de passe après oubli", description = "Enregistre le nouveau mot de passe associé au token de réinitialisation reçu par email. Accessible sans authentification.")
+        @Operation(summary = "Soumettre un nouveau mot de passe après oubli", description = "Applique immédiatement le nouveau mot de passe associé au token de réinitialisation reçu par email. Le token n'est utilisable qu'une fois. Accessible sans authentification.")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Nouveau mot de passe enregistré"),
                         @ApiResponse(responseCode = "400", description = "Token invalide/expiré ou mot de passe ne respectant pas la politique de sécurité"),
                         @ApiResponse(responseCode = "404", description = "Token introuvable")
         })
-        ResponseEntity<Void> submitNewPassword(
-                        @Parameter(description = "Token de réinitialisation reçu par email", required = true) String token,
-                        @Parameter(description = "Nouveau mot de passe (12 caractères minimum)", required = true) String newPassword)
-                        throws HttpException;
+        ResponseEntity<Void> submitNewPassword(AppUserPasswordReset dto) throws HttpException;
 
         @Operation(summary = "Confirmer la réinitialisation du mot de passe", description = "Lien de confirmation envoyé par email après soumission d'un nouveau mot de passe ; sans ce clic, l'ancien mot de passe reste actif. Accessible sans authentification.")
         @ApiResponses({
