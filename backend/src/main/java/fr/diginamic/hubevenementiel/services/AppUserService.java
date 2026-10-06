@@ -526,10 +526,12 @@ public class AppUserService {
 
         Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
 
-        token.setPendingData(passwordEncoder.encode(newPassword));
-        tokenRepo.save(token);
+        AppUser user = token.getUser();
+        user.setHashedPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
 
-        emailService.sendPasswordChangeConfirmationEmail(token.getUser().getEmail(), token.getValue());
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
     }
 
     /**
