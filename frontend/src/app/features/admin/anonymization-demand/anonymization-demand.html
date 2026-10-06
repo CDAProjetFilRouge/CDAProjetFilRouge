@@ -30,7 +30,7 @@
           } @else {
             -
           }</td>
-          <td>{{ demand.approvedDate }}</td>
+          <td>{{ demand.approvedDate | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td>@if (demand.requestStatus === 'PENDING') {
             <button (click)="onValidate(demand.id)">Valider</button>
           } @else {
