@@ -68,7 +68,7 @@
           }
           <h3>{{ event.title}}</h3>
           <p>Organisé par: {{event.organizerFirstName}} {{event.organizerLastName}}</p>
-          <p>Date: {{ event.startDateTime}} - {{ event.endDateTime}}</p>
+          <p>Date: {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
           <p>Lieu: {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
           <p>Places disponile: {{ event.remainingSpots}}/{{ event.maxCapacity}} inscrits</p>
           <div class="event-card-footer">

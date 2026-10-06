@@ -5,7 +5,7 @@ export interface EventModel{
   location: {
     id: number;
     street1: string;
-    streets2: string;
+    street2: string;
     postalCode: string;
     city: string;
     country: string

@@ -4,9 +4,10 @@ import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { filter } from 'rxjs';
+import { DatePipe } from '@angular/common';
 
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DatePipe],
   selector: 'app-event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
@@ -107,7 +108,7 @@ export class Event {
   previousPage(){
     if (this.currentPage > 1){
       this.currentPage--
-      
+
       const filters = this.filters.getRawValue();
 
       this.eventService.search(this.currentPage -1, this.eventsPerPage, filters).subscribe({
