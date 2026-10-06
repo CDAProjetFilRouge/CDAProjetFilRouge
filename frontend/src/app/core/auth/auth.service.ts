@@ -42,4 +42,8 @@ export class AuthService {
   register(request: RegisterRequest): Observable<AppUser> {
     return this.http.post<AppUser>(`${URL_BACKEND}/users`, request);
   }
+
+  verifyAccount(token: string): Observable<void> {
+    return this.http.get<void>(`${URL_BACKEND}/account/verify`, { params: { token } });
+  }
 }
