@@ -6,12 +6,13 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface UserRepo extends JpaRepository<AppUser, Long> {
+public interface UserRepo extends JpaRepository<AppUser, Long>, JpaSpecificationExecutor<AppUser> {
 
     /**
      *

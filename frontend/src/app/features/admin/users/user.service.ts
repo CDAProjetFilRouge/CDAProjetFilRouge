@@ -1,15 +1,26 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
-import { AdminUserUpdate, AppUser } from '../../../core/models/user.models';
+import { AccountStatus, AdminUserUpdate, AppUser, Role } from '../../../core/models/user.models';
+import { Page } from '../../../core/models/page.models';
 
 @Service()
 export class UserService {
   private readonly http = inject(HttpClient);
 
-  getUsers(): Observable<AppUser[]> {
-    return this.http.get<AppUser[]>(`${URL_BACKEND}/users`);
+  getUsers(page: number, size: number, filters: { q?: string; role?: Role; status?: AccountStatus } = {}): Observable<Page<AppUser>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (filters.q) {
+      params = params.set('q', filters.q);
+    }
+    if (filters.role) {
+      params = params.set('role', filters.role);
+    }
+    if (filters.status) {
+      params = params.set('status', filters.status);
+    }
+    return this.http.get<Page<AppUser>>(`${URL_BACKEND}/users`);
   }
 
   deleteUser(id: number): Observable<void> {
