@@ -1,27 +1,26 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../../core/auth/auth.service';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
-  selector: 'app-login',
-  styleUrl: './login.component.scss',
-  templateUrl: './login.component.html',
+  selector: 'app-forgot-password',
+  styleUrl: './forgot-password.scss',
+  templateUrl: './forgot-password.html',
 })
-export class LoginComponent {
+export class ForgotPassword {
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
 
   readonly form = this.formBuilder.group({
-    email: ['', Validators.required],
-    password: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
   });
 
   readonly errorMessage = signal('');
   readonly isSubmitting = signal(false);
+  readonly requestSent = signal(false);
 
   onSubmit(): void {
     if (this.form.invalid) {
@@ -30,17 +29,17 @@ export class LoginComponent {
     }
 
     this.isSubmitting.set(true);
+    this.errorMessage.set('');
 
-    const { email, password } = this.form.getRawValue();
-
-    this.authService.login(email, password).subscribe({
-      next: () => this.router.navigateByUrl('/account'),
+    this.authService.requestPasswordReset(this.form.getRawValue().email).subscribe({
+      next: () => {
+        this.isSubmitting.set(false);
+        this.requestSent.set(true);
+      },
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         this.errorMessage.set(
-          error.status === 401 || error.status === 403
-            ? 'Email ou mot de passe incorrect.'
-            : 'Impossible de joindre le serveur.',
+          typeof error.error === 'string' ? error.error : "Impossible d'envoyer la demande.",
         );
       },
     });
