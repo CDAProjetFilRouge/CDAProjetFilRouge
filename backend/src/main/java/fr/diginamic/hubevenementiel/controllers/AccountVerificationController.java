@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.diginamic.hubevenementiel.dtos.appUser.AccountActivationRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordChange;
+import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordReset;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.openapi.AccountVerificationApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
@@ -43,9 +44,8 @@ public class AccountVerificationController implements AccountVerificationApi {
 
     @Override
     @PostMapping("/password/reset")
-    public ResponseEntity<Void> submitNewPassword(@RequestParam String token, @RequestParam String newPassword)
-            throws HttpException {
-        appUserService.submitNewPasswordAfterReset(token, newPassword);
+    public ResponseEntity<Void> submitNewPassword(@RequestBody AppUserPasswordReset dto) throws HttpException {
+        appUserService.submitNewPasswordAfterReset(dto.getToken(), dto.getNewPassword());
         return ResponseEntity.ok().build();
     }
 

@@ -315,4 +315,23 @@ class AccountAuthIntegrationTest {
                                 org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
 
         }
+
+        @Test
+        void resetPassword_newPasswordTooShort_returns400() throws Exception {
+                mockMvc.perform(post("/account/password/reset")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                Map.of("token", "n-importe-quoi", "newPassword", "court"))))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void resetPassword_unknownToken_returns400() throws Exception {
+                mockMvc.perform(post("/account/password/reset")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                Map.of("token", "jeton-qui-n-existe-pas", "newPassword",
+                                                                "nouveauMotDePasse123"))))
+                                .andExpect(status().isBadRequest());
+        }
 }
