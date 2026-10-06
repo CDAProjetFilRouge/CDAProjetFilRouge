@@ -20,7 +20,7 @@ export class UserService {
     if (filters.status) {
       params = params.set('status', filters.status);
     }
-    return this.http.get<Page<AppUser>>(`${URL_BACKEND}/users`);
+    return this.http.get<Page<AppUser>>(`${URL_BACKEND}/users`, { params });
   }
 
   deleteUser(id: number): Observable<void> {
