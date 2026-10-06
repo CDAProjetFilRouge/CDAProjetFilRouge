@@ -5,6 +5,7 @@ import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
 import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
+import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDTO;
 import fr.diginamic.hubevenementiel.dtos.event.EventSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -29,7 +30,7 @@ public interface EventApi {
             @ApiResponse(responseCode = "200", description = "Liste paginée des évènements"),
             @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
-    Page<EventResponseDto> getEvents(
+    Page<EventResponseMainDTO> getEvents(
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size
             ) throws HttpException;

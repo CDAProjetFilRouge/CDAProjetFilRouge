@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
 
+import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,12 +55,18 @@ public class EventController implements EventApi {
 
     @Override
     @GetMapping
-    public Page<EventResponseDto> getEvents(
+    public Page<EventResponseMainDTO> getEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
             ) throws HttpException {
-        //AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return eventService.findAllEvents(page, size).map(eventMapper::toDto);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        AppUserPrincipal principal = null;
+
+        if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
+            principal = (AppUserPrincipal) authentication.getPrincipal();
+        }
+        return eventService.findAllEventMain(page, size, principal).map(eventMapper::toMainDto);
     }
 
     @Override
@@ -80,7 +87,7 @@ public class EventController implements EventApi {
     }
 
     @GetMapping("/filter")
-    public Page<EventResponseDto> getEventSearch(
+    public Page<EventResponseMainDTO> getEventSearch(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -90,7 +97,7 @@ public class EventController implements EventApi {
             @RequestParam(required = false) LocalDateTime startDate,
             @RequestParam(required = false) LocalDateTime endDate,
             @RequestParam(required = false) EventStatus status) throws HttpException {
-        System.out.print(keyword + category + orginizerFirstName + city + startDate + endDate + startDate);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         AppUserPrincipal principal = null;
@@ -99,7 +106,7 @@ public class EventController implements EventApi {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
         return eventService.searchFilter(page, size, keyword, category, orginizerFirstName, city,
-                startDate, endDate, status, principal).map(eventMapper::toDto);
+                startDate, endDate, status, principal).map(eventMapper::toMainDto);
 
     }
 

@@ -24,10 +24,6 @@ export interface EventModel{
 
     }[],
   status: String,
-  organizer: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-  }
+  organizerFirstName: string,
+  organizerLastName: string
 }

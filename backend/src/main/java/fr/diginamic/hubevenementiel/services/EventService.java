@@ -180,6 +180,13 @@ public class EventService {
         return eventRepository.findAll(spec, pageable).getContent();
     }
 
+    public Page<Event> findAllEventMain(int page, int size, AppUserPrincipal principal) throws HttpException {
+        Specification<Event> spec = EventSpecifications.visibleTo(principal);
+        Pageable pageable = PageRequest.of(page, size);
+
+        return eventRepository.findAll(spec, pageable);
+    }
+
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String organizerFirstName, String city,
             LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
 
