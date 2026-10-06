@@ -366,4 +366,82 @@ class AppUserServiceTest {
         assertThat(user.getAddress()).isNull();
         verify(userRepo).save(user);
     }
+
+    // ---------------------------------------------------------------
+    // explainLoginRefusal
+    // ---------------------------------------------------------------
+
+    @Test
+    void explainLoginRefusal_suspendedWithEndDate_correctPassword_mentionsTheDate() {
+        AppUser user = userWithStatus(AccountStatus.SUSPENDED);
+        user.setSuspensionEndDate(LocalDateTime.of(2026, 10, 10, 12, 0));
+        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
+
+        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
+
+        assertThat(result).contains("Votre compte est suspendu jusqu'au 10/10/2026.");
+    }
+
+    @Test
+    void explainLoginRefusal_suspendedWithoutEndDate_correctPassword_saysSuspended() {
+        AppUser user = userWithStatus(AccountStatus.SUSPENDED);
+        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
+
+        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
+
+        assertThat(result).contains("Votre compte est suspendu.");
+    }
+
+    @Test
+    void explainLoginRefusal_inactive_correctPassword_asksToActivate() {
+        AppUser user = userWithStatus(AccountStatus.INACTIVE);
+        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
+
+        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
+
+        assertThat(result).isPresent();
+        assertThat(result.get()).contains("pas encore activé");
+    }
+
+    @Test
+    void explainLoginRefusal_suspended_wrongPassword_revealsNothing() {
+        AppUser user = userWithStatus(AccountStatus.SUSPENDED);
+        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("mauvaisMotDePasse", "hash")).thenReturn(false);
+
+        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "mauvaisMotDePasse");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void explainLoginRefusal_unknownEmail_revealsNothing() {
+        when(userRepo.findByEmail("inconnu@example.com")).thenReturn(Optional.empty());
+
+        Optional<String> result = appUserService.explainLoginRefusal("inconnu@example.com", "nImporteQuoi");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void explainLoginRefusal_anonymized_correctPassword_revealsNothing() {
+        AppUser user = userWithStatus(AccountStatus.ANONYMIZE);
+        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
+
+        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
+
+        assertThat(result).isEmpty();
+    }
+
+    private AppUser userWithStatus(AccountStatus status) {
+        AppUser user = new AppUser();
+        user.setEmail("alice.martin@example.com");
+        user.setHashedPassword("hash");
+        user.setStatus(status);
+        return user;
+    }
 }
