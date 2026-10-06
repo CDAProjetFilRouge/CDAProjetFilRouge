@@ -31,7 +31,7 @@ public interface AccountVerificationApi {
         ResponseEntity<Void> requesPasswordReset(
                         @Parameter(description = "Adresse email du compte concerné", required = true) String email);
 
-        @Operation(summary = "Soumettre un nouveau mot de passe après oubli", description = "Enregistre le nouveau mot de passe associé au token de réinitialisation reçu par email. Accessible sans authentification.")
+        @Operation(summary = "Soumettre un nouveau mot de passe après oubli", description = "Applique immédiatement le nouveau mot de passe associé au token de réinitialisation reçu par email. Le token n'est utilisable qu'une fois. Accessible sans authentification.")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Nouveau mot de passe enregistré"),
                         @ApiResponse(responseCode = "400", description = "Token invalide/expiré ou mot de passe ne respectant pas la politique de sécurité"),
