@@ -25,23 +25,30 @@ export const routes: Routes = [
       import('./features/account/profile-edit/profile-edit').then((m) => m.ProfileEdit),
   },
   {
-    path: '',
-    component: Event,
-  },
-  {
     path: 'confirm-password-change',
     loadComponent: () =>
       import('./features/auth/confirm-password-change/confirm-password-change').then(
         (m) => m.ConfirmPasswordChange,
       ),
   },
+  {
     path: 'account/password',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/account/password-change/password-change').then((m) => m.PasswordChange),
   },
   {
+    path: 'createAccount',
+    loadComponent: () =>
+      import('./features/auth/create-account/create-account').then((m) => m.CreateAccount),
+  },
+  {
     path: '',
     component: Event,
+  },
+  {
+    path: 'verify',
+    loadComponent: () =>
+      import('./features/auth/verify-account/verify-account').then((m) => m.VerifyAccount),
   },
 ];
