@@ -13,3 +13,8 @@ export interface ProfileUpdate {
   phone: string | null;
   address: AddressUpdate | null;
 }
+
+export interface PasswordChange {
+  currentPassword: string;
+  newPassword: string;
+}

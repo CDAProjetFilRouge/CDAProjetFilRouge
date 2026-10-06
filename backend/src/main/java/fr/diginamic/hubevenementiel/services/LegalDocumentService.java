@@ -1,11 +1,13 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +21,11 @@ import java.util.Optional;
 public class LegalDocumentService {
 
     private final LegalDocumentRepo legalDocumentRepo;
+    private final AppUserService appUserService;
 
-    public LegalDocumentService(LegalDocumentRepo legalDocumentRepo) {
+    public LegalDocumentService(LegalDocumentRepo legalDocumentRepo, AppUserService appUserService) {
         this.legalDocumentRepo = legalDocumentRepo;
+        this.appUserService = appUserService;
     }
 
     public List<LegalDocument> getAllDocuments() {
@@ -109,8 +113,9 @@ public class LegalDocumentService {
      * @throws HttpException
      */
     @Transactional
-    public LegalDocument createNewVersion(LegalDocument document) throws HttpException {
+    public LegalDocument createNewVersion(LegalDocument document, AppUserPrincipal principal) throws HttpException {
         legalDocumentChecker(document);
+        AppUser administrator = appUserService.findById(principal.id());
 
         int previousVersion = legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(document.getDocumentType())
                 .map(LegalDocument::getVersion)
@@ -118,6 +123,7 @@ public class LegalDocumentService {
 
         document.setVersion(previousVersion + 1);
         document.setUpdateDate(LocalDateTime.now());
+        document.setUser(administrator);
 
         return legalDocumentRepo.save(document);
     }

@@ -1,0 +1,21 @@
+.admin-layout {
+  display: flex;
+  min-height: 100%;
+}
+
+.admin-sidebar {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+}
+
+.admin-sidebar a.active {
+  font-weight: bold;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 24px;
+}

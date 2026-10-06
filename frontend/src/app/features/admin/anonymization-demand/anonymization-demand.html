@@ -1,0 +1,46 @@
+<button (click)="selectStatus('PENDING')">En attente</button>
+<button (click)="selectStatus('VALIDATE')">Validées</button>
+
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+@if (loading()) {
+  <p>chargement...</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>Demandeur</th>
+        <th>Demandé le</th>
+        <th>Statut</th>
+        <th>Traité par</th>
+        <th>Traité le</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (demand of demands(); track demand.id) {
+        <tr>
+          <td>{{ demand.requester.firstName }} {{ demand.requester.lastName }} <br> {{ demand.requester.email }}</td>
+          <td>{{ demand.demandDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ statusLabels[demand.requestStatus] }}</td>
+          <td>@if (demand.admin; as admin) {
+            {{ admin.firstName }} {{ admin.lastName }}
+          } @else {
+            -
+          }</td>
+          <td>{{ demand.approvedDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>@if (demand.requestStatus === 'PENDING') {
+            <button (click)="onValidate(demand.id)">Valider</button>
+          } @else {
+            -
+          }
+          </td>
+        </tr>
+      }  @empty {
+        <tr><td colspan="6">Aucune demande.</td></tr>
+      }
+    </tbody>
+  </table>
+}

@@ -29,6 +29,8 @@
     @if (form.controls.password.touched && form.controls.password.hasError('required')) {
       <p>Ton mot de passe est obligatoire.</p>
     }
+    <a routerLink="/forgot-password">Mot de passe oublié ?</a>
+
   </div>
 
   @if (errorMessage()) {
