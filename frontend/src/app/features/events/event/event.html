@@ -4,7 +4,7 @@
     <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
   </div>
   <div class="filter-section">
-    <form [formGroup]="filters" (ngSubmit)="onSubmit()">
+    <form [formGroup]="filters" (ngSubmit)="search()">
       <div class="filter">
         <p>Mot-clé</p>
         <input type="text" formControlName="keyword">
@@ -47,7 +47,7 @@
   </div>
   <div class="event-section">
     <div class="event-sub-section">
-      <p id="counter">X évènements trouvés</p>
+      <p id="counter">{{ totalElements }} évènements</p>
       <div class="sort">
         <p>Trier par: </p>
         <select>
@@ -58,7 +58,7 @@
 
     </div>
     <div class="carousel">
-      @for (event of displayEvents; track event){
+      @for (event of events(); track event.id){
         <div class="event-card">
           <img alt="galerie - image">
           @if(event.remainingSpots > 0){

@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -53,14 +54,12 @@ public class EventController implements EventApi {
 
     @Override
     @GetMapping
-    public List<EventResponseDto> getEvents(
+    public Page<EventResponseDto> getEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
             ) throws HttpException {
         //AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return eventService.findAllEvents(page, size).stream()
-                .map(eventMapper::toDto)
-                .toList();
+        return eventService.findAllEvents(page, size).map(eventMapper::toDto);
     }
 
     @Override
@@ -81,7 +80,7 @@ public class EventController implements EventApi {
     }
 
     @GetMapping("/filter")
-    public List<EventResponseDto> getEventSearch(
+    public Page<EventResponseDto> getEventSearch(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -99,9 +98,9 @@ public class EventController implements EventApi {
         if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
-        return eventService.searchFilter(page, size, keyword, category, orginizerFirstName, city, startDate, endDate, status, principal).stream()
-                .map(eventMapper::toDto)
-                .toList();
+        return eventService.searchFilter(page, size, keyword, category, orginizerFirstName, city,
+                startDate, endDate, status, principal).map(eventMapper::toDto);
+
     }
 
 

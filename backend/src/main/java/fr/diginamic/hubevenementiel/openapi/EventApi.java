@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Évènements", description = "Cycle de vie des évènements (brouillon, publié, annulé, terminé) et recherche multicritères.")
@@ -28,7 +29,7 @@ public interface EventApi {
             @ApiResponse(responseCode = "200", description = "Liste paginée des évènements"),
             @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
-    List<EventResponseDto> getEvents(
+    Page<EventResponseDto> getEvents(
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size
             ) throws HttpException;

@@ -12,6 +12,7 @@ import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.EventSpecifications;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,10 +40,10 @@ public class EventService {
      * @param size number of entries per page
      * @return a list of events
      */
-    public List<Event> findAllEvents(int page, int size) {
+    public Page<Event> findAllEvents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return eventRepository.findAll(pageable).getContent();
+        return eventRepository.findAll(pageable);
     }
 
     /**
@@ -179,7 +180,7 @@ public class EventService {
         return eventRepository.findAll(spec, pageable).getContent();
     }
 
-    public List<Event> searchFilter(int page, int size, String keyword, Category category, String organizerFirstName, String city,
+    public Page<Event> searchFilter(int page, int size, String keyword, Category category, String organizerFirstName, String city,
             LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
@@ -201,7 +202,7 @@ public class EventService {
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        return eventRepository.findAll(spec, pageable).getContent();
+        return eventRepository.findAll(spec, pageable);
     }
 
     /**

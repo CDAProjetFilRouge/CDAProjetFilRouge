@@ -1,8 +1,9 @@
 import { Component, ErrorHandler, inject, signal } from '@angular/core';
-import { EventService } from './event-service';
+import { EventFilter, EventService } from './event-service';
 import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { filter } from 'rxjs';
 
 @Component({
   imports: [ReactiveFormsModule],
@@ -12,8 +13,14 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 })
 export class Event {
   private readonly eventService = inject(EventService);
+
   protected readonly events = signal<EventModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
+
+  currentPage = 1;
+  eventsPerPage = 20;
+  totalElements = 0;
+  totalPages = 0
 
   filters = new FormGroup({
     keyword: new FormControl('', { nonNullable: true}),
@@ -25,19 +32,43 @@ export class Event {
     status: new FormControl('PUBLISHED', {nonNullable: true})
   })
 
+  private handleError(err: HttpErrorResponse): void {
+    this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');
+  }
 
-    ngOnInit(): void{
-    this.eventService.getEvents().subscribe({
-      next: (list) => this.events.set(list),
-      error: (err) => this.handleError(err),
+  ngOnInit(): void {
+    this.loadEvents();
+  }
+
+  loadEvents(): void{
+    this.eventService.getEvent(
+      this.currentPage - 1,
+      this.eventsPerPage
+    ).subscribe({
+      next: (page) => {
+        this.events.set(page.content);
+        this.totalElements = page.totalElements;
+        this.totalPages = page.totalPages;
+      },
+      error: (err) => this.handleError(err)
     });
   }
 
-  onSubmit(): void {
-    console.log("SUBMIT GONE");
-    console.log(this.filters.getRawValue());
-    this.search();
+  search(): void {
+    const filters: EventFilter = this.filters.getRawValue();
+
+    this.currentPage - 1;
+
+    this.eventService.search(0, 20, filters).subscribe({
+      next: (page) => {
+        this.events.set(page.content);
+        this.totalElements = page.totalElements;
+        this.totalPages = page.totalPages
+      },
+      error: (err) => this.handleError(err)
+    });
   }
+
 
   resetFilter(): void {
     this.filters.reset({
@@ -50,50 +81,43 @@ export class Event {
       status: 'PUBLISHED'
     });
 
-    this.search();
-  }
-
-  search(): void {
-    const filters = this.filters.getRawValue();
-
     this.currentPage = 1;
 
-    this.eventService.searchEvent(filters).subscribe({
-      next: (list) => this.events.set(list),
-      error: (err) => this.handleError(err),
-    });
+    this.loadEvents();
   }
 
-
-
-  private handleError(err: HttpErrorResponse): void {
-    this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');
-  }
-
-  currentPage = 1;
-  eventsPerPages = 6;
-
-  get displayEvents(){
-    console.log(this.eventService.getEvents());
-    const start = (this.currentPage - 1) * this.eventsPerPages;
-    const end = start + this.eventsPerPages;
-
-    return this.events().slice(start, end)
-  }
-
-  get totalPages() {
-    return Math.ceil(this.events().length / this.eventsPerPages);
-  }
 
   nextPage(){
-    if (this.currentPage < this.totalPages) {
+    if(this.currentPage < this.totalPages) {
       this.currentPage++;
+
+      const filters = this.filters.getRawValue();
+
+      this.eventService.search(this.currentPage -1, this.eventsPerPage, filters).subscribe({
+        next: (page) => {
+          this.events.set(page.content);
+          this.totalElements = page.totalElements;
+          this.totalPages = page.totalPages
+        },
+        error: (err) => this.handleError(err)
+      });
     }
   }
 
   previousPage(){
-    if (this.currentPage >1){
+    if (this.currentPage > 1){
       this.currentPage--
+      
+      const filters = this.filters.getRawValue();
+
+      this.eventService.search(this.currentPage -1, this.eventsPerPage, filters).subscribe({
+        next: (page) => {
+          this.events.set(page.content);
+          this.totalElements = page.totalElements;
+          this.totalPages = page.totalPages
+        },
+        error: (err) => this.handleError(err)
+      });
     }
   }
 
