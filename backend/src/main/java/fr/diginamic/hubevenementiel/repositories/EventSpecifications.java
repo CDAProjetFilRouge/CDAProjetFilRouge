@@ -1,9 +1,13 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.AppUser;
+import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -19,6 +23,10 @@ public class EventSpecifications {
     // RG14/RG15 : un brouillon n'est visible que par son organisateur ou un admin.
     public static Specification<Event> visibleTo(AppUserPrincipal principal) {
         return (root, query, cb) -> {
+            if(principal == null) {
+                return cb.notEqual(root.get("status"), EventStatus.DRAFT);
+            }
+
             if ("ADMINISTRATOR".equals(principal.role())) {
                 return cb.conjunction(); // toujours vrai
             }
@@ -74,4 +82,45 @@ public class EventSpecifications {
         }
         return (root, query, cb) -> cb.equal(root.get("status"), status);
     }
+
+    public static Specification<Event> titleOrDescription(String keyword){
+        if(keyword == null || keyword.isBlank()){
+            return null;
+        }
+
+        return (root, query, cb) -> {
+            String pattern = "%" + keyword.toLowerCase() + "%";
+
+            Predicate titleContains = cb.like(cb.lower(root.get("title")), pattern);
+            Predicate descriptionContains = cb.like(cb.lower(root.get("description")), pattern);
+
+            return cb.or(titleContains, descriptionContains);
+        };
+    }
+
+    public static Specification<Event> hasCity(String city){
+        if(city == null || city.isBlank()){
+            return null;
+        }
+        return (root, query, cb) -> {
+            Join<Event, Address> location = root.join("location");
+
+            return cb.equal(location.get("city"), city);
+        };
+    }
+
+    public static Specification<Event> organizerClubNameContains(String clubName){
+        if(clubName == null || clubName.isBlank()){
+            return null;
+        }
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Join<Event, AppUser> organizer = root.join("organizer");
+            Join<AppUser, Club> club = organizer.join("clubs");
+
+            return cb.like(cb.lower(club.get("name")), "%" + clubName.toLowerCase() + "%");
+        };
+    }
+
 }

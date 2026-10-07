@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.entities;
 
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
+import org.hibernate.annotations.BatchSize;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -47,6 +48,7 @@ public class Event {
     private Integer maxCapacity;
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 20)
     private List<Image> imageGallery = new ArrayList<>();
 
     @Column(name = "status", nullable = false, length = 20)
@@ -60,7 +62,9 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, List<Image> imageGallery, EventStatus status) {
+    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime,
+                 LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice,
+                 Integer maxCapacity, List<Image> imageGallery, EventStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -179,5 +183,4 @@ public class Event {
     public void setOrganizer(AppUser organizer) {
         this.organizer = organizer;
     }
-
 }

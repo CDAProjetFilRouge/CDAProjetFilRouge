@@ -42,4 +42,11 @@ public interface LegalDocumentRepo extends JpaRepository<LegalDocument, Long> {
      * @return an optional of type LegalDocument
      */
     Optional<LegalDocument> findFirstByDocumentTypeOrderByVersionDesc(DocumentType type);
+
+    /**
+     *
+     * @param userId id of the author
+     * @return true if the user authored at least one legal document version
+     */
+    boolean existsByUserId(Long userId);
 }

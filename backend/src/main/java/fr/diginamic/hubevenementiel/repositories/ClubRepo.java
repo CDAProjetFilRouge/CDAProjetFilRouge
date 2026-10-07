@@ -55,4 +55,11 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
     Page<Club> search(@Param("category") Category category, @Param("name") String name, Pageable pageable);
 
     boolean existsByName(String name);
+
+    /**
+     *
+     * @param ownerId id of the owner
+     * @return true if the user owns at least one club
+     */
+    boolean existsByOwnerId(Long ownerId);
 }

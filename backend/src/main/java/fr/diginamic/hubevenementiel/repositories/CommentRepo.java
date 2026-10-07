@@ -33,4 +33,17 @@ public interface CommentRepo extends JpaRepository<Comment, Long> {
      * @return a list of comment with pagination info
      */
     Page<Comment> findByCreationDateBetween(LocalDateTime dateMin, LocalDateTime dateMax, Pageable pageable);
+
+    /**
+     *
+     * @param authorId id of the author
+     * @return true if the user posted at least one comment
+     */
+    boolean existsByAuthorId(Long authorId);
+
+    /**
+     *
+     * @param authorId id of the author whose comments must be removed
+     */
+    void deleteByAuthorId(Long authorId);
 }

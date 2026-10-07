@@ -1,7 +1,5 @@
 package fr.diginamic.hubevenementiel.openapi;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminCreateRequestDto;
@@ -9,6 +7,9 @@ import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminUpdateRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.PageResponseDto;
+import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,13 +25,16 @@ public interface AppUserApi {
 
         @Operation(summary = "Lister les comptes utilisateur", description = "Réservé aux administrateurs.")
         @ApiResponses({
-                        @ApiResponse(responseCode = "200", description = "Liste paginée des comptes"),
+                        @ApiResponse(responseCode = "200", description = "Page de comptes (contenu, total d'éléments, nombre de pages)"),
                         @ApiResponse(responseCode = "401", description = "Non authentifié"),
                         @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis")
         })
-        List<AppUserResponseDto> getUsers(
+        PageResponseDto<AppUserResponseDto> getUsers(
                         @Parameter(description = "Numéro de page (0-indexé)") int page,
-                        @Parameter(description = "Taille de page") int size);
+                        @Parameter(description = "Taille de page") int size,
+                        @Parameter(description = "Recherche (insensible à la casse) sur le prénom, le nom ou l'email") String q,
+                        @Parameter(description = "Filtre sur le rôle") Role role,
+                        @Parameter(description = "Filtre sur le statut du compte") AccountStatus status);
 
         @Operation(summary = "Consulter un compte utilisateur")
         @ApiResponses({
@@ -89,13 +93,15 @@ public interface AppUserApi {
         AppUserResponseDto updateByAdmin(@Parameter(description = "Identifiant du compte", required = true) Long id,
                         AppUserAdminUpdateRequestDto requestDto) throws HttpException;
 
-        @Operation(summary = "Supprimer un compte", description = "Réservé aux administrateurs.")
+        @Operation(summary = "Supprimer un compte", description = "Réservé aux administrateurs. Les inscriptions du compte sont supprimées. Le compte est refusé s'il organise des évènements, possède un club, a publié des documents légaux ou traité des demandes d'anonymisation. S'il a posté des commentaires, la suppression est refusée (409, en-tête X-Error-Code: ACCOUNT_HAS_COMMENTS) sauf avec deleteComments=true.")
         @ApiResponses({
                         @ApiResponse(responseCode = "204", description = "Compte supprimé"),
                         @ApiResponse(responseCode = "401", description = "Non authentifié"),
                         @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
-                        @ApiResponse(responseCode = "404", description = "Utilisateur introuvable")
+                        @ApiResponse(responseCode = "404", description = "Utilisateur introuvable"),
+                        @ApiResponse(responseCode = "409", description = "Le compte a une activité qui empêche sa suppression")
         })
-        ResponseEntity<Void> delete(@Parameter(description = "Identifiant du compte", required = true) Long id)
+        ResponseEntity<Void> delete(@Parameter(description = "Identifiant du compte", required = true) Long id,
+                        @Parameter(description = "Supprimer aussi les commentaires du compte") boolean deleteComments)
                         throws HttpException;
 }

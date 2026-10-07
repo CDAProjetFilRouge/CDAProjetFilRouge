@@ -3,7 +3,12 @@ import { Service, inject, signal } from '@angular/core';
 import { Observable, switchMap, tap } from 'rxjs';
 import { URL_BACKEND } from '../api/api.config';
 import { AppUser } from '../models/user.models';
-import { LoginResponse, RegisterRequest } from './auth.models';
+import {
+  AccountActivationRequest,
+  LoginResponse,
+  PasswordResetRequest,
+  RegisterRequest,
+} from './auth.models';
 
 @Service()
 export class AuthService {
@@ -45,5 +50,20 @@ export class AuthService {
 
   verifyAccount(token: string): Observable<void> {
     return this.http.get<void>(`${URL_BACKEND}/account/verify`, { params: { token } });
+  }
+
+  requestPasswordReset(email: string): Observable<void> {
+    return this.http.post<void>(
+      `${URL_BACKEND}/account/password/forgot?email=${encodeURIComponent(email)}`,
+      null,
+    );
+  }
+
+  resetPassword(request: PasswordResetRequest): Observable<void> {
+    return this.http.post<void>(`${URL_BACKEND}/account/password/reset`, request);
+  }
+
+  activateAccount(request: AccountActivationRequest): Observable<void> {
+    return this.http.post<void>(`${URL_BACKEND}/account/activate`, request);
   }
 }

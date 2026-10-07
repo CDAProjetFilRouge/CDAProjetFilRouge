@@ -22,5 +22,5 @@ app:
   upload-dir: ${UPLOAD_DIR:uploads}
   mail-sender: ${MAIL_SENDER:${BREVO_SMTP_LOGIN}}
   jwt:
-    expiration-ms: 900000
+    expiration-ms: 86400000
   frontend-url: ${FRONTEND_URL:http://localhost:4200}

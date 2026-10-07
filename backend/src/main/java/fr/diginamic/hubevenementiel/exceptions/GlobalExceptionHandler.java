@@ -7,8 +7,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    public static final String ERROR_CODE_HEADER = "X-Error-Code";
+
     @ExceptionHandler(HttpException.class)
     public ResponseEntity<String> handleHttpException(HttpException exception) {
-        return ResponseEntity.status(exception.getStatus()).body(exception.getMessage());
+        ResponseEntity.BodyBuilder response = ResponseEntity.status(exception.getStatus());
+        if (exception.getCode() != null) {
+            response.header(ERROR_CODE_HEADER, exception.getCode());
+        }
+        return response.body(exception.getMessage());
     }
 }

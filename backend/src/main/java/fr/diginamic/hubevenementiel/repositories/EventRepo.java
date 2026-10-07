@@ -6,6 +6,8 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -26,6 +28,16 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
      * @return an optional of type event
      */
     Optional<Event> findByTitle(String title);
+
+    /**
+     *
+     * @param spec filters to apply
+     * @param pageable settings for the pagination
+     * @return a page of events with their location and organizer loaded in the same query
+     */
+    @Override
+    @EntityGraph(attributePaths = {"location", "organizer"})
+    Page<Event> findAll(Specification<Event> spec, Pageable pageable);
 
     Page<Event> findByLocationId(Long id, Pageable pageable);
 
@@ -89,4 +101,10 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
     @Query("SELECT e FROM Event e WHERE e.id = :id")
     Optional<Event> findByIdForUpdate(@Param("id") Long id);
 
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @return true if the user organizes at least one event
+     */
+    boolean existsByOrganizerId(Long organizerId);
 }

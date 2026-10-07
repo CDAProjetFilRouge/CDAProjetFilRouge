@@ -1,10 +1,15 @@
 package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
+import java.util.Map;
 
+import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
+import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,7 +20,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
 import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
@@ -39,20 +48,44 @@ public class EventController implements EventApi {
 
     private final EventService eventService;
     private final EventMapper eventMapper;
+    private final EventMainMapper eventMainMapper;
     private final EventSummaryMapper eventSummaryMapper;
     private final AppUserService appUserService;
 
     public EventController(EventService eventService, EventMapper eventMapper, EventSummaryMapper eventSummaryMapper,
-            AppUserService appUserService) {
+            AppUserService appUserService, EventMainMapper eventMainMapper) {
         this.eventService = eventService;
         this.eventMapper = eventMapper;
         this.eventSummaryMapper = eventSummaryMapper;
         this.appUserService = appUserService;
+        this.eventMainMapper = eventMainMapper;
     }
 
     @Override
     @GetMapping
-    public List<EventSummaryResponseDto> getEvents(
+    public Page<EventResponseMainDto> getEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+            ) throws HttpException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        AppUserPrincipal principal = null;
+
+        if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
+            principal = (AppUserPrincipal) authentication.getPrincipal();
+        }
+        return toMainDtos(eventService.findAllEventMain(page, size, principal));
+    }
+
+    private Page<EventResponseMainDto> toMainDtos(Page<Event> events) {
+        Map<Long, Integer> remainingSpots = eventService.remainingSpots(events.getContent());
+
+        return events.map(event -> eventMainMapper.toDto(event, remainingSpots.get(event.getId())));
+    }
+
+    @Override
+    @GetMapping("/summary")
+    public List<EventSummaryResponseDto> getEventsSummary(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Category category,
@@ -66,6 +99,34 @@ public class EventController implements EventApi {
                 .map(eventSummaryMapper::toDto)
                 .toList();
     }
+
+    @Override
+    @GetMapping("/filter")
+    public Page<EventResponseMainDto> getEventSearch(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Category category,
+            @RequestParam(required = false) String clubName,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) EventStatus status) throws HttpException {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        AppUserPrincipal principal = null;
+
+        if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
+            principal = (AppUserPrincipal) authentication.getPrincipal();
+        }
+        LocalDateTime startDateTime = startDate == null ? null : startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate == null ? null : endDate.atTime(LocalTime.MAX);
+        return toMainDtos(eventService.searchFilter(page, size, keyword, category, clubName, city,
+                startDateTime, endDateTime, status, principal));
+
+    }
+
 
     @Override
     @GetMapping("/{id}")
