@@ -199,7 +199,7 @@ public class EventService {
     public Page<Event> findAllEventMain(int page, int size, AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
-            throw  new ForbiddenException("Taille maximale d'éléments à afficher dépassée");
+            throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
         }
 
         Specification<Event> spec = EventSpecifications.visibleTo(principal);
@@ -212,7 +212,7 @@ public class EventService {
             LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
-            throw new ForbiddenException("Taille maximale d'éléments à afficher dépassée");
+            throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
         }
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
