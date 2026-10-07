@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable, Service} from '@angular/core';
+import { inject, Service} from '@angular/core';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
 import { EventModel } from './event-model';
@@ -41,7 +41,7 @@ export class EventService {
     }
 
     if(filters?.organizer) {
-      params = params.set('organizer', filters.organizer);
+      params = params.set('orginizerFirstName', filters.organizer);
     }
 
     if(filters?.city) {
@@ -49,17 +49,16 @@ export class EventService {
     }
 
     if(filters?.startDate) {
-      params = params.set('startDate', filters.startDate);
+      params = params.set('startDate', filters.startDate+"T00:00:00");
     }
 
     if(filters?.endDate) {
-      params = params.set('endDate', filters.endDate);
+      params = params.set('endDate', filters.endDate+"T00:00:00");
     }
 
     if(filters?.status) {
       params = params.set('status', filters.status);
     }
-
 
 
     return this.http.get<PageResponse<EventModel>>(`${URL_BACKEND}/events/filter`, { params });

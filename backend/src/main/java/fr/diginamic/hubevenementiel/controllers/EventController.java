@@ -2,7 +2,8 @@ package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
 
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDTO;
+import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
+import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,20 +43,22 @@ public class EventController implements EventApi {
 
     private final EventService eventService;
     private final EventMapper eventMapper;
+    private final EventMainMapper eventMainMapper;
     private final EventSummaryMapper eventSummaryMapper;
     private final AppUserService appUserService;
 
     public EventController(EventService eventService, EventMapper eventMapper, EventSummaryMapper eventSummaryMapper,
-            AppUserService appUserService) {
+            AppUserService appUserService, EventMainMapper eventMainMapper) {
         this.eventService = eventService;
         this.eventMapper = eventMapper;
         this.eventSummaryMapper = eventSummaryMapper;
         this.appUserService = appUserService;
+        this.eventMainMapper = eventMainMapper;
     }
 
     @Override
     @GetMapping
-    public Page<EventResponseMainDTO> getEvents(
+    public Page<EventResponseMainDto> getEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
             ) throws HttpException {
@@ -66,7 +69,7 @@ public class EventController implements EventApi {
         if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
-        return eventService.findAllEventMain(page, size, principal).map(eventMapper::toMainDto);
+        return eventService.findAllEventMain(page, size, principal).map(eventMainMapper::toDto);
     }
 
     @Override
@@ -86,13 +89,14 @@ public class EventController implements EventApi {
                 .toList();
     }
 
+    @Override
     @GetMapping("/filter")
-    public Page<EventResponseMainDTO> getEventSearch(
+    public Page<EventResponseMainDto> getEventSearch(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Category category,
-            @RequestParam(required = false) String orginizerFirstName,
+            @RequestParam(required = false) String organizerFirstName,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) LocalDateTime startDate,
             @RequestParam(required = false) LocalDateTime endDate,
@@ -105,8 +109,8 @@ public class EventController implements EventApi {
         if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
-        return eventService.searchFilter(page, size, keyword, category, orginizerFirstName, city,
-                startDate, endDate, status, principal).map(eventMapper::toMainDto);
+        return eventService.searchFilter(page, size, keyword, category, organizerFirstName, city,
+                startDate, endDate, status, principal).map(eventMainMapper::toDto);
 
     }
 

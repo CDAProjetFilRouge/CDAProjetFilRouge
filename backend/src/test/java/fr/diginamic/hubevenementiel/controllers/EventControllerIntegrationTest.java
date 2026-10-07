@@ -198,6 +198,7 @@ class EventControllerIntegrationTest {
                 });
     }
 
+
     // ---------------------------------------------------------------
     // RG15 : seul le propriétaire peut modifier/supprimer
     // ---------------------------------------------------------------
@@ -251,4 +252,5 @@ class EventControllerIntegrationTest {
 
         return ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
     }
+
 }

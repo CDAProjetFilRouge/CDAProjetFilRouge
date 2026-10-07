@@ -20,7 +20,7 @@
       </div>
       <div class="filter">
         <p>Club oragnisateur</p>
-        <input type="text" formControlName="organizer">
+        <input type="text" formControlName="organizerFirstName">
       </div>
       <div class="filter">
         <p>Ville</p>
@@ -60,7 +60,11 @@
     <div class="carousel">
       @for (event of events(); track event.id){
         <div class="event-card">
-          <img alt="galerie - image">
+          @if (event.imageGallery.length > 0) {
+            <img alt="image-galerie" src="{{event.imageGallery[0].path}}">
+          }@else {
+            <img src="https://www.freeiconspng.com/uploads/no-image-icon-6.png" width="350" alt="Icon No Download"  title="Image from freeiconspng.com"/>
+          }
           @if(event.remainingSpots > 0){
             <p class="event-card-header">{{event.category}} - <span style="color: green">Place disponibles</span></p>
           }@else {
@@ -70,7 +74,7 @@
           <p>Organisé par: {{event.organizerFirstName}} {{event.organizerLastName}}</p>
           <p>Date: {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
           <p>Lieu: {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
-          <p>Places disponile: {{ event.remainingSpots}}/{{ event.maxCapacity}} inscrits</p>
+          <p>Places disponile: {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
           <div class="event-card-footer">
             <p>{{ event.affiliatePrice}}€ affilié - {{ event.nonAffiliatePrice}}€ non affilié</p>
             <button>Voir le détails</button>

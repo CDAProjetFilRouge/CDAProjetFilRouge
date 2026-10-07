@@ -1,7 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.event;
 
 import fr.diginamic.hubevenementiel.dtos.address.AddressResponseDto;
-import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
 import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -11,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventResponseMainDTO {
+public class EventResponseMainDto {
 
     private Long id;
     private String title;
@@ -29,9 +28,9 @@ public class EventResponseMainDTO {
     private String organizerFirstName;
     private String organizerLastName;
 
-    public EventResponseMainDTO() {}
+    public EventResponseMainDto() {}
 
-    public EventResponseMainDTO(Long id, String title, String description, AddressResponseDto location, Category category,
+    public EventResponseMainDto(Long id, String title, String description, AddressResponseDto location, Category category,
                                 LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
                                 BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery,
                                 EventStatus status, String organizerFirstName, String organizerLastName){

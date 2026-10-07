@@ -46,6 +46,9 @@ public class Event {
     @Column(name = "max_capacity", nullable = false, length = 10)
     private Integer maxCapacity;
 
+    @Column(name = "remaining_places", nullable = false, length = 10)
+    private Integer remainingPlace;
+
     @OneToMany(mappedBy = "event")
     private List<Image> imageGallery = new ArrayList<>();
 
@@ -60,7 +63,9 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, List<Image> imageGallery, EventStatus status) {
+    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime,
+                 LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice,
+                 Integer maxCapacity, Integer remainingPlace, List<Image> imageGallery, EventStatus status) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -71,6 +76,7 @@ public class Event {
         this.affiliatePrice = affiliatePrice;
         this.nonAffiliatePrice = nonAffiliatePrice;
         this.maxCapacity = maxCapacity;
+        this.remainingPlace = remainingPlace;
         this.imageGallery = imageGallery;
         this.status = status;
     }
@@ -180,4 +186,11 @@ public class Event {
         this.organizer = organizer;
     }
 
+    public Integer getRemainingPlace() {
+        return remainingPlace;
+    }
+
+    public void setRemainingPlace(Integer remainingPlace) {
+        this.remainingPlace = remainingPlace;
+    }
 }

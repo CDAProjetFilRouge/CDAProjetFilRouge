@@ -5,6 +5,7 @@ import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -102,9 +103,9 @@ public class EventSpecifications {
             return null;
         }
         return (root, query, cb) -> {
-            Join<Event, Address> address = root.join("address");
+            Join<Event, Address> location = root.join("location");
 
-            return cb.equal(address.get("city"), city);
+            return cb.equal(location.get("city"), city);
         };
     }
 
@@ -118,7 +119,7 @@ public class EventSpecifications {
 
             return cb.and(
                     cb.equal(organizer.get("firstName"), organizerFirstName ),
-                    cb.equal(organizer.get("role"), "ORGANIZER")
+                    cb.equal(organizer.get("role"), Role.ORGANIZER)
             );
         };
     }

@@ -36,18 +36,6 @@ public class EventService {
 
     /**
      *
-     * @param page starting page
-     * @param size number of entries per page
-     * @return a list of events
-     */
-    public Page<Event> findAllEvents(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-
-        return eventRepository.findAll(pageable);
-    }
-
-    /**
-     *
      * @param eventId id of the event to find
      * @return an object of type Event
      * @throws HttpException
@@ -181,6 +169,11 @@ public class EventService {
     }
 
     public Page<Event> findAllEventMain(int page, int size, AppUserPrincipal principal) throws HttpException {
+
+        if(size > 20){
+            throw  new ForbiddenException("Taille maximale d'éléments à afficher dépassée");
+        }
+
         Specification<Event> spec = EventSpecifications.visibleTo(principal);
         Pageable pageable = PageRequest.of(page, size);
 
@@ -189,6 +182,10 @@ public class EventService {
 
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String organizerFirstName, String city,
             LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
+
+        if(size > 20){
+            throw new ForbiddenException("Taille maximale d'éléments à afficher dépassée");
+        }
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");

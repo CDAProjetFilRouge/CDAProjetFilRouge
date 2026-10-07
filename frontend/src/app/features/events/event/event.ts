@@ -1,9 +1,8 @@
-import { Component, ErrorHandler, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { EventFilter, EventService } from './event-service';
 import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { filter } from 'rxjs';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -59,7 +58,6 @@ export class Event {
     const filters: EventFilter = this.filters.getRawValue();
 
     this.currentPage - 1;
-
     this.eventService.search(0, 20, filters).subscribe({
       next: (page) => {
         this.events.set(page.content);

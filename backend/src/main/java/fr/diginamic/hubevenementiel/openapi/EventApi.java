@@ -5,7 +5,7 @@ import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
 import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDTO;
+import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
 import fr.diginamic.hubevenementiel.dtos.event.EventSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -23,16 +23,35 @@ import org.springframework.http.ResponseEntity;
 @SecurityRequirement(name = "bearerAuth")
 public interface EventApi {
 
-    @Operation(summary = "Rechercher des évènements",
-            description = "Recherche paginée et multicritères (catégorie, période, prix, statut). "
+    @Operation(summary = "Récupère tous les évènements et en masque certains en fonction du rôle",
+            description = "Récupère tous les évènements avec des informations de pagination"
                     + "Les évènements au statut DRAFT ne sont visibles que par leur organisateur et les administrateurs.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste paginée des évènements"),
-            @ApiResponse(responseCode = "401", description = "Non authentifié")
+            @ApiResponse(responseCode = "404", description = "Page non trouvée")
     })
-    Page<EventResponseMainDTO> getEvents(
+    Page<EventResponseMainDto> getEvents(
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size
+            ) throws HttpException;
+
+    @Operation(summary = "Récupère tous les évènements en applicant des filtres",
+            description = "Récupère tous les évènements en fonction de mots présent dans son titre/description, de sa catégorie, de du nom de famille de son organisateur," +
+                    "de sa ville, de ses dates de début/fin et de son status. Les évènement marqués DRAFT sont invisible pour les utilisateurs non admin/organisateur")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Liste paginée des évènements avec filtres"),
+            @ApiResponse(responseCode = "404", description = "Page non trouvée")
+    })
+    Page<EventResponseMainDto> getEventSearch(
+            @Parameter(description = "Numéro de page (0-indéxé)") int page,
+            @Parameter(description = "Taille de la page") int size,
+            @Parameter(description = "Keyword pour effectuer la recherche sur le titre ou description") String keyword,
+            @Parameter(description = "Nom de la catégorie sur laquelle effectuer une recherche") Category category,
+            @Parameter(description = "Nom de famille de l'organisateur sur lequel effectuer une recherche")String oranizerFirstName,
+            @Parameter(description = "Nom de la ville sur laquelle effectuer la recherche") String city,
+            @Parameter(description = "Date de début de l'évènement sur laquelle effectuer une recherche") LocalDateTime startDate,
+            @Parameter(description = "Date de fin de l'évènement sur laquelle effectuer une recherche") LocalDateTime endDate,
+            @Parameter(description = "Status de l'évènement sur lequel effectuer une recherche") EventStatus status
             ) throws HttpException;
 
     @Operation(summary = "Consulter le détail d'un évènement",
