@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.controllers;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -23,7 +24,10 @@ import fr.diginamic.hubevenementiel.dtos.appUser.AppUserRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserResponseDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSuspensionRequestDto;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserUpdateRequestDto;
+import fr.diginamic.hubevenementiel.dtos.appUser.PageResponseDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
+import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.AppUserMapper;
 import fr.diginamic.hubevenementiel.mappers.AppUserSummaryMapper;
@@ -50,12 +54,22 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @GetMapping
-    public List<AppUserResponseDto> getUsers(
+    public PageResponseDto<AppUserResponseDto> getUsers(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return appUserService.findAllUsers(page, size).stream()
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) AccountStatus status) {
+        Page<AppUser> result = appUserService.searchUsers(q, role, status, page, size);
+        List<AppUserResponseDto> content = result.getContent().stream()
                 .map(appUserMapper::toDto)
                 .toList();
+        return new PageResponseDto<>(
+            content,
+            result.getTotalElements(),
+            result.getTotalPages(),
+            result.getNumber(),
+            result.getSize());
     }
 
     @Override

@@ -2,13 +2,18 @@ package fr.diginamic.hubevenementiel.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +27,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.AppUserSpecifications;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -174,6 +180,20 @@ public class AppUserService {
         return users;
     }
 
+    public Page<AppUser> searchUsers(String q, Role role, AccountStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("lastName", "firstName"));
+        Specification<AppUser> spec = Specification.unrestricted();
+        for (Specification<AppUser> filter : Arrays.asList(
+                AppUserSpecifications.matchesSearch(q),
+                AppUserSpecifications.hasRole(role),
+                AppUserSpecifications.hasStatus(status))) {
+            if (filter != null) {
+                spec = spec.and(filter);
+            }
+        }
+        return userRepo.findAll(spec, pageable);
+    }
+
     @Transactional
     public void suspend(Long id, LocalDateTime endDate) throws HttpException {
         AppUser user = findById(id);
@@ -204,6 +224,36 @@ public class AppUserService {
         user.setSuspensionEndDate(null);
 
         userRepo.save(user);
+    }
+
+    /**
+     * Explains why a login was refused, but only to someone who knows the password,
+     * so that the state of an account is never revealed to a stranger.
+     *
+     * @param email email used to log in
+     * @param rawPassword password typed by the user
+     * @return a message when the password is correct and the account cannot log in
+     *         (suspended, not activated), otherwise empty
+     */
+    public Optional<String> explainLoginRefusal(String email, String rawPassword) {
+        return userRepo.findByEmail(email)
+                .filter(user -> passwordEncoder.matches(rawPassword, user.getHashedPassword()))
+                .flatMap(user -> switch (user.getStatus()) {
+                    case SUSPENDED -> Optional.of(suspensionMessage(user));
+                    case INACTIVE, PENDING_ACTIVATION -> Optional.of(
+                            "Votre compte n'est pas encore activé. Cliquez sur le lien d'activation reçu par email.");
+                    default -> Optional.empty();
+                });
+    }
+
+    private String suspensionMessage(AppUser user) {
+        LocalDateTime endDate = user.getSuspensionEndDate();
+
+        if (endDate == null) {
+            return "Votre compte est suspendu.";
+        }
+
+        return "Votre compte est suspendu jusqu'au " + endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".";
     }
 
     /**

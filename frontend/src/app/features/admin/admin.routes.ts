@@ -30,8 +30,18 @@ export const ADMIN_ROUTES: Routes = [
 
       {
         path: 'anonymisation-demands',
-        loadComponent: () => import('./anonymization-demand/anonymization-demand').then((m) => m.AnonymizationDemandList)
-      }
+        loadComponent: () => import('./anonymization-demand/anonymization-demand').then((m) => m.AnonymizationDemandList),
+      },
+
+      {
+        path: 'users/:id/edit',
+        loadComponent: () => import('./users/user-edit/user-edit').then((m) => m.UserEdit),
+      },
+
+      {
+        path: 'users/new',
+        loadComponent: () => import('./users/user-create/user-create').then((m) => m.UserCreate),
+      },
     ]
   },
 

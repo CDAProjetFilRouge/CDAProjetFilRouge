@@ -1,0 +1,44 @@
+<h1>Créer un compte</h1>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <label for="firstName">Prénom</label>
+  <input id="firstName" type="text" formControlName="firstName" />
+  @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
+    <p>Le prénom est obligatoire.</p>
+  }
+
+  <label for="lastName">Nom</label>
+  <input id="lastName" type="text" formControlName="lastName" />
+  @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
+    <p>Le nom est obligatoire.</p>
+  }
+
+  <label for="email">Adresse email</label>
+  <input id="email" type="email" formControlName="email" />
+  @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+    <p>L'adresse email est obligatoire.</p>
+  }
+  @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+    <p>L'adresse email n'est pas valide.</p>
+  }
+
+  <label for="role">Rôle</label>
+  <select id="role" formControlName="role">
+    @for (role of roles; track role) {
+      <option [value]="role">{{ ROLE_LABELS[role] }}</option>
+    }
+  </select>
+
+  <label for="phone">Téléphone</label>
+  <input id="phone" type="tel" formControlName="phone" />
+  @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+    <p>Le numéro de téléphone est obligatoire.</p>
+  }
+
+  @if (errorMessage()) {
+    <p>{{ errorMessage() }}</p>
+  }
+
+  <button type="submit" [disabled]="isSubmitting()">Enregistrer</button>
+  <button type="button" routerLink="/admin/users">Annuler</button>
+</form>

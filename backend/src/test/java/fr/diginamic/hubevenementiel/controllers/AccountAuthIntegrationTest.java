@@ -362,4 +362,70 @@ class AccountAuthIntegrationTest {
                                 .content(body))
                                 .andExpect(status().isBadRequest());
         }
+
+        // ---------------------------------------------------------------
+        // Comptes suspendus
+        // ---------------------------------------------------------------
+
+        @Test
+        void login_suspendedAccountWithCorrectPassword_returns403WithExplanation() throws Exception {
+                AppUser user = createUser(uniqueEmail("login-suspendu"), AccountStatus.SUSPENDED);
+
+                String body = mockMvc.perform(post("/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                Map.of("email", user.getEmail(), "password", PASSWORD))))
+                                .andExpect(status().isForbidden())
+                                .andReturn().getResponse().getContentAsString();
+
+                org.assertj.core.api.Assertions.assertThat(body).contains("suspendu");
+        }
+
+        @Test
+        void login_suspendedAccountWithWrongPassword_doesNotRevealTheStatus() throws Exception {
+                AppUser user = createUser(uniqueEmail("login-suspendu-faux-mdp"), AccountStatus.SUSPENDED);
+
+                String body = mockMvc.perform(post("/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                Map.of("email", user.getEmail(), "password", "mauvaisMotDePasse123"))))
+                                .andExpect(status().isForbidden())
+                                .andReturn().getResponse().getContentAsString();
+
+                org.assertj.core.api.Assertions.assertThat(body).doesNotContain("suspendu");
+        }
+
+        @Test
+        void login_suspensionEnded_reactivatesTheAccountAndReturnsAToken() throws Exception {
+                AppUser user = createUser(uniqueEmail("login-fin-suspension"), AccountStatus.SUSPENDED);
+                user.setSuspensionEndDate(LocalDateTime.now().minusMinutes(1));
+                userRepo.save(user);
+
+                mockMvc.perform(post("/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(
+                                                Map.of("email", user.getEmail(), "password", PASSWORD))))
+                                .andExpect(status().isOk());
+
+                AppUser refreshed = userRepo.findById(user.getId()).orElseThrow();
+                org.assertj.core.api.Assertions.assertThat(refreshed.getStatus()).isEqualTo(AccountStatus.ACTIVE);
+                org.assertj.core.api.Assertions.assertThat(refreshed.getSuspensionEndDate()).isNull();
+        }
+
+        @Test
+        void protectedRoute_tokenOfAnAccountSuspendedAfterLogin_isRejected() throws Exception {
+                AppUser admin = createUser(uniqueEmail("admin-suspendu"), AccountStatus.ACTIVE);
+                admin.setRole(Role.ADMINISTRATOR);
+                userRepo.save(admin);
+                String token = loginAndGetToken(admin.getEmail());
+
+                mockMvc.perform(get("/users").header("Authorization", "Bearer " + token))
+                                .andExpect(status().isOk());
+
+                admin.setStatus(AccountStatus.SUSPENDED);
+                userRepo.save(admin);
+
+                mockMvc.perform(get("/users").header("Authorization", "Bearer " + token))
+                                .andExpect(status().isForbidden());
+        }
 }
