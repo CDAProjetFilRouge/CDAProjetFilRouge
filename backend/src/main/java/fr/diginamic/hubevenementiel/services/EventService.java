@@ -208,7 +208,7 @@ public class EventService {
         return eventRepository.findAll(spec, pageable);
     }
 
-    public Page<Event> searchFilter(int page, int size, String keyword, Category category, String organizerFirstName, String city,
+    public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
             LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
@@ -223,7 +223,7 @@ public class EventService {
         for (Specification<Event> filter : Arrays.asList(
                 EventSpecifications.titleOrDescription(keyword),
                 EventSpecifications.hasCategory(category),
-                EventSpecifications.organizerFirstName(organizerFirstName),
+                EventSpecifications.organizerClubNameContains(clubName),
                 EventSpecifications.hasCity(city),
                 EventSpecifications.startsOnOrAfter(startDate),
                 EventSpecifications.endsOnOrBefore(endDate),

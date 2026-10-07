@@ -48,7 +48,7 @@ public interface EventApi {
             @Parameter(description = "Taille de la page") int size,
             @Parameter(description = "Keyword pour effectuer la recherche sur le titre ou description") String keyword,
             @Parameter(description = "Nom de la catégorie sur laquelle effectuer une recherche") Category category,
-            @Parameter(description = "Prénom de l'organisateur sur lequel effectuer une recherche") String organizerFirstName,
+            @Parameter(description = "Nom (ou partie du nom) d'un club de l'organisateur") String clubName,
             @Parameter(description = "Nom de la ville sur laquelle effectuer la recherche") String city,
             @Parameter(description = "Jour à partir duquel les évènements commencent (format AAAA-MM-JJ)") LocalDate startDate,
             @Parameter(description = "Jour jusqu'auquel les évènements se terminent, inclus (format AAAA-MM-JJ)") LocalDate endDate,

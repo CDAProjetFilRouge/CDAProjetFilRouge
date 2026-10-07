@@ -374,6 +374,32 @@ class EventControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[0].organizerLastName").doesNotExist());
     }
 
+    @Test
+    void filterEvents_byClubName_returnsOnlyEventsOfThatClubOrganizers() throws Exception {
+        String clubName = "Club-" + System.nanoTime();
+        fr.diginamic.hubevenementiel.entities.Club club = new fr.diginamic.hubevenementiel.entities.Club();
+        club.setName(clubName);
+        club.setCategory(Category.SPORT);
+        club.setEmail("club@example.com");
+        club.setPhone("0600000000");
+        club = clubRepo.save(club);
+        organizer.getClubs().add(club);
+        userRepo.save(organizer);
+
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String inClub = "Evenement du club-" + System.nanoTime();
+        createPublishedEvent(loginAndGetToken(organizer.getEmail()), inClub, "Paris", start, start.plusHours(2), 50);
+        createPublishedEvent(loginAndGetToken(otherOrganizer.getEmail()), "Evenement hors club-" + System.nanoTime(),
+                "Paris", start, start.plusHours(2), 50);
+
+        mockMvc.perform(get("/events/filter")
+                        .param("clubName", clubName.toUpperCase()).param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + loginAndGetToken(organizer.getEmail())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value(inClub));
+    }
+
     private void createPublishedEvent(String token, String title, String city, LocalDateTime start,
             LocalDateTime end, int capacity) throws Exception {
         AddressRequestDto address = new AddressRequestDto();

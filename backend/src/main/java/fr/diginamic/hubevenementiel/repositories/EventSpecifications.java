@@ -2,10 +2,10 @@ package fr.diginamic.hubevenementiel.repositories;
 
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
+import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
-import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -109,18 +109,17 @@ public class EventSpecifications {
         };
     }
 
-    public static Specification<Event> organizerFirstName(String organizerFirstName){
-        if(organizerFirstName == null|| organizerFirstName.isBlank()){
+    public static Specification<Event> organizerClubNameContains(String clubName){
+        if(clubName == null || clubName.isBlank()){
             return null;
         }
 
         return (root, query, cb) -> {
+            query.distinct(true);
             Join<Event, AppUser> organizer = root.join("organizer");
+            Join<AppUser, Club> club = organizer.join("clubs");
 
-            return cb.and(
-                    cb.equal(organizer.get("firstName"), organizerFirstName ),
-                    cb.equal(organizer.get("role"), Role.ORGANIZER)
-            );
+            return cb.like(cb.lower(club.get("name")), "%" + clubName.toLowerCase() + "%");
         };
     }
 

@@ -25,7 +25,7 @@ export class Event {
   filters = new FormGroup({
     keyword: new FormControl('', { nonNullable: true}),
     category: new FormControl('', { nonNullable: true}),
-    organizer: new FormControl('', {nonNullable: true}),
+    club: new FormControl('', {nonNullable: true}),
     city: new FormControl('', {nonNullable: true}),
     startDate: new FormControl('', {nonNullable: true}),
     endDate: new FormControl('', {nonNullable: true}),
@@ -62,7 +62,7 @@ export class Event {
     this.filters.reset({
       keyword: '',
       category: '',
-      organizer: '',
+      club: '',
       city: '',
       startDate: '',
       endDate: '',

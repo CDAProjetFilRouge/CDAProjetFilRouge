@@ -9,7 +9,7 @@ import { PageResponse } from './pageReponse-model';
 export interface EventFilter {
   keyword: string;
   category: string;
-  organizer: string;
+  club: string;
   city: string;
   startDate: string;
   endDate: string;
@@ -40,8 +40,8 @@ export class EventService {
       params = params.set('category', filters.category);
     }
 
-    if(filters?.organizer) {
-      params = params.set('organizerFirstName', filters.organizer);
+    if(filters?.club) {
+      params = params.set('clubName', filters.club);
     }
 
     if(filters?.city) {

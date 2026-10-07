@@ -107,7 +107,7 @@ public class EventController implements EventApi {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Category category,
-            @RequestParam(required = false) String organizerFirstName,
+            @RequestParam(required = false) String clubName,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
@@ -122,7 +122,7 @@ public class EventController implements EventApi {
         }
         LocalDateTime startDateTime = startDate == null ? null : startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate == null ? null : endDate.atTime(LocalTime.MAX);
-        return toMainDtos(eventService.searchFilter(page, size, keyword, category, organizerFirstName, city,
+        return toMainDtos(eventService.searchFilter(page, size, keyword, category, clubName, city,
                 startDateTime, endDateTime, status, principal));
 
     }
