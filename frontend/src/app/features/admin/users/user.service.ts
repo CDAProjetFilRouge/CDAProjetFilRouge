@@ -23,8 +23,12 @@ export class UserService {
     return this.http.get<Page<AppUser>>(`${URL_BACKEND}/users`, { params });
   }
 
-  deleteUser(id: number): Observable<void> {
-    return this.http.delete<void>(`${URL_BACKEND}/users/${id}`);
+  deleteUser(id: number, deleteComments = false): Observable<void> {
+    let params = new HttpParams;
+    if (deleteComments) {
+      params = params.set('deleteComments', deleteComments = true);
+    }
+    return this.http.delete<void>(`${URL_BACKEND}/users/${id}`, { params });
   }
 
   suspendUser(id: number, suspensionEndDate?: string): Observable<AppUser> {

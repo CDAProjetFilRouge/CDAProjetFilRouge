@@ -101,4 +101,16 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      */
     Page<AnonymizationDemand> findByAdminEmail(Pageable pageable, String email);
 
+    /**
+     *
+     * @param adminId id of the administrator
+     * @return true if the user handled at least one anonymization demand
+     */
+    boolean existsByAdminId(Long adminId);
+
+    /**
+     *
+     * @param requesterId id of the requester whose demands must be removed
+     */
+    void deleteByRequesterId(Long requesterId);
 }
