@@ -41,7 +41,7 @@ export class EventService {
     }
 
     if(filters?.organizer) {
-      params = params.set('orginizerFirstName', filters.organizer);
+      params = params.set('organizerFirstName', filters.organizer);
     }
 
     if(filters?.city) {
@@ -49,11 +49,11 @@ export class EventService {
     }
 
     if(filters?.startDate) {
-      params = params.set('startDate', filters.startDate+"T00:00:00");
+      params = params.set('startDate', filters.startDate);
     }
 
     if(filters?.endDate) {
-      params = params.set('endDate', filters.endDate+"T00:00:00");
+      params = params.set('endDate', filters.endDate);
     }
 
     if(filters?.status) {

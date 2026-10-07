@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,10 +48,10 @@ public interface EventApi {
             @Parameter(description = "Taille de la page") int size,
             @Parameter(description = "Keyword pour effectuer la recherche sur le titre ou description") String keyword,
             @Parameter(description = "Nom de la catégorie sur laquelle effectuer une recherche") Category category,
-            @Parameter(description = "Nom de famille de l'organisateur sur lequel effectuer une recherche")String oranizerFirstName,
+            @Parameter(description = "Prénom de l'organisateur sur lequel effectuer une recherche") String organizerFirstName,
             @Parameter(description = "Nom de la ville sur laquelle effectuer la recherche") String city,
-            @Parameter(description = "Date de début de l'évènement sur laquelle effectuer une recherche") LocalDateTime startDate,
-            @Parameter(description = "Date de fin de l'évènement sur laquelle effectuer une recherche") LocalDateTime endDate,
+            @Parameter(description = "Jour à partir duquel les évènements commencent (format AAAA-MM-JJ)") LocalDate startDate,
+            @Parameter(description = "Jour jusqu'auquel les évènements se terminent, inclus (format AAAA-MM-JJ)") LocalDate endDate,
             @Parameter(description = "Status de l'évènement sur lequel effectuer une recherche") EventStatus status
             ) throws HttpException;
 

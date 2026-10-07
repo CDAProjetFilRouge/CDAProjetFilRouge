@@ -20,7 +20,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
 import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
@@ -105,8 +109,8 @@ public class EventController implements EventApi {
             @RequestParam(required = false) Category category,
             @RequestParam(required = false) String organizerFirstName,
             @RequestParam(required = false) String city,
-            @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) EventStatus status) throws HttpException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -116,8 +120,10 @@ public class EventController implements EventApi {
         if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
+        LocalDateTime startDateTime = startDate == null ? null : startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate == null ? null : endDate.atTime(LocalTime.MAX);
         return toMainDtos(eventService.searchFilter(page, size, keyword, category, organizerFirstName, city,
-                startDate, endDate, status, principal));
+                startDateTime, endDateTime, status, principal));
 
     }
 
