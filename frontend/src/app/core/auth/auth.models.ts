@@ -21,3 +21,8 @@ export interface AccountActivationRequest {
   newPassword: string;
   confirmNewPassword: string;
 }
+
+export interface LoginResponse {
+  token: string;
+  refreshToken: string;
+}
