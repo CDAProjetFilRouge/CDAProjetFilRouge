@@ -84,13 +84,15 @@ public class ClubService {
      * @param page     starting page
      * @param size     number of entries per page
      * @param category category to find a club by
-     * @param city     city to find a club by
+     * @param name    name of the club to find by
      * @return a list of Club
      */
-    public List<Club> search(int page, int size, Category category, String city) {
+    public Page<Club> search(int page, int size, Category category, String name) {
         Pageable pageable = PageRequest.of(page, size);
-
-        return clubRepository.search(category, city, pageable).getContent();
+        if(name != null && name.isBlank()){
+            name = null;
+        }
+        return clubRepository.search(category, name, pageable);
     }
 
     public Page<Club> searchClubs(String name, Category category, String city, int page, int size) {

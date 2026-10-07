@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Clubs", description = "Gestion des clubs affiliés à la fédération.")
@@ -24,7 +25,7 @@ public interface ClubApi {
             @ApiResponse(responseCode = "200", description = "Liste paginée des clubs"),
             @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
-    List<ClubSummaryResponseDto> getClubs(
+    Page<ClubSummaryResponseDto> getClubs(
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size,
             @Parameter(description = "Filtre optionnel par catégorie") Category category,

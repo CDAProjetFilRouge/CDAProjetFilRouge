@@ -44,16 +44,15 @@ public class ClubController implements ClubApi {
         this.clubSummaryMapper = clubSummaryMapper;
     }
 
+
     @Override
     @GetMapping
-    public List<ClubSummaryResponseDto> getClubs(
+    public Page<ClubSummaryResponseDto> getClubs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Category category,
-            @RequestParam(required = false) String city) {
-        return clubService.search(page, size, category, city).stream()
-                .map(clubSummaryMapper::toDto)
-                .toList();
+            @RequestParam(required = false) String name) {
+        return clubService.search(page, size, category, name).map(clubSummaryMapper::toDto);
     }
 
     @Secured("ROLE_ADMINISTRATOR")
