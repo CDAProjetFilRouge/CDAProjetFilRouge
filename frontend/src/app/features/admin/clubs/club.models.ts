@@ -1,11 +1,11 @@
 import { Address, AppUserSummary } from "../../../core/models/user.models";
 
-export type ClubCategory = 'CULTURE' | 'SPORT' | 'HOBBIES';
+export type ClubCategory = 'CULTURE' | 'SPORT' | 'DIVERTISSEMENT';
 
 export const CLUB_CATEGORY_LABELS: Record<ClubCategory, string> = {
   CULTURE: 'Culture',
   SPORT: 'Sport',
-  HOBBIES: 'Divertissement',
+  DIVERTISSEMENT: 'Divertissement',
 }
 
 export interface Club {
