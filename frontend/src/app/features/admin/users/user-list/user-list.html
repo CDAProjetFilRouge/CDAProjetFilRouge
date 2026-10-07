@@ -2,7 +2,7 @@
   <p role="alert">{{ errorMessage() }}</p>
 }
 
-<button [routerLink]="'/admin/users/new'">Crée un compue utilisateur</button>
+<button [routerLink]="'/admin/users/new'">Crée un compte utilisateur</button>
 
 <input type="search" placeholder="Rechercher (nom, prénom, e-mail)" #searchInput
        (keydown.enter)="onSearch(searchInput.value)" />
