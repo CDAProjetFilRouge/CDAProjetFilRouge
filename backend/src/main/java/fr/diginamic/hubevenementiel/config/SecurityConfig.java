@@ -1,7 +1,5 @@
 package fr.diginamic.hubevenementiel.config;
 
-import fr.diginamic.hubevenementiel.security.JwtAuthenticationFilter;
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import fr.diginamic.hubevenementiel.security.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/events").permitAll()
                         .requestMatchers(HttpMethod.GET, "/events/filter").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
