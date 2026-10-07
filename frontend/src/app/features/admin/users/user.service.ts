@@ -24,7 +24,7 @@ export class UserService {
   }
 
   deleteUser(id: number, deleteComments = false): Observable<void> {
-    let params = new HttpParams;
+    let params = new HttpParams();
     if (deleteComments) {
       params = params.set('deleteComments', deleteComments = true);
     }

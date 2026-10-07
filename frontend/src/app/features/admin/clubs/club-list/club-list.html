@@ -1,0 +1,57 @@
+<button>Créer un club</button>
+
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+
+
+<input type="search" placeholder="Rechercher un club" #searchInput
+       (keydown.enter)="onSearch(searchInput.value)" />
+<select #categorySelect (change)="onCategoryFilter(categorySelect.value)">
+  <option value="">Toutes les catégories</option>
+  @for (c of categories; track c) {
+    <option [value]="c">{{ categoryLabels[c] }}</option>
+  }
+</select>
+
+<button (click)="onSearch(searchInput.value)">Rechercher</button>
+
+<p>{{ totalElements() }} club(s)</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Catégorie</th>
+      <th>Ville</th>
+      <th>Nombre de membres</th>
+      <th>Statut</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (club of clubs(); track club.id) {
+      <tr>
+        <td>{{ club.name }}</td>
+        <td>{{ categoryLabels[club.category] }}</td>
+        <td>{{ club.address.city }}</td>
+        <td>{{ club.appUsers.length }}</td>
+        <td>@if (club.endValidityDate) {
+          Désaffilié le {{ club.endValidityDate | date: 'dd/MM/yyyy' }}
+        } @else {
+          Actif
+        }</td>
+        <td>
+          <button>Modifier</button>
+          <button>Désaffilier</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+
+<button (click)="goToPage(page() - 1)" [disabled]="page() === 0">Précédent</button>
+<span>Page {{ page() + 1 }} sur {{ totalPages() }}</span>
+<button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()">Suivant</button>

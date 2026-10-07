@@ -1,7 +1,7 @@
 <div class="event-main">
   <div class="title-section">
-    <h1>Les évènement de la fédération</h1>
-    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
+    <h1>Les évènements de la fédération</h1>
+    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au statut brouillon ne sont pas listés.</p>
   </div>
   <form [formGroup]="filters" (ngSubmit)="search()">
     <div class="filter-section">
@@ -15,7 +15,7 @@
           <option value=""></option>
           <option value="CULTURE">Culture</option>
           <option value="SPORT">Sport</option>
-          <option value="HOBBIES">Hobbies</option>
+          <option value="DIVERTISSEMENT">Divertissement</option>
         </select>
       </div>
       <div class="filter">
@@ -35,7 +35,7 @@
         <input type="date" formControlName="endDate">
       </div>
       <div class="filter">
-        <p>Status</p>
+        <p>Statut</p>
         <select formControlName="status">
           <option value="PUBLISHED">Publié</option>
           <option value="CANCELLED">Annulé</option>
@@ -50,7 +50,7 @@
     <div class="event-sub-section">
       <p id="counter">{{ totalElements }} évènements</p>
       <div class="sort">
-        <p>Trier par: </p>
+        <p>Trier par :</p>
         <select>
           <option>Date croissante</option>
           <option>Date décroissante</option>
@@ -62,25 +62,25 @@
       @for (event of events(); track event.id){
         <div class="event-card">
           @if (event.imageGallery.length > 0) {
-            <img alt="image-galerie" [src]="imageUrl(event.imageGallery[0].path)">
+            <img alt="Image de l'évènement" [src]="imageUrl(event.imageGallery[0].path)">
           }@else {
-            <img src="https://www.freeiconspng.com/uploads/no-image-icon-6.png" width="350" alt="Icon No Download"  title="Image from freeiconspng.com"/>
+            <img src="https://www.freeiconspng.com/uploads/no-image-icon-6.png" width="350" alt="Aucune image"  title="Image from freeiconspng.com"/>
           }
           @if(event.remainingSpots > 0){
-            <p class="event-card-header">{{event.category}} - <span style="color: green">Place disponibles</span></p>
+            <p class="event-card-header">{{event.category}} - <span style="color: green">Places disponibles</span></p>
           }@else {
             <p class="event-card-header">{{event.category}} - <span style="color: red">Complet - Liste d'attente</span></p>
           }
           <h3>{{ event.title}}</h3>
           @if (event.organizerClubs.length > 0) {
-            <p>Organisé par: {{ event.organizerClubs.join(', ') }}</p>
+            <p>Organisé par : {{ event.organizerClubs.join(', ') }}</p>
           }
-          <p>Date: {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
-          <p>Lieu: {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
-          <p>Places disponile: {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
+          <p>Date : {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
+          <p>Lieu : {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
+          <p>Places disponibles : {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
           <div class="event-card-footer">
             <p>{{ event.affiliatePrice}}€ affilié - {{ event.nonAffiliatePrice}}€ non affilié</p>
-            <button>Voir le détails</button>
+            <button>Voir le détail</button>
           </div>
 
         </div>
@@ -88,7 +88,7 @@
     </div>
     <div class="pagination">
       @if (currentPage > 1){
-        <button (click)="previousPage()"> Précédent</button>
+        <button (click)="previousPage()">Précédent</button>
       }
 
       <span>

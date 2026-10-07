@@ -5,10 +5,16 @@ import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.exceptions.*;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
+import fr.diginamic.hubevenementiel.repositories.ClubSpecifications;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import java.util.Arrays;
+
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,13 +84,29 @@ public class ClubService {
      * @param page     starting page
      * @param size     number of entries per page
      * @param category category to find a club by
-     * @param city     city to find a club by
+     * @param name    name of the club to find by
      * @return a list of Club
      */
-    public List<Club> search(int page, int size, Category category, String city) {
+    public Page<Club> search(int page, int size, Category category, String name) {
         Pageable pageable = PageRequest.of(page, size);
+        if(name != null && name.isBlank()){
+            name = null;
+        }
+        return clubRepository.search(category, name, pageable);
+    }
 
-        return clubRepository.search(category, city, pageable).getContent();
+    public Page<Club> searchClubs(String name, Category category, String city, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name"));
+        Specification<Club> spec = Specification.unrestricted();
+        for (Specification<Club> filter : Arrays.asList(
+                ClubSpecifications.matchNames(name),
+                ClubSpecifications.hasCategory(category),
+                ClubSpecifications.inCity(city))) {
+            if (filter != null) {
+                spec = spec.and(filter);
+            }
+        }
+        return clubRepository.findAll(spec, pageable);
     }
 
     /**

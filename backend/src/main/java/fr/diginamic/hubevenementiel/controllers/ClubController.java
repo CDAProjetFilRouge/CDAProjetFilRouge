@@ -3,6 +3,8 @@ package fr.diginamic.hubevenementiel.controllers;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.diginamic.hubevenementiel.dtos.appUser.PageResponseDto;
 import fr.diginamic.hubevenementiel.dtos.club.ClubRequestDto;
 import fr.diginamic.hubevenementiel.dtos.club.ClubResponseDto;
 import fr.diginamic.hubevenementiel.dtos.club.ClubSummaryResponseDto;
@@ -41,16 +44,35 @@ public class ClubController implements ClubApi {
         this.clubSummaryMapper = clubSummaryMapper;
     }
 
+
     @Override
     @GetMapping
-    public List<ClubSummaryResponseDto> getClubs(
+    public Page<ClubSummaryResponseDto> getClubs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Category category,
+            @RequestParam(required = false) String name) {
+        return clubService.search(page, size, category, name).map(clubSummaryMapper::toDto);
+    }
+
+    @Secured("ROLE_ADMINISTRATOR")
+    @GetMapping("/admin")
+    public PageResponseDto<ClubResponseDto> getClubsAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue =  "20") int size,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Category category,
             @RequestParam(required = false) String city) {
-        return clubService.search(page, size, category, city).stream()
-                .map(clubSummaryMapper::toDto)
+        Page<Club> result = clubService.searchClubs(name, category, city, page, size);
+        List<ClubResponseDto> content = result.getContent().stream()
+                .map(clubMapper::toDto)
                 .toList();
+        return new PageResponseDto<>(
+            content,
+            result.getTotalElements(),
+            result.getTotalPages(),
+            result.getNumber(),
+            result.getSize());
     }
 
     @Override

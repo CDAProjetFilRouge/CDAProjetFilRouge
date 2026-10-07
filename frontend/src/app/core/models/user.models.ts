@@ -15,7 +15,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMINISTRATOR: 'Administrateur',
 }
 
-export type Category = 'CULTURE' | 'SPORT' | 'HOBBIES';
+export type Category = 'CULTURE' | 'SPORT' | 'DIVERTISSEMENT';
 
 export type AccountStatus = 'INACTIVE' | 'ACTIVE' | 'SUSPENDED' | 'ANONYMIZE' | 'PENDING_ACTIVATION';
 
@@ -24,7 +24,7 @@ export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
   ACTIVE: 'Actif',
   SUSPENDED: 'Suspendu',
   ANONYMIZE: 'Anonymisé',
-  PENDING_ACTIVATION:'En attente d\'activation'
+  PENDING_ACTIVATION:'En attente d\'activation',
 }
 
 export interface Address {

@@ -1,0 +1,82 @@
+.club-main{
+  margin-left: 3rem;
+  margin-right: 3rem;
+}
+
+.title-section{
+  margin-bottom: 3rem;
+}
+.carousel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5rem;
+}
+
+.club-card {
+  display: flex;
+  flex-direction: column;
+  background-color: lightgray;
+  border-radius: 5px;
+  padding: 1rem 1rem 1rem 1rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+  align-items: center;
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+}
+
+.club-sub-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.club-card-header {
+  align-self: center;
+}
+
+.club-card-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.club-card-footer button{
+  border-style: hidden;
+  border-radius: 5px;
+}
+
+.club-card-footer p{
+  color: black;
+}
+
+#search-btn {
+  border-style: hidden;
+  border-radius: 5px;
+  background-color: rgb(250, 109, 109);
+}
+
+.sort{
+  display: flex;
+  flex-direction: row;
+}
+
+.sort select{
+  border-style: hidden;
+  background: transparent;
+}
+
+.filter-btn{
+  height: auto;
+}
