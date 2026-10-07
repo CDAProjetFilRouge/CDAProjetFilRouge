@@ -4,14 +4,18 @@ import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
+import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.EventInscriptionCount;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.EventSpecifications;
+import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,27 +26,40 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
 
     private final EventRepo eventRepository;
+    private final InscriptionRepo inscriptionRepo;
 
-    public EventService(EventRepo eventRepository) {
+    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo) {
         this.eventRepository = eventRepository;
+        this.inscriptionRepo = inscriptionRepo;
     }
 
     /**
      *
-     * @param page starting page
-     * @param size number of entries per page
-     * @return a list of events
+     * @param events events of a page for which the remaining spots are needed
+     * @return the remaining spots by event id (maximum capacity minus confirmed inscriptions, never below zero)
      */
-    public List<Event> findAllEvents(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Map<Long, Integer> remainingSpots(List<Event> events) {
+        if (events.isEmpty()) {
+            return Map.of();
+        }
 
-        return eventRepository.findAll(pageable).getContent();
+        List<Long> eventIds = events.stream().map(Event::getId).toList();
+
+        Map<Long, Long> confirmedByEvent = inscriptionRepo
+                .countByEventIdsAndStatus(eventIds, InscriptionStatus.CONFIRMED).stream()
+                .collect(Collectors.toMap(EventInscriptionCount::getEventId, EventInscriptionCount::getTotal));
+
+        return events.stream().collect(Collectors.toMap(
+                Event::getId,
+                event -> Math.max(0, event.getMaxCapacity() - confirmedByEvent.getOrDefault(event.getId(), 0L).intValue())));
     }
 
     /**
@@ -177,6 +194,47 @@ public class EventService {
 
         Pageable pageable = PageRequest.of(page, size);
         return eventRepository.findAll(spec, pageable).getContent();
+    }
+
+    public Page<Event> findAllEventMain(int page, int size, AppUserPrincipal principal) throws HttpException {
+
+        if(size > 20){
+            throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
+        }
+
+        Specification<Event> spec = EventSpecifications.visibleTo(principal);
+        Pageable pageable = PageRequest.of(page, size);
+
+        return eventRepository.findAll(spec, pageable);
+    }
+
+    public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
+            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
+
+        if(size > 20){
+            throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
+        }
+
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BadRequestException("La date de début ne peut pas être postérieure à la date de fin.");
+        }
+
+        Specification<Event> spec = EventSpecifications.visibleTo(principal);
+        for (Specification<Event> filter : Arrays.asList(
+                EventSpecifications.titleOrDescription(keyword),
+                EventSpecifications.hasCategory(category),
+                EventSpecifications.organizerClubNameContains(clubName),
+                EventSpecifications.hasCity(city),
+                EventSpecifications.startsOnOrAfter(startDate),
+                EventSpecifications.endsOnOrBefore(endDate),
+                EventSpecifications.hasStatus(status))) {
+            if (filter != null) {
+                spec = spec.and(filter);
+            }
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        return eventRepository.findAll(spec, pageable);
     }
 
     /**

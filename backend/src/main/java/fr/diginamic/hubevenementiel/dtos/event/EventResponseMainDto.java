@@ -1,70 +1,38 @@
-package fr.diginamic.hubevenementiel.entities;
+package fr.diginamic.hubevenementiel.dtos.event;
 
+import fr.diginamic.hubevenementiel.dtos.address.AddressResponseDto;
+import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
-import org.hibernate.annotations.BatchSize;
-import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "event")
-public class Event {
+public class EventResponseMainDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "title", nullable = false, length = 200)
     private String title;
-
-    @Column(name = "description", nullable = false, length = 65535)
     private String description;
-
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "location_id")
-    private Address location;
-
-    @Column(name = "category", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
+    private AddressResponseDto location;
     private Category category;
-
-    @Column(name = "start_date_time", nullable = false)
     private LocalDateTime startDateTime;
-
-    @Column(name = "end_date_time", nullable = false)
     private LocalDateTime endDateTime;
-
-    @Column(name = "affiliate_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal affiliatePrice;
-
-    @Column(name = "non_affiliate_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal nonAffiliatePrice;
-
-    @Column(name = "max_capacity", nullable = false, length = 10)
     private Integer maxCapacity;
-
-    @OneToMany(mappedBy = "event")
-    @BatchSize(size = 20)
-    private List<Image> imageGallery = new ArrayList<>();
-
-    @Column(name = "status", nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
+    private Integer remainingSpots;
+    private List<ImageSummaryResponseDto> imageGallery = new ArrayList<>();
     private EventStatus status;
+    private List<String> organizerClubs = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "organizer_id", nullable = false)
-    private AppUser organizer;
+    public EventResponseMainDto() {}
 
-    public Event() {
-    }
-
-    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime,
-                 LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice,
-                 Integer maxCapacity, List<Image> imageGallery, EventStatus status) {
+    public EventResponseMainDto(Long id, String title, String description, AddressResponseDto location, Category category,
+                                LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
+                                BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery,
+                                EventStatus status, List<String> organizerClubs){
         this.id = id;
         this.title = title;
         this.description = description;
@@ -75,10 +43,11 @@ public class Event {
         this.affiliatePrice = affiliatePrice;
         this.nonAffiliatePrice = nonAffiliatePrice;
         this.maxCapacity = maxCapacity;
+        this.remainingSpots = remainingSpots;
         this.imageGallery = imageGallery;
         this.status = status;
+        this.organizerClubs = organizerClubs;
     }
-
 
     public Long getId() {
         return id;
@@ -104,11 +73,11 @@ public class Event {
         this.description = description;
     }
 
-    public Address getLocation() {
+    public AddressResponseDto getLocation() {
         return location;
     }
 
-    public void setLocation(Address location) {
+    public void setLocation(AddressResponseDto location) {
         this.location = location;
     }
 
@@ -160,11 +129,19 @@ public class Event {
         this.maxCapacity = maxCapacity;
     }
 
-    public List<Image> getImageGallery() {
+    public Integer getRemainingSpots() {
+        return remainingSpots;
+    }
+
+    public void setRemainingSpots(Integer remainingSpots) {
+        this.remainingSpots = remainingSpots;
+    }
+
+    public List<ImageSummaryResponseDto> getImageGallery() {
         return imageGallery;
     }
 
-    public void setImageGallery(List<Image> imageGallery) {
+    public void setImageGallery(List<ImageSummaryResponseDto> imageGallery) {
         this.imageGallery = imageGallery;
     }
 
@@ -176,11 +153,11 @@ public class Event {
         this.status = status;
     }
 
-    public AppUser getOrganizer() {
-        return organizer;
+    public List<String> getOrganizerClubs() {
+        return organizerClubs;
     }
 
-    public void setOrganizer(AppUser organizer) {
-        this.organizer = organizer;
+    public void setOrganizerClubs(List<String> organizerClubs) {
+        this.organizerClubs = organizerClubs;
     }
 }

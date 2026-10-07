@@ -58,4 +58,5 @@ public class EventMapper {
 
         return entity;
     }
+
 }

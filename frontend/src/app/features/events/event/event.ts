@@ -1,158 +1,93 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { EventFilter, EventService } from './event-service';
+import { EventModel } from './event-model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { URL_BACKEND } from '../../../core/api/api.config';
 
 @Component({
-  imports: [],
+  imports: [ReactiveFormsModule, DatePipe],
   selector: 'app-event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
 })
 export class Event {
-  readonly events = [
-    {
-      name: "Event 1",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 2",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 3",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 4",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 5",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 6",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 7",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 8",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 9",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 10",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 11",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 0,
-      placeMax: 20,
-      type: "loisir"
-    },
-        {
-      name: "Event 12",
-      price: 12,
-      dateDebut: "xx/xx/xxxx",
-      dateFin: "yy/yy/yyyy",
-      address: 'xxxxxxxxxx',
-      placeDispo: 1,
-      placeMax: 20,
-      type: "loisir"
-    }
-  ]
+  private readonly eventService = inject(EventService);
 
-   currentPage = 1;
-   eventsPerPages = 6;
-  get displayEvents(){
-    const start = (this.currentPage - 1) * this.eventsPerPages;
-    const end = start + this.eventsPerPages;
+  protected readonly events = signal<EventModel[]>([]);
+  protected readonly errorMessage = signal<string | null>(null);
 
-    return this.events.slice(start, end)
+  currentPage = 1;
+  eventsPerPage = 20;
+  totalElements = 0;
+  totalPages = 0
+
+  filters = new FormGroup({
+    keyword: new FormControl('', { nonNullable: true}),
+    category: new FormControl('', { nonNullable: true}),
+    club: new FormControl('', {nonNullable: true}),
+    city: new FormControl('', {nonNullable: true}),
+    startDate: new FormControl('', {nonNullable: true}),
+    endDate: new FormControl('', {nonNullable: true}),
+    status: new FormControl('PUBLISHED', {nonNullable: true})
+  })
+
+  private handleError(err: HttpErrorResponse): void {
+    this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');
   }
 
-  get totalPages() {
-    return Math.ceil(this.events.length / this.eventsPerPages);
+  protected imageUrl(path: string): string {
+    return `${URL_BACKEND}${path}`;
   }
 
-  nextPage(){
+  ngOnInit(): void {
+    this.loadEvents();
+  }
+
+  loadEvents(): void {
+    const filters: EventFilter = this.filters.getRawValue();
+
+    this.eventService.search(this.currentPage - 1, this.eventsPerPage, filters).subscribe({
+      next: (page) => {
+        this.events.set(page.content);
+        this.totalElements = page.totalElements;
+        this.totalPages = page.totalPages;
+      },
+      error: (err) => this.handleError(err)
+    });
+  }
+
+  search(): void {
+    this.currentPage = 1;
+    this.loadEvents();
+  }
+
+  resetFilter(): void {
+    this.filters.reset({
+      keyword: '',
+      category: '',
+      club: '',
+      city: '',
+      startDate: '',
+      endDate: '',
+      status: 'PUBLISHED'
+    });
+
+    this.search();
+  }
+
+  nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
+      this.loadEvents();
     }
   }
 
-  previousPage(){
-    if (this.currentPage >1){
-      this.currentPage--
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadEvents();
     }
   }
-
 }
