@@ -20,7 +20,7 @@
       </div>
       <div class="filter">
         <p>Club oragnisateur</p>
-        <input type="text" formControlName="organizerFirstName">
+        <input type="text" formControlName="organizer">
       </div>
       <div class="filter">
         <p>Ville</p>
@@ -72,7 +72,9 @@
             <p class="event-card-header">{{event.category}} - <span style="color: red">Complet - Liste d'attente</span></p>
           }
           <h3>{{ event.title}}</h3>
-          <p>Organisé par: {{event.organizerFirstName}} {{event.organizerLastName}}</p>
+          @if (event.organizerClubs.length > 0) {
+            <p>Organisé par: {{ event.organizerClubs.join(', ') }}</p>
+          }
           <p>Date: {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
           <p>Lieu: {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
           <p>Places disponile: {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>

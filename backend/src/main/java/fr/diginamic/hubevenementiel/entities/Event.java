@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.entities;
 
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
+import org.hibernate.annotations.BatchSize;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -47,6 +48,7 @@ public class Event {
     private Integer maxCapacity;
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 20)
     private List<Image> imageGallery = new ArrayList<>();
 
     @Column(name = "status", nullable = false, length = 20)

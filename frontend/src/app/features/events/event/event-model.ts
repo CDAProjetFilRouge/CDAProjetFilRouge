@@ -23,7 +23,6 @@ export interface EventModel{
       displayOrder: number
 
     }[],
-  status: String,
-  organizerFirstName: string,
-  organizerLastName: string
+  status: string,
+  organizerClubs: string[]
 }

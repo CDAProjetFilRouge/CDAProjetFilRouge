@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.mappers;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
+import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -36,8 +37,7 @@ public class EventMainMapper {
         dto.setRemainingSpots(remainingSpots);
         dto.setImageGallery(event.getImageGallery().stream().map(imageGaleryMapper::toDto).collect(Collectors.toList()));
         dto.setStatus(event.getStatus());
-        dto.setOrganizerFirstName(event.getOrganizer().getFirstName());
-        dto.setOrganizerLastName(event.getOrganizer().getLastName());
+        dto.setOrganizerClubs(event.getOrganizer().getClubs().stream().map(Club::getName).collect(Collectors.toList()));
 
         return dto;
     }

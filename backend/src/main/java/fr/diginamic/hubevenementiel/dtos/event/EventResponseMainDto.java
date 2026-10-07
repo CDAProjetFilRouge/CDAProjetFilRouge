@@ -25,15 +25,14 @@ public class EventResponseMainDto {
     private Integer remainingSpots;
     private List<ImageSummaryResponseDto> imageGallery = new ArrayList<>();
     private EventStatus status;
-    private String organizerFirstName;
-    private String organizerLastName;
+    private List<String> organizerClubs = new ArrayList<>();
 
     public EventResponseMainDto() {}
 
     public EventResponseMainDto(Long id, String title, String description, AddressResponseDto location, Category category,
                                 LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
                                 BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery,
-                                EventStatus status, String organizerFirstName, String organizerLastName){
+                                EventStatus status, List<String> organizerClubs){
         this.id = id;
         this.title = title;
         this.description = description;
@@ -47,8 +46,7 @@ public class EventResponseMainDto {
         this.remainingSpots = remainingSpots;
         this.imageGallery = imageGallery;
         this.status = status;
-        this.organizerFirstName = organizerFirstName;
-        this.organizerLastName = organizerLastName;
+        this.organizerClubs = organizerClubs;
     }
 
     public Long getId() {
@@ -155,19 +153,11 @@ public class EventResponseMainDto {
         this.status = status;
     }
 
-    public String getOrganizerFirstName() {
-        return organizerFirstName;
+    public List<String> getOrganizerClubs() {
+        return organizerClubs;
     }
 
-    public void setOrganizerFirstName(String organizerFirstName) {
-        this.organizerFirstName = organizerFirstName;
-    }
-
-    public String getOrganizerLastName() {
-        return organizerLastName;
-    }
-
-    public void setOrganizerLastName(String organizerLastName) {
-        this.organizerLastName = organizerLastName;
+    public void setOrganizerClubs(List<String> organizerClubs) {
+        this.organizerClubs = organizerClubs;
     }
 }

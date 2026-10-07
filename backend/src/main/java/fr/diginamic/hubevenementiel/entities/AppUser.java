@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
+import org.hibernate.annotations.BatchSize;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -62,7 +63,7 @@ public class AppUser {
     private List<LegalDocument> legalDocumentList;
 
     @ManyToMany
-
+    @BatchSize(size = 20)
     private List<Club> clubs = new ArrayList<>();
 
     public AppUser() {
