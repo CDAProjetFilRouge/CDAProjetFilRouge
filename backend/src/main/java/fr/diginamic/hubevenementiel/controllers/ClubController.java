@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.controllers;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -41,16 +42,15 @@ public class ClubController implements ClubApi {
         this.clubSummaryMapper = clubSummaryMapper;
     }
 
+
     @Override
     @GetMapping
-    public List<ClubSummaryResponseDto> getClubs(
+    public Page<ClubSummaryResponseDto> getClubs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Category category,
-            @RequestParam(required = false) String city) {
-        return clubService.search(page, size, category, city).stream()
-                .map(clubSummaryMapper::toDto)
-                .toList();
+            @RequestParam(required = false) String name) {
+        return clubService.search(page, size, category, name).map(clubSummaryMapper::toDto);
     }
 
     @Override

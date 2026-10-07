@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
 import { Event } from './features/events/event/event';
+import { Club } from './features/clubs/club/club';
 
 export const routes: Routes = [
   {
@@ -43,12 +44,16 @@ export const routes: Routes = [
       import('./features/auth/create-account/create-account').then((m) => m.CreateAccount),
   },
   {
-    path: '',
-    component: Event,
-  },
-  {
     path: 'verify',
     loadComponent: () =>
       import('./features/auth/verify-account/verify-account').then((m) => m.VerifyAccount),
   },
+  {
+    path: 'clubs',
+    component: Club,
+  },
+    {
+    path: '',
+    component: Event,
+  }
 ];

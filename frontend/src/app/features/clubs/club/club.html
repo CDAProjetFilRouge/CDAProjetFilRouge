@@ -1,0 +1,60 @@
+<div class="club-main">
+  <div class="title-section">
+    <h1>Clubs</h1>
+    <p>Liste de tous les clubs</p>
+  </div>
+  <form [formGroup]="filters" (ngSubmit)="loadClubs()">
+    <div class="filter-section">
+      <div class="filter">
+        <p>Nom</p>
+        <input type="text" formControlName="name">
+      </div>
+      <div class="filter">
+        <p>Catégorie</p>
+        <select formControlName="category">
+          <option value=""></option>
+          <option value="CULTURE">Culture</option>
+          <option value="SPORT">Sport</option>
+          <option value="HOBBIES">Hobbies</option>
+        </select>
+      </div>
+      <button class="filter-btn" type="button" (click)="resetFilter()">Réinitialiser</button>
+      <button class="filter-btn" type="submit">Rechercher</button>
+    </div>
+  </form>
+
+  <div class="club-section">
+    <div class="club-sub-section">
+      <p id="counter">{{ totalElements}} clubs</p>
+    </div>
+    <div class="sort">
+      <p>Trier par: </p>
+      <select>
+          <option>Date croissante</option>
+          <option>Date décroissante</option>
+      </select>
+    </div>
+
+    <div class="carousel">
+      @for (club of clubs(); track club.id){
+        <div class="club-card">
+          <h2>{{club.name}}</h2>
+          <p>{{club.category}}</p>
+        </div>
+      }
+    </div>
+    <div class="pagination">
+      @if (currentPage > 1){
+        <button (click)="previousPage()">Précédant</button>
+      }
+
+      <span>
+        Page {{ currentPage }} / {{ totalPages }}
+      </span>
+
+      @if (currentPage < totalPages) {
+        <button (click)="nextPage()">Suivant</button>
+      }
+    </div>
+  </div>
+</div>

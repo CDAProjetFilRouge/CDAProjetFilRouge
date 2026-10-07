@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.exceptions.*;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -78,13 +79,15 @@ public class ClubService {
      * @param page     starting page
      * @param size     number of entries per page
      * @param category category to find a club by
-     * @param city     city to find a club by
+     * @param name    name of the club to find by
      * @return a list of Club
      */
-    public List<Club> search(int page, int size, Category category, String city) {
+    public Page<Club> search(int page, int size, Category category, String name) {
         Pageable pageable = PageRequest.of(page, size);
-
-        return clubRepository.search(category, city, pageable).getContent();
+        if(name != null && name.isBlank()){
+            name = null;
+        }
+        return clubRepository.search(category, name, pageable);
     }
 
     /**

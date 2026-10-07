@@ -51,8 +51,8 @@ public interface ClubRepo extends JpaRepository<Club, Long> {
 
     @Query("SELECT c FROM Club c WHERE " +
             "(:category IS NULL OR c.category = :category) AND " +
-            "(:city IS NULL OR c.address.city = :city)")
-    Page<Club> search(@Param("category") Category category, @Param("city") String city, Pageable pageable);
+            "(:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')))")
+    Page<Club> search(@Param("category") Category category, @Param("name") String name, Pageable pageable);
 
     boolean existsByName(String name);
 }
