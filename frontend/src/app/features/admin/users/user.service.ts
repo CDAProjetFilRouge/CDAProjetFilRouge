@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
-import { AccountStatus, AdminUserUpdate, AppUser, Role } from '../../../core/models/user.models';
+import { AccountStatus, AdminUserCreate, AdminUserUpdate, AppUser, Role } from '../../../core/models/user.models';
 import { Page } from '../../../core/models/page.models';
 
 @Service()
@@ -41,5 +41,9 @@ export class UserService {
 
   updateUserByAdmin(id: number, updatedUser: AdminUserUpdate): Observable<AppUser> {
     return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/admin`, updatedUser);
+  }
+
+  createUserByAdmin(user: AdminUserCreate): Observable<AppUser> {
+    return this.http.post<AppUser>(`${URL_BACKEND}/users/admin`, user);
   }
 }

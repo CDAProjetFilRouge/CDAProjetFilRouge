@@ -61,3 +61,12 @@ export interface AdminUserUpdate extends ProfileUpdate {
   clubIds: number[];
 }
 
+export interface AdminUserCreate {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: Role;
+  clubIds?: number[];
+}
+
