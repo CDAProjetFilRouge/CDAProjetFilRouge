@@ -3,8 +3,8 @@
     <h1>Les évènement de la fédération</h1>
     <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
   </div>
-  <div class="filter-section">
-    <form [formGroup]="filters" (ngSubmit)="search()">
+  <form [formGroup]="filters" (ngSubmit)="search()">
+    <div class="filter-section">
       <div class="filter">
         <p>Mot-clé</p>
         <input type="text" formControlName="keyword">
@@ -43,8 +43,9 @@
       </div>
       <button type="button" (click)="resetFilter()">Réinitialiser</button>
       <button type="submit">Rechercher</button>
-    </form>
-  </div>
+    </div>
+  </form>
+
   <div class="event-section">
     <div class="event-sub-section">
       <p id="counter">{{ totalElements }} évènements</p>
