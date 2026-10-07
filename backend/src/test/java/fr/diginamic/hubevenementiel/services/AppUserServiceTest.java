@@ -386,7 +386,6 @@ class AppUserServiceTest {
     }
 
     // ---------------------------------------------------------------
-<<<<<<< HEAD
     // deleteAccount
     // ---------------------------------------------------------------
 
@@ -510,7 +509,9 @@ class AppUserServiceTest {
         assertThat(ex.getMessage()).contains("organise des évènements").contains("commentaires");
         verify(commentRepo, never()).deleteByAuthorId(any());
         verify(userRepo, never()).delete(any(AppUser.class));
-=======
+    }
+
+    // ---------------------------------------------------------------
     // explainLoginRefusal
     // ---------------------------------------------------------------
 
@@ -586,6 +587,5 @@ class AppUserServiceTest {
         user.setHashedPassword("hash");
         user.setStatus(status);
         return user;
->>>>>>> 2e14ef58f542545c116eb557500c839cdd78c3d1
     }
 }
