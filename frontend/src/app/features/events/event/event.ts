@@ -38,14 +38,12 @@ export class Event {
 
   ngOnInit(): void {
     this.loadEvents();
-    console.log(this.currentPage);
   }
 
-  loadEvents(): void{
-    this.eventService.getEvent(
-      this.currentPage - 1,
-      this.eventsPerPage
-    ).subscribe({
+  loadEvents(): void {
+    const filters: EventFilter = this.filters.getRawValue();
+
+    this.eventService.search(this.currentPage - 1, this.eventsPerPage, filters).subscribe({
       next: (page) => {
         this.events.set(page.content);
         this.totalElements = page.totalElements;
@@ -56,18 +54,9 @@ export class Event {
   }
 
   search(): void {
-    const filters: EventFilter = this.filters.getRawValue();
-
-    this.eventService.search(this.currentPage - 1, 20, filters).subscribe({
-      next: (page) => {
-        this.events.set(page.content);
-        this.totalElements = page.totalElements;
-        this.totalPages = page.totalPages
-      },
-      error: (err) => this.handleError(err)
-    });
+    this.currentPage = 1;
+    this.loadEvents();
   }
-
 
   resetFilter(): void {
     this.filters.reset({
@@ -80,44 +69,20 @@ export class Event {
       status: 'PUBLISHED'
     });
 
-    this.currentPage = 1;
-
-    this.loadEvents();
+    this.search();
   }
 
-
-  nextPage(){
-    if(this.currentPage < this.totalPages) {
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
       this.currentPage++;
-
-      const filters = this.filters.getRawValue();
-
-      this.eventService.search(this.currentPage -1, this.eventsPerPage, filters).subscribe({
-        next: (page) => {
-          this.events.set(page.content);
-          this.totalElements = page.totalElements;
-          this.totalPages = page.totalPages
-        },
-        error: (err) => this.handleError(err)
-      });
+      this.loadEvents();
     }
   }
 
-  previousPage(){
-    if (this.currentPage > 1){
-      this.currentPage--
-
-      const filters = this.filters.getRawValue();
-
-      this.eventService.search(this.currentPage -1, this.eventsPerPage, filters).subscribe({
-        next: (page) => {
-          this.events.set(page.content);
-          this.totalElements = page.totalElements;
-          this.totalPages = page.totalPages
-        },
-        error: (err) => this.handleError(err)
-      });
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.loadEvents();
     }
   }
-
 }
