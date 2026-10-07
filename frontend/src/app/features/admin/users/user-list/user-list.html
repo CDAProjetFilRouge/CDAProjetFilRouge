@@ -2,6 +2,8 @@
   <p role="alert">{{ errorMessage() }}</p>
 }
 
+<button [routerLink]="'/admin/users/new'">Crée un compue utilisateur</button>
+
 <input type="search" placeholder="Rechercher (nom, prénom, e-mail)" #searchInput
        (keydown.enter)="onSearch(searchInput.value)" />
 <select id="role" #roleSelect (change)="onRoleFilter(roleSelect.value)">
