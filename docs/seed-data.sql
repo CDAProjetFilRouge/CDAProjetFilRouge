@@ -129,13 +129,13 @@ INSERT INTO club (name, category, email, phone, end_validity_date, owner_id, add
 VALUES ('Orchestre de Lyon', 'CULTURE', 'contact@orchestre-lyon.seed', '0472000002', NULL, @orga2, @a_lyo);
 SET @c2 = LAST_INSERT_ID();
 INSERT INTO club (name, category, email, phone, end_validity_date, owner_id, address_id)
-VALUES ('Les Joueurs de Paris', 'HOBBIES', 'contact@joueurs-paris.seed', '0140000003', NULL, @orga3, @a_par);
+VALUES ('Les Joueurs de Paris', 'DIVERTISSEMENT', 'contact@joueurs-paris.seed', '0140000003', NULL, @orga3, @a_par);
 SET @c3 = LAST_INSERT_ID();
 INSERT INTO club (name, category, email, phone, end_validity_date, owner_id, address_id)
 VALUES ('Bordeaux Running', 'SPORT', 'contact@bordeaux-running.seed', '0556000004', NULL, @orga1, @a_bor);
 SET @c4 = LAST_INSERT_ID();
 INSERT INTO club (name, category, email, phone, end_validity_date, owner_id, address_id)
-VALUES ('Atelier Photo Nantes', 'HOBBIES', 'contact@photo-nantes.seed', '0240000005', CURDATE() - INTERVAL 30 DAY, @orga2, @a_nan);
+VALUES ('Atelier Photo Nantes', 'DIVERTISSEMENT', 'contact@photo-nantes.seed', '0240000005', CURDATE() - INTERVAL 30 DAY, @orga2, @a_nan);
 SET @c5 = LAST_INSERT_ID();
 INSERT INTO club (name, category, email, phone, end_validity_date, owner_id, address_id)
 VALUES ('Ciné-club de Lille', 'CULTURE', 'contact@cineclub-lille.seed', '0320000006', NULL, @orga3, @a_lil);
@@ -174,7 +174,7 @@ SET @e2 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
 VALUES ('Tournoi de jeux de société', 'Après-midi jeux de plateau, de la stratégie à l''ambiance.',
-        @a_par, 'HOBBIES', NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 5 DAY + INTERVAL 4 HOUR, 5.00, 8.00, 3, 3, 'PUBLISHED', @orga3);
+        @a_par, 'DIVERTISSEMENT', NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 5 DAY + INTERVAL 4 HOUR, 5.00, 8.00, 3, 3, 'PUBLISHED', @orga3);
 SET @e3 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
@@ -184,7 +184,7 @@ SET @e4 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
 VALUES ('Exposition photo (brouillon)', 'Vernissage de l''exposition collective du club photo.',
-        @a_nan, 'HOBBIES', NOW() + INTERVAL 30 DAY, NOW() + INTERVAL 30 DAY + INTERVAL 5 HOUR, 0.00, 5.00, 60, 60, 'DRAFT', @orga2);
+        @a_nan, 'DIVERTISSEMENT', NOW() + INTERVAL 30 DAY, NOW() + INTERVAL 30 DAY + INTERVAL 5 HOUR, 0.00, 5.00, 60, 60, 'DRAFT', @orga2);
 SET @e5 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
@@ -204,7 +204,7 @@ SET @e8 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
 VALUES ('Atelier peinture (annulé)', 'Atelier d''aquarelle annulé faute d''animateur.',
-        @a_nan, 'HOBBIES', NOW() + INTERVAL 12 DAY, NOW() + INTERVAL 12 DAY + INTERVAL 3 HOUR, 8.00, 12.00, 15, 15, 'CANCELLED', @orga2);
+        @a_nan, 'DIVERTISSEMENT', NOW() + INTERVAL 12 DAY, NOW() + INTERVAL 12 DAY + INTERVAL 3 HOUR, 8.00, 12.00, 15, 15, 'CANCELLED', @orga2);
 SET @e9 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
@@ -219,7 +219,7 @@ SET @e11 = LAST_INSERT_ID();
 INSERT INTO event (title, description, location_id, category, start_date_time, end_date_time,
                    affiliate_price, non_affiliate_price, max_capacity, remaining_places, status, organizer_id)
 VALUES ('Rencontre échecs', 'Parties libres et mini-tournoi, échiquiers fournis.',
-        @a_par, 'HOBBIES', NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 7 DAY + INTERVAL 3 HOUR, 3.00, 5.00, 30, 30, 'PUBLISHED', @orga3);
+        @a_par, 'DIVERTISSEMENT', NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 7 DAY + INTERVAL 3 HOUR, 3.00, 5.00, 30, 30, 'PUBLISHED', @orga3);
 SET @e12 = LAST_INSERT_ID();
 
 -- ---------------------------------------------------------------------
