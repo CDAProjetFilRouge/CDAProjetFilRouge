@@ -38,6 +38,7 @@ export class Event {
 
   ngOnInit(): void {
     this.loadEvents();
+    console.log(this.currentPage);
   }
 
   loadEvents(): void{
@@ -57,8 +58,7 @@ export class Event {
   search(): void {
     const filters: EventFilter = this.filters.getRawValue();
 
-    this.currentPage - 1;
-    this.eventService.search(0, 20, filters).subscribe({
+    this.eventService.search(this.currentPage - 1, 20, filters).subscribe({
       next: (page) => {
         this.events.set(page.content);
         this.totalElements = page.totalElements;
