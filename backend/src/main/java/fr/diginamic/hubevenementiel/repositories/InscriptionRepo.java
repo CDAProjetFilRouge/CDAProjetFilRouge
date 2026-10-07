@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.List;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import org.springframework.data.domain.Page;
@@ -85,4 +86,11 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @return an optional of type inscription
      */
     Optional<Inscription> findFirstByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
+
+    /**
+     *
+     * @param userId id of the user you want to find every inscription for
+     * @return all the inscriptions of the user, whatever their status
+     */
+    List<Inscription> findAllByUserId(Long userId);
 }

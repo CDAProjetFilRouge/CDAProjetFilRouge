@@ -76,17 +76,28 @@ export class UserList {
     this.loadUsers();
   }
 
-  protected onDelete(id: number): void {
-    if (!confirm('Supprimer cet utilisateur ?')) {
-      return;
-    }
-    this.appUserService.deleteUser(id).subscribe({
+  private deleteUser(id: number, deleteComments: boolean): void {
+    this.appUserService.deleteUser(id, deleteComments).subscribe({
       next: () => {
         this.users.update((list) => list.filter((u) => u.id !== id));
         this.errorMessage.set(null);
       },
-      error: (err) => this.handleError(err),
-    });
+      error: (err : HttpErrorResponse) => {
+        const hasComments = err.status === 409 && err.headers.get('X-Error-Code') === 'ACCOUNT_HAS_COMMENTS';
+      if (hasComments && confirm('Ce compte a posté des commentaires. Supprimer quand même le compte avec ses commentaires ?')) {
+        this.deleteUser(id, true);
+      } else {
+        this.handleError(err);
+      }
+    },
+  });
+  }
+
+  protected onDelete(id: number): void {
+    if (!confirm('Supprimer cet utilisateur ?')) {
+      return;
+    }
+    this.deleteUser(id, false);
   }
 
   protected onReactivate(id: number): void {
