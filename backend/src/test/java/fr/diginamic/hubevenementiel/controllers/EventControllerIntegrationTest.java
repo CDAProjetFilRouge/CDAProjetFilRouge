@@ -400,6 +400,12 @@ class EventControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[0].title").value(inClub));
     }
 
+    @Test
+    void uploadedImages_areReachableWithoutToken() throws Exception {
+        mockMvc.perform(get("/uploads/fichier-inexistant.png"))
+                .andExpect(status().isNotFound());
+    }
+
     private void createPublishedEvent(String token, String title, String city, LocalDateTime start,
             LocalDateTime end, int capacity) throws Exception {
         AddressRequestDto address = new AddressRequestDto();

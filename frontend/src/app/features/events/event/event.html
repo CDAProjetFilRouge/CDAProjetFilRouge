@@ -62,7 +62,7 @@
       @for (event of events(); track event.id){
         <div class="event-card">
           @if (event.imageGallery.length > 0) {
-            <img alt="image-galerie" src="{{event.imageGallery[0].path}}">
+            <img alt="image-galerie" [src]="imageUrl(event.imageGallery[0].path)">
           }@else {
             <img src="https://www.freeiconspng.com/uploads/no-image-icon-6.png" width="350" alt="Icon No Download"  title="Image from freeiconspng.com"/>
           }
