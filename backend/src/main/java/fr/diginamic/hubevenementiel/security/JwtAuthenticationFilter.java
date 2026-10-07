@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.security;
 
+import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,9 +23,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final UserRepo userRepo;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserRepo userRepo) {
         this.jwtService = jwtService;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -37,15 +41,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (jwtService.isTokenValid(token)) {
                 Long id = jwtService.extractUserId(token);
-                String email = jwtService.extractEmail(token);
-                String role = jwtService.extractRole(token);
 
-                AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
+                boolean accountIsActive = userRepo.findById(id)
+                        .map(user -> user.getStatus() == AccountStatus.ACTIVE)
+                        .orElse(false);
 
-                Authentication auth = new UsernamePasswordAuthenticationToken(
-                        principal, null, List.of(new RoleAuthority("ROLE_" + role)));
+                if (accountIsActive) {
+                    String email = jwtService.extractEmail(token);
+                    String role = jwtService.extractRole(token);
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                    AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
+
+                    Authentication auth = new UsernamePasswordAuthenticationToken(
+                            principal, null, List.of(new RoleAuthority("ROLE_" + role)));
+
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             }
         }
 
