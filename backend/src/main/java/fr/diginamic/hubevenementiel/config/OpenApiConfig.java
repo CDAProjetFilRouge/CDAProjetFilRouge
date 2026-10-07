@@ -18,7 +18,15 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Hub Événementiel API")
                         .description("API de gestion d'un hub évènementiel : clubs, évènements, inscriptions, "
-                                + "commentaires, documents légaux et demandes d'anonymisation RGPD.")
+                                + "commentaires, documents légaux et demandes d'anonymisation RGPD.
+
+"
+                                + "**Authentification** : POST /login renvoie un access token (JWT, 15 minutes), à envoyer dans "
+                                + "l'en-tête Authorization (Bearer), et un refresh token. Une réponse 401 signifie que l'utilisateur "
+                                + "n'est pas authentifié (token absent, expiré ou invalide) : appeler POST /auth/refresh avec le "
+                                + "refresh token pour obtenir de nouveaux tokens, puis rejouer la requête. Chaque refresh token "
+                                + "ne sert qu'une fois. Une réponse 403 signifie que l'utilisateur est connecté mais n'a pas les "
+                                + "droits nécessaires. POST /auth/logout révoque la session.")
                         .version("v1"))
                 .components(new Components()
                         .addSecuritySchemes(BEARER_SECURITY_SCHEME, new SecurityScheme()

@@ -19,7 +19,8 @@ public interface LoginApi {
                         + "Accessible sans authentification.")
         @ApiResponses({
                         @ApiResponse(responseCode = "200", description = "Authentification réussie, token JWT renvoyé"),
-                        @ApiResponse(responseCode = "403", description = "Identifiants invalides, ou compte non ACTIF. Si le mot de passe est correct, le corps de la réponse explique pourquoi (compte suspendu, compte non activé)")
+                        @ApiResponse(responseCode = "401", description = "Identifiants invalides"),
+                        @ApiResponse(responseCode = "403", description = "Compte non ACTIF. Le mot de passe est correct, le corps de la réponse explique pourquoi (compte suspendu, compte non activé)")
         })
         ResponseEntity<LoginResponseDto> login(LoginRequestDto request) throws HttpException;
 
