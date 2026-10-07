@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
 import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
@@ -69,7 +70,13 @@ public class EventController implements EventApi {
         if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
-        return eventService.findAllEventMain(page, size, principal).map(eventMainMapper::toDto);
+        return toMainDtos(eventService.findAllEventMain(page, size, principal));
+    }
+
+    private Page<EventResponseMainDto> toMainDtos(Page<Event> events) {
+        Map<Long, Integer> remainingSpots = eventService.remainingSpots(events.getContent());
+
+        return events.map(event -> eventMainMapper.toDto(event, remainingSpots.get(event.getId())));
     }
 
     @Override
@@ -109,8 +116,8 @@ public class EventController implements EventApi {
         if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
             principal = (AppUserPrincipal) authentication.getPrincipal();
         }
-        return eventService.searchFilter(page, size, keyword, category, organizerFirstName, city,
-                startDate, endDate, status, principal).map(eventMainMapper::toDto);
+        return toMainDtos(eventService.searchFilter(page, size, keyword, category, organizerFirstName, city,
+                startDate, endDate, status, principal));
 
     }
 

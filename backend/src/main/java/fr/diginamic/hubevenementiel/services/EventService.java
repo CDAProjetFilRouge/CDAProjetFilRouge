@@ -4,13 +4,16 @@ import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
+import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.EventInscriptionCount;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.EventSpecifications;
+import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,15 +26,40 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
 
     private final EventRepo eventRepository;
+    private final InscriptionRepo inscriptionRepo;
 
-    public EventService(EventRepo eventRepository) {
+    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo) {
         this.eventRepository = eventRepository;
+        this.inscriptionRepo = inscriptionRepo;
+    }
+
+    /**
+     *
+     * @param events events of a page for which the remaining spots are needed
+     * @return the remaining spots by event id (maximum capacity minus confirmed inscriptions, never below zero)
+     */
+    public Map<Long, Integer> remainingSpots(List<Event> events) {
+        if (events.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Long> eventIds = events.stream().map(Event::getId).toList();
+
+        Map<Long, Long> confirmedByEvent = inscriptionRepo
+                .countByEventIdsAndStatus(eventIds, InscriptionStatus.CONFIRMED).stream()
+                .collect(Collectors.toMap(EventInscriptionCount::getEventId, EventInscriptionCount::getTotal));
+
+        return events.stream().collect(Collectors.toMap(
+                Event::getId,
+                event -> Math.max(0, event.getMaxCapacity() - confirmedByEvent.getOrDefault(event.getId(), 0L).intValue())));
     }
 
     /**

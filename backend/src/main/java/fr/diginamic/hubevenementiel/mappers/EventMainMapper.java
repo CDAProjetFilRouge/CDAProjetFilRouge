@@ -17,7 +17,7 @@ public class EventMainMapper {
     private AddressMapper addressMapper;
 
 
-    public EventResponseMainDto toDto(Event event) {
+    public EventResponseMainDto toDto(Event event, int remainingSpots) {
         if (event == null){
             return null;
         }
@@ -33,7 +33,7 @@ public class EventMainMapper {
         dto.setAffiliatePrice(event.getAffiliatePrice());
         dto.setNonAffiliatePrice(event.getNonAffiliatePrice());
         dto.setMaxCapacity(event.getMaxCapacity());
-        dto.setRemainingSpots(event.getRemainingPlace());
+        dto.setRemainingSpots(remainingSpots);
         dto.setImageGallery(event.getImageGallery().stream().map(imageGaleryMapper::toDto).collect(Collectors.toList()));
         dto.setStatus(event.getStatus());
         dto.setOrganizerFirstName(event.getOrganizer().getFirstName());
