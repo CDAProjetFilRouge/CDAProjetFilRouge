@@ -93,13 +93,15 @@ public interface AppUserApi {
         AppUserResponseDto updateByAdmin(@Parameter(description = "Identifiant du compte", required = true) Long id,
                         AppUserAdminUpdateRequestDto requestDto) throws HttpException;
 
-        @Operation(summary = "Supprimer un compte", description = "Réservé aux administrateurs.")
+        @Operation(summary = "Supprimer un compte", description = "Réservé aux administrateurs. Les inscriptions du compte sont supprimées. Le compte est refusé s'il organise des évènements, possède un club, a publié des documents légaux ou traité des demandes d'anonymisation. S'il a posté des commentaires, la suppression est refusée (409, en-tête X-Error-Code: ACCOUNT_HAS_COMMENTS) sauf avec deleteComments=true.")
         @ApiResponses({
                         @ApiResponse(responseCode = "204", description = "Compte supprimé"),
                         @ApiResponse(responseCode = "401", description = "Non authentifié"),
                         @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
-                        @ApiResponse(responseCode = "404", description = "Utilisateur introuvable")
+                        @ApiResponse(responseCode = "404", description = "Utilisateur introuvable"),
+                        @ApiResponse(responseCode = "409", description = "Le compte a une activité qui empêche sa suppression")
         })
-        ResponseEntity<Void> delete(@Parameter(description = "Identifiant du compte", required = true) Long id)
+        ResponseEntity<Void> delete(@Parameter(description = "Identifiant du compte", required = true) Long id,
+                        @Parameter(description = "Supprimer aussi les commentaires du compte") boolean deleteComments)
                         throws HttpException;
 }

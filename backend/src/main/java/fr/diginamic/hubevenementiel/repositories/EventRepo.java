@@ -89,4 +89,10 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
     @Query("SELECT e FROM Event e WHERE e.id = :id")
     Optional<Event> findByIdForUpdate(@Param("id") Long id);
 
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @return true if the user organizes at least one event
+     */
+    boolean existsByOrganizerId(Long organizerId);
 }

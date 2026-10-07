@@ -152,8 +152,9 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
-        appUserService.deleteAccount(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean deleteComments) throws HttpException {
+        appUserService.deleteAccount(id, deleteComments);
         return ResponseEntity.noContent().build();
     }
 }

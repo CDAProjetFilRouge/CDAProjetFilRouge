@@ -14,3 +14,10 @@ export interface PasswordResetRequest {
   token: string;
   newPassword: string;
 }
+
+export interface AccountActivationRequest {
+  token: string;
+  temporaryPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
