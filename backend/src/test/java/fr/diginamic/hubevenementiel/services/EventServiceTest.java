@@ -5,12 +5,15 @@ import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
+import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.repositories.EventInscriptionCount;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
+import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +42,9 @@ class EventServiceTest {
 
     @Mock
     private EventRepo eventRepository;
+
+    @Mock
+    private InscriptionRepo inscriptionRepo;
 
     @InjectMocks
     private EventService eventService;
@@ -382,6 +390,62 @@ class EventServiceTest {
 
         assertThrows(BadRequestException.class,
                 () -> eventService.search(0, 20, null, null, null, 50, 10, null, principal));
+    }
+
+    // ---------------------------------------------------------------
+    // remainingSpots
+    // ---------------------------------------------------------------
+
+    @Test
+    void remainingSpots_subtractsConfirmedInscriptionsFromTheCapacity() {
+        Event busy = eventWith(1L, 10);
+        Event empty = eventWith(2L, 5);
+        when(inscriptionRepo.countByEventIdsAndStatus(List.of(1L, 2L), InscriptionStatus.CONFIRMED))
+                .thenReturn(List.of(count(1L, 3L)));
+
+        Map<Long, Integer> result = eventService.remainingSpots(List.of(busy, empty));
+
+        assertThat(result).containsEntry(1L, 7).containsEntry(2L, 5);
+    }
+
+    @Test
+    void remainingSpots_neverGoesBelowZero() {
+        Event overbooked = eventWith(1L, 2);
+        when(inscriptionRepo.countByEventIdsAndStatus(List.of(1L), InscriptionStatus.CONFIRMED))
+                .thenReturn(List.of(count(1L, 3L)));
+
+        Map<Long, Integer> result = eventService.remainingSpots(List.of(overbooked));
+
+        assertThat(result).containsEntry(1L, 0);
+    }
+
+    @Test
+    void remainingSpots_noEvents_returnsEmptyMapWithoutQuerying() {
+        Map<Long, Integer> result = eventService.remainingSpots(List.of());
+
+        assertThat(result).isEmpty();
+        verify(inscriptionRepo, never()).countByEventIdsAndStatus(any(), any());
+    }
+
+    private Event eventWith(Long id, int maxCapacity) {
+        Event event = new Event();
+        event.setId(id);
+        event.setMaxCapacity(maxCapacity);
+        return event;
+    }
+
+    private EventInscriptionCount count(Long eventId, Long total) {
+        return new EventInscriptionCount() {
+            @Override
+            public Long getEventId() {
+                return eventId;
+            }
+
+            @Override
+            public Long getTotal() {
+                return total;
+            }
+        };
     }
 
     private Event cloneFutureEvent() {

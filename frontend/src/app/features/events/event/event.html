@@ -1,48 +1,56 @@
 <div class="event-main">
   <div class="title-section">
-    <h1>Les évènement de la fédération</h1>
-    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au status brouillon de son pas listés.</p>
+    <h1>Les évènements de la fédération</h1>
+    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au statut brouillon ne sont pas listés.</p>
   </div>
-  <div class="filter-section">
-    <div class="filter">
-      <p>Mot-clé</p>
-      <input type="text">
+  <form [formGroup]="filters" (ngSubmit)="search()">
+    <div class="filter-section">
+      <div class="filter">
+        <p>Mot-clé</p>
+        <input type="text" formControlName="keyword">
+      </div>
+      <div class="filter">
+        <p>Catégorie</p>
+        <select formControlName="category">
+          <option value=""></option>
+          <option value="CULTURE">Culture</option>
+          <option value="SPORT">Sport</option>
+          <option value="HOBBIES">Hobbies</option>
+        </select>
+      </div>
+      <div class="filter">
+        <p>Club organisateur</p>
+        <input type="text" formControlName="club">
+      </div>
+      <div class="filter">
+        <p>Ville</p>
+        <input type="text" formControlName="city">
+      </div>
+      <div class="filter">
+        <p>Date de début</p>
+        <input type="date" formControlName="startDate">
+      </div>
+      <div class="filter">
+        <p>Date de fin</p>
+        <input type="date" formControlName="endDate">
+      </div>
+      <div class="filter">
+        <p>Statut</p>
+        <select formControlName="status">
+          <option value="PUBLISHED">Publié</option>
+          <option value="CANCELLED">Annulé</option>
+        </select>
+      </div>
+      <button type="button" (click)="resetFilter()">Réinitialiser</button>
+      <button type="submit">Rechercher</button>
     </div>
-    <div class="filter">
-      <p>Catégorie</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Club oragnisateur</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Lieu</p>
-      <input type="text">
-    </div>
-    <div class="filter">
-      <p>Date de début</p>
-      <input type="date">
-    </div>
-    <div class="filter">
-      <p>Date de fin</p>
-      <input type="date">
-    </div>
-    <div class="filter">
-      <p>Status</p>
-      <select>
-        <option>Publié</option>
-        <option>Annulé</option>
-      </select>
-    </div>
-    <button>Réinitialiser</button>
-    <button id="search-btn">Rechercher</button>
-  </div>
+  </form>
+
   <div class="event-section">
     <div class="event-sub-section">
-      <p id="counter">X évènements trouvés</p>
+      <p id="counter">{{ totalElements }} évènements</p>
       <div class="sort">
-        <p>Trier par: </p>
+        <p>Trier par :</p>
         <select>
           <option>Date croissante</option>
           <option>Date décroissante</option>
@@ -51,21 +59,28 @@
 
     </div>
     <div class="carousel">
-      @for (event of displayEvents; track event){
+      @for (event of events(); track event.id){
         <div class="event-card">
-          <img alt="galerie - image">
-          @if(event.placeDispo > 0){
-            <p class="event-card-header">{{event.type}} - <span style="color: green">Place disponibles</span></p>
+          @if (event.imageGallery.length > 0) {
+            <img alt="Image de l'évènement" [src]="imageUrl(event.imageGallery[0].path)">
           }@else {
-            <p class="event-card-header">{{event.type}} - <span style="color: red">Complet - Liste d'attente</span></p>
+            <img src="https://www.freeiconspng.com/uploads/no-image-icon-6.png" width="350" alt="Aucune image"  title="Image from freeiconspng.com"/>
           }
-          <h3>{{ event.name}}</h3>
-          <p>Date: {{ event.dateDebut}} - {{ event.dateFin}}</p>
-          <p>Lieu: {{ event.address}}</p>
-          <p>Places: {{ event.placeDispo}}/{{ event.placeMax}} inscrits</p>
+          @if(event.remainingSpots > 0){
+            <p class="event-card-header">{{event.category}} - <span style="color: green">Places disponibles</span></p>
+          }@else {
+            <p class="event-card-header">{{event.category}} - <span style="color: red">Complet - Liste d'attente</span></p>
+          }
+          <h3>{{ event.title}}</h3>
+          @if (event.organizerClubs.length > 0) {
+            <p>Organisé par : {{ event.organizerClubs.join(', ') }}</p>
+          }
+          <p>Date : {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
+          <p>Lieu : {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
+          <p>Places disponibles : {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
           <div class="event-card-footer">
-            <p>{{ event.price}}€ affilié - 14€</p>
-            <button>Voir le détails</button>
+            <p>{{ event.affiliatePrice}}€ affilié - {{ event.nonAffiliatePrice}}€ non affilié</p>
+            <button>Voir le détail</button>
           </div>
 
         </div>
@@ -73,7 +88,7 @@
     </div>
     <div class="pagination">
       @if (currentPage > 1){
-        <button (click)="previousPage()"> Précédent</button>
+        <button (click)="previousPage()">Précédent</button>
       }
 
       <span>

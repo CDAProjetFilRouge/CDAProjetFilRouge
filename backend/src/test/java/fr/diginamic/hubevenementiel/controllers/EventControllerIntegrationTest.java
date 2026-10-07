@@ -44,6 +44,10 @@ class EventControllerIntegrationTest {
     private UserRepo userRepo;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
+    @Autowired
+    private fr.diginamic.hubevenementiel.repositories.ClubRepo clubRepo;
 
     private static final String PASSWORD = "motdepasse123456";
 
@@ -189,14 +193,28 @@ class EventControllerIntegrationTest {
 
         String otherToken = loginAndGetToken(otherOrganizer.getEmail());
 
-        mockMvc.perform(get("/events?size=100")
+        mockMvc.perform(get("/events/filter")
+                        .param("keyword", title)
                         .header("Authorization", "Bearer " + otherToken))
                 .andExpect(status().isOk())
-                .andExpect(result -> {
-                    String body = result.getResponse().getContentAsString();
-                    org.assertj.core.api.Assertions.assertThat(body).doesNotContain(title);
-                });
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("keyword", title)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
+
+    @Test
+    void getEvents_sizeAboveLimit_returns400() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+
+        mockMvc.perform(get("/events?size=100")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
 
     // ---------------------------------------------------------------
     // RG15 : seul le propriétaire peut modifier/supprimer
@@ -241,6 +259,189 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // ---------------------------------------------------------------
+    // GET /events/filter : filtres, dates inclusives, places restantes
+    // ---------------------------------------------------------------
+
+    @Test
+    void filterEvents_byCity_returnsOnlyMatchingEvents() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String inCity = "Dans la ville-" + System.nanoTime();
+        String elsewhere = "Ailleurs-" + System.nanoTime();
+        createPublishedEvent(token, inCity, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, elsewhere, "Paris", start, start.plusHours(2), 50);
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value(inCity));
+    }
+
+    @Test
+    void filterEvents_endDateIsInclusive_startDateExcludesEarlierEvents() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        createPublishedEvent(token, "Evenement date-" + System.nanoTime(), city, start, start.plusHours(2), 50);
+        String day = start.toLocalDate().toString();
+        String nextDay = start.toLocalDate().plusDays(1).toString();
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .param("startDate", day).param("endDate", day)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .param("startDate", nextDay)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void filterEvents_withoutInscriptions_remainingSpotsEqualsCapacity() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        createPublishedEvent(token, "Evenement places-" + System.nanoTime(), city, start, start.plusHours(2), 42);
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].maxCapacity").value(42))
+                .andExpect(jsonPath("$.content[0].remainingSpots").value(42));
+    }
+
+    @Test
+    void filterEvents_listOfEventsWithDifferentOrganizers_doesNotQueryPerEvent() throws Exception {
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String viewerToken = loginAndGetToken(organizer.getEmail());
+        for (int i = 0; i < 5; i++) {
+            AppUser eventOrganizer = createActiveUser("n1-" + i + "-" + System.nanoTime() + "@example.com", Role.ORGANIZER);
+            String token = loginAndGetToken(eventOrganizer.getEmail());
+            createPublishedEvent(token, "Evenement N+1 " + i + "-" + System.nanoTime(), city, start, start.plusHours(2), 50);
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        org.hibernate.stat.Statistics statistics = entityManager.getEntityManagerFactory()
+                .unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        statistics.setStatisticsEnabled(true);
+        statistics.clear();
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + viewerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(5));
+
+        org.assertj.core.api.Assertions.assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(6);
+    }
+
+    @Test
+    void filterEvents_showsOrganizerClubsInsteadOfOrganizerName() throws Exception {
+        String clubName = "Club-" + System.nanoTime();
+        fr.diginamic.hubevenementiel.entities.Club club = new fr.diginamic.hubevenementiel.entities.Club();
+        club.setName(clubName);
+        club.setCategory(Category.SPORT);
+        club.setEmail("club@example.com");
+        club.setPhone("0600000000");
+        club = clubRepo.save(club);
+        organizer.getClubs().add(club);
+        userRepo.save(organizer);
+
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        createPublishedEvent(token, "Evenement club-" + System.nanoTime(), city, start, start.plusHours(2), 50);
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].organizerClubs[0]").value(clubName))
+                .andExpect(jsonPath("$.content[0].organizerFirstName").doesNotExist())
+                .andExpect(jsonPath("$.content[0].organizerLastName").doesNotExist());
+    }
+
+    @Test
+    void filterEvents_byClubName_returnsOnlyEventsOfThatClubOrganizers() throws Exception {
+        String clubName = "Club-" + System.nanoTime();
+        fr.diginamic.hubevenementiel.entities.Club club = new fr.diginamic.hubevenementiel.entities.Club();
+        club.setName(clubName);
+        club.setCategory(Category.SPORT);
+        club.setEmail("club@example.com");
+        club.setPhone("0600000000");
+        club = clubRepo.save(club);
+        organizer.getClubs().add(club);
+        userRepo.save(organizer);
+
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String inClub = "Evenement du club-" + System.nanoTime();
+        createPublishedEvent(loginAndGetToken(organizer.getEmail()), inClub, "Paris", start, start.plusHours(2), 50);
+        createPublishedEvent(loginAndGetToken(otherOrganizer.getEmail()), "Evenement hors club-" + System.nanoTime(),
+                "Paris", start, start.plusHours(2), 50);
+
+        mockMvc.perform(get("/events/filter")
+                        .param("clubName", clubName.toUpperCase()).param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + loginAndGetToken(organizer.getEmail())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value(inClub));
+    }
+
+    @Test
+    void uploadedImages_areReachableWithoutToken() throws Exception {
+        mockMvc.perform(get("/uploads/fichier-inexistant.png"))
+                .andExpect(status().isNotFound());
+    }
+
+    private void createPublishedEvent(String token, String title, String city, LocalDateTime start,
+            LocalDateTime end, int capacity) throws Exception {
+        AddressRequestDto address = new AddressRequestDto();
+        address.setStreet1("12 rue de la Paix");
+        address.setPostalCode("75002");
+        address.setCity(city);
+        address.setCountry("France");
+        Map<String, Object> body = Map.of(
+                "title", title,
+                "description", "Un bel évènement de test.",
+                "location", address,
+                "category", Category.SPORT,
+                "startDateTime", start.toString(),
+                "endDateTime", end.toString(),
+                "affiliatePrice", 10,
+                "nonAffiliatePrice", 20,
+                "maxCapacity", capacity
+        );
+
+        String response = mockMvc.perform(post("/events")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long eventId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+
+        Map<String, Object> published = new java.util.HashMap<>(body);
+        published.put("status", "PUBLISHED");
+        mockMvc.perform(put("/events/" + eventId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(published)))
+                .andExpect(status().isOk());
+    }
+
     private Long createDraftEventAndReturnId(String token, String title) throws Exception {
         String response = mockMvc.perform(post("/events")
                         .header("Authorization", "Bearer " + token)
@@ -251,4 +452,5 @@ class EventControllerIntegrationTest {
 
         return ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
     }
+
 }

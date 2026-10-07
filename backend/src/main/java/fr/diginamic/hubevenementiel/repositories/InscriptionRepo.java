@@ -1,11 +1,14 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.Collection;
 import java.util.List;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -69,6 +72,17 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @return the number of inscriptions with parameters
      */
     long countByEventIdAndStatus(Long eventId, InscriptionStatus status);
+
+    /**
+     *
+     * @param eventIds ids of the events you want the number of inscriptions for
+     * @param status status of the inscriptions to count
+     * @return one entry per event having at least one inscription with this status
+     */
+    @Query("select i.event.id as eventId, count(i) as total from Inscription i "
+            + "where i.event.id in :eventIds and i.status = :status group by i.event.id")
+    List<EventInscriptionCount> countByEventIdsAndStatus(@Param("eventIds") Collection<Long> eventIds,
+            @Param("status") InscriptionStatus status);
 
     /**
      *
