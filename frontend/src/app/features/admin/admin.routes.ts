@@ -42,6 +42,11 @@ export const ADMIN_ROUTES: Routes = [
         path: 'users/new',
         loadComponent: () => import('./users/user-create/user-create').then((m) => m.UserCreate),
       },
+
+      {
+        path: 'clubs',
+        loadComponent: () => import('./clubs/club-list/club-list').then((m) => m.ClubList),
+      },
     ]
   },
 

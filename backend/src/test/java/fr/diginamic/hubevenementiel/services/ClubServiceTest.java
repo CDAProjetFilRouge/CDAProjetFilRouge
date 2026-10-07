@@ -11,11 +11,18 @@ import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -204,5 +211,44 @@ class ClubServiceTest {
 
         assertThat(existing.getEndValidityDate()).isEqualTo(LocalDate.now());
         verify(clubRepository).save(existing);
+    }
+
+    // ---------------------------------------------------------------
+    // searchClubs (admin)
+    // ---------------------------------------------------------------
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void searchClubs_returnsThePageFromTheRepository() {
+        Page<Club> repoPage = new PageImpl<>(List.of(validClub));
+        when(clubRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(repoPage);
+
+        Page<Club> result = clubService.searchClubs("course", Category.SPORT, "Rennes", 0, 20);
+
+        assertThat(result.getContent()).containsExactly(validClub);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void searchClubs_buildsPageableSortedByName() {
+        when(clubRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
+
+        clubService.searchClubs(null, null, null, 2, 10);
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(clubRepository).findAll(any(Specification.class), captor.capture());
+        assertThat(captor.getValue().getPageNumber()).isEqualTo(2);
+        assertThat(captor.getValue().getPageSize()).isEqualTo(10);
+        assertThat(captor.getValue().getSort().getOrderFor("name")).isNotNull();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void searchClubs_withoutFilters_stillQueriesTheRepository() {
+        when(clubRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
+
+        clubService.searchClubs(" ", null, "", 0, 20);
+
+        verify(clubRepository).findAll(any(Specification.class), any(Pageable.class));
     }
 }
