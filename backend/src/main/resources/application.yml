@@ -21,6 +21,9 @@ server:
 
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
+  image-storage:
+    url: ${IMAGE_STORAGE_URL:}
+    key: ${IMAGE_STORAGE_KEY:}
   mail-sender: ${MAIL_SENDER:${BREVO_SMTP_LOGIN}}
   jwt:
     expiration-ms: 900000

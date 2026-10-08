@@ -4,7 +4,7 @@ import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { URL_BACKEND } from '../../../core/api/api.config';
+import { URL_IMAGES } from '../../../core/api/api.config';
 
 @Component({
   imports: [ReactiveFormsModule, DatePipe],
@@ -39,7 +39,7 @@ export class Event {
   }
 
   protected imageUrl(path: string): string {
-    return `${URL_BACKEND}${path}`;
+    return `${URL_IMAGES}${path}`;
   }
 
   ngOnInit(): void {
