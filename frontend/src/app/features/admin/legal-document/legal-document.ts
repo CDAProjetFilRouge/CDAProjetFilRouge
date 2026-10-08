@@ -5,9 +5,10 @@ import { DOCUMENT_TYPE_LABELS, DocumentType, LegalDocument } from './legal-docum
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { QuillEditorComponent } from 'ngx-quill';
 
 @Component({
-  imports: [FormField, DatePipe],
+  imports: [FormField, DatePipe, QuillEditorComponent],
   selector: 'app-legal-document',
   styleUrl: './legal-document.scss',
   templateUrl: './legal-document.html',
@@ -43,7 +44,7 @@ export class LegalDocumentPage {
   }
 
   protected publish(): void {
-    const text = this.legalDocumentModel().content.trim();
+    const text = (this.legalDocumentModel().content ?? '').trim();
     if (!text) {
       this.publishError.set('Le texte est obligatoire.');
       return;
