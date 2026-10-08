@@ -6,7 +6,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, switchMap } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth-interceptor';
 import { AuthService } from './core/auth/auth.service';
@@ -18,10 +18,16 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAppInitializer(() => {
       const authService = inject(AuthService);
-      if (!authService.getToken()) {
+      if (!authService.getRefreshToken()) {
         return;
       }
-      return firstValueFrom(authService.loadCurrentUser()).catch(() => authService.logout());
+      return firstValueFrom(
+        authService.refresh().pipe(switchMap(() => authService.loadCurrentUser())),
+      ).catch((error) => {
+        if (error.status === 401) {
+          authService.clearSession();
+        }
+      });
     }),
   ],
 };

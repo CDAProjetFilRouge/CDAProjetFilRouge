@@ -36,6 +36,7 @@ import fr.diginamic.hubevenementiel.repositories.CommentRepo;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
@@ -48,6 +49,7 @@ public class AppUserService {
 
     private final UserRepo userRepo;
     private final TokenRepo tokenRepo;
+    private final RefreshTokenRepo refreshTokenRepo;
     private final ClubRepo clubRepo;
     private final EventRepo eventRepo;
     private final InscriptionRepo inscriptionRepo;
@@ -57,12 +59,13 @@ public class AppUserService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, ClubRepo clubRepo, EventRepo eventRepo,
+    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo, EventRepo eventRepo,
             InscriptionRepo inscriptionRepo, CommentRepo commentRepo, LegalDocumentRepo legalDocumentRepo,
             AnonymizationDemandRepo anonymizationDemandRepo, EmailService emailService,
             PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.tokenRepo = tokenRepo;
+        this.refreshTokenRepo = refreshTokenRepo;
         this.clubRepo = clubRepo;
         this.eventRepo = eventRepo;
         this.inscriptionRepo = inscriptionRepo;
@@ -744,6 +747,7 @@ public class AppUserService {
         }
         cancelInscriptionsOf(id);
         tokenRepo.deleteByUser(user);
+        refreshTokenRepo.deleteByUser(user);
         anonymizationDemandRepo.deleteByRequesterId(id);
         userRepo.delete(user);
     }

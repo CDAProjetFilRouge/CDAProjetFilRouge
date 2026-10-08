@@ -252,11 +252,11 @@ class EventControllerIntegrationTest {
     // ---------------------------------------------------------------
 
     @Test
-    void createEvent_withoutToken_returns403() throws Exception {
+    void createEvent_withoutToken_returns401() throws Exception {
         mockMvc.perform(post("/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validEventPayload("Sans token-" + System.nanoTime())))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     // ---------------------------------------------------------------
