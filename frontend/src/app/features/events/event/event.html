@@ -52,16 +52,14 @@
     <div class="event-sub-section">
       <p id="counter">{{ totalElements }} évènements trouvés</p>
       <div class="sort">
-        <p>Trier par :</p>
-        <select>
-          <option>Date croissante</option>
-          <option>Date décroissante</option>
-      </select>
+        <button type="button" (click)="toggleSort()">
+            Trier par: {{ sortOrder() === 'desc' ? 'Date ↓' : 'Date ↑'}}
+        </button>
       </div>
 
     </div>
     <div class="carousel">
-      @for (event of events(); track event.id){
+      @for (event of sortedItems(); track event.id){
         <div class="event-card">
           @if (event.imageGallery.length > 0) {
             <img alt="Image de l'évènement" [src]="imageUrl(event.imageGallery[0].path)">
