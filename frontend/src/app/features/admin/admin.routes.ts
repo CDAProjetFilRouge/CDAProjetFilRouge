@@ -47,6 +47,16 @@ export const ADMIN_ROUTES: Routes = [
         path: 'clubs',
         loadComponent: () => import('./clubs/club-list/club-list').then((m) => m.ClubList),
       },
+
+      {
+        path: 'clubs/new',
+        loadComponent: () => import('./clubs/club-form/club-form').then((m) => m.ClubForm),
+      },
+
+      {
+        path: 'clubs/:id/edit',
+        loadComponent: () => import('./clubs/club-form/club-form').then((m) => m.ClubForm),
+      },
     ]
   },
 
