@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminUserUpdate, AppUser, Role, ROLE_LABELS } from '../../../../core/models/user.models';
+import { PHONE_PATTERN } from '../../../../core/validator/phone';
 import { UserService } from '../user.service';
 
 @Component({
@@ -27,7 +28,7 @@ export class UserEdit {
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     role: ['MEMBER' as Role],
-    phone: [''],
+    phone: ['', Validators.pattern(PHONE_PATTERN)],
     street1: [''],
     street2: [''],
     postalCode: [''],

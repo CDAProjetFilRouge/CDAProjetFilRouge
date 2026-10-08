@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AdminUserCreate, Role, ROLE_LABELS } from '../../../../core/models/user.models';
+import { PHONE_PATTERN } from '../../../../core/validator/phone';
 import { UserService } from '../user.service';
 
 @Component({
@@ -23,7 +24,7 @@ export class UserCreate {
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     role: ['MEMBER' as Role],
-    phone: ['', Validators.required],
+    phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
   });
 
   readonly errorMessage = signal('');
@@ -53,9 +54,7 @@ export class UserCreate {
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         this.errorMessage.set(
-          typeof error.error === 'string'
-            ? error.error
-            : "Impossible de créer un compte.",
+          typeof error.error === 'string' ? error.error : 'Impossible de créer un compte.',
         );
       },
     });
