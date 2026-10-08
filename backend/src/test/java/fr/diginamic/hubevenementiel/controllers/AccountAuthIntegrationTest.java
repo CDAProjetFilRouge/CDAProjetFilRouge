@@ -233,7 +233,7 @@ class AccountAuthIntegrationTest {
         @Test
         void protectedRoute_withoutToken_isRejected() throws Exception {
                 mockMvc.perform(get("/users"))
-                                .andExpect(status().isForbidden());
+                                .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -389,7 +389,7 @@ class AccountAuthIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(
                                                 Map.of("email", user.getEmail(), "password", "mauvaisMotDePasse123"))))
-                                .andExpect(status().isForbidden())
+                                .andExpect(status().isUnauthorized())
                                 .andReturn().getResponse().getContentAsString();
 
                 org.assertj.core.api.Assertions.assertThat(body).doesNotContain("suspendu");
@@ -426,6 +426,6 @@ class AccountAuthIntegrationTest {
                 userRepo.save(admin);
 
                 mockMvc.perform(get("/users").header("Authorization", "Bearer " + token))
-                                .andExpect(status().isForbidden());
+                                .andExpect(status().isUnauthorized());
         }
 }
