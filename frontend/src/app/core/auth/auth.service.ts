@@ -3,6 +3,7 @@ import { inject, Service, signal } from '@angular/core';
 import { finalize, Observable, shareReplay, switchMap, tap } from 'rxjs';
 import { URL_BACKEND } from '../api/api.config';
 import { AppUser } from '../models/user.models';
+import { DpopService } from './dpop.service';
 import {
   AccountActivationRequest,
   LoginResponse,
@@ -13,6 +14,7 @@ import {
 @Service()
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly dpopService = inject(DpopService);
 
   readonly currentUser = signal<AppUser | null>(null);
   private accessToken: string | null = null;
@@ -95,6 +97,7 @@ export class AuthService {
     this.accessToken = null;
     localStorage.removeItem('refreshToken');
     this.currentUser.set(null);
+    void this.dpopService.clear().catch(() => undefined);
   }
 
   private storeTokens(response: LoginResponse): void {

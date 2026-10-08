@@ -90,3 +90,15 @@ a {
     }
   }
 }
+
+// La page affichée par le routeur occupe toute la hauteur disponible entre le header et le footer,
+// pour que les fonds de couleur (connexion, administration) descendent jusqu'au footer.
+app-root .main > router-outlet + * {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  > :only-child {
+    flex: 1;
+  }
+}
