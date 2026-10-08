@@ -592,4 +592,38 @@ class AppUserServiceTest {
         user.setStatus(status);
         return user;
     }
+
+    // ---------------------------------------------------------------
+    // appUserChecker : format du téléphone
+    // ---------------------------------------------------------------
+
+    @Test
+    void appUserChecker_malformedPhone_throwsBadRequest() {
+        validUser.setPhone("123456");
+        assertThrows(BadRequestException.class, () -> appUserService.appUserChecker(validUser, false, false));
+    }
+
+    @Test
+    void appUserChecker_malformedPhone_alsoRefusedWhenPhoneIsRequired() {
+        validUser.setPhone("06ABCDEFGH");
+        assertThrows(BadRequestException.class, () -> appUserService.appUserChecker(validUser, true, false));
+    }
+
+    @Test
+    void appUserChecker_validPhone_passes() throws HttpException {
+        validUser.setPhone("05 61 23 45 67");
+        assertThat(appUserService.appUserChecker(validUser, true, false)).isTrue();
+    }
+
+    @Test
+    void appUserChecker_noPhoneWhenOptional_passes() throws HttpException {
+        validUser.setPhone(null);
+        assertThat(appUserService.appUserChecker(validUser, false, false)).isTrue();
+    }
+
+    @Test
+    void appUserChecker_blankPhoneWhenOptional_passes() throws HttpException {
+        validUser.setPhone("  ");
+        assertThat(appUserService.appUserChecker(validUser, false, false)).isTrue();
+    }
 }

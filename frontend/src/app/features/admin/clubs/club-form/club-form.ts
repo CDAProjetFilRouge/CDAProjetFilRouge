@@ -1,10 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ClubService } from '../club.service';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { CLUB_CATEGORY_LABELS, ClubCategory, ClubRequest } from '../club.models';
 import { HttpErrorResponse } from '@angular/common/http';
-
+import { Component, inject, signal } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { PHONE_PATTERN } from '../../../../core/validator/phone';
+import { CLUB_CATEGORY_LABELS, ClubCategory, ClubRequest } from '../club.models';
+import { ClubService } from '../club.service';
 
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
@@ -24,12 +24,11 @@ export class ClubForm {
   readonly isSubmitting = signal(false);
   readonly isEdit = this.id !== 0;
 
-
   readonly form = this.formBuilder.group({
     name: ['', Validators.required],
     category: ['CULTURE' as ClubCategory],
     email: ['', [Validators.required, Validators.email]],
-    phone: ['', Validators.required],
+    phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
     address: this.formBuilder.group({
       street1: ['', Validators.required],
       street2: [''],
@@ -40,21 +39,22 @@ export class ClubForm {
   });
 
   constructor() {
-    if(this.isEdit) {
+    if (this.isEdit) {
       this.clubService.getClubById(this.id).subscribe({
-        next: (club) => this.form.patchValue({
-          name: club.name,
-          category: club.category,
-          email: club.email,
-          phone: club.phone,
-          address: {
-            street1: club.address.street1,
-            street2: club.address.street2?? '',
-            postalCode: club.address.postalCode,
-            city: club.address.city,
-            country: club.address.country,
-          },
-        }),
+        next: (club) =>
+          this.form.patchValue({
+            name: club.name,
+            category: club.category,
+            email: club.email,
+            phone: club.phone,
+            address: {
+              street1: club.address.street1,
+              street2: club.address.street2 ?? '',
+              postalCode: club.address.postalCode,
+              city: club.address.city,
+              country: club.address.country,
+            },
+          }),
         error: () => this.errorMessage.set('Club introuvable'),
       });
     }
@@ -89,11 +89,9 @@ export class ClubForm {
         this.errorMessage.set(
           typeof error.error === 'string'
             ? error.error
-            : "Impossible d'enregistrer les modifications"
-        )
+            : "Impossible d'enregistrer les modifications",
+        );
       },
     });
-
   }
-
 }
