@@ -28,6 +28,9 @@
       @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
         <p class="field-error">Le numéro de téléphone est obligatoire.</p>
       }
+      @if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+        <p class="field-error">Numéro invalide. Exemple : 05 61 23 45 67.</p>
+      }
     </div>
 
     <div class="field">

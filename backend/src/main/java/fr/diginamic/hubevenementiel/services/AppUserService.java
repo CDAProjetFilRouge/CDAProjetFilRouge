@@ -40,6 +40,7 @@ import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import fr.diginamic.hubevenementiel.validation.PhoneNumberFormat;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -59,7 +60,8 @@ public class AppUserService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo, EventRepo eventRepo,
+    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo,
+            EventRepo eventRepo,
             InscriptionRepo inscriptionRepo, CommentRepo commentRepo, LegalDocumentRepo legalDocumentRepo,
             AnonymizationDemandRepo anonymizationDemandRepo, EmailService emailService,
             PasswordEncoder passwordEncoder) {
@@ -254,7 +256,7 @@ public class AppUserService {
      * Explains why a login was refused, but only to someone who knows the password,
      * so that the state of an account is never revealed to a stranger.
      *
-     * @param email email used to log in
+     * @param email       email used to log in
      * @param rawPassword password typed by the user
      * @return a message when the password is correct and the account cannot log in
      *         (suspended, not activated), otherwise empty
@@ -435,6 +437,10 @@ public class AppUserService {
         String phone = appUser.getPhone();
         if (phoneRequired && (phone == null || phone.isBlank())) {
             throw new BadRequestException("Le téléphone est obligatoire pour un compte créé par un administrateur.");
+        }
+
+        if (phone != null && !phone.isBlank() && !PhoneNumberFormat.isValid(phone)) {
+            throw new BadRequestException("Le numéro de téléphone n'est pas valide. Exemple : 05 61 23 45 67.");
         }
 
         return true;
@@ -703,7 +709,8 @@ public class AppUserService {
      * deleteComments is true, in which case they are deleted with the account.
      *
      * @param id             id of the AppUser to delete
-     * @param deleteComments true to delete the comments of the account along with it
+     * @param deleteComments true to delete the comments of the account along with
+     *                       it
      * @throws HttpException NotFoundException if the user does not exist,
      *                       ConflictException if the account has activity that
      *                       prevents its deletion (code ACCOUNT_HAS_COMMENTS when

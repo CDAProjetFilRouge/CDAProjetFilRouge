@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { PHONE_PATTERN } from '../../../core/validator/phone';
 import { ProfileUpdate } from '../account.models';
 import { AccountService } from '../account.service';
 
@@ -24,7 +25,7 @@ export class ProfileEdit {
     firstName: [this.user?.firstName ?? '', Validators.required],
     lastName: [this.user?.lastName ?? '', Validators.required],
     email: [this.user?.email ?? '', [Validators.required, Validators.email]],
-    phone: [this.user?.phone ?? ''],
+    phone: [this.user?.phone ?? '', Validators.pattern(PHONE_PATTERN)],
     street1: [this.user?.address?.street1 ?? ''],
     street2: [this.user?.address?.street2 ?? ''],
     postalCode: [this.user?.address?.postalCode ?? ''],
