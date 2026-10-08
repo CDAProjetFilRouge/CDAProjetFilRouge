@@ -68,8 +68,18 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/activate-account/activate-account').then((m) => m.ActivateAccount),
   },
-      {
+  {
     path: '',
     component: Event,
+  },
+  {
+    path: 'terms-of-use',
+    loadComponent: () => import('./features/legal/legal-page/legal-page').then((m) => m.LegalPage),
+    data: { documentType: 'TERM_OF_USE' },
+  },
+  {
+    path: 'gdpr-policy',
+    loadComponent: () => import('./features/legal/legal-page/legal-page').then((m) => m.LegalPage),
+    data: { documentType: 'GDPR_POLICY' },
   },
 ];

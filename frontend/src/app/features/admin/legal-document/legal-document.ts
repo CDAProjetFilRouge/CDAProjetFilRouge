@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { QuillEditorComponent } from 'ngx-quill';
+import { URL_BACKEND } from '../../../core/api/api.config';
 
 @Component({
   imports: [FormField, DatePipe, QuillEditorComponent],
