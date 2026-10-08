@@ -251,4 +251,22 @@ class ClubServiceTest {
 
         verify(clubRepository).findAll(any(Specification.class), any(Pageable.class));
     }
+
+    @Test
+    void clubChecker_phoneMadeOfSeparatorsOnly_throwsBadRequest() {
+        validClub.setPhone("------");
+        assertThrows(BadRequestException.class, () -> clubService.clubChecker(validClub));
+    }
+
+    @Test
+    void clubChecker_phoneWithWrongNumberOfDigits_throwsBadRequest() {
+        validClub.setPhone("06 12 34 56");
+        assertThrows(BadRequestException.class, () -> clubService.clubChecker(validClub));
+    }
+
+    @Test
+    void clubChecker_frenchPhoneWithSpaces_passes() throws HttpException {
+        validClub.setPhone("05 61 23 45 67");
+        assertThat(clubService.clubChecker(validClub)).isTrue();
+    }
 }
