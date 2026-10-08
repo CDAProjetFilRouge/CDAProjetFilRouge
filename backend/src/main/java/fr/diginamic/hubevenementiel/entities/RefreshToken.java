@@ -26,6 +26,9 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
+    @Column(name = "key_thumbprint", length = 64)
+    private String keyThumbprint;
+
     @Column(name = "family_id", nullable = false, length = 36)
     private String familyId;
     @Column(name = "family_created_at", nullable = false)
@@ -42,12 +45,13 @@ public class RefreshToken {
     }
 
     public RefreshToken(String tokenHash, AppUser user, String familyId, LocalDateTime familyCreatedAt,
-            LocalDateTime expiresAt) {
+            LocalDateTime expiresAt, String keyThumbprint) {
         this.tokenHash = tokenHash;
         this.user = user;
         this.familyId = familyId;
         this.familyCreatedAt = familyCreatedAt;
         this.expiresAt = expiresAt;
+        this.keyThumbprint = keyThumbprint;
     }
 
     public Long getId() {
@@ -88,6 +92,10 @@ public class RefreshToken {
 
     public void setRevokedAt(LocalDateTime revokedAt) {
         this.revokedAt = revokedAt;
+    }
+
+    public String getKeyThumbprint() {
+        return keyThumbprint;
     }
 
 }

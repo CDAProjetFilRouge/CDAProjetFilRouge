@@ -19,9 +19,11 @@ import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.openapi.LoginApi;
 import fr.diginamic.hubevenementiel.security.AppUserDetails;
+import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
 import fr.diginamic.hubevenementiel.services.AppUserService;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import fr.diginamic.hubevenementiel.services.RefreshTokenService;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class LoginController implements LoginApi {
@@ -30,13 +32,18 @@ public class LoginController implements LoginApi {
     private final JwtService jwtService;
     private final AppUserService appUserService;
     private final RefreshTokenService refreshTokenService;
+    private final DpopProofVerifier dpopProofVerifier;
+    private final HttpServletRequest httpRequest;
 
     public LoginController(AuthenticationManager authenticationManager, JwtService jwtService,
-            AppUserService appUserService, RefreshTokenService refreshTokenService) {
+            AppUserService appUserService, RefreshTokenService refreshTokenService,
+            DpopProofVerifier dpopProofVerifier, HttpServletRequest httpRequest) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.appUserService = appUserService;
         this.refreshTokenService = refreshTokenService;
+        this.dpopProofVerifier = dpopProofVerifier;
+        this.httpRequest = httpRequest;
     }
 
     @Override
@@ -60,14 +67,15 @@ public class LoginController implements LoginApi {
 
         AppUser user = ((AppUserDetails) authentication.getPrincipal()).getAppUser();
         String token = jwtService.generateToken(user);
-        String refreshToken = refreshTokenService.issueForLogin(user);
+        String refreshToken = refreshTokenService.issueForLogin(user, currentThumbprint());
 
         return ResponseEntity.ok(new LoginResponseDto(token, refreshToken));
     }
 
     @PostMapping("/auth/refresh")
     public ResponseEntity<LoginResponseDto> refresh(@RequestBody RefreshRequestDto request) throws HttpException {
-        RefreshTokenService.Rotation rotation = refreshTokenService.rotate(request.getRefreshToken());
+        RefreshTokenService.Rotation rotation = refreshTokenService.rotate(request.getRefreshToken(),
+                currentThumbprint());
 
         return ResponseEntity.ok(new LoginResponseDto(jwtService.generateToken(rotation.user()),
                 rotation.refreshToken()));
@@ -78,6 +86,15 @@ public class LoginController implements LoginApi {
         refreshTokenService.logout(request.getRefreshToken());
 
         return ResponseEntity.noContent().build();
+    }
+
+    private String currentThumbprint() throws HttpException {
+        String proof = httpRequest.getHeader("DPoP");
+        if (proof == null) {
+            return null;
+        }
+        return dpopProofVerifier.verify(proof, httpRequest.getMethod(), httpRequest.getRequestURL().toString())
+                .thumbprint();
     }
 
 }

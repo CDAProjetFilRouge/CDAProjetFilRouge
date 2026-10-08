@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.security.KeyPair;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,8 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.AppUserService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Jwks;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -238,6 +243,122 @@ class RefreshTokenIntegrationTest {
 
         assertThat(userRepo.findById(user.getId())).isEmpty();
         assertThat(refreshTokenRepo.findAll()).noneMatch(token -> token.getUser().getId().equals(user.getId()));
+    }
+
+    private static final String BASE_URL = "http://localhost";
+
+    private KeyPair newKey() {
+        return Jwts.SIG.ES256.keyPair().build();
+    }
+
+    private String thumbprintOf(KeyPair key) {
+        return Jwks.builder().key(key.getPublic()).build().thumbprint().toString();
+    }
+
+    private String dpopProof(KeyPair signer, String path) {
+        return Jwts.builder()
+                .header().type("dpop+jwt").jwk(Jwks.builder().key(signer.getPublic()).build()).and()
+                .id(UUID.randomUUID().toString())
+                .claim("htm", "POST")
+                .claim("htu", BASE_URL + path)
+                .claim("iat", Instant.now().getEpochSecond())
+                .signWith(signer.getPrivate(), Jwts.SIG.ES256)
+                .compact();
+    }
+
+    private int loginStatus(String dpopHeader) throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of("email", user.getEmail(), "password", PASSWORD));
+        var request = post("/login").contentType(MediaType.APPLICATION_JSON).content(body);
+        if (dpopHeader != null) {
+            request = request.header("DPoP", dpopHeader);
+        }
+        int httpStatus = mockMvc.perform(request).andReturn().getResponse().getStatus();
+        syncWithDatabase();
+        return httpStatus;
+    }
+
+    private String loginWithKey(KeyPair key) throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of("email", user.getEmail(), "password", PASSWORD));
+        String response = mockMvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON).content(body)
+                .header("DPoP", dpopProof(key, "/login")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        syncWithDatabase();
+        return (String) objectMapper.readValue(response, Map.class).get("refreshToken");
+    }
+
+    private int refreshStatus(String refreshToken, KeyPair signer) throws Exception {
+        var request = post("/auth/refresh").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken)));
+        if (signer != null) {
+            request = request.header("DPoP", dpopProof(signer, "/auth/refresh"));
+        }
+        int httpStatus = mockMvc.perform(request).andReturn().getResponse().getStatus();
+        syncWithDatabase();
+        return httpStatus;
+    }
+
+    @Test
+    void login_withProof_bindsTheSessionToTheKey() throws Exception {
+        KeyPair key = newKey();
+
+        loginWithKey(key);
+
+        assertThat(tokensOfUser()).hasSize(1);
+        assertThat(tokensOfUser().get(0).getKeyThumbprint()).isEqualTo(thumbprintOf(key));
+    }
+
+    @Test
+    void login_withoutProof_leavesTheSessionUnbound() throws Exception {
+        login();
+
+        assertThat(tokensOfUser().get(0).getKeyThumbprint()).isNull();
+    }
+
+    @Test
+    void login_withInvalidProof_returns401AndOpensNoSession() throws Exception {
+        assertThat(loginStatus("ceci-nest-pas-une-preuve")).isEqualTo(401);
+
+        assertThat(tokensOfUser()).isEmpty();
+    }
+
+    @Test
+    void refresh_withTheSameKey_isAcceptedAndKeepsTheBinding() throws Exception {
+        KeyPair key = newKey();
+        String first = loginWithKey(key);
+
+        assertThat(refreshStatus(first, key)).isEqualTo(200);
+
+        assertThat(tokensOfUser()).hasSize(2);
+        assertThat(tokensOfUser()).allMatch(token -> thumbprintOf(key).equals(token.getKeyThumbprint()));
+    }
+
+    @Test
+    void refresh_withAnotherKey_returns401AndRevokesTheFamily() throws Exception {
+        String first = loginWithKey(newKey());
+
+        assertThat(refreshStatus(first, newKey())).isEqualTo(401);
+
+        assertThat(tokensOfUser()).allMatch(token -> token.getRevokedAt() != null);
+    }
+
+    @Test
+    void refresh_boundSessionWithoutProof_returns401AndRevokesTheFamily() throws Exception {
+        String first = loginWithKey(newKey());
+
+        assertThat(refreshStatus(first, null)).isEqualTo(401);
+
+        assertThat(tokensOfUser()).allMatch(token -> token.getRevokedAt() != null);
+    }
+
+    @Test
+    void refresh_unboundSessionWithAProof_isAcceptedButStaysUnbound() throws Exception {
+        String first = (String) login().get("refreshToken");
+
+        assertThat(refreshStatus(first, newKey())).isEqualTo(200);
+
+        assertThat(tokensOfUser()).hasSize(2);
+        assertThat(tokensOfUser()).allMatch(token -> token.getKeyThumbprint() == null);
     }
 
     private void setFamilyCreatedAt(RefreshToken token, LocalDateTime value) {
