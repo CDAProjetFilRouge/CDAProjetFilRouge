@@ -9,6 +9,9 @@ import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
+
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -115,6 +118,14 @@ public class LegalDocumentService {
     @Transactional
     public LegalDocument createNewVersion(LegalDocument document, AppUserPrincipal principal) throws HttpException {
         legalDocumentChecker(document);
+        Safelist safelist = Safelist.relaxed().addAttributes(":all", "class");
+        String cleanContent = Jsoup.clean(document.getContent(), safelist);
+        document.setContent(cleanContent);
+
+        if (Jsoup.parse(cleanContent).text().isBlank()) {
+            throw new BadRequestException("Le contenu du document ne peut pas être vide.");
+        }
+
         AppUser administrator = appUserService.findById(principal.id());
 
         int previousVersion = legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(document.getDocumentType())

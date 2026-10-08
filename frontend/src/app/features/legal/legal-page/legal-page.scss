@@ -1,0 +1,8 @@
+// Le lien de téléchargement reprend le style global .btn .btn-primary (styles.scss) ;
+// on ajoute seulement ce qui est propre à un <a> et à cette page.
+.download {
+  align-self: flex-start; // la page est un conteneur flex en colonne : sans ça, le bouton s'étire sur toute la largeur
+  margin-top: 24px;
+  text-decoration: none;
+  cursor: pointer;
+}
