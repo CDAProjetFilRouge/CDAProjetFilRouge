@@ -18,14 +18,16 @@
           <option value="DIVERTISSEMENT">Divertissement</option>
         </select>
       </div>
-      <button class="filter-btn" type="button" (click)="resetFilter()">Réinitialiser</button>
-      <button class="filter-btn" type="submit">Rechercher</button>
+      <div class="filter-actions">
+        <button class="btn" type="button" (click)="resetFilter()">Réinitialiser</button>
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+      </div>
     </div>
   </form>
 
   <div class="club-section">
     <div class="club-sub-section">
-      <p id="counter">{{ totalElements}} clubs</p>
+      <p id="counter">{{ totalElements }} clubs trouvés</p>
     </div>
     <div class="sort">
       <p>Trier par: </p>
@@ -38,14 +40,14 @@
     <div class="carousel">
       @for (club of clubs(); track club.id){
         <div class="club-card">
+          <span class="badge">{{club.category}}</span>
           <h2>{{club.name}}</h2>
-          <p>{{club.category}}</p>
         </div>
       }
     </div>
     <div class="pagination">
       @if (currentPage > 1){
-        <button (click)="previousPage()">Précédant</button>
+        <button class="btn" (click)="previousPage()">‹</button>
       }
 
       <span>
@@ -53,7 +55,7 @@
       </span>
 
       @if (currentPage < totalPages) {
-        <button (click)="nextPage()">Suivant</button>
+        <button class="btn" (click)="nextPage()">›</button>
       }
     </div>
   </div>

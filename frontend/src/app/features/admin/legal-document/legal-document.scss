@@ -1,0 +1,14 @@
+@use "../../../../styles/admin";
+
+@include admin.page;
+
+:host > button {
+  height: 37px;
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+  }
+}

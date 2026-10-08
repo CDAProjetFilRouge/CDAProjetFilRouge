@@ -41,14 +41,16 @@
           <option value="CANCELLED">Annulé</option>
         </select>
       </div>
-      <button type="button" (click)="resetFilter()">Réinitialiser</button>
-      <button type="submit">Rechercher</button>
+      <div class="filter-actions">
+        <button class="btn" type="button" (click)="resetFilter()">Réinitialiser</button>
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+      </div>
     </div>
   </form>
 
   <div class="event-section">
     <div class="event-sub-section">
-      <p id="counter">{{ totalElements }} évènements</p>
+      <p id="counter">{{ totalElements }} évènements trouvés</p>
       <div class="sort">
         <p>Trier par :</p>
         <select>
@@ -64,12 +66,12 @@
           @if (event.imageGallery.length > 0) {
             <img alt="Image de l'évènement" [src]="imageUrl(event.imageGallery[0].path)">
           }@else {
-            <img src="https://www.freeiconspng.com/uploads/no-image-icon-6.png" width="350" alt="Aucune image"  title="Image from freeiconspng.com"/>
+            <div class="no-image">galerie · image</div>
           }
           @if(event.remainingSpots > 0){
-            <p class="event-card-header">{{event.category}} - <span style="color: green">Places disponibles</span></p>
+            <p class="event-card-header"><span class="badge">{{event.category}}</span><span class="badge badge-success">Places disponibles</span></p>
           }@else {
-            <p class="event-card-header">{{event.category}} - <span style="color: red">Complet - Liste d'attente</span></p>
+            <p class="event-card-header"><span class="badge">{{event.category}}</span><span class="badge badge-danger">Complet · liste d'attente</span></p>
           }
           <h3>{{ event.title}}</h3>
           @if (event.organizerClubs.length > 0) {
@@ -80,7 +82,7 @@
           <p>Places disponibles : {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
           <div class="event-card-footer">
             <p>{{ event.affiliatePrice}}€ affilié - {{ event.nonAffiliatePrice}}€ non affilié</p>
-            <button>Voir le détail</button>
+            <button class="btn">Voir le détail</button>
           </div>
 
         </div>
@@ -88,7 +90,7 @@
     </div>
     <div class="pagination">
       @if (currentPage > 1){
-        <button (click)="previousPage()">Précédent</button>
+        <button class="btn" (click)="previousPage()">‹</button>
       }
 
       <span>
@@ -96,7 +98,7 @@
       </span>
 
       @if (currentPage < totalPages) {
-        <button (click)="nextPage()">Suivant</button>
+        <button class="btn" (click)="nextPage()">›</button>
       }
     </div>
   </div>

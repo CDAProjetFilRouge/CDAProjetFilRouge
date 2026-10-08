@@ -1,47 +1,44 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-  <h1>Connexion</h1>
+<div class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <h1>Se connecter</h1>
+    <p class="auth-subtitle">Accédez à votre calendrier et à vos inscriptions.</p>
 
-  <div>
-    <label for="email">Adresse email</label>
-
-    <input
-      id="email"
-      type="email"
-      formControlName="email"
-      autocomplete="username"
-    />
-
-    @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-      <p>Ton adresse email est obligatoire.</p>
+    @if (errorMessage()) {
+      <p class="alert alert-danger" role="alert">{{ errorMessage() }}</p>
     }
-  </div>
 
-  <div>
-    <label for="password">Mot de passe</label>
+    <div class="field">
+      <label for="email">Adresse e-mail</label>
+      <input id="email" type="email" formControlName="email" autocomplete="username" />
+      @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+        <p class="field-error">Ton adresse email est obligatoire.</p>
+      }
+    </div>
 
-    <input
-      id="password"
-      type="password"
-      formControlName="password"
-      autocomplete="current-password"
-    />
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        autocomplete="current-password"
+      />
+      @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+        <p class="field-error">Ton mot de passe est obligatoire.</p>
+      }
+      <a class="auth-link" routerLink="/forgot-password">Mot de passe oublié ?</a>
+    </div>
 
-    @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-      <p>Ton mot de passe est obligatoire.</p>
-    }
-    <a routerLink="/forgot-password">Mot de passe oublié ?</a>
+    <button class="btn btn-primary btn-block" type="submit" [disabled]="isSubmitting()">
+      @if (isSubmitting()) {
+        Connexion en cours...
+      } @else {
+        Se connecter
+      }
+    </button>
 
-  </div>
-
-  @if (errorMessage()) {
-    <p role="alert">{{ errorMessage() }}</p>
-  }
-
-  <button type="submit" [disabled]="isSubmitting()">
-    @if (isSubmitting()) {
-      Connexion en cours...
-    } @else {
-      Se connecter
-    }
-  </button>
-</form>
+    <p class="auth-footer">
+      Pas encore de compte ? <a class="auth-link" routerLink="/createAccount">Créer un compte</a>
+    </p>
+  </form>
+</div>
