@@ -1,11 +1,11 @@
 import { inject } from "@angular/core"
 import { AuthService } from "./auth.service"
-import { Router } from "@angular/router";
+import { CanActivateFn, Router } from "@angular/router";
 
-export const adminGuard: CanActifateFn = () => {
+export const adminGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   const user = authService.currentUser();
-  return user?plan === 'ADMINISTRATOR' ? true : router.createUrlTree(['/'])
-}
+  return user?.role === 'ADMINISTRATOR' ? true : router.createUrlTree(['/']);
+};
