@@ -1,41 +1,56 @@
+:host {
+  display: block;
+}
+
 .layout-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 24px;
   height: 80px;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 80px;
+  background: #fff;
+  border-bottom: 1px solid #bfbfbf;
+}
+
+.logo {
+  padding: 3px 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-primary-soft);
+  border: 0;
+  border-radius: var(--radius-sm);
 }
 
 .page-space {
   display: flex;
-  gap: 2rem;
+  flex: 1;
+  justify-content: center;
+  gap: 30px;
+}
+
+.page-select {
+  padding: 4px 0;
+  font-size: 13px;
+  color: #616161;
+  background: none;
+  border: 0;
+  transition: color .15s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+  }
 }
 
 .login-space {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 12px;
+
+  p {
+    font-size: 13px;
+    color: var(--color-muted);
+  }
 }
-
-* {
-  background-color: pink;
-}
-
-#create-acc-btn {
-  border-radius: 5px;
-  padding: 0.5rem 1rem;
-  background-color: lightcoral;
-  color: white;
-}
-
-
-
-button {
-  border-style: hidden;
-}
-
-button:hover {
-  cursor: pointer;
-  text-decoration: underline;
-}
-

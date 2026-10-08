@@ -1,40 +1,85 @@
-<h1>Activation du compte</h1>
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Activation du compte</h1>
 
-@if (!hasToken) {
-  <p>Lien invalide : le jeton est manquant.</p>
-  <button type="button" routerLink="/login">Aller à la connexion</button>
-} @else if (accountActivated()) {
-  <p>Ton compte est activé avec ton nouveau mot de passe. Tu peux maintenant te connecter.</p>
-  <button type="button" routerLink="/login">Se connecter</button>
-} @else {
-  <p>Saisis le mot de passe temporaire reçu par email, puis choisis ton mot de passe définitif.</p>
+    @if (!hasToken) {
+      <p class="alert alert-danger">Lien invalide : le jeton est manquant.</p>
+      <button class="btn btn-primary btn-block" type="button" routerLink="/login">
+        Aller à la connexion
+      </button>
+    } @else if (accountActivated()) {
+      <p class="alert alert-success">
+        Ton compte est activé avec ton nouveau mot de passe. Tu peux maintenant te connecter.
+      </p>
+      <button class="btn btn-primary btn-block" type="button" routerLink="/login">
+        Se connecter
+      </button>
+    } @else {
+      <p class="alert alert-info">
+        Saisis le mot de passe temporaire reçu par email, puis choisis ton mot de passe définitif.
+      </p>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label for="temporaryPassword">Mot de passe temporaire</label>
-    <input id="temporaryPassword" type="password" formControlName="temporaryPassword" autocomplete="off" />
-    @if (form.controls.temporaryPassword.touched && form.controls.temporaryPassword.hasError('required')) {
-      <p>Le mot de passe temporaire est obligatoire.</p>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="field">
+          <label for="temporaryPassword">Mot de passe temporaire</label>
+          <input
+            id="temporaryPassword"
+            type="password"
+            formControlName="temporaryPassword"
+            autocomplete="off"
+          />
+          @if (
+            form.controls.temporaryPassword.touched &&
+            form.controls.temporaryPassword.hasError('required')
+          ) {
+            <p class="field-error">Le mot de passe temporaire est obligatoire.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="newPassword">Nouveau mot de passe</label>
+          <input
+            id="newPassword"
+            type="password"
+            formControlName="newPassword"
+            autocomplete="new-password"
+          />
+          @if (
+            form.controls.newPassword.touched && form.controls.newPassword.hasError('required')
+          ) {
+            <p class="field-error">Le nouveau mot de passe est obligatoire.</p>
+          }
+          @if (
+            form.controls.newPassword.touched && form.controls.newPassword.hasError('minlength')
+          ) {
+            <p class="field-error">Le mot de passe doit contenir au moins 12 caractères.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="confirmNewPassword">Confirmer le nouveau mot de passe</label>
+          <input
+            id="confirmNewPassword"
+            type="password"
+            formControlName="confirmNewPassword"
+            autocomplete="new-password"
+          />
+          @if (
+            form.controls.confirmNewPassword.touched &&
+            form.controls.confirmNewPassword.hasError('required')
+          ) {
+            <p class="field-error">La confirmation est obligatoire.</p>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <p class="alert alert-danger" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <button class="btn btn-primary btn-block" type="submit" [disabled]="isSubmitting()">
+          Activer mon compte
+        </button>
+      </form>
     }
-
-    <label for="newPassword">Nouveau mot de passe</label>
-    <input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" />
-    @if (form.controls.newPassword.touched && form.controls.newPassword.hasError('required')) {
-      <p>Le nouveau mot de passe est obligatoire.</p>
-    }
-    @if (form.controls.newPassword.touched && form.controls.newPassword.hasError('minlength')) {
-      <p>Le mot de passe doit contenir au moins 12 caractères.</p>
-    }
-
-    <label for="confirmNewPassword">Confirmer le nouveau mot de passe</label>
-    <input id="confirmNewPassword" type="password" formControlName="confirmNewPassword" autocomplete="new-password" />
-    @if (form.controls.confirmNewPassword.touched && form.controls.confirmNewPassword.hasError('required')) {
-      <p>La confirmation est obligatoire.</p>
-    }
-
-    @if (errorMessage()) {
-      <p>{{ errorMessage() }}</p>
-    }
-
-    <button type="submit" [disabled]="isSubmitting()">Activer mon compte</button>
-  </form>
-}
+  </div>
+</div>
