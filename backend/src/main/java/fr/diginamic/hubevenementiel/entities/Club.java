@@ -37,6 +37,9 @@ public class Club {
     @ManyToMany(mappedBy = "clubs")
     private List<AppUser> appUsers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "club")
+    private List<Event> events = new ArrayList<>();
+
     public Club() {
     }
 

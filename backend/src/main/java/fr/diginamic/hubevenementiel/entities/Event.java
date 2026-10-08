@@ -56,6 +56,10 @@ public class Event {
     private EventStatus status;
 
     @ManyToOne
+    @JoinColumn(name = "club_id", nullable = false)
+    private Club club;
+
+    @ManyToOne
     @JoinColumn(name = "organizer_id", nullable = false)
     private AppUser organizer;
 
@@ -183,4 +187,8 @@ public class Event {
     public void setOrganizer(AppUser organizer) {
         this.organizer = organizer;
     }
+
+    public Club getClub() { return club; }
+
+    public void setClub(Club club) { this.club = club; }
 }

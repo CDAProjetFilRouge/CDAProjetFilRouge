@@ -3,7 +3,7 @@ package fr.diginamic.hubevenementiel.controllers;
 import java.util.List;
 import java.util.Map;
 
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
+import fr.diginamic.hubevenementiel.dtos.event.*;
 import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -26,9 +26,6 @@ import java.time.LocalTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventSummaryResponseDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -127,12 +124,18 @@ public class EventController implements EventApi {
 
     }
 
-
+    /**
     @Override
     @GetMapping("/{id}")
     public EventResponseDto getById(@PathVariable Long id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return eventMapper.toDto(eventService.findVisibleById(id, principal));
+    }
+    **/
+
+    @GetMapping("/{id}")
+    public EventDetailsReponseDto getById(@PathVariable Long id) throws HttpException {
+        <Map Long, Integer> remainingSpots = eventService.remainingSpots();
     }
 
     @Override

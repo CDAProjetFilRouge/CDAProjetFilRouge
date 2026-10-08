@@ -5,9 +5,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { URL_BACKEND } from '../../../core/api/api.config';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, RouterLink],
   selector: 'app-event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
