@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, ɵInternalFormsSharedModule } from '@angular/forms';
 import { ClubModel } from './club-model';
 import { ClubFilter, ClubService } from './club-service';
@@ -15,6 +15,7 @@ export class Club {
 
   protected readonly clubs = signal<ClubModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly sortOrder = signal<'asc' | 'desc'>('desc');
 
   currentPage = 1;
   clubPerPage = 20;
@@ -66,7 +67,19 @@ export class Club {
   previousPage(): void {
     if (this.currentPage > 1){
       this.currentPage--;
-      this.loadClubs;
+      this.loadClubs();
     }
   }
+
+  toggleSort(){
+    this.sortOrder.update(order => order === 'desc' ? 'asc' : 'desc');
+  }
+
+  sortedItems = computed(() => {
+    return [...this.clubs()].sort((a, b) => {
+      const result = a.name.localeCompare(b.name, 'fr', { sensitivity: 'base'});
+
+      return this.sortOrder() === 'desc' ? result : -result;
+    });
+  });
 }
