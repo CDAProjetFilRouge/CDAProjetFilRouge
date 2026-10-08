@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.controllers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,6 +30,7 @@ import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
+import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
 import fr.diginamic.hubevenementiel.services.AppUserService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Jwks;
@@ -277,14 +279,38 @@ class RefreshTokenIntegrationTest {
         return httpStatus;
     }
 
-    private String loginWithKey(KeyPair key) throws Exception {
+    private Map<?, ?> loginTokensWithKey(KeyPair key) throws Exception {
         String body = objectMapper.writeValueAsString(Map.of("email", user.getEmail(), "password", PASSWORD));
         String response = mockMvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON).content(body)
                 .header("DPoP", dpopProof(key, "/login")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         syncWithDatabase();
-        return (String) objectMapper.readValue(response, Map.class).get("refreshToken");
+        return objectMapper.readValue(response, Map.class);
+    }
+
+    private String loginWithKey(KeyPair key) throws Exception {
+        return (String) loginTokensWithKey(key).get("refreshToken");
+    }
+
+    private String resourceProof(KeyPair signer, String path, String accessToken) {
+        return Jwts.builder()
+                .header().type("dpop+jwt").jwk(Jwks.builder().key(signer.getPublic()).build()).and()
+                .id(UUID.randomUUID().toString())
+                .claim("htm", "GET")
+                .claim("htu", BASE_URL + path)
+                .claim("iat", Instant.now().getEpochSecond())
+                .claim("ath", DpopProofVerifier.hashOfAccessToken(accessToken))
+                .signWith(signer.getPrivate(), Jwts.SIG.ES256)
+                .compact();
+    }
+
+    private int getMe(String accessToken, String proof) throws Exception {
+        var request = get("/users/me").header("Authorization", "Bearer " + accessToken);
+        if (proof != null) {
+            request = request.header("DPoP", proof);
+        }
+        return mockMvc.perform(request).andReturn().getResponse().getStatus();
     }
 
     private int refreshStatus(String refreshToken, KeyPair signer) throws Exception {
@@ -359,6 +385,77 @@ class RefreshTokenIntegrationTest {
 
         assertThat(tokensOfUser()).hasSize(2);
         assertThat(tokensOfUser()).allMatch(token -> token.getKeyThumbprint() == null);
+    }
+
+    @Test
+    void accessToken_ofABoundSession_worksWithAProofOfTheSameKey() throws Exception {
+        KeyPair key = newKey();
+        String accessToken = (String) loginTokensWithKey(key).get("token");
+
+        assertThat(getMe(accessToken, resourceProof(key, "/users/me", accessToken))).isEqualTo(200);
+    }
+
+    @Test
+    void accessToken_ofABoundSession_withoutProof_returns401() throws Exception {
+        String accessToken = (String) loginTokensWithKey(newKey()).get("token");
+
+        assertThat(getMe(accessToken, null)).isEqualTo(401);
+    }
+
+    @Test
+    void accessToken_ofABoundSession_withAProofOfAnotherKey_returns401() throws Exception {
+        String accessToken = (String) loginTokensWithKey(newKey()).get("token");
+
+        assertThat(getMe(accessToken, resourceProof(newKey(), "/users/me", accessToken))).isEqualTo(401);
+    }
+
+    @Test
+    void accessToken_withAProofMadeForAnotherToken_returns401() throws Exception {
+        KeyPair key = newKey();
+        String accessToken = (String) loginTokensWithKey(key).get("token");
+
+        assertThat(getMe(accessToken, resourceProof(key, "/users/me", "un-autre-token"))).isEqualTo(401);
+    }
+
+    @Test
+    void accessToken_withAProofMadeForAnotherRoute_returns401() throws Exception {
+        KeyPair key = newKey();
+        String accessToken = (String) loginTokensWithKey(key).get("token");
+
+        assertThat(getMe(accessToken, resourceProof(key, "/users", accessToken))).isEqualTo(401);
+    }
+
+    @Test
+    void accessToken_withTheSameProofTwice_isRefusedTheSecondTime() throws Exception {
+        KeyPair key = newKey();
+        String accessToken = (String) loginTokensWithKey(key).get("token");
+        String proof = resourceProof(key, "/users/me", accessToken);
+
+        assertThat(getMe(accessToken, proof)).isEqualTo(200);
+        assertThat(getMe(accessToken, proof)).isEqualTo(401);
+    }
+
+    @Test
+    void accessToken_ofAnUnboundSession_worksWithoutProof() throws Exception {
+        String accessToken = (String) login().get("token");
+
+        assertThat(getMe(accessToken, null)).isEqualTo(200);
+    }
+
+    @Test
+    void refresh_returnsAnAccessTokenBoundToTheSameKey() throws Exception {
+        KeyPair key = newKey();
+        String refreshToken = loginWithKey(key);
+        var request = post("/auth/refresh").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken)))
+                .header("DPoP", dpopProof(key, "/auth/refresh"));
+        String response = mockMvc.perform(request).andExpect(status().isOk()).andReturn().getResponse()
+                .getContentAsString();
+        syncWithDatabase();
+        String newAccessToken = (String) objectMapper.readValue(response, Map.class).get("token");
+
+        assertThat(getMe(newAccessToken, null)).isEqualTo(401);
+        assertThat(getMe(newAccessToken, resourceProof(key, "/users/me", newAccessToken))).isEqualTo(200);
     }
 
     private void setFamilyCreatedAt(RefreshToken token, LocalDateTime value) {

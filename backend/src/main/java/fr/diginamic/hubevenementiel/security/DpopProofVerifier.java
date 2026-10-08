@@ -1,7 +1,11 @@
 package fr.diginamic.hubevenementiel.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,6 +56,16 @@ public class DpopProofVerifier {
         seenIds.values().removeIf(seenAt -> seenAt.isBefore(now.minusSeconds(MEMORY_SECONDS)));
         if (seenIds.putIfAbsent(id, now) != null) {
             throw invalid();
+        }
+    }
+
+    public static String hashOfAccessToken(String accessToken) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(accessToken.getBytes(StandardCharsets.US_ASCII));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
         }
     }
 

@@ -26,7 +26,7 @@ public class RefreshTokenService {
     private static final long ABSOLUTE_DAYS = 30;
     private static final long GRACE_SECONDS = 10;
 
-    public record Rotation(AppUser user, String refreshToken) {
+    public record Rotation(AppUser user, String refreshToken, String keyThumbprint) {
     }
 
     private final RefreshTokenRepo refreshTokenRepo;
@@ -97,7 +97,7 @@ public class RefreshTokenService {
         refreshTokenRepo.save(new RefreshToken(hash(raw), user, current.getFamilyId(),
                 current.getFamilyCreatedAt(), expiresAt, current.getKeyThumbprint()));
 
-        return new Rotation(user, raw);
+        return new Rotation(user, raw, current.getKeyThumbprint());
     }
 
     @Transactional

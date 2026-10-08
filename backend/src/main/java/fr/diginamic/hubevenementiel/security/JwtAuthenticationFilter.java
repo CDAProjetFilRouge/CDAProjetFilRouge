@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.security;
 
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import jakarta.servlet.FilterChain;
@@ -21,13 +22,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String DPOP_HEADER = "DPoP";
 
     private final JwtService jwtService;
     private final UserRepo userRepo;
+    private final DpopProofVerifier dpopProofVerifier;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserRepo userRepo) {
+    public JwtAuthenticationFilter(JwtService jwtService, UserRepo userRepo, DpopProofVerifier dpopProofVerifier) {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
+        this.dpopProofVerifier = dpopProofVerifier;
     }
 
     @Override
@@ -46,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .map(user -> user.getStatus() == AccountStatus.ACTIVE)
                         .orElse(false);
 
-                if (accountIsActive) {
+                if (accountIsActive && keyBindingIsRespected(token, request)) {
                     String email = jwtService.extractEmail(token);
                     String role = jwtService.extractRole(token);
 
@@ -61,5 +65,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean keyBindingIsRespected(String accessToken, HttpServletRequest request) {
+        String boundKey = jwtService.extractKeyThumbprint(accessToken);
+        if (boundKey == null) {
+            return true;
+        }
+
+        String proof = request.getHeader(DPOP_HEADER);
+        if (proof == null) {
+            return false;
+        }
+
+        try {
+            DpopProofVerifier.Proof verified = dpopProofVerifier.verify(proof, request.getMethod(),
+                    request.getRequestURL().toString());
+            return boundKey.equals(verified.thumbprint())
+                    && DpopProofVerifier.hashOfAccessToken(accessToken).equals(verified.accessTokenHash());
+        } catch (HttpException exception) {
+            return false;
+        }
     }
 }

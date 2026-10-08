@@ -66,8 +66,9 @@ public class LoginController implements LoginApi {
         }
 
         AppUser user = ((AppUserDetails) authentication.getPrincipal()).getAppUser();
-        String token = jwtService.generateToken(user);
-        String refreshToken = refreshTokenService.issueForLogin(user, currentThumbprint());
+        String keyThumbprint = currentThumbprint();
+        String token = jwtService.generateToken(user, keyThumbprint);
+        String refreshToken = refreshTokenService.issueForLogin(user, keyThumbprint);
 
         return ResponseEntity.ok(new LoginResponseDto(token, refreshToken));
     }
@@ -77,7 +78,7 @@ public class LoginController implements LoginApi {
         RefreshTokenService.Rotation rotation = refreshTokenService.rotate(request.getRefreshToken(),
                 currentThumbprint());
 
-        return ResponseEntity.ok(new LoginResponseDto(jwtService.generateToken(rotation.user()),
+        return ResponseEntity.ok(new LoginResponseDto(jwtService.generateToken(rotation.user(), rotation.keyThumbprint()),
                 rotation.refreshToken()));
     }
 
