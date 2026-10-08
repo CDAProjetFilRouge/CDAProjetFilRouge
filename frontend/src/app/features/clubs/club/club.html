@@ -28,15 +28,13 @@
       <p id="counter">{{ totalElements}} clubs</p>
     </div>
     <div class="sort">
-      <p>Trier par: </p>
-      <select>
-          <option>Date croissante</option>
-          <option>Date décroissante</option>
-      </select>
+      <button type="button" (click)="toggleSort()">
+        Tier par: {{ sortOrder() === 'desc' ? 'Nom ↓' : 'Nom ↑'}}
+      </button>
     </div>
 
     <div class="carousel">
-      @for (club of clubs(); track club.id){
+      @for (club of sortedItems(); track club.id){
         <div class="club-card">
           <h2>{{club.name}}</h2>
           <p>{{club.category}}</p>
