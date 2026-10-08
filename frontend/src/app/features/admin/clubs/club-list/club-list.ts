@@ -3,9 +3,10 @@ import { ClubService } from '../club.service';
 import { Club, CLUB_CATEGORY_LABELS, ClubCategory } from '../club.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   selector: 'app-club-list',
   styleUrl: './club-list.scss',
   templateUrl: './club-list.html',
@@ -55,6 +56,23 @@ export class ClubList {
     this.search.set(value);
     this.page.set(0);
     this.loadClubs();
+  }
+
+  private deleteClub(id: number): void {
+    this.clubService.deleteClub(id).subscribe({
+      next: () => {
+        this.errorMessage.set(null);
+        this.loadClubs();
+      },
+      error: (err) => this.handleError(err),
+    });
+  }
+
+  protected onDelete(id: number): void {
+    if (!confirm('Voulez-vous vraiment désaffilier ce club ?')) {
+      return;
+    }
+    this.deleteClub(id);
   }
 
   protected onCategoryFilter(value: string): void {

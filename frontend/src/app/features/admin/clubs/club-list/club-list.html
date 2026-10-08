@@ -1,4 +1,4 @@
-<button>Créer un club</button>
+<button routerLink="/admin/clubs/new">Créer un club</button>
 
 @if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
@@ -43,8 +43,10 @@
           Actif
         }</td>
         <td>
-          <button>Modifier</button>
-          <button>Désaffilier</button>
+          <button [routerLink]="['/admin/clubs', club.id, 'edit']">Modifier</button>
+          @if (!club.endValidityDate) {
+            <button (click)="onDelete(club.id)">Désaffilier</button>
+          }
         </td>
       </tr>
     }
