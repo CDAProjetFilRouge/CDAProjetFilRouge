@@ -19,6 +19,7 @@ import fr.diginamic.hubevenementiel.repositories.CommentRepo;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
@@ -67,6 +68,9 @@ class AppUserServiceTest {
     private EmailService emailService;
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private RefreshTokenRepo refreshTokenRepo;
 
     @InjectMocks
     private AppUserService appUserService;

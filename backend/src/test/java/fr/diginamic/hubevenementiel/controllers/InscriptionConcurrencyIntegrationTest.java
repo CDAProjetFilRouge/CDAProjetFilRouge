@@ -59,6 +59,9 @@ class InscriptionConcurrencyIntegrationTest {
     @MockitoBean
     private EmailService emailService;
 
+    @Autowired
+    private fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo refreshTokenRepo;
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final String PASSWORD = "motdepasse123456";
 
@@ -74,6 +77,13 @@ class InscriptionConcurrencyIntegrationTest {
         if (eventId != null) {
             eventRepo.findById(eventId).ifPresent(eventRepo::delete);
         }
+        List<Long> userIds = new java.util.ArrayList<>(memberIds);
+        if (organizerId != null) {
+            userIds.add(organizerId);
+        }
+        refreshTokenRepo.deleteAll(refreshTokenRepo.findAll().stream()
+                .filter(token -> userIds.contains(token.getUser().getId()))
+                .toList());
         memberIds.forEach(id -> userRepo.findById(id).ifPresent(userRepo::delete));
         if (organizerId != null) {
             userRepo.findById(organizerId).ifPresent(userRepo::delete);
