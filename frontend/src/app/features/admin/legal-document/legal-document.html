@@ -7,7 +7,7 @@
   <h2>Version {{ doc.version }}</h2>
   <p>{{ doc.updateDate | date: 'dd/MM/yyyy'}}</p>
   <p>Publié par {{ doc.user.firstName }} {{ doc.user.lastName }}</p>
-  <div class="content">{{ doc.content }}</div>
+  <div class="content" [innerHTML]="doc.content"></div>
 } @else {
   <p>Aucune version du document publiée pour le moment.</p>
 }
@@ -15,7 +15,7 @@
 
 
 
-<textarea [formField]="legalDocumentForm.content"></textarea>
+<quill-editor [formField]="legalDocumentForm.content"></quill-editor>
 <button (click)="publish()">Publier</button>
 
 
