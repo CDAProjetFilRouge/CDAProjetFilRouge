@@ -1,5 +1,5 @@
 <div class="layout-header">
-  <button class="Logo">MyHubEvent</button>
+  <button class="logo" routerLink="/">MyHubEvent</button>
   <div class="page-space">
       <button class="page-select" routerLink="/">Catalogue</button>
       @if (isAffiliated()) {
@@ -24,10 +24,10 @@
   <div class="login-space">
     @if (user(); as u) {
       <p>{{ u.firstName }} {{ u.lastName }} - {{ roleLabels[u.role] }}</p>
-      <button class="logout-btn" (click)="logout()">Déconnexion</button>
+      <button class="btn" (click)="logout()">Déconnexion</button>
     } @else {
-      <button class="login-btn" routerLink="/login">Se connecter</button>
-      <button id="create-acc-btn" routerLink="/createAccount">Créer un compte</button>
+      <button class="btn" routerLink="/login">Se connecter</button>
+      <button class="btn btn-primary" routerLink="/createAccount">Créer un compte</button>
     }
   </div>
 </div>

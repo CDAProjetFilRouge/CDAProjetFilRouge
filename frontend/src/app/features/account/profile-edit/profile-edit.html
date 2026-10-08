@@ -1,49 +1,73 @@
-<h1>Modifier mes informations</h1>
+<div class="auth-page">
+  <div class="auth-card auth-card-wide">
+    <h1>Modifier mes informations</h1>
 
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <label for="firstName">Prénom</label>
-  <input id="firstName" type="text" formControlName="firstName" />
-  @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
-    <p>Le prénom est obligatoire.</p>
-  }
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="field">
+        <label for="firstName">Prénom</label>
+        <input id="firstName" type="text" formControlName="firstName" />
+        @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
+          <p class="field-error">Le prénom est obligatoire.</p>
+        }
+      </div>
 
-  <label for="lastName">Nom</label>
-  <input id="lastName" type="text" formControlName="lastName" />
-  @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
-    <p>Le nom est obligatoire.</p>
-  }
+      <div class="field">
+        <label for="lastName">Nom</label>
+        <input id="lastName" type="text" formControlName="lastName" />
+        @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
+          <p class="field-error">Le nom est obligatoire.</p>
+        }
+      </div>
 
-  <label for="email">Adresse email</label>
-  <input id="email" type="email" formControlName="email" />
-  @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-    <p>L'adresse email est obligatoire.</p>
-  }
-  @if (form.controls.email.touched && form.controls.email.hasError('email')) {
-    <p>L'adresse email n'est pas valide.</p>
-  }
+      <div class="field">
+        <label for="email">Adresse email</label>
+        <input id="email" type="email" formControlName="email" />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <p class="field-error">L'adresse email est obligatoire.</p>
+        }
+        @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <p class="field-error">L'adresse email n'est pas valide.</p>
+        }
+      </div>
 
-  <label for="phone">Téléphone</label>
-  <input id="phone" type="tel" formControlName="phone" />
+      <div class="field">
+        <label for="phone">Téléphone</label>
+        <input id="phone" type="tel" formControlName="phone" />
+      </div>
 
-  <label for="street1">Adresse</label>
-  <input id="street1" type="text" formControlName="street1" />
+      <div class="field">
+        <label for="street1">Adresse</label>
+        <input id="street1" type="text" formControlName="street1" />
+      </div>
 
-  <label for="street2">Complément d'adresse</label>
-  <input id="street2" type="text" formControlName="street2" />
+      <div class="field">
+        <label for="street2">Complément d'adresse</label>
+        <input id="street2" type="text" formControlName="street2" />
+      </div>
 
-  <label for="postalCode">Code postal</label>
-  <input id="postalCode" type="text" formControlName="postalCode" />
+      <div class="field">
+        <label for="postalCode">Code postal</label>
+        <input id="postalCode" type="text" formControlName="postalCode" />
+      </div>
 
-  <label for="city">Ville</label>
-  <input id="city" type="text" formControlName="city" />
+      <div class="field">
+        <label for="city">Ville</label>
+        <input id="city" type="text" formControlName="city" />
+      </div>
 
-  <label for="country">Pays</label>
-  <input id="country" type="text" formControlName="country" />
+      <div class="field">
+        <label for="country">Pays</label>
+        <input id="country" type="text" formControlName="country" />
+      </div>
 
-  @if (errorMessage()) {
-    <p>{{ errorMessage() }}</p>
-  }
+      @if (errorMessage()) {
+        <p class="alert alert-danger" role="alert">{{ errorMessage() }}</p>
+      }
 
-  <button type="submit" [disabled]="isSubmitting()">Enregistrer</button>
-  <button type="button" routerLink="/account">Annuler</button>
-</form>
+      <button class="btn btn-primary btn-block" type="submit" [disabled]="isSubmitting()">
+        Enregistrer
+      </button>
+      <button class="btn btn-block" type="button" routerLink="/account">Annuler</button>
+    </form>
+  </div>
+</div>

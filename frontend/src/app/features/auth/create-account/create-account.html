@@ -1,57 +1,114 @@
-<h1>Créer un compte</h1>
+<div class="auth-page">
+  <div class="auth-card auth-card-wide">
+    <h1>Créer mon compte</h1>
+    <p class="auth-subtitle">
+      Pour participer à un évènement, même sans être affilié à un club. Les tarifs « non affilié »
+      s'appliqueront.
+    </p>
 
-@if (accountCreated()) {
-  <p>
-    Ton compte est créé. Un email d'activation vient de t'être envoyé : clique sur le lien qu'il
-    contient pour activer ton compte avant de te connecter.
-  </p>
-  <button type="button" routerLink="/login">Aller à la connexion</button>
-} @else {
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <label for="firstName">Prénom</label>
-    <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name" />
-    @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
-      <p>Le prénom est obligatoire.</p>
-    }
+    @if (accountCreated()) {
+      <p class="alert alert-success">
+        Ton compte est créé. Un email d'activation vient de t'être envoyé : clique sur le lien qu'il
+        contient pour activer ton compte avant de te connecter.
+      </p>
+      <button class="btn btn-primary btn-block" type="button" routerLink="/login">
+        Aller à la connexion
+      </button>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <div class="field-row">
+          <div class="field">
+            <label for="firstName">Prénom</label>
+            <input
+              id="firstName"
+              type="text"
+              formControlName="firstName"
+              autocomplete="given-name"
+            />
+            @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
+              <p class="field-error">Le prénom est obligatoire.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="lastName">Nom</label>
+            <input
+              id="lastName"
+              type="text"
+              formControlName="lastName"
+              autocomplete="family-name"
+            />
+            @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
+              <p class="field-error">Le nom est obligatoire.</p>
+            }
+          </div>
+        </div>
 
-    <label for="lastName">Nom</label>
-    <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name" />
-    @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
-      <p>Le nom est obligatoire.</p>
-    }
+        <div class="field">
+          <label for="email">Adresse e-mail</label>
+          <input id="email" type="email" formControlName="email" autocomplete="email" />
+          <p class="field-hint">Sert d'identifiant de connexion et à recevoir les notifications.</p>
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <p class="field-error">L'adresse email est obligatoire.</p>
+          }
+          @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <p class="field-error">L'adresse email n'est pas valide.</p>
+          }
+        </div>
 
-    <label for="email">Adresse email</label>
-    <input id="email" type="email" formControlName="email" autocomplete="email" />
-    @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-      <p>L'adresse email est obligatoire.</p>
-    }
-    @if (form.controls.email.touched && form.controls.email.hasError('email')) {
-      <p>L'adresse email n'est pas valide.</p>
-    }
+        <div class="field">
+          <label for="phone">Téléphone (facultatif)</label>
+          <input id="phone" type="tel" formControlName="phone" autocomplete="tel" />
+        </div>
 
-    <label for="phone">Téléphone (facultatif)</label>
-    <input id="phone" type="tel" formControlName="phone" autocomplete="tel" />
+        <div class="field-row">
+          <div class="field">
+            <label for="password">Mot de passe</label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+            />
+            @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+              <p class="field-error">Le mot de passe est obligatoire.</p>
+            }
+            @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+              <p class="field-error">Le mot de passe doit contenir au moins 12 caractères.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="confirmPassword">Confirmer le mot de passe</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              formControlName="confirmPassword"
+              autocomplete="new-password"
+            />
+            @if (
+              form.controls.confirmPassword.touched &&
+              form.controls.confirmPassword.hasError('required')
+            ) {
+              <p class="field-error">La confirmation est obligatoire.</p>
+            }
+          </div>
+        </div>
 
-    <label for="password">Mot de passe</label>
-    <input id="password" type="password" formControlName="password" autocomplete="new-password" />
-    @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-      <p>Le mot de passe est obligatoire.</p>
-    }
-    @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
-      <p>Le mot de passe doit contenir au moins 12 caractères.</p>
-    }
+        <p class="alert alert-info">
+          12 caractères minimum, une majuscule, un chiffre et un caractère spécial.
+        </p>
 
-    <label for="confirmPassword">Confirmer le mot de passe</label>
-    <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" />
-    @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
-      <p>La confirmation est obligatoire.</p>
-    }
+        @if (errorMessage()) {
+          <p class="alert alert-danger" role="alert">{{ errorMessage() }}</p>
+        }
 
-    @if (errorMessage()) {
-      <p>{{ errorMessage() }}</p>
-    }
+        <button class="btn btn-primary btn-block" type="submit" [disabled]="isSubmitting()">
+          Créer mon compte
+        </button>
 
-    <button type="submit" [disabled]="isSubmitting()">Créer mon compte</button>
-    <button type="button" routerLink="/login">J'ai déjà un compte</button>
-  </form>
-}
+        <p class="auth-footer">
+          Vous avez déjà un compte ? <a class="auth-link" routerLink="/login">Se connecter</a>
+        </p>
+      </form>
+    }
+  </div>
+</div>

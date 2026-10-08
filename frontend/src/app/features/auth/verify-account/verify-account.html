@@ -1,15 +1,23 @@
-<h1>Activation du compte</h1>
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Activation du compte</h1>
 
-@switch (status()) {
-  @case ('loading') {
-    <p>Activation en cours…</p>
-  }
-  @case ('success') {
-    <p>Ton compte est activé. Tu peux maintenant te connecter.</p>
-    <button type="button" routerLink="/login">Se connecter</button>
-  }
-  @case ('error') {
-    <p>{{ errorMessage() }}</p>
-    <button type="button" routerLink="/createAccount">Créer un compte</button>
-  }
-}
+    @switch (status()) {
+      @case ('loading') {
+        <p class="alert alert-info">Activation en cours…</p>
+      }
+      @case ('success') {
+        <p class="alert alert-success">Ton compte est activé. Tu peux maintenant te connecter.</p>
+        <button class="btn btn-primary btn-block" type="button" routerLink="/login">
+          Se connecter
+        </button>
+      }
+      @case ('error') {
+        <p class="alert alert-danger">{{ errorMessage() }}</p>
+        <button class="btn btn-primary btn-block" type="button" routerLink="/createAccount">
+          Créer un compte
+        </button>
+      }
+    }
+  </div>
+</div>
