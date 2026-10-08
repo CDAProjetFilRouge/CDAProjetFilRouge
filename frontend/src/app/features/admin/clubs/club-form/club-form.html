@@ -1,1 +1,91 @@
-<p>club-form works!</p>
+
+<div class="auth-card auth-card-wide">
+  <h1>@if (isEdit) { Modifier le club } @else { Créer un club }</h1>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="field">
+      <label for="name">Nom</label>
+      <input id="name" type="text" formControlName="name" />
+      @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+        <p class="field-error">Le nom est obligatoire.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="email">Adresse email</label>
+      <input id="email" type="email" formControlName="email" />
+      @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+        <p class="field-error">L'adresse email est obligatoire.</p>
+      }
+      @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+        <p class="field-error">L'adresse email n'est pas valide.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="phone">Téléphone</label>
+      <input id="phone" type="tel" formControlName="phone" />
+      @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+        <p class="field-error">Le numéro de téléphone est obligatoire.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="category">Catégorie</label>
+      <select formControlName="category" id="category">
+        @for (c of categories; track c) {
+          <option [value]="c">{{ CLUB_CATEGORY_LABELS[c] }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field" formGroupName="address">
+      <div class="field">
+        <label for="street1">Adresse</label>
+        <input id="street1" type="text" formControlName="street1" />
+        @if (form.controls.address.controls.street1.touched && form.controls.address.controls.street1.hasError('required')) {
+          <p class="field-error">L'adresse est obligatoire.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="street2">Complément d'adresse</label>
+        <input id="street2" type="text" formControlName="street2" />
+      </div>
+
+      <div class="field">
+        <label for="postalCode">Code postal</label>
+        <input id="postalCode" type="text" formControlName="postalCode" />
+        @if (form.controls.address.controls.postalCode.touched && form.controls.address.controls.postalCode.hasError('required')) {
+          <p class="field-error">Le code postal est obligatoire.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="city">Ville</label>
+        <input id="city" type="text" formControlName="city" />
+        @if (form.controls.address.controls.city.touched && form.controls.address.controls.city.hasError('required')) {
+          <p class="field-error">La ville est obligatoire.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="country">Pays</label>
+        <input id="country" type="text" formControlName="country" />
+        @if (form.controls.address.controls.country.touched && form.controls.address.controls.country.hasError('required')) {
+          <p class="field-error">Le pays est obligatoire.</p>
+        }
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="alert alert-danger" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <button class="btn btn-primary btn-block" type="submit" [disabled]="isSubmitting()">
+      {{ isEdit ? 'Enregistrer' : 'Créer' }}
+    </button>
+    <a class="btn btn-block" routerLink="/admin/clubs">Annuler</a>
+
+  </form>
+</div>
