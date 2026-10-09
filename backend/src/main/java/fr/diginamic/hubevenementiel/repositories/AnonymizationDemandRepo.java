@@ -113,4 +113,6 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param requesterId id of the requester whose demands must be removed
      */
     void deleteByRequesterId(Long requesterId);
+
+    long countByStatus(RequestStatus status);
 }

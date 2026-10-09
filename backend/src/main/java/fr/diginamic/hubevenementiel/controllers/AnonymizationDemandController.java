@@ -48,6 +48,12 @@ public class AnonymizationDemandController implements AnonymizationDemandApi {
                 .toList();
     }
 
+    @Secured("ROLE_ADMINISTRATOR")
+    @GetMapping("/count")
+    public long countByStatus() {
+        return anonymizationDemandService.countByStatus();
+    }
+
     @Override
     @PostMapping
     public ResponseEntity<AnonymizationDemandResponseDto> request() throws HttpException {

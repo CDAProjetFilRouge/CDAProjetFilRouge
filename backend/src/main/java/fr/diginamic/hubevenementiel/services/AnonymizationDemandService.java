@@ -338,6 +338,10 @@ public class AnonymizationDemandService {
         return true;
     }
 
+    public long countByStatus() {
+        return anonymizationDemandRepository.countByStatus(RequestStatus.PENDING);
+    }
+
     /**
      *
      * @param anonymizationDemand demand to save in the DB
