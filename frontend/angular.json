@@ -31,7 +31,10 @@
             ],
             "styles": [
               "src/styles.scss",
-              "node_modules/quill/dist/quill.snow.css"
+              "node_modules/quill/dist/quill.snow.css",
+              "@fullcalendar/angular/skeleton.css",
+              "@fullcalendar/angular/themes/classic/theme.css",
+              "@fullcalendar/angular/themes/classic/palette.css"
             ]
           },
           "configurations": {

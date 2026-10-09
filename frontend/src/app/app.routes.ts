@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin-guard';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
-import { Event } from './features/events/event/event';
 import { Club } from './features/clubs/club/club';
-import { adminGuard } from './core/auth/admin-guard';
+import { Event } from './features/events/event/event';
 
 export const routes: Routes = [
   {
@@ -81,5 +81,10 @@ export const routes: Routes = [
     path: 'gdpr-policy',
     loadComponent: () => import('./features/legal/legal-page/legal-page').then((m) => m.LegalPage),
     data: { documentType: 'GDPR_POLICY' },
+  },
+  {
+    path: 'calendar',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/calendar/calendar').then((m) => m.Calendar),
   },
 ];

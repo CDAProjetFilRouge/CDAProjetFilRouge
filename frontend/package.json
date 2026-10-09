@@ -17,9 +17,12 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@fullcalendar/angular": "^7.1.1",
+    "fullcalendar": "^7.1.1",
     "ngx-quill": "^31.0.1",
     "quill": "^2.0.3",
     "rxjs": "~7.8.0",
+    "temporal-polyfill": "^1.0.5",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
