@@ -4,7 +4,11 @@
 
     <a routerLink="users" routerLinkActive="active">Comptes utilisateurs</a>
     <a routerLink="clubs" routerLinkActive="active">Clubs Affiliés</a>
-    <a routerLink="anonymisation-demands" routerLinkActive="active">Demandes d'anonymisation</a>
+    <a routerLink="anonymisation-demands" routerLinkActive="active">Demandes d'anonymisation
+      @if (demandService.pendingCount() > 0) {
+        <span class="badge">{{ demandService.pendingCount() }}</span>
+      }
+    </a>
     <a routerLink="terms-of-use" routerLinkActive="active">Conditions d'Utilisation</a>
     <a routerLink="gdpr-policy" routerLinkActive="active">Politique RGPD</a>
   </nav>
