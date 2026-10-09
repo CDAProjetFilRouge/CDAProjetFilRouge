@@ -114,7 +114,8 @@ public class AppUserController implements AppUserApi {
             suspenstionEndDate = requestDto.getSuspensionEndDate();            
         }
         
-        appUserService.suspend(id, suspenstionEndDate);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        appUserService.suspend(id, suspenstionEndDate, principal.id());
         AppUser suspendedAppUser = appUserService.findById(id);
         return appUserMapper.toDto(suspendedAppUser); 
     }

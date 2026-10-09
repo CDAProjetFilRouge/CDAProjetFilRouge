@@ -4,6 +4,7 @@ import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.AnonymizationDemandRepo;
@@ -41,6 +42,10 @@ public class AnonymizationDemandService {
     public AnonymizationDemand request(AppUserPrincipal principal) throws HttpException {
 
         AppUser user = appUserService.findById(principal.id());
+
+        if (anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(user.getId(), RequestStatus.PENDING)) {
+            throw new ConflictException("Une demande d'anonymisation est déjà en cours de traitement pour votre compte.");
+        }
 
         AnonymizationDemand anonymizationDemand = new AnonymizationDemand();
 
