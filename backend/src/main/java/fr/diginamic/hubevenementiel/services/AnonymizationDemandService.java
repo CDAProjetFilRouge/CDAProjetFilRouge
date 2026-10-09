@@ -339,7 +339,7 @@ public class AnonymizationDemandService {
     }
 
     public long countByStatus() {
-        return anonymizationDemandRepository.countByStatus(RequestStatus.PENDING);
+        return anonymizationDemandRepository.countByRequestStatus(RequestStatus.PENDING);
     }
 
     /**
