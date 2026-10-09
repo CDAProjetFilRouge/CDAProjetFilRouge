@@ -58,6 +58,7 @@ export class AnonymizationDemandList {
     this.service.validateDemand(id).subscribe({
       next: () => {
         this.demands.update((list) => list.filter((d) => d.id !== id));
+        this.service.refreshPendingCount();
         this.errorMessage.set(null);
       },
       error: (err) => this.handleError(err),
