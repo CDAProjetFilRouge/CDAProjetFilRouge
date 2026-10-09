@@ -1,0 +1,18 @@
+<h1>Mon calendrier</h1>
+
+<p>{{ inscriptions().length }} inscription(s) chargée(s) </p>
+@if (errorMessage()) {
+    <p>{{ errorMessage() }}</p>
+}
+
+<full-calendar [options]="options()"></full-calendar>
+
+@if (selected(); as ins) {
+  <section class="detail">
+    <h2>{{ ins.event.title }}</h2>
+    <p>Le {{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</p>
+    <p>Statut : {{ statusLabels[ins.status] }}</p>
+    <p>Tarif : {{ ins.price }} €</p>
+    <button type="button" (click)="selected.set(null)">Fermer</button>
+  </section>
+}
