@@ -28,4 +28,8 @@ export class AnonymizationDemandService {
     this.http.get<number>(`${URL_BACKEND}/anonymization-demands/count`)
     .subscribe( n => this._pendingCount.set(n));
   }
+
+  requestAnonymization(): Observable<AnonymizationDemand> {
+    return this.http.post<AnonymizationDemand>(`${URL_BACKEND}/anonymization-demands`, {});
+  }
 }
