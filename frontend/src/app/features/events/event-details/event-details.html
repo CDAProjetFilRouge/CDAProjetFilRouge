@@ -25,7 +25,7 @@
               [class.active]="selectedImageIndex() === i"
               [attr.aria-label]="'Afficher l’image' + (i + 1)"
               [attr.aria-pressed]="selectedImageIndex() === i"
-              (click)="selectImage(i)">
+              (click)="selectedImage(i)">
               <img [src]="image.path" [alt]="'Miniature ' + (i + 1)" />
               </button>
             }
@@ -63,11 +63,11 @@
       <div class="register-info">
         <div class="info-row">
           <p>Début</p>
-          <span style="color: black;">{{ event.startDateTime}}</span>
+          <span style="color: black;">{{ event.startDate | date:'dd/MM/yyyy'}}</span>
         </div>
         <div class="info-row">
           <p>fin</p>
-          <span style="color: black;">{{ event.endDateTime}}</span>
+          <span style="color: black;">{{ event.endDate | date:'dd/MM/yyyy'}}</span>
         </div>
         <div class="info-row">
           <p>Lieu</p>

@@ -8,8 +8,8 @@ export interface EventDetailsModel{
   postalCode: string;
   country: string;
   category: string;
-  startDateTime: Date;
-  endDateTime: Date;
+  startDate: Date;
+  endDate: Date;
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;

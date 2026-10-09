@@ -3,9 +3,10 @@ import { EventDetailsModel } from './event-details-model';
 import { EventDetailsService } from './event-details-service';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 
 @Component({
-  imports: [],
+  imports: [DatePipe],
   selector: 'app-event-details',
   styleUrl: './event-details.scss',
   templateUrl: './event-details.html',
