@@ -1,0 +1,117 @@
+.eventDetail-main {
+  display: grid;
+  grid-template-columns: 80% 1fr;
+  grid-template-rows: 20% 40% 15% 1rf;
+  margin: 3rem 3rem 3rem 3rem;
+  row-gap: 2rem;
+}
+
+.eventDetail-head {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.img-section {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.img-section img{
+  width: 100%;
+  text-align: center;
+}
+
+.description-section {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.comment-section {
+  grid-column: 1;
+  grid-row: 4;
+}
+
+.register-section {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: right;
+}
+
+.register-section button {
+  margin-top: 1rem;
+}
+
+
+.organizer-section {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.register-info {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.info-row p {
+  text-align: left;
+}
+
+.info-row span {
+ text-align: right;
+}
+
+.register-counter {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+#register-disclosure {
+  margin-top: 1rem;
+}
+
+#error {
+  text-align: center;
+  margin: 5rem 5rem 5rem 5rem
+}
+
+#home-btn {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 5rem;
+}
+
+#type-comment{
+  width: 90%;
+  margin-right: 1rem;
+  border-style: hidden;
+  resize: none;
+  border-radius: 5px;
+}
+
+.thumbnail-btn.active {
+  border-color: #2563eb;
+}
+
+.thumbnail-btn:focus-visible,
+.carousel-arrow:focus-visible {
+  outline: 3px solid  #2563eb;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .carousel-main {
+    height: 260;
+  }
+
+  .thumbnail-btn {
+    flex-basis: 70px;
+    height: 52px;
+  }
+}

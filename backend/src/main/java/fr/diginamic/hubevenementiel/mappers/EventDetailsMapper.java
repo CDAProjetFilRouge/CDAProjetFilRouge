@@ -2,11 +2,12 @@ package fr.diginamic.hubevenementiel.mappers;
 
 import fr.diginamic.hubevenementiel.dtos.event.EventDetailsReponseDto;
 import fr.diginamic.hubevenementiel.entities.Event;
-import fr.diginamic.hubevenementiel.entities.Image;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+@Component
 public class EventDetailsMapper {
 
     @Autowired

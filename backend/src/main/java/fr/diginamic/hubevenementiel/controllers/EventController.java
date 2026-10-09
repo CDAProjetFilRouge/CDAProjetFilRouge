@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import fr.diginamic.hubevenementiel.dtos.event.*;
+import fr.diginamic.hubevenementiel.mappers.EventDetailsMapper;
 import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -47,15 +48,17 @@ public class EventController implements EventApi {
     private final EventMapper eventMapper;
     private final EventMainMapper eventMainMapper;
     private final EventSummaryMapper eventSummaryMapper;
+    private final EventDetailsMapper eventDetailsMapper;
     private final AppUserService appUserService;
 
     public EventController(EventService eventService, EventMapper eventMapper, EventSummaryMapper eventSummaryMapper,
-            AppUserService appUserService, EventMainMapper eventMainMapper) {
+            AppUserService appUserService, EventMainMapper eventMainMapper, EventDetailsMapper eventDetailsMapper) {
         this.eventService = eventService;
         this.eventMapper = eventMapper;
         this.eventSummaryMapper = eventSummaryMapper;
         this.appUserService = appUserService;
         this.eventMainMapper = eventMainMapper;
+        this.eventDetailsMapper = eventDetailsMapper;
     }
 
     @Override
@@ -132,10 +135,22 @@ public class EventController implements EventApi {
         return eventMapper.toDto(eventService.findVisibleById(id, principal));
     }
     **/
-
+    @Override
     @GetMapping("/{id}")
     public EventDetailsReponseDto getById(@PathVariable Long id) throws HttpException {
-        <Map Long, Integer> remainingSpots = eventService.remainingSpots();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        AppUserPrincipal principal = null;
+
+        if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
+            principal = (AppUserPrincipal) authentication.getPrincipal();
+        }
+
+        Event event = eventService.findVisibleById(id, principal);
+
+        Map <Long, Integer> remainingSpots = eventService.remainingSpots(List.of(event));
+
+        return eventDetailsMapper.toDto(event, remainingSpots.get(event.getId()));
     }
 
     @Override

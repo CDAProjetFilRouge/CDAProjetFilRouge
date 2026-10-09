@@ -1,0 +1,109 @@
+@if (eventDetail(); as event){
+<div class="eventDetail-main">
+  <div class="eventDetail-header">
+    <h1>{{ event.title}}</h1>
+    <p>Organisé par {{ event.organizerLastName }} {{event.organizerFirstName}} - publié le xx/xx/xxxx</p>
+  </div>
+  <div class="img-section">
+    @if (event.imageGallery.length > 0) {
+      <div class="carousel">
+        <div class="carousel-main">
+          <img [src]="event.imageGallery[selectedImageIndex()].path" [alt]="'Image ' + (selectedImageIndex() + 1) + ' de l’événement '" class="main-img"/>
+
+          @if (event.imageGallery.length > 1) {
+            <button class="carousel-arrow prev" aria-label="Image précédente" (click)="previousImage()">&#10094;</button>
+            <button class="carousel-arrow next" aria-label="Image suivante" (click)="nextImage()">&#10095;</button>
+          }
+
+          <span class="image-counter">{{ selectedImageIndex() + 1}} / {{ event.imageGallery.length }}</span>
+        </div>
+
+        @if (event.imageGallery.length > 1) {
+          <div class="img-thumbnails">
+            @for ( image of event.imageGallery; track image.id; let i = $index) {
+              <button class="thumbnail-btn"
+              [class.active]="selectedImageIndex() === i"
+              [attr.aria-label]="'Afficher l’image' + (i + 1)"
+              [attr.aria-pressed]="selectedImageIndex() === i"
+              (click)="selectImage(i)">
+              <img [src]="image.path" [alt]="'Miniature ' + (i + 1)" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }@else {
+          <p>Aucune image disponible pour cet évènement</p>
+        }
+  </div>
+  <div class="description-section">
+    <h3>Description</h3>
+    <p>{{ event.description}}</p>
+  </div>
+  <div class="comment-section">
+    <h3>Commentaire (x)</h3>
+    <div class="write-comment-section">
+      <form>
+        <textarea id="type-comment" rows="10"></textarea>
+        <button type="submit">Publier</button>
+      </form>
+    </div>
+    <div class="comments">
+      <p class="user-name">xxxxxx</p>
+      <p>comment</p>
+    </div>
+
+  </div>
+      <div class="register-section">
+      <h3>Insription</h3>
+      <div class="register-counter">
+        <label>{{ event.remainingSpots}}/{{ event.maxCapacity}}</label>
+        <progress value="{{ event.remainingSpots}}" max="{{ event.maxCapacity}}"></progress>
+      </div>
+      <div class="register-info">
+        <div class="info-row">
+          <p>Début</p>
+          <span style="color: black;">{{ event.startDateTime}}</span>
+        </div>
+        <div class="info-row">
+          <p>fin</p>
+          <span style="color: black;">{{ event.endDateTime}}</span>
+        </div>
+        <div class="info-row">
+          <p>Lieu</p>
+          <span style="color: black;">
+            {{ event.street1}}
+            @if(event.street2){
+              , {{ event.street2}}
+            }
+          </span>
+        </div>
+        <div class="info-row">
+          <p>Ville</p>
+          <span style="color: black;">{{ event.city}}</span>
+        </div>
+        <div class="info-row">
+          <p>Tarif affilié</p>
+          <span style="color: black;">{{ event.affiliatePrice}} €</span>
+        </div>
+        <div class="info-row">
+          <p>Tarif non affilié</p>
+          <span style="color: black;">{{ event.nonAffiliatePrice}} €</span>
+        </div>
+      </div>
+      <button>S'inscrire à cet évènement</button>
+      <p id="register-disclosure">Si l'évènemt est complet, l'inscription vous place dans la liste d'attente, dans l'ordre d'arrivé. (RG- UC14)</p>
+    </div>
+    <div class="organizer-section">
+      <p id="organizer-title">Organisateur</p>
+      <p>{{ event.organizerFirstName}} {{ event.organizerLastName}}</p>
+      <p>{{ event.clubName}}</p>
+    </div>
+</div>
+}@else {
+  <h3 id="error">No event to be found here</h3>
+  <div id="home-btn">
+    <button id="home" routerLink="/">Go back home</button>
+  </div>
+
+}

@@ -90,14 +90,24 @@ public class EventService {
     public Event findVisibleById(Long eventId, AppUserPrincipal principal) throws HttpException {
         Event event = findById(eventId);
 
-        boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
-        boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
-
-        if (event.getStatus() == EventStatus.DRAFT && !isAdmin && !isOwner) {
-            throw new NotFoundException("Aucun évènement trouvé avec cet identifiant.");
+        if(event == null){
+            throw new NotFoundException("Aucun évènement trouvé avec cet identifiant");
         }
 
-        return event;
+        if(principal != null){
+            boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
+            boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
+
+            if (event.getStatus() == EventStatus.DRAFT && !isAdmin && !isOwner) {
+                throw new NotFoundException("Vous n'avez pas les accès nécessaire pour consulter cette ressource");
+            }
+            return event;
+
+        }else if(event.getStatus() != EventStatus.DRAFT){
+            return event;
+        }else{
+            throw new NotFoundException("Vous n'avez pas les accès nécessaire pour consulter cette ressource");
+        }
     }
 
     /**
