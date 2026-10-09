@@ -7,6 +7,7 @@
 
 <full-calendar [options]="options()"></full-calendar>
 
+
 @if (selected(); as ins) {
   <section class="detail">
     <h2>{{ ins.event.title }}</h2>
@@ -20,4 +21,18 @@
 @if (canCancel()) {
   <button type="button" (click)="cancel()">Me désinscrire</button>
 }
+
+@if (hovered(); as h) {
+  <div class="bubble" [style.top.px]="h.top" [style.left.px]="h.left">
+    <strong>{{ h.ins.event.title }}</strong>
+    <p>
+      {{ h.ins.event.startDateTime | date: 'dd/MM/yyyy HH:mm' }}
+      → {{ h.ins.event.endDateTime | date: 'dd/MM/yyyy HH:mm' }}
+    </p>
+    @if (h.ins.status === 'WAITING_LIST') {
+      <span class="badge">Liste d'attente</span>
+    }
+  </div>
+}
+
 

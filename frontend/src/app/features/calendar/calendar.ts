@@ -26,6 +26,10 @@ export class Calendar {
   protected readonly selected = signal<InscriptionModel | null>(null);
   protected readonly statusLabels = INSCRIPTION_STATUS_LABELS;
 
+  protected readonly hovered = signal<{ ins: InscriptionModel; top: number; left: number } | null>(
+    null,
+  );
+
   protected readonly canCancel = computed(() => {
     const ins = this.selected();
     return ins !== null && new Date(ins.event.startDateTime) > new Date();
@@ -72,9 +76,19 @@ export class Calendar {
         classNames: i.status === 'WAITING_LIST' ? ['waiting'] : [],
       })),
     eventClick: (info) => {
-      const found = this.inscriptions().find((i) => i.id === Number(info.event.id));
-      this.selected.set(found ?? null);
+      this.selected.set(this.findInscription(info.event.id) ?? null);
     },
+    eventMouseEnter: (info) => {
+      const ins = this.findInscription(info.event.id);
+      if (!ins) return;
+      const rect = info.el.getBoundingClientRect();
+      this.hovered.set({
+        ins,
+        top: rect.bottom + 6,
+        left: Math.min(rect.left, window.innerWidth - 260),
+      });
+    },
+    eventMouseLeave: () => this.hovered.set(null),
   }));
 
   protected cancel(): void {
@@ -89,5 +103,9 @@ export class Calendar {
       },
       error: (err: HttpErrorResponse) => this.handleError(err),
     });
+  }
+
+  private findInscription(eventId: string): InscriptionModel | undefined {
+    return this.inscriptions().find((i) => i.id === Number(eventId));
   }
 }
