@@ -126,6 +126,6 @@ export class UserEdit {
   }
 
   protected toggleClub(id: number, checked: boolean): void {
-    this.selectedClubIds.update((ids) => checked ? [...ids, id] : ids.filter((i) => i!== id));
+    this.selectedClubIds.update((ids) => checked ? [...ids, id] : ids.filter((i) => i !== id));
   }
 }
