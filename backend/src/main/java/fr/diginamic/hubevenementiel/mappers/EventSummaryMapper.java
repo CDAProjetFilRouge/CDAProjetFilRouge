@@ -16,6 +16,7 @@ public class EventSummaryMapper {
         dto.setId(event.getId());
         dto.setTitle(event.getTitle());
         dto.setStartDateTime(event.getStartDateTime());
+        dto.setEndDateTime(event.getEndDateTime());
 
         return dto;
     }
