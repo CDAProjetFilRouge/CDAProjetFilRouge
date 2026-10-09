@@ -54,6 +54,12 @@ public class AnonymizationDemandController implements AnonymizationDemandApi {
         return anonymizationDemandService.countByStatus();
     }
 
+    @GetMapping("/me/pending")
+    public boolean hasPendingDemand() {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return anonymizationDemandService.hasPendingDemand(principal);
+    }
+
     @Override
     @PostMapping
     public ResponseEntity<AnonymizationDemandResponseDto> request() throws HttpException {

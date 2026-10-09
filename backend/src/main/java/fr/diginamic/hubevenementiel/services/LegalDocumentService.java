@@ -119,7 +119,11 @@ public class LegalDocumentService {
     public LegalDocument createNewVersion(LegalDocument document, AppUserPrincipal principal) throws HttpException {
         legalDocumentChecker(document);
         Safelist safelist = Safelist.relaxed().addAttributes(":all", "class");
-        String cleanContent = Jsoup.clean(document.getContent(), safelist);
+        // Quill remplace les espaces par des espaces insécables (&nbsp;) à la saisie ou au collage :
+        // ils empêchent le retour à la ligne et le texte déborde de la page.
+        String cleanContent = Jsoup.clean(document.getContent(), safelist)
+                .replace("&nbsp;", " ")
+                .replace(" ", " ");
         document.setContent(cleanContent);
 
         if (Jsoup.parse(cleanContent).text().isBlank()) {
