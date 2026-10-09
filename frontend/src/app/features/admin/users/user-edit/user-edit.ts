@@ -1,10 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminUserUpdate, AppUser, Role, ROLE_LABELS } from '../../../../core/models/user.models';
 import { PHONE_PATTERN } from '../../../../core/validator/phone';
 import { UserService } from '../user.service';
+import { ClubService } from '../../clubs/club.service';
+import { Club } from '../../clubs/club.models';
 
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
@@ -20,6 +22,13 @@ export class UserEdit {
   private readonly id = Number(this.route.snapshot.paramMap.get('id'));
   protected readonly ROLE_LABELS = ROLE_LABELS;
   protected readonly roles = Object.keys(ROLE_LABELS) as Role[];
+  private readonly clubService = inject(ClubService);
+  protected readonly clubs = signal<Club[]>([]);
+  protected readonly displayedClubs = computed(() => {
+    const memberIds = this.user()?.clubs.map((c) => c.id) ?? [];
+    return this.clubs().filter((c) => !c.endValidityDate || memberIds.includes(c.id));
+  })
+  protected readonly selectedClubIds= signal<number[]>([]);
 
   protected readonly user = signal<AppUser | null>(null);
 
@@ -55,8 +64,14 @@ export class UserEdit {
           country: user.address?.country ?? '',
           role: user.role,
         });
+        this.selectedClubIds.set(user.clubs.map((c) => c.id));
       },
       error: () => this.errorMessage.set('Utilisateur introuvable'),
+    });
+
+    this.clubService.getClubs(0, 100).subscribe({
+      next: (result) => this.clubs.set(result.content),
+      error: (error: HttpErrorResponse) => this.errorMessage.set(typeof error.error === 'string' ? error.error : 'Aucun club trouvé.'),
     });
   }
 
@@ -91,7 +106,7 @@ export class UserEdit {
               country: value.country,
             },
       role: value.role,
-      clubIds: this.user()!.clubs.map((club) => club.id),
+      clubIds: this.selectedClubIds(),
     };
 
     this.isSubmitting.set(true);
@@ -108,5 +123,9 @@ export class UserEdit {
         );
       },
     });
+  }
+
+  protected toggleClub(id: number, checked: boolean): void {
+    this.selectedClubIds.update((ids) => checked ? [...ids, id] : ids.filter((i) => i!== id));
   }
 }

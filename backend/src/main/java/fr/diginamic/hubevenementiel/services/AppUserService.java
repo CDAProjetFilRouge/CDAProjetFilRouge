@@ -513,7 +513,7 @@ public class AppUserService {
     public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser, List<Long> clubIds) throws HttpException {
         AppUser existing = findById(id);
 
-        appUserChecker(modifiedUser, true, false);
+        appUserChecker(modifiedUser, false, false);
 
         if (!existing.getEmail().equalsIgnoreCase(modifiedUser.getEmail())
                 && userRepo.existsByEmail(modifiedUser.getEmail())) {
