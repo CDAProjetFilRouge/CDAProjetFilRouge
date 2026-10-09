@@ -137,10 +137,6 @@ public class InscriptionService {
         Pageable pageable = PageRequest.of(page, size);
         List<Inscription> inscriptions = inscriptionRepo.findByEventId(id, pageable).getContent();
 
-        if (inscriptions.isEmpty()) {
-            throw new NotFoundException("No inscriptions found with event id: " + id);
-        }
-
         return inscriptions;
     }
 
