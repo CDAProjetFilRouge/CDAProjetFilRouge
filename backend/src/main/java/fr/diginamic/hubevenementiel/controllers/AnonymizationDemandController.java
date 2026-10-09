@@ -17,7 +17,7 @@ import fr.diginamic.hubevenementiel.dtos.anonymizerDemand.AnonymizationDemandRes
 import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
-import fr.diginamic.hubevenementiel.mappers.AnonymisationDemandMapper;
+import fr.diginamic.hubevenementiel.mappers.AnonymizationDemandMapper;
 import fr.diginamic.hubevenementiel.openapi.AnonymizationDemandApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.AnonymizationDemandService;
@@ -28,10 +28,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class AnonymizationDemandController implements AnonymizationDemandApi {
 
     private final AnonymizationDemandService anonymizationDemandService;
-    private final AnonymisationDemandMapper anonymizationDemandMapper;
+    private final AnonymizationDemandMapper anonymizationDemandMapper;
 
     public AnonymizationDemandController(AnonymizationDemandService anonymizationDemandService,
-            AnonymisationDemandMapper anonymizationDemandMapper) {
+            AnonymizationDemandMapper anonymizationDemandMapper) {
         this.anonymizationDemandService = anonymizationDemandService;
         this.anonymizationDemandMapper = anonymizationDemandMapper;
     }

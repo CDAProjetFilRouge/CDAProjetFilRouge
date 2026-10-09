@@ -253,6 +253,25 @@ public class AppUserService {
     }
 
     /**
+     * Reactivates every suspended account whose suspension end date is reached (RG11).
+     *
+     * @return the number of accounts reactivated
+     */
+    @Transactional
+    public int reactivateExpiredSuspensions() {
+        List<AppUser> expired = userRepo.findByStatusAndSuspensionEndDateLessThanEqual(
+                AccountStatus.SUSPENDED, LocalDateTime.now());
+
+        for (AppUser user : expired) {
+            user.setStatus(AccountStatus.ACTIVE);
+            user.setSuspensionEndDate(null);
+        }
+
+        userRepo.saveAll(expired);
+        return expired.size();
+    }
+
+    /**
      * Explains why a login was refused, but only to someone who knows the password,
      * so that the state of an account is never revealed to a stranger.
      *
