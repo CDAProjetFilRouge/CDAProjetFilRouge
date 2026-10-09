@@ -4,6 +4,15 @@
   max-width: 820px;
   margin: 0 auto;
   padding: 40px var(--page-padding);
+  box-sizing: border-box;
+  min-width: 0; // un enfant flex ne rétrécit pas en dessous de son contenu sans ça
+}
+
+// Sur mobile, 64px de marge de chaque côté mange tout l'écran.
+@media (max-width: 700px) {
+  :host {
+    padding: 24px 16px;
+  }
 }
 
 h1 {
@@ -23,8 +32,41 @@ h1 {
 
 // Le contenu est du HTML injecté par [innerHTML] (éditeur Quill) : il ne porte pas l'attribut
 // d'encapsulation d'Angular, d'où le ::ng-deep.
+.content {
+  min-width: 0;
+}
+
 .content ::ng-deep {
   line-height: 1.7;
+  overflow-wrap: break-word; // ne coupe un mot que s'il ne tient vraiment pas sur une ligne (URL, mot très long)
+
+  // Quill peut produire des blocs préformatés, des tableaux ou des images plus larges que la colonne.
+  pre {
+    margin: 0 0 12px;
+    padding: 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    background: var(--color-surface);
+    border-radius: 6px;
+  }
+
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  table {
+    display: block;
+    max-width: 100%;
+    margin: 0 0 12px;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  td, th {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+  }
 
   h1, h2, h3 {
     margin: 28px 0 10px;

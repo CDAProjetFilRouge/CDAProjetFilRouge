@@ -346,6 +346,15 @@ public class AnonymizationDemandService {
 
     /**
      *
+     * @param principal the connected user
+     * @return true if the connected user already has a pending anonymization demand
+     */
+    public boolean hasPendingDemand(AppUserPrincipal principal) {
+        return anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(principal.id(), RequestStatus.PENDING);
+    }
+
+    /**
+     *
      * @param anonymizationDemand demand to save in the DB
      * @return demand saved
      * @throws HttpException

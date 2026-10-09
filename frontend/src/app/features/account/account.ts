@@ -22,6 +22,12 @@ export class Account {
 
 
 
+  constructor() {
+    this.anonymizationService.hasPendingDemand().subscribe({
+      next: (pending) => this.requested.set(pending),
+    });
+  }
+
   protected logout(): void {
     this.authService.logout();
     void this.router.navigateByUrl('/login');
