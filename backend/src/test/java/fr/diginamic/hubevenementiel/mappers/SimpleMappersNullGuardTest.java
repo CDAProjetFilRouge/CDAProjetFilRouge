@@ -44,8 +44,8 @@ class SimpleMappersNullGuardTest {
     }
 
     @Test
-    void anonymisationDemandMapper_toDto_null_returnsNull() {
-        AnonymisationDemandMapper mapper = new AnonymisationDemandMapper();
+    void anonymizationDemandMapper_toDto_null_returnsNull() {
+        AnonymizationDemandMapper mapper = new AnonymizationDemandMapper();
         ReflectionTestUtils.setField(mapper, "appUserSummaryMapper", new AppUserSummaryMapper());
         assertThat(mapper.toDto(null)).isNull();
     }

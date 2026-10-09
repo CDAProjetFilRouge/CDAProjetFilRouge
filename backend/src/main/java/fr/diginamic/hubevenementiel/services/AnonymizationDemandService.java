@@ -61,9 +61,6 @@ public class AnonymizationDemandService {
         AppUser admin = appUserService.findById(principal.id());
 
         AnonymizationDemand anonymizationDemand = findById(id);
-        if(anonymizationDemand.getRequester().getAddress() == null){
-
-        }
 
         appUserService.anonymizeAccount(anonymizationDemand.getRequester());
 

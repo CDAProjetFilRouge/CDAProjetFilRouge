@@ -20,7 +20,13 @@
 </select>
 <button (click)="onSearch(searchInput.value)">Rechercher</button>
 
-<p>{{ totalElements() }} utilisateur(s)</p>
+<p>{{ totalElements() }}
+  @@if (totalElements() > 1 ) {
+    utilisateurs.
+  } @else {
+    utilisateur.
+  }
+</p>
 
 <table>
   <thead>

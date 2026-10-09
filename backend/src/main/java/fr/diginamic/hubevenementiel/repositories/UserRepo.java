@@ -10,9 +10,17 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepo extends JpaRepository<AppUser, Long>, JpaSpecificationExecutor<AppUser> {
+
+    /**
+     * @param status accounts with this status
+     * @param date   upper bound (inclusive) of the suspension end date
+     * @return the accounts whose suspension end date is reached
+     */
+    List<AppUser> findByStatusAndSuspensionEndDateLessThanEqual(AccountStatus status, LocalDateTime date);
 
     /**
      *

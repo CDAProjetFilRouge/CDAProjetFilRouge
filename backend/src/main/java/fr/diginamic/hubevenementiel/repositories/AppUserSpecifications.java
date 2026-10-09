@@ -12,11 +12,15 @@ public class AppUserSpecifications {
         if (q == null || q.isBlank()) {
             return null;
         }
-        String pattern  = "%" + q.trim().toLowerCase() + "%";
+        String escaped = q.trim().toLowerCase()
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        String pattern = "%" + escaped + "%";
         return (root, query, cb) -> cb.or(
-            cb.like(cb.lower(root.get("firstName")), pattern),
-            cb.like(cb.lower(root.get("lastName")), pattern),
-            cb.like(cb.lower(root.get("email")), pattern));
+            cb.like(cb.lower(root.get("firstName")), pattern, '\\'),
+            cb.like(cb.lower(root.get("lastName")), pattern, '\\'),
+            cb.like(cb.lower(root.get("email")), pattern, '\\'));
     }
 
     public static  Specification<AppUser> hasRole(Role role) {

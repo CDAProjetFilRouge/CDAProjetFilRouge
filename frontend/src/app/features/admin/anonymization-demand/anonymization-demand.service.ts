@@ -1,12 +1,12 @@
 import { inject, Service, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { AnonymizationDemand, AnonymizationDemandStatus } from '../../../core/models/anonymisation-demande.models';
+import { AnonymizationDemand, AnonymizationDemandStatus } from '../../../core/models/anonymization-demand.models';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
 
 
 @Service()
-export class AnonymisationDemandService {
+export class AnonymizationDemandService {
 
   private readonly http = inject(HttpClient);
   private readonly _pendingCount = signal<number>(0);

@@ -29,7 +29,7 @@ export const ADMIN_ROUTES: Routes = [
       },
 
       {
-        path: 'anonymisation-demands',
+        path: 'anonymization-demands',
         loadComponent: () => import('./anonymization-demand/anonymization-demand').then((m) => m.AnonymizationDemandList),
       },
 

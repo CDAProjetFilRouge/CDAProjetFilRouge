@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AnonymisationDemandService } from '../anonymization-demand/anonymisation-demand.service';
+import { AnonymizationDemandService } from '../anonymization-demand/anonymization-demand.service';
 
 
 @Component({
@@ -11,7 +11,7 @@ import { AnonymisationDemandService } from '../anonymization-demand/anonymisatio
 })
 export class AdminLayout implements OnInit {
 
-  protected demandService = inject(AnonymisationDemandService);
+  protected demandService = inject(AnonymizationDemandService);
 
   ngOnInit(): void {
     this.demandService.refreshPendingCount();
