@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
@@ -193,5 +196,53 @@ class AnonymizationDemandServiceTest {
 
         assertThrows(BadRequestException.class,
                 () -> anonymizationDemandService.findApprovedDemandBetweenDates(0, 20, start, end));
+    }
+
+    // ---------------------------------------------------------------
+    // request : doublon
+    // ---------------------------------------------------------------
+
+    @Test
+    void request_pendingDemandAlreadyExists_throwsConflictAndSavesNothing() throws HttpException {
+        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        when(appUserService.findById(6L)).thenReturn(requester);
+        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(6L, RequestStatus.PENDING))
+                .thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> anonymizationDemandService.request(principal));
+        verify(anonymizationDemandRepository, never()).save(any(AnonymizationDemand.class));
+    }
+
+    // ---------------------------------------------------------------
+    // hasPendingDemand
+    // ---------------------------------------------------------------
+
+    @Test
+    void hasPendingDemand_pendingDemandExists_returnsTrue() {
+        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(6L, RequestStatus.PENDING))
+                .thenReturn(true);
+
+        assertThat(anonymizationDemandService.hasPendingDemand(principal)).isTrue();
+    }
+
+    @Test
+    void hasPendingDemand_noPendingDemand_returnsFalse() {
+        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(6L, RequestStatus.PENDING))
+                .thenReturn(false);
+
+        assertThat(anonymizationDemandService.hasPendingDemand(principal)).isFalse();
+    }
+
+    // ---------------------------------------------------------------
+    // countByStatus
+    // ---------------------------------------------------------------
+
+    @Test
+    void countByStatus_countsOnlyPendingDemands() {
+        when(anonymizationDemandRepository.countByRequestStatus(RequestStatus.PENDING)).thenReturn(4L);
+
+        assertThat(anonymizationDemandService.countByStatus()).isEqualTo(4L);
     }
 }
