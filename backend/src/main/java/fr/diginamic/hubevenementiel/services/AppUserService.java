@@ -221,7 +221,11 @@ public class AppUserService {
     }
 
     @Transactional
-    public void suspend(Long id, LocalDateTime endDate) throws HttpException {
+    public void suspend(Long id, LocalDateTime endDate, Long actingAdminId) throws HttpException {
+        if (id.equals(actingAdminId)) {
+            throw new BadRequestException("Vous ne pouvez pas suspendre votre propre compte.");
+        }
+
         AppUser user = findById(id);
 
         if (endDate != null && endDate.isBefore(LocalDateTime.now())) {

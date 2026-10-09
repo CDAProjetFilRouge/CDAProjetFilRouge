@@ -5,7 +5,7 @@
 } @else if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
 } @else if (document(); as doc) {
-  <p>Version {{ doc.version }} - mise à jour le {{ doc.updateDate | date: 'dd/MM/yyyy' }}</p>
+  <p class="meta">Version {{ doc.version }} - mise à jour le {{ doc.updateDate | date: 'dd/MM/yyyy' }}</p>
 
   <div class="content" [innerHTML]="doc.content"></div>
   <a class="btn btn-primary download" [href]="urlBackend + '/PDF/legalDocument/' + doc.id">Télécharger le PDF</a>
