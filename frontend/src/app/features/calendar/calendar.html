@@ -16,3 +16,8 @@
     <button type="button" (click)="selected.set(null)">Fermer</button>
   </section>
 }
+
+@if (canCancel()) {
+  <button type="button" (click)="cancel()">Me désinscrire</button>
+}
+

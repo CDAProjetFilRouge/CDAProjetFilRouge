@@ -15,4 +15,8 @@ export class CalendarService {
       params,
     });
   }
+
+  cancel(inscriptionId: number): Observable<void> {
+    return this.http.delete<void>(`${URL_BACKEND}/inscriptions/${inscriptionId}`);
+  }
 }

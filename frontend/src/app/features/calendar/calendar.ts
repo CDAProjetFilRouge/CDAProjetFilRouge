@@ -26,6 +26,11 @@ export class Calendar {
   protected readonly selected = signal<InscriptionModel | null>(null);
   protected readonly statusLabels = INSCRIPTION_STATUS_LABELS;
 
+  protected readonly canCancel = computed(() => {
+    const ins = this.selected();
+    return ins !== null && new Date(ins.event.startDateTime) > new Date();
+  });
+
   private load(userId: number): void {
     this.calendarService.getByUser(userId).subscribe({
       next: (list) => this.inscriptions.set(list),
@@ -52,8 +57,8 @@ export class Calendar {
     locale: 'fr',
     firstDay: 1,
     initialView: 'dayGridMonth',
-    headerToolBar: {
-      left: 'prev, next today',
+    headerToolbar: {
+      left: 'prev,next today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,listMonth',
     },
@@ -63,6 +68,7 @@ export class Calendar {
         id: String(i.id),
         title: i.event.title,
         start: i.event.startDateTime,
+        end: i.event.endDateTime,
         classNames: i.status === 'WAITING_LIST' ? ['waiting'] : [],
       })),
     eventClick: (info) => {
@@ -70,4 +76,18 @@ export class Calendar {
       this.selected.set(found ?? null);
     },
   }));
+
+  protected cancel(): void {
+    const ins = this.selected();
+    const user = this.auth.currentUser();
+    if (!ins || !user) return;
+
+    this.calendarService.cancel(ins.id).subscribe({
+      next: () => {
+        this.selected.set(null);
+        this.load(user.id);
+      },
+      error: (err: HttpErrorResponse) => this.handleError(err),
+    });
+  }
 }
