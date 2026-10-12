@@ -74,6 +74,7 @@ export class Calendar {
         start: i.event.startDateTime,
         end: i.event.endDateTime,
         classNames: i.status === 'WAITING_LIST' ? ['waiting'] : [],
+        color: i.status === 'WAITING_LIST' ? 'var(--color-muted)' : undefined,
       })),
     eventClick: (info) => {
       this.selected.set(this.findInscription(info.event.id) ?? null);
