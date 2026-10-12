@@ -39,7 +39,7 @@
       <tr>
         <td>{{ club.name }}</td>
         <td>{{ categoryLabels[club.category] }}</td>
-        <td>{{ club.address.city }}</td>
+        <td>{{ club.address?.city ?? "—" }}</td>
         <td>{{ club.appUsers.length }}</td>
         <td>@if (club.endValidityDate) {
           Désaffilié le {{ club.endValidityDate | date: 'dd/MM/yyyy' }}
