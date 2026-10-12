@@ -66,6 +66,10 @@ class EventControllerIntegrationTest {
         eventClub.setEmail("club-evenements@example.com");
         eventClub.setPhone("0600000000");
         eventClub = clubRepo.save(eventClub);
+        organizer.getClubs().add(eventClub);
+        otherOrganizer.getClubs().add(eventClub);
+        userRepo.save(organizer);
+        userRepo.save(otherOrganizer);
     }
 
     private AppUser createActiveUser(String email, Role role) {
@@ -378,7 +382,7 @@ class EventControllerIntegrationTest {
                         .param("city", city).param("status", "PUBLISHED")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].organizerClubs[0]").value(clubName))
+                .andExpect(jsonPath("$.content[0].organizerClubs", org.hamcrest.Matchers.hasItem(clubName)))
                 .andExpect(jsonPath("$.content[0].organizerFirstName").doesNotExist())
                 .andExpect(jsonPath("$.content[0].organizerLastName").doesNotExist());
     }

@@ -1,11 +1,13 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -276,6 +278,7 @@ public class EventService {
         eventChecker(event);
 
         Club club = clubService.findById(clubId);
+        checkClubMembership(event.getOrganizer(), club);
 
         event.setClub(club);
 
@@ -488,6 +491,21 @@ public class EventService {
         }
         if (value.length() > maxLength) {
             throw new BadRequestException(label + " ne peut pas dépasser " + maxLength + " caractères.");
+        }
+    }
+
+    /**
+     * Un organisateur ne crée un évènement que pour un club dont il est membre ;
+     * un administrateur peut choisir n'importe quel club.
+     */
+    private void checkClubMembership(AppUser organizer, Club club) throws ForbiddenException {
+        if (organizer == null || organizer.getRole() == Role.ADMINISTRATOR) {
+            return;
+        }
+        boolean isMember = organizer.getClubs().stream()
+                .anyMatch(c -> c.getId() != null && c.getId().equals(club.getId()));
+        if (!isMember) {
+            throw new ForbiddenException("Vous ne pouvez créer un évènement que pour un club dont vous êtes membre.");
         }
     }
 
