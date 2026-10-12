@@ -20,6 +20,12 @@ import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -386,6 +392,37 @@ class EventServiceTest {
         Event result = eventService.createEvent(validEvent, 9L);
 
         assertThat(result.getClub()).isSameAs(club);
+    }
+
+    // ---------------------------------------------------------------
+    // findOrganizedBy : « mes évènements »
+    // ---------------------------------------------------------------
+
+    @Test
+    void findOrganizedBy_sizeAboveTwenty_throwsBadRequest() {
+        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        assertThrows(BadRequestException.class, () -> eventService.findOrganizedBy(0, 21, null, principal));
+
+        verify(eventRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void findOrganizedBy_sortsByStartDateDescending() throws HttpException {
+        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(validEvent)));
+
+        Page<Event> result = eventService.findOrganizedBy(2, 10, EventStatus.DRAFT, principal);
+
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(eventRepository).findAll(any(Specification.class), pageable.capture());
+        assertThat(pageable.getValue().getPageNumber()).isEqualTo(2);
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(10);
+        assertThat(pageable.getValue().getSort().getOrderFor("startDateTime").getDirection())
+                .isEqualTo(Sort.Direction.DESC);
+        assertThat(result.getContent()).containsExactly(validEvent);
     }
 
     // ---------------------------------------------------------------
