@@ -1,6 +1,6 @@
 import { ConfirmService } from '../../../core/ui/confirm.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -9,7 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, concatMap, from, map, Observable, of, reduce, switchMap, tap } from 'rxjs';
 import { URL_IMAGES } from '../../../core/api/api.config';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Category } from '../../../core/models/user.models';
@@ -23,6 +23,9 @@ import {
 } from './event-form.models';
 import { EventFormService } from './event-form.service';
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGES = 10;
+
 function endAfterStart(group: AbstractControl): ValidationErrors | null {
   const start = group.get('startDateTime')?.value as string;
   const end = group.get('endDateTime')?.value as string;
@@ -35,7 +38,7 @@ function endAfterStart(group: AbstractControl): ValidationErrors | null {
   styleUrl: './event-form.scss',
   templateUrl: './event-form.html',
 })
-export class EventForm {
+export class EventForm implements OnDestroy {
   private readonly confirmDialog = inject(ConfirmService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly eventFormService = inject(EventFormService);
@@ -49,6 +52,8 @@ export class EventForm {
   protected readonly categoryLabels = EVENT_CATEGORY_LABELS;
   protected readonly categories = Object.keys(EVENT_CATEGORY_LABELS) as Category[];
 
+  protected readonly maxImages = MAX_IMAGES;
+  protected readonly pendingImages = signal<{ file: File; url: string }[]>([]);
   protected readonly detail = signal<EventDetail | null>(null);
   protected readonly loadError = signal('');
   protected readonly errorMessage = signal('');
@@ -108,6 +113,11 @@ export class EventForm {
       }
     });
 
+    const notice = this.router.getCurrentNavigation()?.extras.state?.['notice'];
+    if (typeof notice === 'string') {
+      this.errorMessage.set(notice);
+    }
+
     if (this.isEdit) {
       this.form.controls.clubId.disable();
       this.load();
@@ -152,6 +162,40 @@ export class EventForm {
         this.errorMessage.set(this.reasonOf(error, "Impossible de supprimer l'évènement."));
       },
     });
+  }
+
+  protected onPendingFileSelected(input: HTMLInputElement): void {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) {
+      return;
+    }
+    this.errorMessage.set('');
+    if (file.size > MAX_IMAGE_BYTES) {
+      this.errorMessage.set("L'image ne peut pas dépasser 5 Mo.");
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      this.errorMessage.set('Le fichier doit être une image.');
+      return;
+    }
+    if (this.pendingImages().length >= MAX_IMAGES) {
+      this.errorMessage.set('Un évènement ne peut pas avoir plus de 10 images.');
+      return;
+    }
+    this.pendingImages.update((list) => [...list, { file, url: URL.createObjectURL(file) }]);
+  }
+
+  protected removePending(index: number): void {
+    const item = this.pendingImages()[index];
+    if (item) {
+      URL.revokeObjectURL(item.url);
+    }
+    this.pendingImages.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  ngOnDestroy(): void {
+    this.pendingImages().forEach((item) => URL.revokeObjectURL(item.url));
   }
 
   protected onFileSelected(input: HTMLInputElement): void {
@@ -232,27 +276,31 @@ export class EventForm {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    let call: Observable<EventSaved>;
+    let call: Observable<{ saved: EventSaved; failedImages: number }>;
     if (this.eventId === null) {
       call = this.eventFormService.create(request).pipe(
         tap((created) => (createdId = created.id)),
         switchMap((created) =>
-          publish
-            ? this.eventFormService.update(created.id, { ...request, status: 'PUBLISHED' })
-            : of(created),
+          this.uploadPending(created.id).pipe(map((failedImages) => ({ created, failedImages }))),
+        ),
+        switchMap(({ created, failedImages }) =>
+          publish && failedImages === 0
+            ? this.eventFormService
+                .update(created.id, { ...request, status: 'PUBLISHED' })
+                .pipe(map((saved) => ({ saved, failedImages })))
+            : of({ saved: created, failedImages }),
         ),
       );
     } else {
-      call = this.eventFormService.update(this.eventId, {
-        ...request,
-        status: publish ? 'PUBLISHED' : this.status(),
-      });
+      call = this.eventFormService
+        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : this.status() })
+        .pipe(map((saved) => ({ saved, failedImages: 0 })));
     }
 
     call.subscribe({
-      next: (saved) => {
+      next: ({ saved, failedImages }) => {
         this.isSubmitting.set(false);
-        this.onSaved(saved, publish);
+        this.onSaved(saved, publish, failedImages);
       },
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
@@ -266,9 +314,30 @@ export class EventForm {
     });
   }
 
-  private onSaved(saved: EventSaved, publish: boolean): void {
+  private uploadPending(eventId: number): Observable<number> {
+    const files = this.pendingImages().map((item) => item.file);
+    if (files.length === 0) {
+      return of(0);
+    }
+    return from(files).pipe(
+      concatMap((file) =>
+        this.eventFormService.uploadImage(eventId, file).pipe(
+          map(() => 0),
+          catchError(() => of(1)),
+        ),
+      ),
+      reduce((failed, one) => failed + one, 0),
+    );
+  }
+
+  private onSaved(saved: EventSaved, publish: boolean, failedImages = 0): void {
     if (!this.isEdit) {
-      if (publish) {
+      if (failedImages > 0) {
+        const notice =
+          `L'évènement a été enregistré en brouillon, mais ${failedImages} image(s) n'ont pas pu ` +
+          `être ajoutées. Ajoutez-les ci-dessous, puis publiez.`;
+        this.router.navigate(['/events', saved.id, 'edit'], { state: { notice } });
+      } else if (publish) {
         this.router.navigateByUrl('/');
       } else {
         this.router.navigate(['/events', saved.id, 'edit']);
