@@ -1,18 +1,14 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { CalendarOptions, FullCalendarModule } from '@fullcalendar/angular';
-import dayGridPlugin from '@fullcalendar/angular/daygrid';
-import listPlugin from '@fullcalendar/angular/list';
-import localesAll from '@fullcalendar/angular/locales-all';
-import classicTheme from '@fullcalendar/angular/themes/classic';
-import timeGridPlugin from '@fullcalendar/angular/timegrid';
 import { AuthService } from '../../core/auth/auth.service';
+import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
+import { EventCalendar } from '../../shared/event-calendar/event-calendar';
 import { CalendarService } from './calendar-service';
 import { INSCRIPTION_STATUS_LABELS, InscriptionModel } from './calendar.models';
 
 @Component({
-  imports: [FullCalendarModule, DatePipe],
+  imports: [EventCalendar, DatePipe],
   selector: 'app-calendar',
   styleUrl: './calendar.scss',
   templateUrl: './calendar.html',
@@ -27,8 +23,17 @@ export class Calendar {
   protected readonly confirming = signal(false);
   protected readonly statusLabels = INSCRIPTION_STATUS_LABELS;
 
-  protected readonly hovered = signal<{ ins: InscriptionModel; top: number; left: number } | null>(
-    null,
+  protected readonly calendarEvents = computed<CalendarEvent[]>(() =>
+    this.inscriptions()
+      .filter((i) => i.status !== 'CANCELED')
+      .map((i) => ({
+        id: String(i.id),
+        title: i.event.title,
+        start: i.event.startDateTime,
+        end: i.event.endDateTime,
+        muted: i.status === 'WAITING_LIST',
+        badge: i.status === 'WAITING_LIST' ? "Liste d'attente" : undefined,
+      })),
   );
 
   protected readonly canCancel = computed(() => {
@@ -56,43 +61,10 @@ export class Calendar {
     });
   }
 
-  protected readonly options = computed<CalendarOptions>(() => ({
-    plugins: [classicTheme, dayGridPlugin, timeGridPlugin, listPlugin],
-    locales: localesAll,
-    locale: 'fr',
-    firstDay: 1,
-    initialView: 'dayGridMonth',
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listMonth',
-    },
-    events: this.inscriptions()
-      .filter((i) => i.status !== 'CANCELED')
-      .map((i) => ({
-        id: String(i.id),
-        title: i.event.title,
-        start: i.event.startDateTime,
-        end: i.event.endDateTime,
-        classNames: i.status === 'WAITING_LIST' ? ['waiting'] : [],
-        color: i.status === 'WAITING_LIST' ? 'var(--color-muted)' : undefined,
-      })),
-    eventClick: (info) => {
-      this.confirming.set(false);
-      this.selected.set(this.findInscription(info.event.id) ?? null);
-    },
-    eventMouseEnter: (info) => {
-      const ins = this.findInscription(info.event.id);
-      if (!ins) return;
-      const rect = info.el.getBoundingClientRect();
-      this.hovered.set({
-        ins,
-        top: rect.bottom + 6,
-        left: Math.min(rect.left, window.innerWidth - 260),
-      });
-    },
-    eventMouseLeave: () => this.hovered.set(null),
-  }));
+  protected select(eventId: string): void {
+    this.confirming.set(false);
+    this.selected.set(this.inscriptions().find((i) => i.id === Number(eventId)) ?? null);
+  }
 
   protected askCancel(): void {
     this.confirming.set(true);
@@ -118,9 +90,5 @@ export class Calendar {
         this.handleError(err);
       },
     });
-  }
-
-  private findInscription(eventId: string): InscriptionModel | undefined {
-    return this.inscriptions().find((i) => i.id === Number(eventId));
   }
 }

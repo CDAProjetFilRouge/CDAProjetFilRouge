@@ -6,7 +6,7 @@
   }
 
   <div class="calendar-layout">
-    <full-calendar [options]="options()"></full-calendar>
+    <app-event-calendar [events]="calendarEvents()" (eventSelected)="select($event)" />
 
     <aside class="detail">
       @if (selected(); as ins) {
@@ -31,17 +31,4 @@
       }
     </aside>
   </div>
-
-  @if (hovered(); as h) {
-    <div class="bubble" [style.top.px]="h.top" [style.left.px]="h.left">
-      <strong>{{ h.ins.event.title }}</strong>
-      <p>
-        {{ h.ins.event.startDateTime | date: 'dd/MM/yyyy HH:mm' }}
-        → {{ h.ins.event.endDateTime | date: 'dd/MM/yyyy HH:mm' }}
-      </p>
-      @if (h.ins.status === 'WAITING_LIST') {
-        <span class="badge">Liste d'attente</span>
-      }
-    </div>
-  }
 </div>

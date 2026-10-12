@@ -1,0 +1,40 @@
+:host {
+  --fc-classic-primary: var(--color-primary);
+  --fc-classic-event: var(--color-primary);
+  --fc-classic-event-contrast: #fff;
+  --fc-classic-button: var(--color-primary);
+  --fc-classic-button-border: var(--color-primary);
+  --fc-classic-button-strong: var(--color-primary-hover);
+  --fc-classic-button-strong-border: var(--color-primary-hover);
+  --fc-classic-today: #fbd3d959;
+  --fc-classic-foreground: var(--color-text);
+  --fc-classic-muted-foreground: var(--color-muted);
+  --fc-classic-border: var(--color-border);
+}
+
+.bubble {
+  position: fixed;
+  z-index: 1000;
+  width: 240px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 20px rgba(31, 36, 48, 0.12);
+  pointer-events: none;
+
+  p {
+    margin-top: 4px;
+    color: var(--color-muted);
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+    font-size: 12px;
+  }
+}
