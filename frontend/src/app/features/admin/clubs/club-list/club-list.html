@@ -1,4 +1,6 @@
-<button routerLink="/admin/clubs/new">Créer un club</button>
+<div class="toolbar">
+  <button class="primary" routerLink="/admin/clubs/new">Créer un club</button>
+</div>
 
 @if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
@@ -6,6 +8,7 @@
 
 
 
+<div class="toolbar">
 <input type="search" placeholder="Rechercher un club" #searchInput
        (keydown.enter)="onSearch(searchInput.value)" />
 <select #categorySelect (change)="onCategoryFilter(categorySelect.value)">
@@ -15,7 +18,8 @@
   }
 </select>
 
-<button (click)="onSearch(searchInput.value)">Rechercher</button>
+<button class="primary" (click)="onSearch(searchInput.value)">Rechercher</button>
+</div>
 
 <p>{{ totalElements() }} club(s)</p>
 
@@ -45,7 +49,7 @@
         <td>
           <button [routerLink]="['/admin/clubs', club.id, 'edit']">Modifier</button>
           @if (!club.endValidityDate) {
-            <button (click)="onDelete(club.id)">Désaffilier</button>
+            <button class="danger" (click)="onDelete(club.id)">Désaffilier</button>
           }
         </td>
       </tr>
