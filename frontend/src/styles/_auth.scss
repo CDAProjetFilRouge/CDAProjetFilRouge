@@ -161,3 +161,39 @@
     font-weight: 500;
   }
 }
+
+// Bouton « œil » des champs mot de passe (directive appPasswordToggle)
+.password-field {
+  position: relative;
+  display: block;
+
+  input {
+    width: 100%;
+    padding-right: 40px !important;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 37px;
+  height: 100%;
+  padding: 0;
+  color: var(--color-muted);
+  background: none;
+  border: 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}

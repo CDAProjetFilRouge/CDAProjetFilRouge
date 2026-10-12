@@ -2,11 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { PasswordToggle } from '../../../shared/password-toggle/password-toggle';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PHONE_PATTERN } from '../../../core/validator/phone';
 
 @Component({
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [PasswordToggle, ReactiveFormsModule, RouterLink],
   selector: 'app-create-account',
   styleUrl: './create-account.scss',
   templateUrl: './create-account.html',

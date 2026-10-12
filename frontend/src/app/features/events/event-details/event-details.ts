@@ -30,7 +30,7 @@ const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '
 const priceFormat = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 @Component({
-  imports: [RouterLink, TimeAgoPipe],
+  imports: [DatePipe, RouterLink, TimeAgoPipe],
   selector: 'app-event-details',
   styleUrl: './event-details.scss',
   templateUrl: './event-details.html',
