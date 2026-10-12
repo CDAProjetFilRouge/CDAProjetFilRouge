@@ -8,7 +8,7 @@
     @if (event.imageGallery.length > 0) {
       <div class="carousel">
         <div class="carousel-main">
-          <img [src]="event.imageGallery[selectedImageIndex()].path" [alt]="'Image ' + (selectedImageIndex() + 1) + ' de l’événement '" class="main-img"/>
+          <img [src]="imageUrl(event.imageGallery[selectedImageIndex()].path)" [alt]="'Image ' + (selectedImageIndex() + 1) + ' de l’événement '" class="main-img"/>
 
           @if (event.imageGallery.length > 1) {
             <button class="carousel-arrow prev" aria-label="Image précédente" (click)="previousImage()">&#10094;</button>
@@ -26,7 +26,7 @@
               [attr.aria-label]="'Afficher l’image' + (i + 1)"
               [attr.aria-pressed]="selectedImageIndex() === i"
               (click)="selectedImage(i)">
-              <img [src]="image.path" [alt]="'Miniature ' + (i + 1)" />
+              <img [src]="imageUrl(image.path)" [alt]="'Miniature ' + (i + 1)" />
               </button>
             }
           </div>

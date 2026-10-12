@@ -4,6 +4,7 @@ import { EventDetailsService } from './event-details-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
+import { URL_IMAGES } from '../../../core/api/api.config';
 
 @Component({
   imports: [DatePipe],
@@ -19,6 +20,10 @@ export class EventDetails {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly eventDetail = signal<EventDetailsModel | null>(null);
   protected readonly selectedImageIndex = signal(0);
+
+  protected imageUrl(path: string): string {
+    return `${URL_IMAGES}${path}`;
+  }
 
     private handleError(err: HttpErrorResponse): void {
     this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');
