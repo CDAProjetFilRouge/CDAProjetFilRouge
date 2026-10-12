@@ -2,7 +2,7 @@
 <div class="eventDetail-main">
   <div class="eventDetail-header">
     <h1>{{ event.title}}</h1>
-    <p>Organisé par {{ event.organizerLastName }} {{event.organizerFirstName}} - publié le xx/xx/xxxx</p>
+    <p>Organisé par {{ event.organizerLastName }} {{event.organizerFirstName}}</p>
     @if (canEdit()) {
       <a class="btn" [routerLink]="['/events', event.id, 'edit']">Modifier cet évènement</a>
     }
@@ -18,7 +18,7 @@
             <button class="carousel-arrow next" aria-label="Image suivante" (click)="nextImage()">&#10095;</button>
           }
 
-          <span class="image-counter">{{ selectedImageIndex() + 1}} / {{ event.imageGallery.length }}</span>
+        <br><span class="image-counter">{{ selectedImageIndex() + 1}} / {{ event.imageGallery.length }}</span>
         </div>
 
         @if (event.imageGallery.length > 1) {
@@ -29,7 +29,7 @@
               [attr.aria-label]="'Afficher l’image' + (i + 1)"
               [attr.aria-pressed]="selectedImageIndex() === i"
               (click)="selectedImage(i)">
-              <img [src]="imageUrl(image.path)" [alt]="'Miniature ' + (i + 1)" />
+              <img [src]="imageUrl(image.path)" [alt]="'Miniature ' + (i + 1)" class="image-event"/>
               </button>
             }
           </div>
@@ -44,16 +44,20 @@
     <p>{{ event.description}}</p>
   </div>
   <div class="comment-section">
-    <h3>Commentaire (x)</h3>
-    <div class="write-comment-section">
-      <form>
-        <textarea id="type-comment" rows="10"></textarea>
-        <button type="submit">Publier</button>
-      </form>
-    </div>
+    <h3>Commentaire {{comments().length}}</h3>
+    @if (user()){
+      <div class="write-comment-section">
+        <form>
+          <textarea id="type-comment" rows="10"></textarea>
+          <button type="submit">Publier</button>
+        </form>
+      </div>
+    }
     <div class="comments">
-      <p class="user-name">xxxxxx</p>
-      <p>comment</p>
+      @for (comment of comments(); track comment.id) {
+        <h5>{{ comment.author.firstName}} {{comment.author.lastName[0]}}. - {{ comment.creationDate | timeAgo}} @if(user()?.id == comment.author.id || user()?.role == rolleLabels.ADMINISTRATOR){<button>SUPPRIMER</button>}</h5>
+        <p>{{ comment.content}}</p>
+      }
     </div>
 
   </div>
