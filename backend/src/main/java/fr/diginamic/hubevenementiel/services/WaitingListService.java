@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +24,13 @@ public class WaitingListService {
 
     private final EventRepo eventRepo;
     private final InscriptionRepo inscriptionRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public WaitingListService(EventRepo eventRepo, InscriptionRepo inscriptionRepo) {
+    public WaitingListService(EventRepo eventRepo, InscriptionRepo inscriptionRepo,
+            ApplicationEventPublisher eventPublisher) {
         this.eventRepo = eventRepo;
         this.inscriptionRepo = inscriptionRepo;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -88,6 +92,15 @@ public class WaitingListService {
                 .forEach(next -> {
                     next.setStatus(InscriptionStatus.CONFIRMED);
                     inscriptionRepo.save(next);
+                    notifyPromotion(next);
                 });
+    }
+
+    private void notifyPromotion(Inscription promoted) {
+        if (promoted.getUser() == null || promoted.getUser().getEmail() == null || promoted.getEvent() == null) {
+            return;
+        }
+        eventPublisher.publishEvent(
+                new InscriptionPromotedEvent(promoted.getUser().getEmail(), promoted.getEvent().getTitle()));
     }
 }
