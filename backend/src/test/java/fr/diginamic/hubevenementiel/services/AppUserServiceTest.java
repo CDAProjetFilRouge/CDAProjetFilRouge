@@ -441,8 +441,8 @@ class AppUserServiceTest {
         when(userRepo.findById(5L)).thenReturn(Optional.of(user));
         when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of(confirmed));
         when(eventRepo.findByIdForUpdate(9L)).thenReturn(Optional.of(event));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(9L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.of(waiting));
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(9L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of(waiting));
 
         appUserService.deleteAccount(5L, false);
 

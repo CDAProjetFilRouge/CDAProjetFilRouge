@@ -99,7 +99,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param status status of the inscription you want to find
      * @return an optional of type inscription
      */
-    Optional<Inscription> findFirstByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
+    List<Inscription> findByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
 
     /**
      *

@@ -277,8 +277,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
         AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
 
         inscriptionService.cancelByMember(1L, principal);
@@ -316,8 +316,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
 
         Inscription result = inscriptionService.cancelByOrganizer(1L, "Évènement annulé faute de participants");
 
@@ -330,8 +330,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
 
         inscriptionService.cancelByOrganizer(1L, "Motif");
 
@@ -347,8 +347,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
 
         Inscription result = inscriptionService.cancelByOrganizer(1L, "Motif");
 
