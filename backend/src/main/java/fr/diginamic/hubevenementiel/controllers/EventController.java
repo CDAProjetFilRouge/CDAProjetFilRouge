@@ -101,6 +101,17 @@ public class EventController implements EventApi {
     }
 
     @Override
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
+    @GetMapping("/mine")
+    public Page<EventResponseMainDto> getMyEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) EventStatus status) throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return toMainDtos(eventService.findOrganizedBy(page, size, status, principal));
+    }
+
+    @Override
     @GetMapping("/filter")
     public Page<EventResponseMainDto> getEventSearch(
             @RequestParam(defaultValue = "0") int page,

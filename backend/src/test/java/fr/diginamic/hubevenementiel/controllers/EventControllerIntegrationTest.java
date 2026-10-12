@@ -421,6 +421,70 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    // ---------------------------------------------------------------
+    // GET /events/mine : « mes évènements »
+    // ---------------------------------------------------------------
+
+    @Test
+    void myEvents_returnsOwnDraftsAndNotTheOtherOrganizers() throws Exception {
+        String ownerToken = loginAndGetToken(organizer.getEmail());
+        String otherToken = loginAndGetToken(otherOrganizer.getEmail());
+        String mine = "Mon brouillon-" + System.nanoTime();
+        createDraftEventAndReturnId(ownerToken, mine);
+        createDraftEventAndReturnId(otherToken, "Brouillon d'un autre-" + System.nanoTime());
+
+        mockMvc.perform(get("/events/mine")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value(mine))
+                .andExpect(jsonPath("$.content[0].status").value("DRAFT"));
+    }
+
+    @Test
+    void myEvents_statusFilter_keepsOnlyThatStatus() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        createPublishedEvent(token, "Publie-" + System.nanoTime(), "Paris", start, start.plusHours(2), 50);
+        createDraftEventAndReturnId(token, "Brouillon-" + System.nanoTime());
+
+        mockMvc.perform(get("/events/mine").param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].status").value("PUBLISHED"));
+
+        mockMvc.perform(get("/events/mine")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    void myEvents_sizeAboveTwenty_returns400() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+
+        mockMvc.perform(get("/events/mine").param("size", "21")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void myEvents_anonymous_isRefused() throws Exception {
+        mockMvc.perform(get("/events/mine"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void myEvents_asMember_returns403() throws Exception {
+        AppUser member = createActiveUser("member-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        String token = loginAndGetToken(member.getEmail());
+
+        mockMvc.perform(get("/events/mine")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
     private void createPublishedEvent(String token, String title, String city, LocalDateTime start,
             LocalDateTime end, int capacity) throws Exception {
         AddressRequestDto address = new AddressRequestDto();
