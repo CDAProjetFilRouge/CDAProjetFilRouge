@@ -16,7 +16,6 @@ import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,7 +32,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +49,6 @@ class InscriptionServiceTest {
     @Mock
     private EmailService emailService;
 
-    @InjectMocks
     private InscriptionService inscriptionService;
 
     private AppUser user;
@@ -59,6 +56,9 @@ class InscriptionServiceTest {
 
     @BeforeEach
     void setUp() {
+        inscriptionService = new InscriptionService(inscriptionRepo, eventRepo, appUserService, eventService,
+                emailService, new WaitingListService(eventRepo, inscriptionRepo));
+
         user = new AppUser();
         user.setId(6L);
         user.setEmail("alice@example.com");
@@ -277,8 +277,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
         AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
 
         inscriptionService.cancelByMember(1L, principal);
@@ -316,8 +316,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
 
         Inscription result = inscriptionService.cancelByOrganizer(1L, "Évènement annulé faute de participants");
 
@@ -330,8 +330,8 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
 
         inscriptionService.cancelByOrganizer(1L, "Motif");
 
@@ -347,39 +347,12 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
         when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
 
         Inscription result = inscriptionService.cancelByOrganizer(1L, "Motif");
 
         assertThat(result.getCanceledById()).isNull();
     }
 
-    // ---------------------------------------------------------------
-    // promoteNextInWaitingList
-    // ---------------------------------------------------------------
-
-    @Test
-    void promoteNextInWaitingList_emptyList_noOpWithoutException() {
-        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.empty());
-
-        assertDoesNotThrow(() -> inscriptionService.promoteNextInWaitingList(2L));
-        verify(inscriptionRepo, never()).save(any());
-    }
-
-    @Test
-    void promoteNextInWaitingList_promotesFirstInFifoOrder() throws HttpException {
-        Inscription next = new Inscription();
-        next.setStatus(InscriptionStatus.WAITING_LIST);
-        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
-        when(inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(Optional.of(next));
-
-        inscriptionService.promoteNextInWaitingList(2L);
-
-        assertThat(next.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
-        verify(inscriptionRepo, times(1)).save(next);
-    }
 }
