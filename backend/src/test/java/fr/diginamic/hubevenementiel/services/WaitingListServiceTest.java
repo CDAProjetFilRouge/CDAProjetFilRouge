@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +36,8 @@ class WaitingListServiceTest {
     private EventRepo eventRepo;
     @Mock
     private InscriptionRepo inscriptionRepo;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private WaitingListService waitingListService;
@@ -45,14 +48,17 @@ class WaitingListServiceTest {
     void setUp() {
         event = new Event();
         event.setId(2L);
+        event.setTitle("Marathon");
         event.setStartDateTime(LocalDateTime.now().plusDays(5));
     }
 
     private Inscription waitingInscription(AccountStatus userStatus) {
         AppUser user = new AppUser();
         user.setStatus(userStatus);
+        user.setEmail("alice@example.com");
         Inscription inscription = new Inscription();
         inscription.setUser(user);
+        inscription.setEvent(event);
         inscription.setStatus(InscriptionStatus.WAITING_LIST);
         return inscription;
     }
@@ -175,5 +181,23 @@ class WaitingListServiceTest {
 
         assertThat(suspended.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
         assertThat(active.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+    }
+
+    @Test
+    void promoteNext_notifiesThePromotedMember() throws NotFoundException {
+        givenWaitingList(waitingInscription(AccountStatus.ACTIVE));
+
+        waitingListService.promoteNext(2L);
+
+        verify(eventPublisher).publishEvent(new InscriptionPromotedEvent("alice@example.com", "Marathon"));
+    }
+
+    @Test
+    void promoteNext_suspendedOnly_notifiesNobody() throws NotFoundException {
+        givenWaitingList(waitingInscription(AccountStatus.SUSPENDED));
+
+        waitingListService.promoteNext(2L);
+
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
     }
 }
