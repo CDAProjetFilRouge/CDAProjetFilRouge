@@ -23,5 +23,6 @@ export interface EventDetailsModel{
   clubName: string;
   organizerFirstName: string;
   organizerLastName: string;
+  organizerId: number;
 }
 
