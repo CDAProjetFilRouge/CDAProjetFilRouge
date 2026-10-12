@@ -27,7 +27,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -72,13 +71,15 @@ class AppUserServiceTest {
     @Mock
     private RefreshTokenRepo refreshTokenRepo;
 
-    @InjectMocks
     private AppUserService appUserService;
 
     private AppUser validUser;
 
     @BeforeEach
     void setUp() {
+        appUserService = new AppUserService(userRepo, tokenRepo, refreshTokenRepo, clubRepo, eventRepo,
+                inscriptionRepo, commentRepo, legalDocumentRepo, anonymizationDemandRepo, emailService,
+                passwordEncoder, new WaitingListService(eventRepo, inscriptionRepo));
         validUser = new AppUser();
         validUser.setLastName("Martin");
         validUser.setFirstName("Alice");
