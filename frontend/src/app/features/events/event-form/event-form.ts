@@ -58,7 +58,7 @@ export class EventForm {
   protected readonly status = computed<EventStatus>(() => this.detail()?.status ?? 'DRAFT');
   protected readonly isPast = computed(() => {
     const detail = this.detail();
-    return detail !== null && new Date(detail.startDateTime) < new Date();
+    return detail !== null && new Date(detail.startDate) < new Date();
   });
   protected readonly isOwner = computed(() => {
     if (!this.isEdit) {
@@ -69,7 +69,7 @@ export class EventForm {
     return (
       detail !== null &&
       user !== null &&
-      (user.role === 'ADMINISTRATOR' || detail.organizer.id === user.id)
+      (user.role === 'ADMINISTRATOR' || detail.organizerId === user.id)
     );
   });
   protected readonly canEditFields = computed(() => this.isOwner() && !this.isPast());
@@ -197,15 +197,15 @@ export class EventForm {
           title: event.title,
           description: event.description,
           location: {
-            street1: event.location.street1,
-            street2: event.location.street2 ?? '',
-            postalCode: event.location.postalCode,
-            city: event.location.city,
-            country: event.location.country,
+            street1: event.street1,
+            street2: event.street2 ?? '',
+            postalCode: event.postalCode,
+            city: event.city,
+            country: event.country,
           },
           category: event.category,
-          startDateTime: event.startDateTime.slice(0, 16),
-          endDateTime: event.endDateTime.slice(0, 16),
+          startDateTime: event.startDate.slice(0, 16),
+          endDateTime: event.endDate.slice(0, 16),
           maxCapacity: event.maxCapacity,
           affiliatePrice: event.affiliatePrice,
           nonAffiliatePrice: event.nonAffiliatePrice,

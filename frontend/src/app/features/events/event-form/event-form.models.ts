@@ -52,20 +52,18 @@ export interface EventDetail {
   id: number;
   title: string;
   description: string;
-  location: {
-    street1: string;
-    street2: string | null;
-    postalCode: string;
-    city: string;
-    country: string;
-  };
+  street1: string;
+  street2: string | null;
+  postalCode: string;
+  city: string;
+  country: string;
   category: Category;
-  startDateTime: string;
-  endDateTime: string;
+  startDate: string;
+  endDate: string;
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
   status: EventStatus;
-  organizer: { id: number };
+  organizerId: number;
   imageGallery: EventImage[];
 }
