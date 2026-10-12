@@ -66,6 +66,27 @@
     }
   }
 
+  // Action sensible mais réversible (suspendre) : orangé, entre primaire et danger.
+  button.warning {
+    color: #8a5300;
+    border-color: #e0a100;
+
+    &:hover:not(:disabled) {
+      background: #fff4d6;
+    }
+
+    &.solid {
+      color: #fff;
+      background: #d98a00;
+      border-color: #d98a00;
+
+      &:hover:not(:disabled) {
+        background: #bf7800;
+        border-color: #bf7800;
+      }
+    }
+  }
+
   // Onglet de filtre : l'onglet courant est mis en avant.
   button.tab.active {
     font-weight: 600;
