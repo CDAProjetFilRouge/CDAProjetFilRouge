@@ -15,10 +15,16 @@
         <p>Statut : {{ statusLabels[ins.status] }}</p>
         <p>Tarif : {{ ins.price }} €</p>
         <div class="actions">
-          @if (canCancel()) {
-            <button class="btn cancel" type="button" (click)="cancel()">Me désinscrire</button>
+          @if (confirming()) {
+            <p class="confirm">Confirmer la désinscription ?</p>
+            <button class="btn cancel" type="button" (click)="cancel()">Oui, me désinscrire</button>
+            <button class="btn" type="button" (click)="confirming.set(false)">Non, garder</button>
+          } @else {
+            @if (canCancel()) {
+              <button class="btn cancel" type="button" (click)="askCancel()">Me désinscrire</button>
+            }
+            <button class="btn" type="button" (click)="close()">Fermer</button>
           }
-          <button class="btn" type="button" (click)="selected.set(null)">Fermer</button>
         </div>
       } @else {
         <p class="empty">Sélectionnez un évènement pour voir son détail.</p>

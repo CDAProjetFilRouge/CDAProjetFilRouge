@@ -38,8 +38,15 @@
 
   .actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 16px;
+  }
+
+  .confirm {
+    flex-basis: 100%;
+    margin: 0;
+    font-weight: 600;
   }
 
   .cancel {
