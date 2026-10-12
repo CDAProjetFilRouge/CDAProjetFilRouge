@@ -1,7 +1,7 @@
 import { ConfirmService } from '../../../../core/ui/confirm.service';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { ACCOUNT_STATUS_LABELS, AccountStatus, AppUser, Role, ROLE_LABELS } from '../../../../core/models/user.models';
 import { UserService } from '../user.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -34,12 +34,23 @@ export class UserList {
 
   protected readonly accountStatusLabels = ACCOUNT_STATUS_LABELS;
 
-  protected readonly suspendingId = signal<number | null>(null);
+  protected readonly suspendingUser = signal<AppUser | null>(null);
+  private readonly suspendDialog = viewChild<ElementRef<HTMLDialogElement>>('suspendDialog');
 
   protected readonly errorMessage = signal<string | null>(null);
 
   constructor() {
     this.loadUsers();
+    // La boîte native suit l'utilisateur en cours de suspension : showModal() piège le focus.
+    effect(() => {
+      const el = this.suspendDialog()?.nativeElement;
+      if (!el) return;
+      if (this.suspendingUser()) {
+        if (!el.open) el.showModal();
+      } else if (el.open) {
+        el.close();
+      }
+    });
   }
 
   private initialStatus(): AccountStatus | '' {
@@ -141,29 +152,30 @@ export class UserList {
     });
   }
 
-  protected startSuspension(id: number): void {
-    this.suspendingId.set(id);
+  protected startSuspension(user: AppUser): void {
+    this.suspendingUser.set(user);
   }
 
-  protected async confirmSuspension(id: number, suspensionEndDate: string): Promise<void> {
-    const confirmed = await this.confirmDialog.ask({
-      title: 'Suspendre cet utilisateur',
-      message: suspensionEndDate
-        ? "Le compte sera suspendu jusqu'à la date indiquée."
-        : 'Le compte sera suspendu sans date de fin.',
-      confirmLabel: 'Suspendre',
-      tone: 'danger',
-    });
-    if (!confirmed) {
-      return;
-    }
+  protected closeSuspension(): void {
+    this.suspendingUser.set(null);
+  }
+
+  // Touche Échap : la boîte se ferme d'elle-même, on réinitialise l'état.
+  protected onSuspendDialogClosed(): void {
+    this.suspendingUser.set(null);
+  }
+
+  protected confirmSuspension(id: number, suspensionEndDate: string): void {
     this.appUserService.suspendUser(id, suspensionEndDate || undefined).subscribe({
       next: (updated) => {
         this.users.update((list) => list.map((u) => (u.id === id ? updated : u)));
-        this.suspendingId.set(null);
+        this.suspendingUser.set(null);
         this.errorMessage.set(null);
       },
-      error: (err) => this.handleError(err),
+      error: (err) => {
+        this.suspendingUser.set(null);
+        this.handleError(err);
+      },
     });
   }
 }

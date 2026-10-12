@@ -34,3 +34,8 @@
     color: var(--color-muted);
   }
 }
+
+// Formulaire centré dans la zone de contenu du panel admin.
+.auth-card {
+  margin: 0 auto;
+}

@@ -1,3 +1,73 @@
 @use "../../../../../styles/admin";
 
 @include admin.page;
+
+// Boutons d'action d'une ligne : même taille, alignés sur une seule ligne.
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  > button {
+    min-width: 96px;
+    margin-left: 0;
+    white-space: nowrap;
+  }
+}
+
+.suspend {
+  width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(31, 36, 48, 0.18);
+
+  &::backdrop {
+    background: rgba(31, 36, 48, 0.45);
+  }
+
+  .body {
+    padding: 20px;
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    p {
+      margin: 8px 0 16px;
+      line-height: 1.5;
+      color: var(--color-muted);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+    }
+
+    small {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--color-muted);
+    }
+  }
+
+  footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 20px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+}
