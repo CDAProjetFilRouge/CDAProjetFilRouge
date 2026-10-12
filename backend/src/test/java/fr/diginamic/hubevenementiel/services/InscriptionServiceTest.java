@@ -16,6 +16,7 @@ import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,7 +59,7 @@ class InscriptionServiceTest {
     @BeforeEach
     void setUp() {
         inscriptionService = new InscriptionService(inscriptionRepo, eventRepo, appUserService, eventService,
-                emailService, new WaitingListService(eventRepo, inscriptionRepo));
+                emailService, new WaitingListService(eventRepo, inscriptionRepo, mock(ApplicationEventPublisher.class)));
 
         user = new AppUser();
         user.setId(6L);
