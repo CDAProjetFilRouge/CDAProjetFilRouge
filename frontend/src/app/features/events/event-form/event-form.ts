@@ -22,6 +22,8 @@ import {
 } from './event-form.models';
 import { EventFormService } from './event-form.service';
 
+const MAX_PRICE = 99999999.99;
+
 function endAfterStart(group: AbstractControl): ValidationErrors | null {
   const start = group.get('startDateTime')?.value as string;
   const end = group.get('endDateTime')?.value as string;
@@ -93,8 +95,14 @@ export class EventForm {
       startDateTime: ['', Validators.required],
       endDateTime: ['', Validators.required],
       maxCapacity: [null as number | null, [Validators.required, Validators.min(1)]],
-      affiliatePrice: [null as number | null, [Validators.required, Validators.min(0)]],
-      nonAffiliatePrice: [null as number | null, [Validators.required, Validators.min(0)]],
+      affiliatePrice: [
+        null as number | null,
+        [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
+      ],
+      nonAffiliatePrice: [
+        null as number | null,
+        [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
+      ],
     },
     { validators: endAfterStart },
   );
@@ -280,7 +288,22 @@ export class EventForm {
   }
 
   private reasonOf(error: HttpErrorResponse, fallback: string): string {
-    return typeof error.error === 'string' && error.error ? error.error : fallback;
+    if (typeof error.error === 'string' && error.error) {
+      return error.error;
+    }
+    if (error.status === 0) {
+      return 'Le serveur est injoignable. Vérifiez votre connexion et réessayez.';
+    }
+    if (error.status === 400) {
+      return `${fallback} Le serveur refuse certaines valeurs : vérifiez les tarifs, les dates et le nombre de places.`;
+    }
+    if (error.status === 401 || error.status === 403) {
+      return "Vous n'avez pas le droit d'effectuer cette action.";
+    }
+    if (error.status >= 500) {
+      return `${fallback} Le serveur a rencontré une erreur (${error.status}). Réessayez, et prévenez l'équipe si cela continue.`;
+    }
+    return fallback;
   }
 
   private toRequest(): EventRequest {

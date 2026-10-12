@@ -149,7 +149,9 @@
             <input id="affiliatePrice" type="number" min="0" step="0.01"
               formControlName="affiliatePrice" />
             @if (showError('affiliatePrice')) {
-              <p class="field-error">Le tarif ne peut pas être négatif.</p>
+              <p class="field-error">
+                {{ form.controls.affiliatePrice.hasError('max') ? 'Le tarif ne peut pas dépasser 99 999 999,99 €.' : 'Le tarif est obligatoire et ne peut pas être négatif.' }}
+              </p>
             }
           </div>
 
@@ -158,7 +160,9 @@
             <input id="nonAffiliatePrice" type="number" min="0" step="0.01"
               formControlName="nonAffiliatePrice" />
             @if (showError('nonAffiliatePrice')) {
-              <p class="field-error">Le tarif ne peut pas être négatif.</p>
+              <p class="field-error">
+                {{ form.controls.nonAffiliatePrice.hasError('max') ? 'Le tarif ne peut pas dépasser 99 999 999,99 €.' : 'Le tarif est obligatoire et ne peut pas être négatif.' }}
+              </p>
             }
           </div>
         </div>
