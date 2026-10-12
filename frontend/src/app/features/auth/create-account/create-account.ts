@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { PHONE_PATTERN } from '../../../core/validator/phone';
 
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
@@ -18,7 +19,7 @@ export class CreateAccount {
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    phone: [''],
+    phone: ['', Validators.pattern(PHONE_PATTERN)],
     password: ['', [Validators.required, Validators.minLength(12)]],
     confirmPassword: ['', Validators.required],
   });

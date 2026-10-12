@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin-guard';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
-import { Event } from './features/events/event/event';
 import { Club } from './features/clubs/club/club';
 import { EventDetails } from './features/events/event-details/event-details';
+import { Event } from './features/events/event/event';
 
 export const routes: Routes = [
   {
@@ -12,7 +13,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [authGuard],
+    canActivate: [authGuard, adminGuard],
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
   {
@@ -75,5 +76,20 @@ export const routes: Routes = [
   {
     path: '',
     component: Event,
+  },
+  {
+    path: 'terms-of-use',
+    loadComponent: () => import('./features/legal/legal-page/legal-page').then((m) => m.LegalPage),
+    data: { documentType: 'TERM_OF_USE' },
+  },
+  {
+    path: 'gdpr-policy',
+    loadComponent: () => import('./features/legal/legal-page/legal-page').then((m) => m.LegalPage),
+    data: { documentType: 'GDPR_POLICY' },
+  },
+  {
+    path: 'calendar',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/calendar/calendar').then((m) => m.Calendar),
   },
 ];

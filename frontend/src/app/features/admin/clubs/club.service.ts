@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
-import { Club, ClubCategory } from './club.models';
+import { Club, ClubCategory, ClubRequest } from './club.models';
 import { Page } from '../../../core/models/page.models';
 
 
@@ -25,5 +25,13 @@ export class ClubService {
 
   deleteClub(id: number): Observable<void> {
     return this.http.delete<void>(`${URL_BACKEND}/clubs/${id}`);
+  }
+
+  createClub(club: ClubRequest): Observable<Club> {
+    return this.http.post<Club>(`${URL_BACKEND}/clubs`, club);
+  }
+
+  updateClub(id: number, club: ClubRequest): Observable<Club> {
+    return this.http.put<Club>(`${URL_BACKEND}/clubs/${id}`, club);
   }
 }

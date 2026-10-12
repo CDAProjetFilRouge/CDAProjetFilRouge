@@ -79,7 +79,7 @@ export class UserList {
   private deleteUser(id: number, deleteComments: boolean): void {
     this.appUserService.deleteUser(id, deleteComments).subscribe({
       next: () => {
-        this.users.update((list) => list.filter((u) => u.id !== id));
+        this.loadUsers();
         this.errorMessage.set(null);
       },
       error: (err : HttpErrorResponse) => {

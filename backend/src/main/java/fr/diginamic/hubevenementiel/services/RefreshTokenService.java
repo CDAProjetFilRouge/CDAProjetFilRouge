@@ -26,7 +26,7 @@ public class RefreshTokenService {
     private static final long ABSOLUTE_DAYS = 30;
     private static final long GRACE_SECONDS = 10;
 
-    public record Rotation(AppUser user, String refreshToken) {
+    public record Rotation(AppUser user, String refreshToken, String keyThumbprint) {
     }
 
     private final RefreshTokenRepo refreshTokenRepo;
@@ -53,22 +53,18 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public String issueForLogin(AppUser user) {
-        LocalDateTime now = LocalDateTime.now();
-        String raw = generateRawToken();
-        refreshTokenRepo.save(new RefreshToken(hash(raw), user, UUID.randomUUID().toString(),
-                now, now.plusDays(SLIDING_DAYS)));
-        return raw;
-    }
-
-    @Transactional
-    public Rotation rotate(String rawToken) throws HttpException {
+    public Rotation rotate(String rawToken, String keyThumbprint) throws HttpException {
         LocalDateTime now = LocalDateTime.now();
 
         RefreshToken current = refreshTokenRepo.findByTokenHash(hash(rawToken))
                 .orElseThrow(() -> new UnauthorizedException("Session invalide."));
 
         if (current.getRevokedAt() != null) {
+            throw new UnauthorizedException("Session invalide.");
+        }
+
+        if (current.getKeyThumbprint() != null && !current.getKeyThumbprint().equals(keyThumbprint)) {
+            refreshTokenRepo.revokeFamily(current.getFamilyId(), now);
             throw new UnauthorizedException("Session invalide.");
         }
 
@@ -99,15 +95,24 @@ public class RefreshTokenService {
 
         String raw = generateRawToken();
         refreshTokenRepo.save(new RefreshToken(hash(raw), user, current.getFamilyId(),
-                current.getFamilyCreatedAt(), expiresAt));
+                current.getFamilyCreatedAt(), expiresAt, current.getKeyThumbprint()));
 
-        return new Rotation(user, raw);
+        return new Rotation(user, raw, current.getKeyThumbprint());
     }
 
     @Transactional
     public void logout(String rawToken) {
         refreshTokenRepo.findByTokenHash(hash(rawToken))
                 .ifPresent(token -> refreshTokenRepo.revokeFamily(token.getFamilyId(), LocalDateTime.now()));
+    }
+
+    @Transactional
+    public String issueForLogin(AppUser user, String keyThumbprint) {
+        LocalDateTime now = LocalDateTime.now();
+        String raw = generateRawToken();
+        refreshTokenRepo.save(new RefreshToken(hash(raw), user, UUID.randomUUID().toString(),
+                now, now.plusDays(SLIDING_DAYS), keyThumbprint));
+        return raw;
     }
 
 }

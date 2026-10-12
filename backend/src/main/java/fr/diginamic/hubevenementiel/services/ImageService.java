@@ -29,6 +29,12 @@ public class ImageService {
     @Value("${app.upload-dir}")
     private String uploadDir;
 
+    @Value("${app.image-storage.url:}")
+    private String storageUrl;
+
+    @Value("${app.image-storage.key:}")
+    private String storageKey;
+
     public ImageService(ImageRepo imageRepo, EventService eventService) {
         this.imageRepo = imageRepo;
         this.eventService = eventService;
@@ -51,7 +57,7 @@ public class ImageService {
         return imageRepo.findByEventIdOrderByDisplayOrderAsc(eventId);
     }
 
-    private static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
+    public static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
     private static final int MAX_IMAGES_PER_EVENT = 10;
 
     /**
@@ -104,9 +110,14 @@ public class ImageService {
         String storedName = UUID.randomUUID() + extension;
 
         try {
-            Path targetDir = Path.of(uploadDir);
-            Files.createDirectories(targetDir);
-            Files.copy(file.getInputStream(), targetDir.resolve(storedName));
+            RemoteImageStorage remote = remoteStorage();
+            if (remote != null) {
+                remote.put(storedName, file.getBytes(), file.getContentType());
+            } else {
+                Path targetDir = Path.of(uploadDir);
+                Files.createDirectories(targetDir);
+                Files.copy(file.getInputStream(), targetDir.resolve(storedName));
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible d'enregistrer le fichier.", e);
         }
@@ -134,13 +145,26 @@ public class ImageService {
     public void delete(Long id) throws HttpException {
         Image image = getImageById(id);
 
+        String storedName = image.getPath().replace("/uploads/", "");
         try {
-            Files.deleteIfExists(Path.of(uploadDir, image.getPath().replace("/uploads/", "")));
+            RemoteImageStorage remote = remoteStorage();
+            if (remote != null) {
+                remote.delete(storedName);
+            } else {
+                Files.deleteIfExists(Path.of(uploadDir, storedName));
+            }
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de supprimer le fichier.", e);
         }
 
         imageRepo.delete(image);
+    }
+
+    private RemoteImageStorage remoteStorage() {
+        if (storageUrl == null || storageUrl.isBlank() || storageKey == null || storageKey.isBlank()) {
+            return null;
+        }
+        return new RemoteImageStorage(storageUrl, storageKey);
     }
 
     /**

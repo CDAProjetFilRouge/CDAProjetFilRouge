@@ -36,6 +36,6 @@ public class PDFController implements PdfApi {
     public ResponseEntity<byte[]> legalDocumentPDF(@PathVariable Long idDocument) throws IOException, NotFoundException {
         byte[] pdf = pdfService.generateCUPDF(idDocument);
 
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"LegalDocument-"+idDocument+"/pdf\"").body(pdf);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"LegalDocument-"+idDocument+".pdf\"").body(pdf);
     }
 }

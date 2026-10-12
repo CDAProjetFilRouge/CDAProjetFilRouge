@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { EventFilter, EventService } from './event-service';
 import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -6,6 +6,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { URL_BACKEND } from '../../../core/api/api.config';
 import { RouterLink } from '@angular/router';
+import { URL_IMAGES } from '../../../core/api/api.config';
 
 @Component({
   imports: [ReactiveFormsModule, DatePipe, RouterLink],
@@ -18,6 +19,7 @@ export class Event {
 
   protected readonly events = signal<EventModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly sortOrder = signal<'asc' | 'desc'>('desc');
 
   currentPage = 1;
   eventsPerPage = 20;
@@ -39,7 +41,7 @@ export class Event {
   }
 
   protected imageUrl(path: string): string {
-    return `${URL_BACKEND}${path}`;
+    return `${URL_IMAGES}${path}`;
   }
 
   ngOnInit(): void {
@@ -91,4 +93,17 @@ export class Event {
       this.loadEvents();
     }
   }
+
+  toggleSort(){
+    this.sortOrder.update(order => order === 'desc' ? 'asc' : 'desc');
+  }
+
+  sortedItems = computed(() => {
+    return [...this.events()].sort((a, b) => {
+      const dateA = new Date(a.startDateTime).getTime();
+      const dateB = new Date(b.startDateTime).getTime();
+
+      return this.sortOrder() === 'desc' ? dateA - dateB : dateB - dateA;
+    });
+  });
 }

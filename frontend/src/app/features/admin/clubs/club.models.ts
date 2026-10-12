@@ -8,6 +8,9 @@ export const CLUB_CATEGORY_LABELS: Record<ClubCategory, string> = {
   DIVERTISSEMENT: 'Divertissement',
 }
 
+export type ClubAddress = Omit<Address, 'id'>;
+
+
 export interface Club {
   id: number;
   name: string;
@@ -17,6 +20,14 @@ export interface Club {
   endValidityDate?: string | null;
   address: Address;
   appUsers: AppUserSummary[];
+}
+
+export interface ClubRequest {
+  name: string;
+  category: ClubCategory;
+  email: string;
+  phone: string;
+  address: ClubAddress;
 }
 
 

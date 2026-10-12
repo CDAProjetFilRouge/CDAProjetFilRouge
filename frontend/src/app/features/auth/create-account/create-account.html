@@ -58,6 +58,9 @@
         <div class="field">
           <label for="phone">Téléphone (facultatif)</label>
           <input id="phone" type="tel" formControlName="phone" autocomplete="tel" />
+          @if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+            <p class="field-error">Numéro invalide. Exemple : 05 61 23 45 67.</p>
+          }
         </div>
 
         <div class="field-row">

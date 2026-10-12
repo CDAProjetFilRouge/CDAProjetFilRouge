@@ -30,6 +30,8 @@ class JwtAuthenticationFilterTest {
     @Mock
     private UserRepo userRepo;
     @Mock
+    private DpopProofVerifier dpopProofVerifier;
+    @Mock
     private HttpServletRequest request;
     @Mock
     private HttpServletResponse response;

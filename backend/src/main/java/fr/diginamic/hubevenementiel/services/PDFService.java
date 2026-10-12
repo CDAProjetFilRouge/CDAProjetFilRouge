@@ -5,16 +5,21 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
-import fr.diginamic.hubevenementiel.entities.Address;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
+import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class PDFService {
@@ -66,29 +71,35 @@ public class PDFService {
 
     }
 
-    /**
-     *
-     * @param id id of the legal document we want to download a PDF of
-     * @return An array of byte containing our PDF data
-     * @throws IOException
-     * @throws NotFoundException
-     */
-    public byte[] generateCUPDF(Long id) throws IOException, NotFoundException {
 
-        LegalDocument conditionUtilisation = legalDocumentRepo.findById(id).orElseThrow(() -> new NotFoundException("No document found with id: "+id));
+    public byte[] generateCUPDF(Long id) throws IOException, NotFoundException {
+        LegalDocument legalDocument = legalDocumentRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Aucun document avec l'id: " + id));
+
+        String title = legalDocument.getDocumentType() == DocumentType.TERM_OF_USE
+                ? "Conditions d'utilisation"
+                : "Politique de confidentialité (RGPD)";
+
+        String date = legalDocument.getUpdateDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        String html = "<html><head><style>"
+                + "body { font-family: sans-serif; font-size: 12px; }"
+                + ".footer { margin-top: 30px; color: #666; font-size: 10px; }"
+                + "</style></head><body>"
+                + "<h1>" + title + "</h1>"
+                + legalDocument.getContent()
+                + "<p class=\"footer\">Version " + legalDocument.getVersion() + " | Dernière mise à jour : " + date + "</p>"
+                + "</body></html>";
+
+        org.jsoup.nodes.Document parsed = Jsoup.parse(html);
+        parsed.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
+        String xhtml = parsed.html();
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-        PdfWriter writer = new PdfWriter(output);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-
-        document.add(new Paragraph(conditionUtilisation.getDocumentType().name()));
-        document.add(new Paragraph(conditionUtilisation.getContent()));
-        document.add(new Paragraph("Version : " + conditionUtilisation.getVersion() + " | Dernière mise à jour: " + conditionUtilisation.getUpdateDate()));
-
-        document.close();
-
+        PdfRendererBuilder builder = new PdfRendererBuilder();
+        builder.withHtmlContent(xhtml, null);
+        builder.toStream(output);
+        builder.run();
         return output.toByteArray();
     }
 }

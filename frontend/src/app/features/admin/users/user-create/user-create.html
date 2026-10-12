@@ -38,11 +38,29 @@
       </select>
     </div>
 
+    <fieldset class="field club-list">
+      <legend>Clubs</legend>
+      @for (club of clubs(); track club.id) {
+        <label>
+          <input type="checkbox"
+          [checked]="selectedClubIds().includes(club.id)"
+          (change)="toggleClub(club.id, $any($event.target).checked)"
+          />
+          {{ club.name }}
+        </label>
+      } @empty {
+        <p>Aucun club disponible.</p>
+      }
+    </fieldset>
+
     <div class="field">
       <label for="phone">Téléphone</label>
       <input id="phone" type="tel" formControlName="phone" />
       @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
         <p class="field-error">Le numéro de téléphone est obligatoire.</p>
+      }
+      @if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+        <p class="field-error">Numéro invalide. Exemple : 05 61 23 45 67.</p>
       }
     </div>
 

@@ -3,7 +3,10 @@ import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AdminUserCreate, Role, ROLE_LABELS } from '../../../../core/models/user.models';
+import { PHONE_PATTERN } from '../../../../core/validator/phone';
 import { UserService } from '../user.service';
+import { ClubService } from '../../clubs/club.service';
+import { Club } from '../../clubs/club.models';
 
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
@@ -17,17 +20,27 @@ export class UserCreate {
   private readonly router = inject(Router);
   protected readonly ROLE_LABELS = ROLE_LABELS;
   protected readonly roles = Object.keys(ROLE_LABELS) as Role[];
+  private readonly clubService = inject(ClubService);
+  protected readonly clubs = signal<Club[]>([]);
+  protected readonly selectedClubIds = signal<number[]>([]);
 
   readonly form = this.formBuilder.group({
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     role: ['MEMBER' as Role],
-    phone: ['', Validators.required],
+    phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
   });
 
   readonly errorMessage = signal('');
   readonly isSubmitting = signal(false);
+
+  constructor() {
+    this.clubService.getClubs(0, 100).subscribe({
+      next: (result) => this.clubs.set(result.content.filter((c) => !c.endValidityDate)),
+      error: (error: HttpErrorResponse) => this.errorMessage.set(typeof error.error === 'string' ? error.error : 'Aucun club trouvé.'),
+    });
+  }
 
   onSubmit(): void {
     if (this.form.invalid) {
@@ -43,6 +56,7 @@ export class UserCreate {
       email: value.email,
       phone: value.phone,
       role: value.role,
+      clubIds:this.selectedClubIds(),
     };
 
     this.isSubmitting.set(true);
@@ -53,11 +67,13 @@ export class UserCreate {
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         this.errorMessage.set(
-          typeof error.error === 'string'
-            ? error.error
-            : "Impossible de créer un compte.",
+          typeof error.error === 'string' ? error.error : 'Impossible de créer un compte.',
         );
       },
     });
+  }
+
+  protected toggleClub(id: number, checked: boolean): void {
+    this.selectedClubIds.update((ids) => checked ? [...ids, id] : ids.filter((i) => i !== id));
   }
 }

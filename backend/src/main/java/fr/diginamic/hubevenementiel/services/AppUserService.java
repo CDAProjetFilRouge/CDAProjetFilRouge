@@ -40,6 +40,7 @@ import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import fr.diginamic.hubevenementiel.validation.PhoneNumberFormat;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -59,7 +60,8 @@ public class AppUserService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo, EventRepo eventRepo,
+    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo,
+            EventRepo eventRepo,
             InscriptionRepo inscriptionRepo, CommentRepo commentRepo, LegalDocumentRepo legalDocumentRepo,
             AnonymizationDemandRepo anonymizationDemandRepo, EmailService emailService,
             PasswordEncoder passwordEncoder) {
@@ -219,7 +221,11 @@ public class AppUserService {
     }
 
     @Transactional
-    public void suspend(Long id, LocalDateTime endDate) throws HttpException {
+    public void suspend(Long id, LocalDateTime endDate, Long actingAdminId) throws HttpException {
+        if (id.equals(actingAdminId)) {
+            throw new BadRequestException("Vous ne pouvez pas suspendre votre propre compte.");
+        }
+
         AppUser user = findById(id);
 
         if (endDate != null && endDate.isBefore(LocalDateTime.now())) {
@@ -251,10 +257,29 @@ public class AppUserService {
     }
 
     /**
+     * Reactivates every suspended account whose suspension end date is reached (RG11).
+     *
+     * @return the number of accounts reactivated
+     */
+    @Transactional
+    public int reactivateExpiredSuspensions() {
+        List<AppUser> expired = userRepo.findByStatusAndSuspensionEndDateLessThanEqual(
+                AccountStatus.SUSPENDED, LocalDateTime.now());
+
+        for (AppUser user : expired) {
+            user.setStatus(AccountStatus.ACTIVE);
+            user.setSuspensionEndDate(null);
+        }
+
+        userRepo.saveAll(expired);
+        return expired.size();
+    }
+
+    /**
      * Explains why a login was refused, but only to someone who knows the password,
      * so that the state of an account is never revealed to a stranger.
      *
-     * @param email email used to log in
+     * @param email       email used to log in
      * @param rawPassword password typed by the user
      * @return a message when the password is correct and the account cannot log in
      *         (suspended, not activated), otherwise empty
@@ -437,6 +462,10 @@ public class AppUserService {
             throw new BadRequestException("Le téléphone est obligatoire pour un compte créé par un administrateur.");
         }
 
+        if (phone != null && !phone.isBlank() && !PhoneNumberFormat.isValid(phone)) {
+            throw new BadRequestException("Le numéro de téléphone n'est pas valide. Exemple : 05 61 23 45 67.");
+        }
+
         return true;
     }
 
@@ -488,7 +517,7 @@ public class AppUserService {
     public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser, List<Long> clubIds) throws HttpException {
         AppUser existing = findById(id);
 
-        appUserChecker(modifiedUser, true, false);
+        appUserChecker(modifiedUser, false, false);
 
         if (!existing.getEmail().equalsIgnoreCase(modifiedUser.getEmail())
                 && userRepo.existsByEmail(modifiedUser.getEmail())) {
@@ -703,7 +732,8 @@ public class AppUserService {
      * deleteComments is true, in which case they are deleted with the account.
      *
      * @param id             id of the AppUser to delete
-     * @param deleteComments true to delete the comments of the account along with it
+     * @param deleteComments true to delete the comments of the account along with
+     *                       it
      * @throws HttpException NotFoundException if the user does not exist,
      *                       ConflictException if the account has activity that
      *                       prevents its deletion (code ACCOUNT_HAS_COMMENTS when

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
-import { AnonymisationDemandService } from './anonymisation-demand.service';
-import { ANONYMIZATION_DEMAND_LABELS, AnonymizationDemand, AnonymizationDemandStatus } from '../../../core/models/anonymisation-demande.models';
+import { AnonymizationDemandService } from './anonymization-demand.service';
+import { ANONYMIZATION_DEMAND_LABELS, AnonymizationDemand, AnonymizationDemandStatus } from '../../../core/models/anonymization-demand.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 
@@ -12,7 +12,7 @@ import { DatePipe } from '@angular/common';
 })
 export class AnonymizationDemandList {
 
-  private readonly service = inject(AnonymisationDemandService);
+  private readonly service = inject(AnonymizationDemandService);
 
   protected readonly demands = signal<AnonymizationDemand[]>([]);
 
@@ -58,6 +58,7 @@ export class AnonymizationDemandList {
     this.service.validateDemand(id).subscribe({
       next: () => {
         this.demands.update((list) => list.filter((d) => d.id !== id));
+        this.service.refreshPendingCount();
         this.errorMessage.set(null);
       },
       error: (err) => this.handleError(err),

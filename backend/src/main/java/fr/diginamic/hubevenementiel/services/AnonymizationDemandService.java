@@ -4,6 +4,7 @@ import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.AnonymizationDemandRepo;
@@ -42,6 +43,10 @@ public class AnonymizationDemandService {
 
         AppUser user = appUserService.findById(principal.id());
 
+        if (anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(user.getId(), RequestStatus.PENDING)) {
+            throw new ConflictException("Une demande d'anonymisation est déjà en cours de traitement pour votre compte.");
+        }
+
         AnonymizationDemand anonymizationDemand = new AnonymizationDemand();
 
         anonymizationDemand.setRequester(user);
@@ -61,9 +66,6 @@ public class AnonymizationDemandService {
         AppUser admin = appUserService.findById(principal.id());
 
         AnonymizationDemand anonymizationDemand = findById(id);
-        if(anonymizationDemand.getRequester().getAddress() == null){
-
-        }
 
         appUserService.anonymizeAccount(anonymizationDemand.getRequester());
 
@@ -336,6 +338,19 @@ public class AnonymizationDemandService {
         appUserService.findById(requester.getId());
 
         return true;
+    }
+
+    public long countByStatus() {
+        return anonymizationDemandRepository.countByRequestStatus(RequestStatus.PENDING);
+    }
+
+    /**
+     *
+     * @param principal the connected user
+     * @return true if the connected user already has a pending anonymization demand
+     */
+    public boolean hasPendingDemand(AppUserPrincipal principal) {
+        return anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(principal.id(), RequestStatus.PENDING);
     }
 
     /**
