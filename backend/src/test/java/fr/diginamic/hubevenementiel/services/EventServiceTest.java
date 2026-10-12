@@ -186,20 +186,24 @@ class EventServiceTest {
 
     @Test
     void createEvent_forcesDraftStatusRegardlessOfInput() throws HttpException {
+        Long clubId = 1L;
+
         validEvent.setStatus(EventStatus.PUBLISHED);
         when(eventRepository.existsByTitle(anyString())).thenReturn(false);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Event result = eventService.createEvent(validEvent);
+        Event result = eventService.createEvent(validEvent, clubId);
 
         assertThat(result.getStatus()).isEqualTo(EventStatus.DRAFT);
     }
 
     @Test
     void createEvent_duplicateTitle_throwsConflict() {
+        Long clubId = 1L;
+
         when(eventRepository.existsByTitle(validEvent.getTitle())).thenReturn(true);
 
-        assertThrows(ConflictException.class, () -> eventService.createEvent(validEvent));
+        assertThrows(ConflictException.class, () -> eventService.createEvent(validEvent, clubId));
 
         verify(eventRepository, never()).save(any());
     }

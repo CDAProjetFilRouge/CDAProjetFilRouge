@@ -80,7 +80,7 @@
           <p>Places disponibles : {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
           <div class="event-card-footer">
             <p>{{ event.affiliatePrice}}€ affilié - {{ event.nonAffiliatePrice}}€ non affilié</p>
-            <button class="btn" routerLink="event-details">Voir le détail</button>
+            <button class="btn" [routerLink]="['event-details', event.id]">Voir le détail</button>
           </div>
 
         </div>

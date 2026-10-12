@@ -70,7 +70,7 @@ export const routes: Routes = [
       import('./features/auth/activate-account/activate-account').then((m) => m.ActivateAccount),
   },
   {
-    path: 'event-details',
+    path: 'event-details/:id',
     component: EventDetails,
   },
   {

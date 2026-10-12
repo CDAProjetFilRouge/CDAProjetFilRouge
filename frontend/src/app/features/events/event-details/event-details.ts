@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { EventDetailsModel } from './event-details-model';
 import { EventDetailsService } from './event-details-service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 
@@ -14,9 +14,7 @@ import { DatePipe } from '@angular/common';
 export class EventDetails {
   private readonly eventDetailsService = inject(EventDetailsService);
   private readonly activatedRoute = inject(ActivatedRoute);
-  //private readonly id: number = parseInt(this.activatedRoute.snapshot.paramMap.get('id'));
-  private readonly id: number = 2;
-
+  private readonly router = inject(Router);
 
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly eventDetail = signal<EventDetailsModel | null>(null);
@@ -27,7 +25,16 @@ export class EventDetails {
   }
 
   ngOnInit(): void {
-    this.eventDetailsService.getEventDetail(this.id).subscribe({
+    const idParam = this.activatedRoute.snapshot.paramMap.get('id');
+
+    if(idParam == null){
+      this.router.navigate(['/']);
+      return
+    }
+
+    const id = parseInt(idParam);
+
+    this.eventDetailsService.getEventDetail(id).subscribe({
       next: (e) => {
         this.eventDetail.set(e);
       },

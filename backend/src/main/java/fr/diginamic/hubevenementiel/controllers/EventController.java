@@ -169,7 +169,7 @@ public class EventController implements EventApi {
         AppUser organizer = appUserService.findById(principal.id());
         event.setOrganizer(organizer);
 
-        Event created = eventService.createEvent(event);
+        Event created = eventService.createEvent(event, requestDto.getIdClub());
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toDto(created));
     }
 

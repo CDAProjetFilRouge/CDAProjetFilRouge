@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -35,10 +36,12 @@ public class EventService {
 
     private final EventRepo eventRepository;
     private final InscriptionRepo inscriptionRepo;
+    private final ClubService clubService;
 
-    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo) {
+    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo, ClubService clubService) {
         this.eventRepository = eventRepository;
         this.inscriptionRepo = inscriptionRepo;
+        this.clubService = clubService;
     }
 
     /**
@@ -254,10 +257,14 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event createEvent(Event event) throws HttpException {
+    public Event createEvent(Event event, Long clubId) throws HttpException {
 
         event.setStatus(EventStatus.DRAFT);
         eventChecker(event);
+
+        Club club = clubService.findById(clubId);
+
+        event.setClub(club);
 
         if (eventRepository.existsByTitle(event.getTitle())) {
             throw new ConflictException("Un évènement avec ce titre existe déjà.");
