@@ -1,0 +1,16 @@
+<full-calendar [options]="options()"></full-calendar>
+
+@if (hovered(); as h) {
+  <div class="bubble" [style.top.px]="h.top" [style.left.px]="h.left">
+    <strong>{{ h.event.title }}</strong>
+    <p>
+      {{ h.event.start | date: 'dd/MM/yyyy HH:mm' }}
+      @if (h.event.end) {
+        → {{ h.event.end | date: 'dd/MM/yyyy HH:mm' }}
+      }
+    </p>
+    @if (h.event.badge) {
+      <span class="badge">{{ h.event.badge }}</span>
+    }
+  </div>
+}

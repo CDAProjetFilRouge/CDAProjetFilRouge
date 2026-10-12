@@ -1,7 +1,7 @@
 <div class="event-main">
   <div class="title-section">
     <h1>Les évènements de la fédération</h1>
-    <p>Tournois, sorties et réunions des clubs affiliés. Les évènements au statut brouillon ne sont pas listés.</p>
+    <p>Tournois, sorties et réunions des clubs affiliés. Les brouillons ne sont visibles que par leur organisateur.</p>
   </div>
   <form [formGroup]="filters" (ngSubmit)="search()">
     <div class="filter-section">
@@ -39,6 +39,7 @@
         <select formControlName="status">
           <option value="PUBLISHED">Publié</option>
           <option value="CANCELLED">Annulé</option>
+          <option value="DRAFT">Brouillon</option>
         </select>
       </div>
       <div class="filter-actions">

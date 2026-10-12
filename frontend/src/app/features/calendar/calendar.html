@@ -1,41 +1,62 @@
-<div class="calendar-page">
-  <h1>Mon calendrier</h1>
+<div class="calendar-page" [class.compact]="compact()">
+  @if (!compact()) {
+    <h1>Mon calendrier</h1>
+  }
 
   @if (errorMessage()) {
-    <p class="error">{{ errorMessage() }}</p>
+    <p class="error" role="alert">{{ errorMessage() }}</p>
   }
 
-  <div class="calendar-layout">
-    <full-calendar [options]="options()"></full-calendar>
+  <app-event-calendar [events]="calendarEvents()" [compact]="compact()" (eventSelected)="select($event)" />
 
-    <aside class="detail">
-      @if (selected(); as ins) {
-        <h2>{{ ins.event.title }}</h2>
-        <p>Le {{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</p>
-        <p>Statut : {{ statusLabels[ins.status] }}</p>
-        <p>Tarif : {{ ins.price }} €</p>
-        <div class="actions">
-          @if (canCancel()) {
-            <button class="btn cancel" type="button" (click)="cancel()">Me désinscrire</button>
-          }
-          <button class="btn" type="button" (click)="selected.set(null)">Fermer</button>
+  <dialog #detailDialog class="detail" aria-labelledby="detail-title" (close)="onDialogClosed()">
+    @if (selected(); as ins) {
+      <header class="detail-head">
+        <div>
+          <span class="status" [class.waiting]="ins.status === 'WAITING_LIST'">
+            {{ statusLabels[ins.status] }}
+          </span>
+          <h2 id="detail-title">{{ ins.event.title }}</h2>
         </div>
-      } @else {
-        <p class="empty">Sélectionnez un évènement pour voir son détail.</p>
-      }
-    </aside>
-  </div>
+        <button type="button" class="close" aria-label="Fermer" (click)="close()">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+      </header>
 
-  @if (hovered(); as h) {
-    <div class="bubble" [style.top.px]="h.top" [style.left.px]="h.left">
-      <strong>{{ h.ins.event.title }}</strong>
-      <p>
-        {{ h.ins.event.startDateTime | date: 'dd/MM/yyyy HH:mm' }}
-        → {{ h.ins.event.endDateTime | date: 'dd/MM/yyyy HH:mm' }}
-      </p>
-      @if (h.ins.status === 'WAITING_LIST') {
-        <span class="badge">Liste d'attente</span>
-      }
-    </div>
-  }
+      <dl class="facts">
+        <div>
+          <dt>Début</dt>
+          <dd>{{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</dd>
+        </div>
+        <div>
+          <dt>Fin</dt>
+          <dd>{{ ins.event.endDateTime | date: 'dd/MM/yyyy à HH:mm' }}</dd>
+        </div>
+        <div>
+          <dt>Tarif</dt>
+          <dd>{{ ins.price > 0 ? ins.price + ' €' : 'Gratuit' }}</dd>
+        </div>
+      </dl>
+
+      <footer class="detail-foot">
+        @if (confirming()) {
+          <p class="confirm">Confirmer la désinscription ?</p>
+          <button class="btn" type="button" (click)="confirming.set(false)">Non, garder</button>
+          <button class="btn btn-danger" type="button" (click)="cancel()">Oui, me désinscrire</button>
+        } @else {
+          <a class="btn" [routerLink]="['/event-details', ins.event.id]" (click)="close()">
+            Voir l'évènement
+          </a>
+          @if (canCancel()) {
+            <button class="btn btn-danger-outline" type="button" (click)="askCancel()">
+              Me désinscrire
+            </button>
+          }
+        }
+      </footer>
+    }
+  </dialog>
 </div>

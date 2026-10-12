@@ -1,18 +1,15 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import { CalendarOptions, FullCalendarModule } from '@fullcalendar/angular';
-import dayGridPlugin from '@fullcalendar/angular/daygrid';
-import listPlugin from '@fullcalendar/angular/list';
-import localesAll from '@fullcalendar/angular/locales-all';
-import classicTheme from '@fullcalendar/angular/themes/classic';
-import timeGridPlugin from '@fullcalendar/angular/timegrid';
+import { Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
+import { EventCalendar } from '../../shared/event-calendar/event-calendar';
 import { CalendarService } from './calendar-service';
 import { INSCRIPTION_STATUS_LABELS, InscriptionModel } from './calendar.models';
 
 @Component({
-  imports: [FullCalendarModule, DatePipe],
+  imports: [EventCalendar, DatePipe, RouterLink],
   selector: 'app-calendar',
   styleUrl: './calendar.scss',
   templateUrl: './calendar.html',
@@ -21,13 +18,28 @@ export class Calendar {
   private readonly auth = inject(AuthService);
   private readonly calendarService = inject(CalendarService);
 
+  // Intégré au tableau de bord : pas de titre, grille plus basse.
+  readonly compact = input(false);
+
+  private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('detailDialog');
+
   protected readonly inscriptions = signal<InscriptionModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly selected = signal<InscriptionModel | null>(null);
+  protected readonly confirming = signal(false);
   protected readonly statusLabels = INSCRIPTION_STATUS_LABELS;
 
-  protected readonly hovered = signal<{ ins: InscriptionModel; top: number; left: number } | null>(
-    null,
+  protected readonly calendarEvents = computed<CalendarEvent[]>(() =>
+    this.inscriptions()
+      .filter((i) => i.status !== 'CANCELED')
+      .map((i) => ({
+        id: String(i.id),
+        title: i.event.title,
+        start: i.event.startDateTime,
+        end: i.event.endDateTime,
+        muted: i.status === 'WAITING_LIST',
+        badge: i.status === 'WAITING_LIST' ? "Liste d'attente" : undefined,
+      })),
   );
 
   protected readonly canCancel = computed(() => {
@@ -53,44 +65,39 @@ export class Calendar {
         this.load(user.id);
       }
     });
+
+    // La boîte de dialogue native suit la sélection : ouverte avec showModal() (focus piégé,
+    // fond inerte, Échap pour fermer), fermée quand la sélection est vidée.
+    effect(() => {
+      const el = this.dialog()?.nativeElement;
+      if (!el) return;
+      if (this.selected()) {
+        if (!el.open) el.showModal();
+      } else if (el.open) {
+        el.close();
+      }
+    });
   }
 
-  protected readonly options = computed<CalendarOptions>(() => ({
-    plugins: [classicTheme, dayGridPlugin, timeGridPlugin, listPlugin],
-    locales: localesAll,
-    locale: 'fr',
-    firstDay: 1,
-    initialView: 'dayGridMonth',
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listMonth',
-    },
-    events: this.inscriptions()
-      .filter((i) => i.status !== 'CANCELED')
-      .map((i) => ({
-        id: String(i.id),
-        title: i.event.title,
-        start: i.event.startDateTime,
-        end: i.event.endDateTime,
-        classNames: i.status === 'WAITING_LIST' ? ['waiting'] : [],
-        color: i.status === 'WAITING_LIST' ? 'var(--color-muted)' : undefined,
-      })),
-    eventClick: (info) => {
-      this.selected.set(this.findInscription(info.event.id) ?? null);
-    },
-    eventMouseEnter: (info) => {
-      const ins = this.findInscription(info.event.id);
-      if (!ins) return;
-      const rect = info.el.getBoundingClientRect();
-      this.hovered.set({
-        ins,
-        top: rect.bottom + 6,
-        left: Math.min(rect.left, window.innerWidth - 260),
-      });
-    },
-    eventMouseLeave: () => this.hovered.set(null),
-  }));
+  protected select(eventId: string): void {
+    this.confirming.set(false);
+    this.selected.set(this.inscriptions().find((i) => i.id === Number(eventId)) ?? null);
+  }
+
+  // Appelé par l'évènement natif « close » (touche Échap, bouton de fermeture).
+  protected onDialogClosed(): void {
+    this.confirming.set(false);
+    this.selected.set(null);
+  }
+
+  protected askCancel(): void {
+    this.confirming.set(true);
+  }
+
+  protected close(): void {
+    this.confirming.set(false);
+    this.selected.set(null);
+  }
 
   protected cancel(): void {
     const ins = this.selected();
@@ -99,14 +106,13 @@ export class Calendar {
 
     this.calendarService.cancel(ins.id).subscribe({
       next: () => {
-        this.selected.set(null);
+        this.close();
         this.load(user.id);
       },
-      error: (err: HttpErrorResponse) => this.handleError(err),
+      error: (err: HttpErrorResponse) => {
+        this.confirming.set(false);
+        this.handleError(err);
+      },
     });
-  }
-
-  private findInscription(eventId: string): InscriptionModel | undefined {
-    return this.inscriptions().find((i) => i.id === Number(eventId));
   }
 }

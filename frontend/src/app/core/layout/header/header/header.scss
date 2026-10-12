@@ -42,6 +42,13 @@
   &:focus-visible {
     color: var(--color-primary);
   }
+
+  // Page courante : couleur d'accent, graisse et soulignement.
+  &.active {
+    font-weight: 600;
+    color: var(--color-primary);
+    box-shadow: 0 2px 0 var(--color-primary);
+  }
 }
 
 .login-space {

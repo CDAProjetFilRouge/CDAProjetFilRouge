@@ -3,6 +3,9 @@
   <div class="eventDetail-header">
     <h1>{{ event.title}}</h1>
     <p>Organisé par {{ event.organizerLastName }} {{event.organizerFirstName}}</p>
+    @if (canEdit()) {
+      <a class="btn" [routerLink]="['/events', event.id, 'edit']">Modifier cet évènement</a>
+    }
   </div>
   <div class="img-section">
     @if (event.imageGallery.length > 0) {

@@ -38,6 +38,7 @@ public class EventDetailsMapper {
         dto.setClubName(event.getClub().getName());
         dto.setOrganizerFirstName(event.getOrganizer().getFirstName());
         dto.setOrganizerLastname(event.getOrganizer().getLastName());
+        dto.setOrganizerId(event.getOrganizer().getId());
 
         return dto;
     }

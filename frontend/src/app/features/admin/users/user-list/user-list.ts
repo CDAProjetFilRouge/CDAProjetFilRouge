@@ -1,9 +1,10 @@
+import { ConfirmService } from '../../../../core/ui/confirm.service';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { ACCOUNT_STATUS_LABELS, AccountStatus, AppUser, Role, ROLE_LABELS } from '../../../../core/models/user.models';
 import { UserService } from '../user.service';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   imports: [DatePipe, RouterLink],
@@ -12,7 +13,9 @@ import { RouterLink } from '@angular/router';
   templateUrl: './user-list.html',
 })
 export class UserList {
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly appUserService = inject(UserService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly users = signal<AppUser[]>([]);
 
@@ -24,7 +27,8 @@ export class UserList {
   protected readonly roles = Object.keys(ROLE_LABELS) as Role[];
   protected readonly statuses = Object.keys(ACCOUNT_STATUS_LABELS) as AccountStatus[];
   protected readonly roleFilter = signal<Role | ''>('');
-  protected readonly statusFilter = signal<AccountStatus | ''>('') ;
+  // Pré-filtre possible depuis le tableau de bord : /admin/users?status=SUSPENDED
+  protected readonly statusFilter = signal<AccountStatus | ''>(this.initialStatus());
 
   protected readonly roleLabels = ROLE_LABELS;
 
@@ -36,6 +40,11 @@ export class UserList {
 
   constructor() {
     this.loadUsers();
+  }
+
+  private initialStatus(): AccountStatus | '' {
+    const status = this.route.snapshot.queryParamMap.get('status');
+    return status && status in ACCOUNT_STATUS_LABELS ? (status as AccountStatus) : '';
   }
 
   private handleError(err: HttpErrorResponse): void {
@@ -82,26 +91,45 @@ export class UserList {
         this.loadUsers();
         this.errorMessage.set(null);
       },
-      error: (err : HttpErrorResponse) => {
+      error: async (err: HttpErrorResponse) => {
         const hasComments = err.status === 409 && err.headers.get('X-Error-Code') === 'ACCOUNT_HAS_COMMENTS';
-      if (hasComments && confirm('Ce compte a posté des commentaires. Supprimer quand même le compte avec ses commentaires ?')) {
-        this.deleteUser(id, true);
-      } else {
+        if (hasComments) {
+          const confirmed = await this.confirmDialog.ask({
+            title: 'Supprimer le compte et ses commentaires',
+            message: 'Ce compte a posté des commentaires. Ils seront supprimés avec le compte.',
+            confirmLabel: 'Tout supprimer',
+            tone: 'danger',
+          });
+          if (confirmed) {
+            this.deleteUser(id, true);
+            return;
+          }
+        }
         this.handleError(err);
-      }
-    },
+      },
   });
   }
 
-  protected onDelete(id: number): void {
-    if (!confirm('Supprimer cet utilisateur ?')) {
+  protected async onDelete(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Supprimer cet utilisateur',
+      message: 'Le compte sera définitivement supprimé.',
+      confirmLabel: 'Supprimer',
+      tone: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
     this.deleteUser(id, false);
   }
 
-  protected onReactivate(id: number): void {
-    if (!confirm('Voulez-vous vraiment réhabiliter cet utilisateur ?')) {
+  protected async onReactivate(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Réhabiliter cet utilisateur',
+      message: 'Le compte pourra de nouveau se connecter.',
+      confirmLabel: 'Réhabiliter',
+    });
+    if (!confirmed) {
       return;
     }
     this.appUserService.reactivateUser(id).subscribe({
@@ -117,8 +145,16 @@ export class UserList {
     this.suspendingId.set(id);
   }
 
-  protected confirmSuspension(id: number, suspensionEndDate: string): void {
-    if (!confirm('Voulez-vous vraiment suspendre cet utilisateur ?')) {
+  protected async confirmSuspension(id: number, suspensionEndDate: string): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Suspendre cet utilisateur',
+      message: suspensionEndDate
+        ? "Le compte sera suspendu jusqu'à la date indiquée."
+        : 'Le compte sera suspendu sans date de fin.',
+      confirmLabel: 'Suspendre',
+      tone: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
     this.appUserService.suspendUser(id, suspensionEndDate || undefined).subscribe({

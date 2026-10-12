@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../../core/ui/confirm.service';
 import { Component, inject, signal } from '@angular/core';
 import { LegalDocumentService } from './legal-document.service';
 import { form, FormField } from '@angular/forms/signals';
@@ -15,6 +16,7 @@ import { URL_BACKEND } from '../../../core/api/api.config';
   templateUrl: './legal-document.html',
 })
 export class LegalDocumentPage {
+  private readonly confirmDialog = inject(ConfirmService);
 
   private service = inject(LegalDocumentService);
 
@@ -44,13 +46,18 @@ export class LegalDocumentPage {
     return typeof err.error === 'string' ? err.error : 'Une erreur est survenue.';
   }
 
-  protected publish(): void {
+  protected async publish(): Promise<void> {
     const text = (this.legalDocumentModel().content ?? '').trim();
     if (!text) {
       this.publishError.set('Le texte est obligatoire.');
       return;
     }
-    if(!confirm('Publier ce texte ?')) {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Publier ce texte',
+      message: 'Une nouvelle version sera publiée et remplacera la version actuelle pour tous les utilisateurs.',
+      confirmLabel: 'Publier',
+    });
+    if (!confirmed) {
       return;
     }
     this.publishError.set(null);

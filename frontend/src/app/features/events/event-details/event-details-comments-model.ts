@@ -1,11 +1,13 @@
+export interface CommentAuthorModel {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 export interface CommentModel {
   id: number;
-  author: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-  }
+  author: CommentAuthorModel;
   content: string;
-  creationDate: Date
+  creationDate: string;
 }

@@ -1,7 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { EventDetailsModel } from './event-details-model';
 import { EventDetailsService } from './event-details-service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { CommentModel } from './event-details-comments-model';
@@ -28,6 +28,18 @@ export class EventDetails {
   protected readonly eventDetail = signal<EventDetailsModel | null>(null);
   protected readonly selectedImageIndex = signal(0);
   protected readonly comments = signal<CommentModel[]>([]);
+
+  protected imageUrl(path: string): string {
+    return `${URL_IMAGES}${path}`;
+  }
+
+  protected readonly canEdit = computed(() => {
+    const event = this.eventDetail();
+    const user = this.authService.currentUser();
+    return (
+      event !== null && user !== null && (user.role === 'ADMINISTRATOR' || user.id === event.organizerId)
+    );
+  });
 
     private handleError(err: HttpErrorResponse): void {
     this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');

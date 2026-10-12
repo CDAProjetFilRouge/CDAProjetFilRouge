@@ -1,11 +1,13 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -33,6 +35,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventService {
+
+    /** Plus grand tarif accepté : la colonne est un decimal(10,2). */
+    static final BigDecimal MAX_PRICE = new BigDecimal("99999999.99");
+
+    /** Longueur maximale de la description (la colonne est un TEXT de 65 535 octets). */
+    static final int MAX_DESCRIPTION_LENGTH = 10_000;
+
+    /** Nombre de places maximum pour un évènement. */
+    static final int MAX_CAPACITY = 100_000;
 
     private final EventRepo eventRepository;
     private final InscriptionRepo inscriptionRepo;
@@ -267,6 +278,7 @@ public class EventService {
         eventChecker(event);
 
         Club club = clubService.findById(clubId);
+        checkClubMembership(event.getOrganizer(), club);
 
         event.setClub(club);
 
@@ -384,11 +396,15 @@ public class EventService {
         if (description == null || description.isBlank()) {
             throw new BadRequestException("L'évènement doit avoir une description.");
         }
+        if (description.length() > MAX_DESCRIPTION_LENGTH) {
+            throw new BadRequestException("La description ne peut pas dépasser 10 000 caractères.");
+        }
 
         Address location = event.getLocation();
         if (location == null) {
             throw new BadRequestException("L'évènement doit avoir une localisation.");
         }
+        checkLocation(location);
 
         if (event.getCategory() == null) {
             throw new BadRequestException("Vous devez choisir une catégorie pour l'évènement.");
@@ -404,6 +420,10 @@ public class EventService {
             throw new BadRequestException("L'évènement doit avoir une date de fin.");
         }
 
+        if (!start.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("La date de début doit être dans le futur.");
+        }
+
         if (!end.isAfter(start)) {
             throw new BadRequestException("La date de fin doit être postérieure à la date de début.");
         }
@@ -415,6 +435,9 @@ public class EventService {
         if (maxCapacity <= 0) {
             throw new BadRequestException("La capacité maximale doit être supérieure à zéro.");
         }
+        if (maxCapacity > MAX_CAPACITY) {
+            throw new BadRequestException("La capacité maximale ne peut pas dépasser 100 000 places.");
+        }
 
         BigDecimal affiliatePrice = event.getAffiliatePrice();
         if (affiliatePrice == null) {
@@ -422,6 +445,9 @@ public class EventService {
         }
         if (affiliatePrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Le prix pour les personnes affiliées ne peut pas être négatif.");
+        }
+        if (affiliatePrice.compareTo(MAX_PRICE) > 0) {
+            throw new BadRequestException("Le prix pour les personnes affiliées ne peut pas dépasser 99 999 999,99 €.");
         }
 
         BigDecimal nonAffiliatePrice = event.getNonAffiliatePrice();
@@ -431,12 +457,56 @@ public class EventService {
         if (nonAffiliatePrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Le prix pour les personnes non affiliées ne peut pas être négatif.");
         }
+        if (nonAffiliatePrice.compareTo(MAX_PRICE) > 0) {
+            throw new BadRequestException("Le prix pour les personnes non affiliées ne peut pas dépasser 99 999 999,99 €.");
+        }
 
         if (event.getStatus() == null) {
             throw new BadRequestException("Vous devez définir un statut pour l'évènement.");
         }
 
         return true;
+    }
+
+    /**
+     * Garde-fous alignés sur les colonnes de la table address : un champ obligatoire
+     * absent ou trop long partirait en base et reviendrait en erreur 500.
+     */
+    private void checkLocation(Address location) throws BadRequestException {
+        requireLocationField(location.getStreet1(), 255, "L'adresse");
+        if (location.getStreet2() != null && location.getStreet2().length() > 255) {
+            throw new BadRequestException("Le complément d'adresse ne peut pas dépasser 255 caractères.");
+        }
+        requireLocationField(location.getPostalCode(), 10, "Le code postal");
+        if (!location.getPostalCode().matches("\\d{4,5}")) {
+            throw new BadRequestException("Le code postal doit être composé de 4 ou 5 chiffres.");
+        }
+        requireLocationField(location.getCity(), 100, "La ville");
+        requireLocationField(location.getCountry(), 100, "Le pays");
+    }
+
+    private void requireLocationField(String value, int maxLength, String label) throws BadRequestException {
+        if (value == null || value.isBlank()) {
+            throw new BadRequestException(label + " est obligatoire.");
+        }
+        if (value.length() > maxLength) {
+            throw new BadRequestException(label + " ne peut pas dépasser " + maxLength + " caractères.");
+        }
+    }
+
+    /**
+     * Un organisateur ne crée un évènement que pour un club dont il est membre ;
+     * un administrateur peut choisir n'importe quel club.
+     */
+    private void checkClubMembership(AppUser organizer, Club club) throws ForbiddenException {
+        if (organizer == null || organizer.getRole() == Role.ADMINISTRATOR) {
+            return;
+        }
+        boolean isMember = organizer.getClubs().stream()
+                .anyMatch(c -> c.getId() != null && c.getId().equals(club.getId()));
+        if (!isMember) {
+            throw new ForbiddenException("Vous ne pouvez créer un évènement que pour un club dont vous êtes membre.");
+        }
     }
 
 }
