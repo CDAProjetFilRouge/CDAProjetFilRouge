@@ -3,7 +3,6 @@
   <div class="page-space">
       <button class="page-select" [routerLink]="user() ? '/' : '/catalogue'" routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }">Catalogue</button>
-      <button class="page-select" routerLink="/clubs" routerLinkActive="active">Clubs</button>
 
       @if (user()) {
         <button class="page-select" routerLink="/dashboard" routerLinkActive="active">Tableau de bord</button>
