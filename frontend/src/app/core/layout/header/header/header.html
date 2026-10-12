@@ -1,7 +1,7 @@
 <div class="layout-header">
   <button class="logo" routerLink="/">MyHubEvent</button>
   <div class="page-space">
-      <button class="page-select" routerLink="/" routerLinkActive="active"
+      <button class="page-select" [routerLink]="user() ? '/' : '/catalogue'" routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }">Catalogue</button>
       @if (isAffiliated()) {
         <button class="page-select" routerLink="/">Mon club</button>
