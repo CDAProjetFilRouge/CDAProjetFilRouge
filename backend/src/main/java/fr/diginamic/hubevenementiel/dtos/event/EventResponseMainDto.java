@@ -25,14 +25,14 @@ public class EventResponseMainDto {
     private Integer remainingSpots;
     private List<ImageSummaryResponseDto> imageGallery = new ArrayList<>();
     private EventStatus status;
-    private List<String> organizerClubs = new ArrayList<>();
+    private String clubName;
 
     public EventResponseMainDto() {}
 
     public EventResponseMainDto(Long id, String title, String description, AddressResponseDto location, Category category,
                                 LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
                                 BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery,
-                                EventStatus status, List<String> organizerClubs){
+                                EventStatus status, String clubName){
         this.id = id;
         this.title = title;
         this.description = description;
@@ -46,7 +46,7 @@ public class EventResponseMainDto {
         this.remainingSpots = remainingSpots;
         this.imageGallery = imageGallery;
         this.status = status;
-        this.organizerClubs = organizerClubs;
+        this.clubName = clubName;
     }
 
     public Long getId() {
@@ -153,11 +153,11 @@ public class EventResponseMainDto {
         this.status = status;
     }
 
-    public List<String> getOrganizerClubs() {
-        return organizerClubs;
+    public String getClubName() {
+        return clubName;
     }
 
-    public void setOrganizerClubs(List<String> organizerClubs) {
-        this.organizerClubs = organizerClubs;
+    public void setClubName(String clubName) {
+        this.clubName = clubName;
     }
 }
