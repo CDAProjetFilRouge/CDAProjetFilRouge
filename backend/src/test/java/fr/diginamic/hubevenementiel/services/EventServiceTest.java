@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -48,6 +49,9 @@ class EventServiceTest {
 
     @Mock
     private WaitingListService waitingListService;
+
+    @Mock
+    private ClubService clubService;
 
     @InjectMocks
     private EventService eventService;
@@ -190,6 +194,9 @@ class EventServiceTest {
     @Test
     void createEvent_forcesDraftStatusRegardlessOfInput() throws HttpException {
         Long clubId = 1L;
+        Club club = new Club();
+        club.setId(clubId);
+        when(clubService.findById(clubId)).thenReturn(club);
 
         validEvent.setStatus(EventStatus.PUBLISHED);
         when(eventRepository.existsByTitle(anyString())).thenReturn(false);
@@ -201,8 +208,11 @@ class EventServiceTest {
     }
 
     @Test
-    void createEvent_duplicateTitle_throwsConflict() {
+    void createEvent_duplicateTitle_throwsConflict() throws HttpException {
         Long clubId = 1L;
+        Club club = new Club();
+        club.setId(clubId);
+        when(clubService.findById(clubId)).thenReturn(club);
 
         when(eventRepository.existsByTitle(validEvent.getTitle())).thenReturn(true);
 
