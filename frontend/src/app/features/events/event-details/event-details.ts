@@ -11,7 +11,7 @@ import { ROLE_LABELS } from '../../../core/models/user.models';
 import { URL_IMAGES } from '../../../core/api/api.config';
 
 @Component({
-  imports: [DatePipe, TimeAgoPipe],
+  imports: [DatePipe, RouterLink, TimeAgoPipe],
   selector: 'app-event-details',
   styleUrl: './event-details.scss',
   templateUrl: './event-details.html',
@@ -93,8 +93,4 @@ export class EventDetails {
 
     this.selectedImageIndex.update( index => (index + 1) % images.length);
   }
-
-    protected imageUrl(path: string): string {
-      return `${URL_IMAGES}${path}`;
-    }
 }

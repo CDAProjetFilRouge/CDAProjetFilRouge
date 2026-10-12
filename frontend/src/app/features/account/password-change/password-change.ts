@@ -2,10 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { PasswordToggle } from '../../../shared/password-toggle/password-toggle';
 import { AccountService } from '../account.service';
 
 @Component({
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [PasswordToggle, ReactiveFormsModule, RouterLink],
   selector: 'app-password-change',
   styleUrl: './password-change.scss',
   templateUrl: './password-change.html',
