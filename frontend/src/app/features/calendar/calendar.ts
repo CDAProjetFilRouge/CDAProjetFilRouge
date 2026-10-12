@@ -24,6 +24,7 @@ export class Calendar {
   protected readonly inscriptions = signal<InscriptionModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly selected = signal<InscriptionModel | null>(null);
+  protected readonly confirming = signal(false);
   protected readonly statusLabels = INSCRIPTION_STATUS_LABELS;
 
   protected readonly hovered = signal<{ ins: InscriptionModel; top: number; left: number } | null>(
@@ -77,6 +78,7 @@ export class Calendar {
         color: i.status === 'WAITING_LIST' ? 'var(--color-muted)' : undefined,
       })),
     eventClick: (info) => {
+      this.confirming.set(false);
       this.selected.set(this.findInscription(info.event.id) ?? null);
     },
     eventMouseEnter: (info) => {
@@ -92,6 +94,15 @@ export class Calendar {
     eventMouseLeave: () => this.hovered.set(null),
   }));
 
+  protected askCancel(): void {
+    this.confirming.set(true);
+  }
+
+  protected close(): void {
+    this.confirming.set(false);
+    this.selected.set(null);
+  }
+
   protected cancel(): void {
     const ins = this.selected();
     const user = this.auth.currentUser();
@@ -99,10 +110,13 @@ export class Calendar {
 
     this.calendarService.cancel(ins.id).subscribe({
       next: () => {
-        this.selected.set(null);
+        this.close();
         this.load(user.id);
       },
-      error: (err: HttpErrorResponse) => this.handleError(err),
+      error: (err: HttpErrorResponse) => {
+        this.confirming.set(false);
+        this.handleError(err);
+      },
     });
   }
 
