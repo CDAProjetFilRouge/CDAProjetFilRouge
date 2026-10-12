@@ -20,4 +20,8 @@ export class EventDetailsService {
   publishComment(idEvent: number, content: string): Observable<CommentModel>{
     return this.http.post<CommentModel>(`${URL_BACKEND}/events/${idEvent}/comments`, { content });
   }
+
+  deleteComment(idComment: number, idEvent: number): void{
+    this.http.delete<void>(`${URL_BACKEND}/events/${idEvent}/comments/${idComment}`);
+  }
 }

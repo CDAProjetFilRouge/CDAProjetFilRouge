@@ -109,4 +109,8 @@ export class EventDetails {
           error: (err) => this.handleError(err)
         });
     }
+
+    deleteComment(idComment: number): void {
+      this
+    }
 }
