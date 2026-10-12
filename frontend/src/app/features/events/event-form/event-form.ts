@@ -25,6 +25,8 @@ import { EventFormService } from './event-form.service';
 const MAX_PRICE = 99999999.99;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGES = 10;
+const MAX_CAPACITY = 100000;
+const POSTAL_CODE_PATTERN = /^\d{4,5}$/;
 
 function yearInRange(control: AbstractControl): ValidationErrors | null {
   const value = control.value as string;
@@ -33,6 +35,14 @@ function yearInRange(control: AbstractControl): ValidationErrors | null {
   }
   const year = Number(value.slice(0, 4));
   return year >= 1900 && year <= 2100 ? null : { yearRange: true };
+}
+
+function startInFuture(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as string;
+  if (!value) {
+    return null;
+  }
+  return new Date(value).getTime() > Date.now() ? null : { startInPast: true };
 }
 
 function endAfterStart(group: AbstractControl): ValidationErrors | null {
@@ -100,15 +110,18 @@ export class EventForm {
       location: this.formBuilder.group({
         street1: ['', [Validators.required, Validators.maxLength(255)]],
         street2: ['', Validators.maxLength(255)],
-        postalCode: ['', [Validators.required, Validators.maxLength(10)]],
+        postalCode: ['', [Validators.required, Validators.pattern(POSTAL_CODE_PATTERN)]],
         city: ['', [Validators.required, Validators.maxLength(100)]],
         country: ['France', [Validators.required, Validators.maxLength(100)]],
       }),
       category: ['CULTURE' as Category],
       clubId: [null as number | null, Validators.required],
-      startDateTime: ['', [Validators.required, yearInRange]],
+      startDateTime: ['', [Validators.required, yearInRange, startInFuture]],
       endDateTime: ['', [Validators.required, yearInRange]],
-      maxCapacity: [null as number | null, [Validators.required, Validators.min(1)]],
+      maxCapacity: [
+        null as number | null,
+        [Validators.required, Validators.min(1), Validators.max(MAX_CAPACITY)],
+      ],
       affiliatePrice: [
         null as number | null,
         [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
