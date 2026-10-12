@@ -14,7 +14,6 @@ interface KpiTarget {
 }
 
 const KPI_LINKS: Record<string, KpiTarget> = {
-  MY_CLUBS: { link: '/clubs' },
   ACTIVE_ACCOUNTS: { link: '/admin/users', queryParams: { status: 'ACTIVE' } },
   SUSPENDED_ACCOUNTS: { link: '/admin/users', queryParams: { status: 'SUSPENDED' } },
   PENDING_ANONYMIZATIONS: { link: '/admin/anonymization-demands' },
@@ -41,7 +40,6 @@ const WELCOME_MESSAGES: Record<Role, string> = {
 const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
   MEMBER: [
     { label: 'Parcourir les événements', link: '/' },
-    { label: 'Découvrir les clubs', link: '/clubs' },
     { label: 'Mon compte', link: '/account' },
   ],
   ORGANIZER: [
@@ -73,6 +71,8 @@ export class Dashboard {
   protected readonly kpis = signal<KpiView[]>([]);
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
+
+  protected readonly clubNames = computed(() => (this.user()?.clubs ?? []).map((club) => club.name));
 
   protected readonly welcomeMessage = computed(() => {
     const role = this.user()?.role;

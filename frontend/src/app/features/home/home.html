@@ -91,23 +91,6 @@
   </ol>
 </section>
 
-@if (clubs().length > 0) {
-  <section class="clubs">
-    <div class="section-head">
-      <h2>Les clubs de la fédération</h2>
-      <a routerLink="/clubs">Voir tous les clubs</a>
-    </div>
-    <ul>
-      @for (club of clubs(); track club.id) {
-        <li>
-          <span class="club-name">{{ club.name }}</span>
-          <span class="badge">{{ categoryLabel(club.category) }}</span>
-        </li>
-      }
-    </ul>
-  </section>
-}
-
 <section class="cta">
   <h2>Prêt à rejoindre vos clubs&nbsp;?</h2>
   <p>La création d’un compte est gratuite et prend moins d’une minute.</p>
