@@ -99,4 +99,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/events/event-form/event-form').then((m) => m.EventForm),
   },
+  {
+    path: 'events/:id/edit',
+    canActivate: [authGuard, organizerGuard],
+    loadComponent: () =>
+      import('./features/events/event-form/event-form').then((m) => m.EventForm),
+  },
 ];
