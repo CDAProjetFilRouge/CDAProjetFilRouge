@@ -16,11 +16,6 @@
   grid-row: 2;
 }
 
-.img-section img{
-  width: 100%;
-  text-align: center;
-}
-
 .description-section {
   grid-column: 1;
   grid-row: 3;
@@ -114,4 +109,9 @@
     flex-basis: 70px;
     height: 52px;
   }
+}
+
+.main-img {
+  width: 90%;
+  height: 90%;
 }

@@ -13,7 +13,7 @@ export class EventDetailsService {
     return this.http.get<EventDetailsModel>(`${URL_BACKEND}/events/${id}`);
   }
 
-  getComments(eventId: number): Observable<CommentModel>{
-    return this.http.get<CommentModel>(`${URL_BACKEND}/events/${eventId}/comments`)
+  getComments(eventId: number): Observable<CommentModel[]>{
+    return this.http.get<CommentModel[]>(`${URL_BACKEND}/events/${eventId}/comments`)
   }
 }
