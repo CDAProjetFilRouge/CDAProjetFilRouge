@@ -107,4 +107,42 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
      * @return true if the user organizes at least one event
      */
     boolean existsByOrganizerId(Long organizerId);
+
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @param status status of the events to count
+     * @param from lower bound (inclusive) of the start date
+     * @return the number of events of the organizer starting from this date
+     */
+    long countByOrganizerIdAndStatusAndStartDateTimeGreaterThanEqual(Long organizerId, EventStatus status,
+            LocalDateTime from);
+
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @param status status of the events to count
+     * @return the number of events of the organizer with this status
+     */
+    long countByOrganizerIdAndStatus(Long organizerId, EventStatus status);
+
+    /**
+     *
+     * @param status status of the events to count
+     * @param from lower bound (inclusive) of the start date
+     * @return the number of events with this status starting from this date
+     */
+    long countByStatusAndStartDateTimeGreaterThanEqual(EventStatus status, LocalDateTime from);
+
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @param status status of the events to sum
+     * @param from lower bound (inclusive) of the start date
+     * @return the total capacity of the matching events, 0 if there are none
+     */
+    @Query("SELECT COALESCE(SUM(e.maxCapacity), 0L) FROM Event e WHERE e.organizer.id = :organizerId "
+            + "AND e.status = :status AND e.startDateTime >= :from")
+    long sumCapacityByOrganizer(@Param("organizerId") Long organizerId, @Param("status") EventStatus status,
+            @Param("from") LocalDateTime from);
 }

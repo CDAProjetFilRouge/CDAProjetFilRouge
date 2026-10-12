@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.repositories;
 import java.util.Collection;
 import java.util.List;
 import fr.diginamic.hubevenementiel.entities.Inscription;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -107,4 +108,38 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @return all the inscriptions of the user, whatever their status
      */
     List<Inscription> findAllByUserId(Long userId);
+
+    /**
+     *
+     * @param userId id of the user
+     * @param status status of the inscriptions to count
+     * @param from lower bound (inclusive) of the event start date
+     * @return the number of inscriptions of the user for events starting from this date
+     */
+    long countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(Long userId, InscriptionStatus status,
+            LocalDateTime from);
+
+    /**
+     *
+     * @param userId id of the user
+     * @param status status of the inscriptions to count
+     * @param to upper bound (exclusive) of the event start date
+     * @return the number of inscriptions of the user for events started before this date
+     */
+    long countByUserIdAndStatusAndEventStartDateTimeLessThan(Long userId, InscriptionStatus status,
+            LocalDateTime to);
+
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @param eventStatus status of the events of the organizer
+     * @param status status of the inscriptions to count
+     * @param from lower bound (inclusive) of the event start date
+     * @return the number of inscriptions received by the upcoming events of the organizer
+     */
+    @Query("SELECT COUNT(i) FROM Inscription i WHERE i.event.organizer.id = :organizerId "
+            + "AND i.event.status = :eventStatus AND i.status = :status AND i.event.startDateTime >= :from")
+    long countForOrganizerEvents(@Param("organizerId") Long organizerId,
+            @Param("eventStatus") EventStatus eventStatus,
+            @Param("status") InscriptionStatus status, @Param("from") LocalDateTime from);
 }
