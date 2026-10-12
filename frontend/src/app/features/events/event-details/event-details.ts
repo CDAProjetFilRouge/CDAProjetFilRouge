@@ -1,14 +1,33 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { EventDetailsModel } from './event-details-model';
-import { EventDetailsService } from './event-details-service';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { DatePipe } from '@angular/common';
+import { EventDetailsModel, EventStatus } from './event-details-model';
+import { EventDetailsService } from './event-details-service';
 import { CommentModel } from './event-details-comments-model';
+import { InscriptionModel } from './event-details-inscription-model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago-pipe';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ROLE_LABELS } from '../../../core/models/user.models';
 import { URL_IMAGES } from '../../../core/api/api.config';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  CULTURE: 'Culture',
+  SPORT: 'Sport',
+  DIVERTISSEMENT: 'Divertissement',
+};
+
+const STATUS_LABELS: Record<EventStatus, string> = {
+  DRAFT: 'Brouillon',
+  PUBLISHED: 'Publié',
+  CANCELLED: 'Annulé',
+  FINISHED: 'Terminé',
+};
+
+const dayFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric' });
+const monthFormat = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
+const weekdayFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'long' });
+const fullDayFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' });
+const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
+const priceFormat = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 @Component({
   imports: [DatePipe, RouterLink, TimeAgoPipe],
@@ -16,81 +35,305 @@ import { URL_IMAGES } from '../../../core/api/api.config';
   styleUrl: './event-details.scss',
   templateUrl: './event-details.html',
 })
-export class EventDetails {
+export class EventDetails implements OnInit {
   private readonly eventDetailsService = inject(EventDetailsService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
 
   protected readonly user = this.authService.currentUser;
-  protected readonly rolleLabels = ROLE_LABELS;
-  protected readonly errorMessage = signal<string | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly loadError = signal<string | null>(null);
   protected readonly eventDetail = signal<EventDetailsModel | null>(null);
   protected readonly selectedImageIndex = signal(0);
   protected readonly comments = signal<CommentModel[]>([]);
+  protected readonly myInscription = signal<InscriptionModel | null>(null);
 
-  protected imageUrl(path: string): string {
-    return `${URL_IMAGES}${path}`;
-  }
+  protected readonly inscriptionBusy = signal(false);
+  protected readonly inscriptionError = signal<string | null>(null);
+  protected readonly confirmingCancel = signal(false);
+
+  protected readonly commentDraft = signal('');
+  protected readonly commentBusy = signal(false);
+  protected readonly commentError = signal<string | null>(null);
 
   protected readonly canEdit = computed(() => {
     const event = this.eventDetail();
-    const user = this.authService.currentUser();
+    const user = this.user();
     return (
       event !== null && user !== null && (user.role === 'ADMINISTRATOR' || user.id === event.organizerId)
     );
   });
 
-    private handleError(err: HttpErrorResponse): void {
-    this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');
-  }
+  protected readonly categoryLabel = computed(() => {
+    const category = this.eventDetail()?.category ?? '';
+    return CATEGORY_LABELS[category] ?? category;
+  });
+
+  protected readonly statusLabel = computed(() => {
+    const status = this.eventDetail()?.status;
+    return status ? STATUS_LABELS[status] : '';
+  });
+
+  protected readonly isFull = computed(() => (this.eventDetail()?.remainingSpots ?? 0) <= 0);
+
+  protected readonly isEnded = computed(() => {
+    const event = this.eventDetail();
+    return event !== null && new Date(event.endDate).getTime() < Date.now();
+  });
+
+  protected readonly takenRatio = computed(() => {
+    const event = this.eventDetail();
+    if (!event || event.maxCapacity <= 0) {
+      return 0;
+    }
+    const taken = event.maxCapacity - event.remainingSpots;
+    return Math.min(100, Math.max(0, Math.round((taken / event.maxCapacity) * 100)));
+  });
+
+  /** Bloc date du « billet » : jour en grand, mois, jour de la semaine, horaires. */
+  protected readonly dateParts = computed(() => {
+    const event = this.eventDetail();
+    if (!event) {
+      return null;
+    }
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    const sameDay = start.toDateString() === end.toDateString();
+    return {
+      day: dayFormat.format(start),
+      month: monthFormat.format(start).replace('.', ''),
+      weekday: weekdayFormat.format(start),
+      time: sameDay
+        ? `${timeFormat.format(start)} – ${timeFormat.format(end)}`
+        : `${timeFormat.format(start)}, jusqu’au ${fullDayFormat.format(end)} à ${timeFormat.format(end)}`,
+    };
+  });
+
+  protected readonly galleryOrdered = computed(() => {
+    const gallery = this.eventDetail()?.imageGallery ?? [];
+    return [...gallery].sort((a, b) => a.displayOrder - b.displayOrder);
+  });
+
+  /** État du bouton principal de la carte d'inscription. */
+  protected readonly registration = computed<
+    | { kind: 'login' }
+    | { kind: 'blocked'; reason: string }
+    | { kind: 'registered'; waiting: boolean }
+    | { kind: 'open'; waiting: boolean }
+    | null
+  >(() => {
+    const event = this.eventDetail();
+    if (!event) {
+      return null;
+    }
+    if (this.user() === null) {
+      return { kind: 'login' };
+    }
+    const mine = this.myInscription();
+    if (mine) {
+      return { kind: 'registered', waiting: mine.status === 'WAITING_LIST' };
+    }
+    if (event.status === 'CANCELLED') {
+      return { kind: 'blocked', reason: 'Cet évènement a été annulé.' };
+    }
+    if (event.status === 'DRAFT') {
+      return { kind: 'blocked', reason: 'Cet évènement n’est pas encore publié.' };
+    }
+    if (event.status === 'FINISHED' || this.isEnded()) {
+      return { kind: 'blocked', reason: 'Cet évènement est terminé.' };
+    }
+    return { kind: 'open', waiting: this.isFull() };
+  });
 
   ngOnInit(): void {
     const idParam = this.activatedRoute.snapshot.paramMap.get('id');
+    const id = idParam === null ? NaN : parseInt(idParam, 10);
 
-    if(idParam == null){
+    if (Number.isNaN(id)) {
       this.router.navigate(['/']);
-      return
+      return;
     }
 
-    const id = parseInt(idParam);
-
     this.eventDetailsService.getEventDetail(id).subscribe({
-      next: (e) => {
-        this.eventDetail.set(e);
+      next: (event) => {
+        this.eventDetail.set(event);
+        this.loading.set(false);
       },
-      error: (err) => this.handleError(err)
+      error: (err: HttpErrorResponse) => {
+        this.loadError.set(this.messageFrom(err, 'Impossible de charger cet évènement.'));
+        this.loading.set(false);
+      },
     });
 
     this.eventDetailsService.getComments(id).subscribe({
-      next: (c) => {
-        this.comments.set(c);
+      next: (comments) => this.comments.set(comments),
+      error: () => this.comments.set([]),
+    });
+
+    this.loadMyInscription(id);
+  }
+
+  protected imageUrl(path: string): string {
+    return `${URL_IMAGES}${path}`;
+  }
+
+  protected formatPrice(value: number): string {
+    return value === 0 ? 'Gratuit' : priceFormat.format(value);
+  }
+
+  protected initials(firstName: string, lastName: string): string {
+    return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
+  }
+
+  protected canDelete(comment: CommentModel): boolean {
+    const user = this.user();
+    return user !== null && (user.id === comment.author.id || user.role === 'ADMINISTRATOR');
+  }
+
+  // --- Galerie ---
+
+  protected selectImage(index: number): void {
+    this.selectedImageIndex.set(index);
+  }
+
+  protected previousImage(): void {
+    this.shiftImage(-1);
+  }
+
+  protected nextImage(): void {
+    this.shiftImage(1);
+  }
+
+  private shiftImage(step: number): void {
+    const count = this.galleryOrdered().length;
+    if (count === 0) {
+      return;
+    }
+    this.selectedImageIndex.update((index) => (index + step + count) % count);
+  }
+
+  // --- Inscription ---
+
+  protected register(): void {
+    const event = this.eventDetail();
+    const user = this.user();
+    if (!event || !user || this.inscriptionBusy()) {
+      return;
+    }
+
+    this.inscriptionBusy.set(true);
+    this.inscriptionError.set(null);
+
+    this.eventDetailsService.register(user.id, event.id).subscribe({
+      next: (inscription) => {
+        this.myInscription.set(inscription);
+        this.inscriptionBusy.set(false);
+        this.refreshEvent(event.id);
       },
-      error: (err) => this.handleError(err)
+      error: (err: HttpErrorResponse) => {
+        this.inscriptionError.set(this.messageFrom(err, 'L’inscription a échoué. Réessayez dans un instant.'));
+        this.inscriptionBusy.set(false);
+      },
     });
   }
 
-  selectedImage(index: number): void {
-    this.selectedImageIndex.set(index)
+  protected askCancel(): void {
+    this.confirmingCancel.set(true);
   }
 
-  previousImage(): void {
-    const images = this.eventDetail()?.imageGallery ?? [];
-
-    if(images.length === 0) {
-      return
-    }
-
-    this.selectedImageIndex.update(index => (index - 1 + images.length) % images.length);
+  protected keepInscription(): void {
+    this.confirmingCancel.set(false);
   }
 
-  nextImage(): void {
-    const images = this.eventDetail()?.imageGallery ?? [];
-
-    if(images.length === 0) {
-      return
+  protected cancelInscription(): void {
+    const event = this.eventDetail();
+    const mine = this.myInscription();
+    if (!event || !mine || this.inscriptionBusy()) {
+      return;
     }
 
-    this.selectedImageIndex.update( index => (index + 1) % images.length);
+    this.inscriptionBusy.set(true);
+    this.inscriptionError.set(null);
+
+    this.eventDetailsService.cancelInscription(mine.id).subscribe({
+      next: () => {
+        this.myInscription.set(null);
+        this.confirmingCancel.set(false);
+        this.inscriptionBusy.set(false);
+        this.refreshEvent(event.id);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.inscriptionError.set(this.messageFrom(err, 'L’annulation a échoué. Réessayez dans un instant.'));
+        this.inscriptionBusy.set(false);
+      },
+    });
+  }
+
+  private loadMyInscription(eventId: number): void {
+    const user = this.user();
+    if (!user) {
+      return;
+    }
+    this.eventDetailsService.getUserInscriptions(user.id).subscribe({
+      next: (inscriptions) => {
+        const mine = inscriptions.find(
+          (inscription) => inscription.event?.id === eventId && inscription.status !== 'CANCELED',
+        );
+        this.myInscription.set(mine ?? null);
+      },
+      error: () => this.myInscription.set(null),
+    });
+  }
+
+  private refreshEvent(eventId: number): void {
+    this.eventDetailsService.getEventDetail(eventId).subscribe({
+      next: (event) => this.eventDetail.set(event),
+    });
+  }
+
+  // --- Commentaires ---
+
+  protected onDraftInput(event: Event): void {
+    this.commentDraft.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  protected publishComment(): void {
+    const event = this.eventDetail();
+    const content = this.commentDraft().trim();
+    if (!event || content === '' || this.commentBusy()) {
+      return;
+    }
+
+    this.commentBusy.set(true);
+    this.commentError.set(null);
+
+    this.eventDetailsService.postComment(event.id, content).subscribe({
+      next: (created) => {
+        this.comments.update((list) => [created, ...list]);
+        this.commentDraft.set('');
+        this.commentBusy.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.commentError.set(this.messageFrom(err, 'Le commentaire n’a pas pu être publié.'));
+        this.commentBusy.set(false);
+      },
+    });
+  }
+
+  protected deleteComment(comment: CommentModel): void {
+    const event = this.eventDetail();
+    if (!event) {
+      return;
+    }
+    this.eventDetailsService.deleteComment(event.id, comment.id).subscribe({
+      next: () => this.comments.update((list) => list.filter((c) => c.id !== comment.id)),
+      error: (err: HttpErrorResponse) =>
+        this.commentError.set(this.messageFrom(err, 'Le commentaire n’a pas pu être supprimé.')),
+    });
+  }
+
+  private messageFrom(err: HttpErrorResponse, fallback: string): string {
+    return typeof err.error === 'string' && err.error.trim() !== '' ? err.error : fallback;
   }
 }

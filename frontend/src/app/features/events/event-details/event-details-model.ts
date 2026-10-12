@@ -1,15 +1,17 @@
+export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'FINISHED';
+
 export interface EventDetailsModel{
   id: number;
   title: string;
   description: string;
   street1: string;
-  street2: string;
+  street2: string | null;
   city: string;
   postalCode: string;
   country: string;
   category: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
@@ -19,10 +21,10 @@ export interface EventDetailsModel{
       path: string;
       displayOrder: number
     }[],
-  status: string,
-  clubName: string;
+  status: EventStatus,
+  clubName: string | null;
   organizerFirstName: string;
-  organizerLastName: string;
+  // Le backend sérialise ce champ en « organizerLastname » (getter getOrganizerLastname).
+  organizerLastname: string;
   organizerId: number;
 }
-
