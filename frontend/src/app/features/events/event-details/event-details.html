@@ -27,9 +27,12 @@
           </p>
         </div>
 
-        @if (canEdit()) {
-          <a class="btn" [routerLink]="['/events', event.id, 'edit']">Modifier cet évènement</a>
-        }
+        <div class="head-actions">
+          <a class="btn" [href]="pdfUrl(event.id)">Télécharger les détails en PDF</a>
+          @if (canEdit()) {
+            <a class="btn" [routerLink]="['/events', event.id, 'edit']">Modifier cet évènement</a>
+          }
+        </div>
       </div>
     </header>
 

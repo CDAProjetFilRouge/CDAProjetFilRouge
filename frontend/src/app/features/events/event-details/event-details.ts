@@ -7,7 +7,7 @@ import { CommentModel } from './event-details-comments-model';
 import { InscriptionModel } from './event-details-inscription-model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago-pipe';
 import { AuthService } from '../../../core/auth/auth.service';
-import { URL_IMAGES } from '../../../core/api/api.config';
+import { URL_BACKEND, URL_IMAGES } from '../../../core/api/api.config';
 
 const CATEGORY_LABELS: Record<string, string> = {
   CULTURE: 'Culture',
@@ -56,6 +56,10 @@ export class EventDetails implements OnInit {
   protected readonly commentDraft = signal('');
   protected readonly commentBusy = signal(false);
   protected readonly commentError = signal<string | null>(null);
+
+  protected pdfUrl(eventId: number): string {
+    return `${URL_BACKEND}/PDF/event/${eventId}`;
+  }
 
   protected readonly canEdit = computed(() => {
     const event = this.eventDetail();
