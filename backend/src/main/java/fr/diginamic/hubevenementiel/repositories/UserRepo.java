@@ -85,4 +85,11 @@ public interface UserRepo extends JpaRepository<AppUser, Long>, JpaSpecification
      * @return true if user exist or false if not
      */
     boolean existsByEmail(String email);
+
+    /**
+     *
+     * @param status status of the accounts to count
+     * @return the number of accounts with this status
+     */
+    long countByStatus(AccountStatus status);
 }

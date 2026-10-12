@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { ACCOUNT_STATUS_LABELS, AccountStatus, AppUser, Role, ROLE_LABELS } from '../../../../core/models/user.models';
 import { UserService } from '../user.service';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   imports: [DatePipe, RouterLink],
@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 })
 export class UserList {
   private readonly appUserService = inject(UserService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly users = signal<AppUser[]>([]);
 
@@ -24,7 +25,8 @@ export class UserList {
   protected readonly roles = Object.keys(ROLE_LABELS) as Role[];
   protected readonly statuses = Object.keys(ACCOUNT_STATUS_LABELS) as AccountStatus[];
   protected readonly roleFilter = signal<Role | ''>('');
-  protected readonly statusFilter = signal<AccountStatus | ''>('') ;
+  // Pré-filtre possible depuis le tableau de bord : /admin/users?status=SUSPENDED
+  protected readonly statusFilter = signal<AccountStatus | ''>(this.initialStatus());
 
   protected readonly roleLabels = ROLE_LABELS;
 
@@ -36,6 +38,11 @@ export class UserList {
 
   constructor() {
     this.loadUsers();
+  }
+
+  private initialStatus(): AccountStatus | '' {
+    const status = this.route.snapshot.queryParamMap.get('status');
+    return status && status in ACCOUNT_STATUS_LABELS ? (status as AccountStatus) : '';
   }
 
   private handleError(err: HttpErrorResponse): void {

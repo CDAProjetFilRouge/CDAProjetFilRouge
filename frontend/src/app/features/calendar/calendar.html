@@ -1,12 +1,14 @@
-<div class="calendar-page">
-  <h1>Mon calendrier</h1>
+<div class="calendar-page" [class.compact]="compact()">
+  @if (!compact()) {
+    <h1>Mon calendrier</h1>
+  }
 
   @if (errorMessage()) {
     <p class="error">{{ errorMessage() }}</p>
   }
 
   <div class="calendar-layout">
-    <app-event-calendar [events]="calendarEvents()" (eventSelected)="select($event)" />
+    <app-event-calendar [events]="calendarEvents()" [compact]="compact()" (eventSelected)="select($event)" />
 
     <aside class="detail">
       @if (selected(); as ins) {
