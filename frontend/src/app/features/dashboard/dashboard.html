@@ -1,0 +1,53 @@
+<div class="dashboard">
+  <header class="head">
+    @if (user(); as u) {
+      <div class="welcome">
+        <h1>Bonjour {{ u.firstName }}</h1>
+        <p>{{ welcomeMessage() }}</p>
+      </div>
+    }
+
+    <nav class="quick-actions" aria-label="Actions rapides">
+      @for (action of quickActions(); track action.link; let first = $first) {
+        <a class="btn" [class.btn-primary]="first" [routerLink]="action.link">{{ action.label }}</a>
+      }
+    </nav>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="error" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button type="button" class="retry" (click)="loadKpis()">Réessayer</button>
+    </div>
+  }
+
+  <div class="body" [class.with-calendar]="showCalendar()">
+    <section class="kpis" aria-label="Indicateurs" [attr.aria-busy]="loading()">
+      @if (loading() && kpis().length === 0) {
+        @for (n of [1, 2, 3, 4]; track n) {
+          <div class="kpi skeleton" aria-hidden="true">
+            <span class="value"></span>
+            <span class="label"></span>
+          </div>
+        }
+      } @else {
+        @for (kpi of kpis(); track kpi.code) {
+          <div class="kpi" [class.attention]="kpi.needsAttention">
+            <span class="value">{{ kpi.value }}</span>
+            @if (kpi.link) {
+              <a class="label link" [routerLink]="kpi.link" [queryParams]="kpi.queryParams">{{ kpi.label }}</a>
+            } @else {
+              <span class="label">{{ kpi.label }}</span>
+            }
+          </div>
+        }
+      }
+    </section>
+
+    @if (showCalendar()) {
+      <section class="calendar-block" aria-label="Mon calendrier">
+        <app-calendar [compact]="true" />
+      </section>
+    }
+  </div>
+</div>

@@ -16,6 +16,8 @@ import { CalendarEvent } from './event-calendar.models';
 })
 export class EventCalendar {
   readonly events = input.required<CalendarEvent[]>();
+  // Intégré au tableau de bord : grille plus basse, sans la vue semaine.
+  readonly compact = input(false);
   readonly eventSelected = output<string>();
 
   protected readonly hovered = signal<{
@@ -30,17 +32,20 @@ export class EventCalendar {
     locale: 'fr',
     firstDay: 1,
     initialView: 'dayGridMonth',
+    ...(this.compact() ? { height: 400, dayMaxEvents: true } : {}),
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listMonth',
+      right: this.compact() ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth',
     },
     events: this.events().map((e) => ({
       id: e.id,
       title: e.title,
       start: e.start,
       end: e.end,
-      color: e.muted ? 'var(--color-muted)' : undefined,
+      // Couleurs explicites : fond plein + texte blanc, y compris dans la vue semaine.
+      color: e.muted ? 'var(--color-muted)' : 'var(--color-primary)',
+      contrastColor: '#fff',
     })),
     eventClick: (info) => this.eventSelected.emit(info.event.id),
     eventMouseEnter: (info) => {

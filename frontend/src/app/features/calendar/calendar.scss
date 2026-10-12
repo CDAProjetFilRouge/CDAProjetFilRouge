@@ -48,3 +48,29 @@
 .error {
   color: var(--color-danger);
 }
+
+// Mode compact (tableau de bord) : le calendrier perd ses marges de page, le détail passe
+// en panneau flottant et n'apparaît que lorsqu'un évènement est sélectionné.
+.calendar-page.compact {
+  padding: 0;
+  font-size: 12px;
+
+  .calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 0;
+  }
+
+  .detail {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 50;
+    width: 300px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(31, 36, 48, 0.12);
+
+    &:has(.empty) {
+      display: none;
+    }
+  }
+}

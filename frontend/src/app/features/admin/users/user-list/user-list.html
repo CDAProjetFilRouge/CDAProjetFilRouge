@@ -15,13 +15,13 @@
 <select id="status" #statusSelect (change)="onStatusFilter(statusSelect.value)">
   <option value="">Tous les statuts</option>
   @for (status of statuses; track status) {
-    <option [value]="status">{{ accountStatusLabels[status] }}</option>
+    <option [value]="status" [selected]="status === statusFilter()">{{ accountStatusLabels[status] }}</option>
   }
 </select>
 <button (click)="onSearch(searchInput.value)">Rechercher</button>
 
 <p>{{ totalElements() }}
-  @@if (totalElements() > 1 ) {
+  @if (totalElements() > 1 ) {
     utilisateurs.
   } @else {
     utilisateur.

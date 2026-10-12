@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
 import { EventCalendar } from '../../shared/event-calendar/event-calendar';
@@ -16,6 +16,9 @@ import { INSCRIPTION_STATUS_LABELS, InscriptionModel } from './calendar.models';
 export class Calendar {
   private readonly auth = inject(AuthService);
   private readonly calendarService = inject(CalendarService);
+
+  // Intégré au tableau de bord : pas de titre, grille plus basse, détail flottant.
+  readonly compact = input(false);
 
   protected readonly inscriptions = signal<InscriptionModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
