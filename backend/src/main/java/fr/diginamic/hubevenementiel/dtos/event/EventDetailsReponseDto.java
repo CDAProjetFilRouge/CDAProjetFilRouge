@@ -32,6 +32,7 @@ public class EventDetailsReponseDto {
     private String clubName;
     private String organizerFirstName;
     private String organizerLastname;
+    private Long organizerId;
     //endregion
 
     //region Constructor
@@ -225,6 +226,14 @@ public class EventDetailsReponseDto {
 
     public void setOrganizerLastname(String organizerLastname) {
         this.organizerLastname = organizerLastname;
+    }
+
+    public Long getOrganizerId() {
+        return organizerId;
+    }
+
+    public void setOrganizerId(Long organizerId) {
+        this.organizerId = organizerId;
     }
     //endregion
 }

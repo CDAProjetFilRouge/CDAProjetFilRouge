@@ -2,6 +2,13 @@ import { Category } from '../../../core/models/user.models';
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'FINISHED';
 
+export const EVENT_STATUS_STEPS: { status: EventStatus; label: string }[] = [
+  { status: 'DRAFT', label: 'Brouillon' },
+  { status: 'PUBLISHED', label: 'Publié' },
+  { status: 'CANCELLED', label: 'Annulé' },
+  { status: 'FINISHED', label: 'Terminé' },
+];
+
 export const EVENT_CATEGORY_LABELS: Record<Category, string> = {
   CULTURE: 'Culture',
   SPORT: 'Sport',
@@ -26,11 +33,37 @@ export interface EventRequest {
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
-  idClub: number;
+  idClub?: number;
   status?: EventStatus;
 }
 
 export interface EventSaved {
   id: number;
   status: EventStatus;
+}
+
+export interface EventImage {
+  id: number;
+  path: string;
+  displayOrder: number;
+}
+
+export interface EventDetail {
+  id: number;
+  title: string;
+  description: string;
+  street1: string;
+  street2: string | null;
+  postalCode: string;
+  city: string;
+  country: string;
+  category: Category;
+  startDate: string;
+  endDate: string;
+  affiliatePrice: number;
+  nonAffiliatePrice: number;
+  maxCapacity: number;
+  status: EventStatus;
+  organizerId: number;
+  imageGallery: EventImage[];
 }
