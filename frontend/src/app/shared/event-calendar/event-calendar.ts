@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, input, output, signal } from '@angular/core';
-import { CalendarOptions, FullCalendarModule } from '@fullcalendar/angular';
+import { Component, computed, input, output, signal, viewChild } from '@angular/core';
+import { CalendarOptions, FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 import dayGridPlugin from '@fullcalendar/angular/daygrid';
 import listPlugin from '@fullcalendar/angular/list';
 import localesAll from '@fullcalendar/angular/locales-all';
@@ -25,6 +25,9 @@ export class EventCalendar {
   readonly highlightedMark = input<'plus' | 'check' | 'none'>('none');
   readonly eventSelected = output<string>();
 
+  private readonly calendar = viewChild(FullCalendarComponent);
+  protected readonly title = signal('');
+
   protected readonly hovered = signal<{
     event: CalendarEvent;
     top: number;
@@ -45,7 +48,18 @@ export class EventCalendar {
           eventDisplay: 'block',
           displayEventTime: false,
           initialDate: this.initialDate(),
-          dayCellClass: 'agenda-cell',
+          dayCellClass: (info) =>
+            [
+              'agenda-cell',
+              info.isOther ? 'is-other' : '',
+              info.isToday ? 'is-today' : '',
+              info.dow === 0 || info.dow === 6 ? 'is-weekend' : '',
+            ]
+              .filter(Boolean)
+              .join(' '),
+          dayCellTopInnerClass: (info) =>
+            info.isToday ? 'agenda-day-number is-today' : 'agenda-day-number',
+          dayHeaderClass: 'agenda-head',
           eventClass: (info) =>
             info.event.id === this.highlightedId()
               ? `agenda-event is-highlighted${info.isStart ? ` mark-${this.highlightedMark()}` : ''}`
@@ -54,11 +68,14 @@ export class EventCalendar {
           eventTitleClass: 'agenda-event-title',
         }
       : {}),
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: this.large() ? '' : 'dayGridMonth,timeGridWeek,listMonth',
-    },
+    headerToolbar: this.large()
+      ? false
+      : {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,listMonth',
+        },
+    datesSet: (info) => this.title.set(info.view.title),
     events: this.events().map((e) => ({
       id: e.id,
       title: e.title,
@@ -81,4 +98,16 @@ export class EventCalendar {
     },
     eventMouseLeave: () => this.hovered.set(null),
   }));
+
+  protected previous(): void {
+    this.calendar()?.getApi().prev();
+  }
+
+  protected next(): void {
+    this.calendar()?.getApi().next();
+  }
+
+  protected today(): void {
+    this.calendar()?.getApi().today();
+  }
 }
