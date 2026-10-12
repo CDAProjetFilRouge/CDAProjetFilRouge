@@ -26,6 +26,15 @@ export class Calendar {
   protected readonly selected = signal<InscriptionModel | null>(null);
   protected readonly statusLabels = INSCRIPTION_STATUS_LABELS;
 
+  protected readonly hovered = signal<{ ins: InscriptionModel; top: number; left: number } | null>(
+    null,
+  );
+
+  protected readonly canCancel = computed(() => {
+    const ins = this.selected();
+    return ins !== null && new Date(ins.event.startDateTime) > new Date();
+  });
+
   private load(userId: number): void {
     this.calendarService.getByUser(userId).subscribe({
       next: (list) => this.inscriptions.set(list),
@@ -52,8 +61,8 @@ export class Calendar {
     locale: 'fr',
     firstDay: 1,
     initialView: 'dayGridMonth',
-    headerToolBar: {
-      left: 'prev, next today',
+    headerToolbar: {
+      left: 'prev,next today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,listMonth',
     },
@@ -63,11 +72,41 @@ export class Calendar {
         id: String(i.id),
         title: i.event.title,
         start: i.event.startDateTime,
+        end: i.event.endDateTime,
         classNames: i.status === 'WAITING_LIST' ? ['waiting'] : [],
+        color: i.status === 'WAITING_LIST' ? 'var(--color-muted)' : undefined,
       })),
     eventClick: (info) => {
-      const found = this.inscriptions().find((i) => i.id === Number(info.event.id));
-      this.selected.set(found ?? null);
+      this.selected.set(this.findInscription(info.event.id) ?? null);
     },
+    eventMouseEnter: (info) => {
+      const ins = this.findInscription(info.event.id);
+      if (!ins) return;
+      const rect = info.el.getBoundingClientRect();
+      this.hovered.set({
+        ins,
+        top: rect.bottom + 6,
+        left: Math.min(rect.left, window.innerWidth - 260),
+      });
+    },
+    eventMouseLeave: () => this.hovered.set(null),
   }));
+
+  protected cancel(): void {
+    const ins = this.selected();
+    const user = this.auth.currentUser();
+    if (!ins || !user) return;
+
+    this.calendarService.cancel(ins.id).subscribe({
+      next: () => {
+        this.selected.set(null);
+        this.load(user.id);
+      },
+      error: (err: HttpErrorResponse) => this.handleError(err),
+    });
+  }
+
+  private findInscription(eventId: string): InscriptionModel | undefined {
+    return this.inscriptions().find((i) => i.id === Number(eventId));
+  }
 }
