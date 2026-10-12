@@ -1,0 +1,115 @@
+<section class="hero">
+  <div class="hero-text">
+    <h1>Tous les évènements de vos clubs, au même endroit</h1>
+    <p>
+      Tournois, sorties culturelles, réunions : retrouvez ce qui se passe dans les clubs de la
+      fédération et réservez votre place en quelques clics.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" routerLink="/createAccount">Créer un compte</a>
+      <a class="btn btn-lg" routerLink="/catalogue">Parcourir le catalogue</a>
+    </div>
+    <p class="hero-login">Déjà membre ? <a routerLink="/login">Se connecter</a></p>
+  </div>
+
+  <div
+    class="carousel"
+    role="region"
+    aria-roledescription="carousel"
+    aria-label="Prochains évènements"
+    (mouseenter)="paused.set(true)"
+    (mouseleave)="paused.set(false)"
+    (focusin)="paused.set(true)"
+    (focusout)="paused.set(false)"
+  >
+    @if (events().length > 0) {
+      <div class="track" [style.transform]="'translateX(-' + index() * 100 + '%)'">
+        @for (event of events(); track event.id; let i = $index) {
+          <article
+            class="slide"
+            role="group"
+            aria-roledescription="diapositive"
+            [attr.aria-label]="i + 1 + ' sur ' + events().length"
+            [attr.aria-hidden]="i !== index()"
+            [attr.inert]="i !== index() ? '' : null"
+          >
+            @if (imageUrl(event); as src) {
+              <img [src]="src" alt="" />
+            }
+            <div class="slide-body">
+              <span class="badge">{{ categoryLabel(event.category) }}</span>
+              <h2>{{ event.title }}</h2>
+              <p>
+                {{ event.startDateTime | date: 'dd/MM/yyyy' }} · {{ event.location.city }}
+                @if (event.organizerClubs.length > 0) {
+                  · {{ event.organizerClubs.join(', ') }}
+                }
+              </p>
+              <a class="btn" [routerLink]="['/event-details', event.id]">Voir le détail</a>
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (events().length > 1) {
+        <div class="carousel-controls">
+          <button type="button" class="arrow" aria-label="Évènement précédent" (click)="previous()">‹</button>
+          <div class="dots">
+            @for (event of events(); track event.id; let i = $index) {
+              <button
+                type="button"
+                class="dot"
+                [class.active]="i === index()"
+                [attr.aria-label]="'Afficher l’évènement ' + (i + 1)"
+                [attr.aria-current]="i === index()"
+                (click)="goTo(i)"
+              ></button>
+            }
+          </div>
+          <button type="button" class="arrow" aria-label="Évènement suivant" (click)="next()">›</button>
+        </div>
+      }
+    } @else {
+      <div class="carousel-empty">
+        <h2>Les prochains évènements arrivent</h2>
+        <p>Créez un compte pour être parmi les premiers à vous inscrire.</p>
+      </div>
+    }
+  </div>
+</section>
+
+<section class="steps">
+  <h2>Comment ça marche</h2>
+  <ol>
+    @for (step of steps; track step.title; let n = $index) {
+      <li>
+        <span class="step-number" aria-hidden="true">{{ n + 1 }}</span>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.text }}</p>
+      </li>
+    }
+  </ol>
+</section>
+
+@if (clubs().length > 0) {
+  <section class="clubs">
+    <div class="section-head">
+      <h2>Les clubs de la fédération</h2>
+      <a routerLink="/clubs">Voir tous les clubs</a>
+    </div>
+    <ul>
+      @for (club of clubs(); track club.id) {
+        <li>
+          <span class="club-name">{{ club.name }}</span>
+          <span class="badge">{{ categoryLabel(club.category) }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<section class="cta">
+  <h2>Prêt à rejoindre vos clubs&nbsp;?</h2>
+  <p>La création d’un compte est gratuite et prend moins d’une minute.</p>
+  <a class="btn btn-primary btn-lg" routerLink="/createAccount">Créer un compte</a>
+</section>
