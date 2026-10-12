@@ -1,0 +1,167 @@
+<div class="event-form-page">
+  <h1>Créer un évènement</h1>
+
+  @if (clubs().length === 0) {
+    <p class="notice">Vous devez appartenir à un club pour créer un évènement.</p>
+  }
+
+  <form class="layout" [formGroup]="form" (ngSubmit)="saveDraft()">
+    <div class="main">
+      <div class="field">
+        <label for="title">Titre</label>
+        <input id="title" type="text" formControlName="title" placeholder="Titre de l'évènement" />
+        @if (showError('title')) {
+          <p class="field-error">Le titre est obligatoire (200 caractères maximum).</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea id="description" rows="4" formControlName="description"
+          placeholder="Texte de description"></textarea>
+        @if (showError('description')) {
+          <p class="field-error">La description est obligatoire.</p>
+        }
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="category">Catégorie</label>
+          <select id="category" formControlName="category">
+            @for (c of categories; track c) {
+              <option [value]="c">{{ categoryLabels[c] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="clubId">Club organisateur</label>
+          <select id="clubId" formControlName="clubId">
+            <option [ngValue]="null" disabled>Choisir un club</option>
+            @for (club of clubs(); track club.id) {
+              <option [ngValue]="club.id">{{ club.name }}</option>
+            }
+          </select>
+          @if (showError('clubId')) {
+            <p class="field-error">Le club est obligatoire.</p>
+          }
+        </div>
+      </div>
+
+      <fieldset class="location" formGroupName="location">
+        <legend>Lieu</legend>
+
+        <div class="field">
+          <label for="street1">Adresse</label>
+          <input id="street1" type="text" formControlName="street1" placeholder="12 rue de la Paix" />
+          @if (showError('location.street1')) {
+            <p class="field-error">L'adresse est obligatoire.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="street2">Complément d'adresse</label>
+          <input id="street2" type="text" formControlName="street2" />
+        </div>
+
+        <div class="row three">
+          <div class="field">
+            <label for="postalCode">Code postal</label>
+            <input id="postalCode" type="text" formControlName="postalCode" />
+            @if (showError('location.postalCode')) {
+              <p class="field-error">Le code postal est obligatoire.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="city">Ville</label>
+            <input id="city" type="text" formControlName="city" />
+            @if (showError('location.city')) {
+              <p class="field-error">La ville est obligatoire.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="country">Pays</label>
+            <input id="country" type="text" formControlName="country" />
+            @if (showError('location.country')) {
+              <p class="field-error">Le pays est obligatoire.</p>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="row">
+        <div class="field">
+          <label for="startDateTime">Date et heure de début</label>
+          <input id="startDateTime" type="datetime-local" formControlName="startDateTime" />
+          @if (showError('startDateTime')) {
+            <p class="field-error">La date de début est obligatoire.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="endDateTime">Date et heure de fin</label>
+          <input id="endDateTime" type="datetime-local" formControlName="endDateTime" />
+          @if (showError('endDateTime')) {
+            <p class="field-error">La date de fin est obligatoire.</p>
+          }
+          @if (form.touched && form.hasError('endBeforeStart')) {
+            <p class="field-error">La date de fin doit être postérieure à la date de début.</p>
+          }
+        </div>
+      </div>
+
+      <div class="row three">
+        <div class="field">
+          <label for="maxCapacity">Places maximum</label>
+          <input id="maxCapacity" type="number" min="1" formControlName="maxCapacity" />
+          @if (showError('maxCapacity')) {
+            <p class="field-error">Au moins une place.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="affiliatePrice">Tarif affilié (€)</label>
+          <input id="affiliatePrice" type="number" min="0" step="0.01" formControlName="affiliatePrice" />
+          @if (showError('affiliatePrice')) {
+            <p class="field-error">Le tarif ne peut pas être négatif.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="nonAffiliatePrice">Tarif non affilié (€)</label>
+          <input id="nonAffiliatePrice" type="number" min="0" step="0.01"
+            formControlName="nonAffiliatePrice" />
+          @if (showError('nonAffiliatePrice')) {
+            <p class="field-error">Le tarif ne peut pas être négatif.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <section class="rules">
+        <h2>Règles de propriété</h2>
+        <p>Seul le propriétaire peut modifier ou supprimer cet évènement.</p>
+        <p>Un évènement passé n'est modifiable que pour ajouter des images.</p>
+        <p>Seul un évènement futur peut être supprimé.</p>
+      </section>
+
+      @if (errorMessage()) {
+        <p class="form-error">{{ errorMessage() }}</p>
+      }
+      @if (successMessage()) {
+        <p class="form-success">{{ successMessage() }}</p>
+      }
+
+      <button class="btn" type="submit" [disabled]="isSubmitting() || clubs().length === 0">
+        Enregistrer le brouillon
+      </button>
+      <button class="btn btn-primary" type="button" (click)="publish()"
+        [disabled]="isSubmitting() || clubs().length === 0">
+        Publier
+      </button>
+    </aside>
+  </form>
+</div>

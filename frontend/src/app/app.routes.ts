@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/auth/admin-guard';
 import { authGuard } from './core/auth/auth-guard';
+import { organizerGuard } from './core/auth/organizer-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
 import { Club } from './features/clubs/club/club';
 import { EventDetails } from './features/events/event-details/event-details';
@@ -91,5 +92,11 @@ export const routes: Routes = [
     path: 'calendar',
     canActivate: [authGuard],
     loadComponent: () => import('./features/calendar/calendar').then((m) => m.Calendar),
+  },
+  {
+    path: 'events/new',
+    canActivate: [authGuard, organizerGuard],
+    loadComponent: () =>
+      import('./features/events/event-form/event-form').then((m) => m.EventForm),
   },
 ];
