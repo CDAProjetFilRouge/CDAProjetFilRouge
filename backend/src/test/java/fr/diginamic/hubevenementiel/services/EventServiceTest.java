@@ -67,7 +67,12 @@ class EventServiceTest {
         validEvent = new Event();
         validEvent.setTitle("Marathon de Rennes");
         validEvent.setDescription("Une belle course.");
-        validEvent.setLocation(new Address());
+        Address address = new Address();
+        address.setStreet1("12 rue de la Paix");
+        address.setPostalCode("75002");
+        address.setCity("Paris");
+        address.setCountry("France");
+        validEvent.setLocation(address);
         validEvent.setCategory(Category.SPORT);
         validEvent.setStartDateTime(LocalDateTime.now().plusDays(10));
         validEvent.setEndDateTime(LocalDateTime.now().plusDays(10).plusHours(3));
@@ -184,6 +189,38 @@ class EventServiceTest {
     @Test
     void eventChecker_negativeNonAffiliatePrice_throwsBadRequest() {
         validEvent.setNonAffiliatePrice(BigDecimal.valueOf(-1));
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    // ---------------------------------------------------------------
+    // eventChecker : longueurs alignées sur les colonnes
+    // ---------------------------------------------------------------
+
+    @Test
+    void eventChecker_descriptionTooLong_throwsBadRequest() {
+        validEvent.setDescription("a".repeat(10_001));
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_descriptionAtLimit_isAccepted() throws HttpException {
+        validEvent.setDescription("a".repeat(10_000));
+
+        assertThat(eventService.eventChecker(validEvent)).isTrue();
+    }
+
+    @Test
+    void eventChecker_cityTooLong_throwsBadRequest() {
+        validEvent.getLocation().setCity("v".repeat(101));
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_missingStreet_throwsBadRequest() {
+        validEvent.getLocation().setStreet1(" ");
+
         assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
     }
 
