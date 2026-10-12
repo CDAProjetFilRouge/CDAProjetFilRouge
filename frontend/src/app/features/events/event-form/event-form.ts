@@ -23,6 +23,29 @@ import {
 } from './event-form.models';
 import { EventFormService } from './event-form.service';
 
+const MAX_PRICE = 99999999.99;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGES = 10;
+const MAX_CAPACITY = 100000;
+const POSTAL_CODE_PATTERN = /^\d{4,5}$/;
+
+function yearInRange(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as string;
+  if (!value) {
+    return null;
+  }
+  const year = Number(value.slice(0, 4));
+  return year >= 1900 && year <= 2100 ? null : { yearRange: true };
+}
+
+function startInFuture(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as string;
+  if (!value) {
+    return null;
+  }
+  return new Date(value).getTime() > Date.now() ? null : { startInPast: true };
+}
+
 function endAfterStart(group: AbstractControl): ValidationErrors | null {
   const start = group.get('startDateTime')?.value as string;
   const end = group.get('endDateTime')?.value as string;
@@ -73,6 +96,9 @@ export class EventForm {
       (user.role === 'ADMINISTRATOR' || detail.organizerId === user.id)
     );
   });
+  protected readonly canAddImage = computed(
+    () => this.isOwner() && (this.detail()?.imageGallery.length ?? 0) < MAX_IMAGES,
+  );
   protected readonly canEditFields = computed(() => this.isOwner() && !this.isPast());
   protected readonly canPublish = computed(
     () => this.isEdit && this.canEditFields() && this.status() === 'DRAFT',
@@ -81,21 +107,30 @@ export class EventForm {
   protected readonly form = this.formBuilder.group(
     {
       title: ['', [Validators.required, Validators.maxLength(200)]],
-      description: ['', Validators.required],
+      description: ['', [Validators.required, Validators.maxLength(10000)]],
       location: this.formBuilder.group({
-        street1: ['', Validators.required],
-        street2: [''],
-        postalCode: ['', Validators.required],
-        city: ['', Validators.required],
-        country: ['France', Validators.required],
+        street1: ['', [Validators.required, Validators.maxLength(255)]],
+        street2: ['', Validators.maxLength(255)],
+        postalCode: ['', [Validators.required, Validators.pattern(POSTAL_CODE_PATTERN)]],
+        city: ['', [Validators.required, Validators.maxLength(100)]],
+        country: ['France', [Validators.required, Validators.maxLength(100)]],
       }),
       category: ['CULTURE' as Category],
       clubId: [null as number | null, Validators.required],
-      startDateTime: ['', Validators.required],
-      endDateTime: ['', Validators.required],
-      maxCapacity: [null as number | null, [Validators.required, Validators.min(1)]],
-      affiliatePrice: [null as number | null, [Validators.required, Validators.min(0)]],
-      nonAffiliatePrice: [null as number | null, [Validators.required, Validators.min(0)]],
+      startDateTime: ['', [Validators.required, yearInRange, startInFuture]],
+      endDateTime: ['', [Validators.required, yearInRange]],
+      maxCapacity: [
+        null as number | null,
+        [Validators.required, Validators.min(1), Validators.max(MAX_CAPACITY)],
+      ],
+      affiliatePrice: [
+        null as number | null,
+        [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
+      ],
+      nonAffiliatePrice: [
+        null as number | null,
+        [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
+      ],
     },
     { validators: endAfterStart },
   );
@@ -160,6 +195,21 @@ export class EventForm {
       return;
     }
     this.errorMessage.set('');
+    if (file.size > MAX_IMAGE_BYTES) {
+      input.value = '';
+      this.errorMessage.set("L'image ne peut pas dépasser 5 Mo.");
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      input.value = '';
+      this.errorMessage.set('Le fichier doit être une image.');
+      return;
+    }
+    if ((this.detail()?.imageGallery.length ?? 0) >= MAX_IMAGES) {
+      input.value = '';
+      this.errorMessage.set('Un évènement ne peut pas avoir plus de 10 images.');
+      return;
+    }
     this.eventFormService.uploadImage(this.eventId, file).subscribe({
       next: (image) => {
         this.detail.update((d) => (d ? { ...d, imageGallery: [...d.imageGallery, image] } : d));
@@ -281,7 +331,22 @@ export class EventForm {
   }
 
   private reasonOf(error: HttpErrorResponse, fallback: string): string {
-    return typeof error.error === 'string' && error.error ? error.error : fallback;
+    if (typeof error.error === 'string' && error.error) {
+      return error.error;
+    }
+    if (error.status === 0) {
+      return 'Le serveur est injoignable. Vérifiez votre connexion et réessayez.';
+    }
+    if (error.status === 400) {
+      return `${fallback} Le serveur refuse certaines valeurs : vérifiez les tarifs, les dates et le nombre de places.`;
+    }
+    if (error.status === 401 || error.status === 403) {
+      return "Vous n'avez pas le droit d'effectuer cette action.";
+    }
+    if (error.status >= 500) {
+      return `${fallback} Le serveur a rencontré une erreur (${error.status}). Réessayez, et prévenez l'équipe si cela continue.`;
+    }
+    return fallback;
   }
 
   private toRequest(): EventRequest {
