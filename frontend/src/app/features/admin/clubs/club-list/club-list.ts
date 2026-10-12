@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../../../core/ui/confirm.service';
 import { Component, inject, signal } from '@angular/core';
 import { ClubService } from '../club.service';
 import { Club, CLUB_CATEGORY_LABELS, ClubCategory } from '../club.models';
@@ -12,6 +13,7 @@ import { RouterLink } from '@angular/router';
   templateUrl: './club-list.html',
 })
 export class ClubList {
+  private readonly confirmDialog = inject(ConfirmService);
 
   private readonly clubService = inject(ClubService);
 
@@ -68,8 +70,14 @@ export class ClubList {
     });
   }
 
-  protected onDelete(id: number): void {
-    if (!confirm('Voulez-vous vraiment désaffilier ce club ?')) {
+  protected async onDelete(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Désaffilier ce club',
+      message: 'Le club ne sera plus affilié à la fédération.',
+      confirmLabel: 'Désaffilier',
+      tone: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
     this.deleteClub(id);

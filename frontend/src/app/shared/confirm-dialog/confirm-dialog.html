@@ -1,0 +1,18 @@
+<dialog #dialog class="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-message"
+  (close)="onClosed()">
+  @if (confirmService.request(); as r) {
+    <div class="body">
+      <h2 id="confirm-title">{{ r.title }}</h2>
+      <p id="confirm-message">{{ r.message }}</p>
+    </div>
+    <footer>
+      <button type="button" class="btn" autofocus (click)="confirmService.answer(false)">
+        {{ r.cancelLabel }}
+      </button>
+      <button type="button" class="btn" [class.btn-primary]="r.tone === 'primary'"
+        [class.btn-danger]="r.tone === 'danger'" (click)="confirmService.answer(true)">
+        {{ r.confirmLabel }}
+      </button>
+    </footer>
+  }
+</dialog>

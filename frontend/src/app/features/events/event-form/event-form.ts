@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../../core/ui/confirm.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
@@ -35,6 +36,7 @@ function endAfterStart(group: AbstractControl): ValidationErrors | null {
   templateUrl: './event-form.html',
 })
 export class EventForm {
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly eventFormService = inject(EventFormService);
   private readonly authService = inject(AuthService);
@@ -52,7 +54,6 @@ export class EventForm {
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly isSubmitting = signal(false);
-  protected readonly confirmingDelete = signal(false);
 
   protected readonly clubs = computed(() => this.authService.currentUser()?.clubs ?? []);
   protected readonly status = computed<EventStatus>(() => this.detail()?.status ?? 'DRAFT');
@@ -130,16 +131,17 @@ export class EventForm {
     this.submit(true);
   }
 
-  protected askDelete(): void {
-    this.confirmingDelete.set(true);
-  }
-
-  protected cancelDelete(): void {
-    this.confirmingDelete.set(false);
-  }
-
-  protected confirmDelete(): void {
+  protected async askDelete(): Promise<void> {
     if (this.eventId === null) {
+      return;
+    }
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Supprimer cet évènement',
+      message: "L'évènement sera supprimé définitivement.",
+      confirmLabel: 'Supprimer',
+      tone: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
     this.isSubmitting.set(true);
@@ -147,7 +149,6 @@ export class EventForm {
       next: () => this.router.navigateByUrl('/'),
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
-        this.confirmingDelete.set(false);
         this.errorMessage.set(this.reasonOf(error, "Impossible de supprimer l'évènement."));
       },
     });
