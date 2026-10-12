@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,8 @@ public class CommentController implements CommentApi {
 
     @Override
     @PostMapping
-    public ResponseEntity<CommentResponseDto> create(@PathVariable Long eventId, @RequestParam String content) throws HttpException {
+    public ResponseEntity<CommentResponseDto> create(@PathVariable Long eventId, @RequestBody Map<String, String> body) throws HttpException {
+        String content = body.get("content");
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment created = commentService.createComment(eventId, principal.id(), content);
         return ResponseEntity.status(HttpStatus.CREATED).body(commentMapper.toDto(created));

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { EventDetailsModel } from './event-details-model';
 import { Observable } from 'rxjs';
@@ -15,5 +15,9 @@ export class EventDetailsService {
 
   getComments(eventId: number): Observable<CommentModel[]>{
     return this.http.get<CommentModel[]>(`${URL_BACKEND}/events/${eventId}/comments`)
+  }
+
+  publishComment(idEvent: number, content: string): Observable<CommentModel>{
+    return this.http.post<CommentModel>(`${URL_BACKEND}/events/${idEvent}/comments`, { content });
   }
 }

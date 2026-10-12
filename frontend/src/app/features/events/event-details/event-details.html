@@ -44,15 +44,15 @@
     <h3>Commentaire {{comments().length}}</h3>
     @if (user()){
       <div class="write-comment-section">
-        <form>
-          <textarea id="type-comment" rows="10"></textarea>
+        <form [formGroup]="commentContent" (ngSubmit)="submitComment()">
+          <textarea id="type-comment" rows="10" formControlName="content" placeholder="Écrivez un commentaire"></textarea>
           <button type="submit">Publier</button>
         </form>
       </div>
     }
     <div class="comments">
       @for (comment of comments(); track comment.id) {
-        <h5>{{ comment.author.firstName}} {{comment.author.lastName[0]}}. - {{ comment.creationDate | timeAgo}} @if(user()?.id == comment.author.id || user()?.role == rolleLabels.ADMINISTRATOR){<button>SUPPRIMER</button>}</h5>
+        <h5>{{ comment.author.firstName}} {{comment.author.lastName[0]}}. - {{ comment.creationDate | timeAgo}} @if(user()?.id === comment.author.id || user()?.role === roles.ADMIN){<button>SUPPRIMER</button>}</h5>
         <p>{{ comment.content}}</p>
       }
     </div>
