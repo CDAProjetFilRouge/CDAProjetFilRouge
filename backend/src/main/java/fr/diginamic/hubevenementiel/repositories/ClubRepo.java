@@ -63,4 +63,18 @@ public interface ClubRepo extends JpaRepository<Club, Long>, JpaSpecificationExe
      * @return true if the user owns at least one club
      */
     boolean existsByOwnerId(Long ownerId);
+
+    /**
+     *
+     * @return the number of clubs that are not disaffiliated
+     */
+    long countByEndValidityDateIsNull();
+
+    /**
+     *
+     * @param userId id of the member
+     * @return the number of non disaffiliated clubs the user belongs to
+     */
+    @Query("SELECT COUNT(c) FROM AppUser u JOIN u.clubs c WHERE u.id = :userId AND c.endValidityDate IS NULL")
+    long countActiveByMemberId(@Param("userId") Long userId);
 }
