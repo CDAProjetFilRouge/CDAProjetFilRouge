@@ -4,7 +4,7 @@
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="field">
       <label for="firstName">Prénom</label>
-      <input id="firstName" type="text" formControlName="firstName" />
+      <input id="firstName" type="text" placeholder="Ex. : Marie" formControlName="firstName" />
       @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
         <p class="field-error">Le prénom est obligatoire.</p>
       }
@@ -12,7 +12,7 @@
 
     <div class="field">
       <label for="lastName">Nom</label>
-      <input id="lastName" type="text" formControlName="lastName" />
+      <input id="lastName" type="text" placeholder="Ex. : Dupont" formControlName="lastName" />
       @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
         <p class="field-error">Le nom est obligatoire.</p>
       }
@@ -20,7 +20,7 @@
 
     <div class="field">
       <label for="email">Adresse email</label>
-      <input id="email" type="email" formControlName="email" />
+      <input id="email" type="email" placeholder="Ex. : marie.dupont@exemple.fr" formControlName="email" />
       @if (form.controls.email.touched && form.controls.email.hasError('required')) {
         <p class="field-error">L'adresse email est obligatoire.</p>
       }
@@ -55,7 +55,7 @@
 
     <div class="field">
       <label for="phone">Téléphone</label>
-      <input id="phone" type="tel" formControlName="phone" />
+      <input id="phone" type="tel" placeholder="Ex. : 05 61 23 45 67" formControlName="phone" />
       @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
         <p class="field-error">Le numéro de téléphone est obligatoire.</p>
       }

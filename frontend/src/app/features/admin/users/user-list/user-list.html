@@ -61,36 +61,42 @@
       <td>{{ accountStatusLabels[user.status] }}</td>
       <td>{{ user.creationDate | date: 'dd/MM/yyyy' }}</td>
       <td>
-        <button [routerLink]="['/admin/users', user.id, 'edit']">
-          Modifier
-        </button>
+        <div class="actions">
+          <button [routerLink]="['/admin/users', user.id, 'edit']">Modifier</button>
 
-        @if (user.status === 'SUSPENDED') {
-          <button (click)="onReactivate(user.id)">
-            Réactiver
-          </button>
-        } @else {
-          <button class="danger" (click)="startSuspension(user.id)">Suspendre</button>
-
-          @if (suspendingId() === user.id) {
-            <input type="datetime-local" #suspensionEndDate>
-            <small>Laisser vide pour une suspension définitive.</small>
-            <button class="primary" (click)="confirmSuspension(user.id, suspensionEndDate.value)">Confirmer</button>
-            <button (click)="suspendingId.set(null)">Annuler</button>
+          @if (user.status === 'SUSPENDED') {
+            <button (click)="onReactivate(user.id)">Réactiver</button>
+          } @else {
+            <button class="warning" (click)="startSuspension(user)">Suspendre</button>
           }
 
-        }
-
-
-        <button class="danger" (click)="onDelete(user.id)">
-          Supprimer
-        </button>
+          <button class="danger" (click)="onDelete(user.id)">Supprimer</button>
+        </div>
       </td>
     </tr>
     }
   </tbody>
 </table>
 
-<button (click)="goToPage(page() - 1)" [disabled]="page() === 0">Précédent</button>
-<span>Page {{ page() + 1 }} sur {{ totalPages() }}</span>
-<button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()">Suivant</button>
+<nav class="pagination" aria-label="Pagination">
+  <button (click)="goToPage(page() - 1)" [disabled]="page() === 0" aria-label="Page précédente">‹</button>
+  <span>Page {{ page() + 1 }} / {{ totalPages() || 1 }}</span>
+  <button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()" aria-label="Page suivante">›</button>
+</nav>
+
+<dialog #suspendDialog class="suspend" aria-labelledby="suspend-title" (close)="onSuspendDialogClosed()">
+  @if (suspendingUser(); as user) {
+    <div class="body">
+      <h2 id="suspend-title">Suspendre {{ user.firstName }} {{ user.lastName }}</h2>
+      <p>Le compte ne pourra plus se connecter pendant la suspension.</p>
+      <label for="suspension-end">Date de fin de suspension</label>
+      <input id="suspension-end" type="datetime-local" #suspensionEndDate>
+      <small>Laisser vide pour une suspension définitive.</small>
+    </div>
+    <footer>
+      <button type="button" (click)="closeSuspension()">Annuler</button>
+      <button type="button" class="warning solid"
+              (click)="confirmSuspension(user.id, suspensionEndDate.value)">Suspendre</button>
+    </footer>
+  }
+</dialog>
