@@ -34,6 +34,9 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
 
+    /** Plus grand tarif accepté : la colonne est un decimal(10,2). */
+    static final BigDecimal MAX_PRICE = new BigDecimal("99999999.99");
+
     private final EventRepo eventRepository;
     private final InscriptionRepo inscriptionRepo;
     private final ClubService clubService;
@@ -423,6 +426,9 @@ public class EventService {
         if (affiliatePrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Le prix pour les personnes affiliées ne peut pas être négatif.");
         }
+        if (affiliatePrice.compareTo(MAX_PRICE) > 0) {
+            throw new BadRequestException("Le prix pour les personnes affiliées ne peut pas dépasser 99 999 999,99 €.");
+        }
 
         BigDecimal nonAffiliatePrice = event.getNonAffiliatePrice();
         if (nonAffiliatePrice == null) {
@@ -430,6 +436,9 @@ public class EventService {
         }
         if (nonAffiliatePrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Le prix pour les personnes non affiliées ne peut pas être négatif.");
+        }
+        if (nonAffiliatePrice.compareTo(MAX_PRICE) > 0) {
+            throw new BadRequestException("Le prix pour les personnes non affiliées ne peut pas dépasser 99 999 999,99 €.");
         }
 
         if (event.getStatus() == null) {

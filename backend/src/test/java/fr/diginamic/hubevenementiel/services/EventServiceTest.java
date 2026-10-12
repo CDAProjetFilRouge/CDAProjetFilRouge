@@ -188,6 +188,32 @@ class EventServiceTest {
     }
 
     // ---------------------------------------------------------------
+    // eventChecker : plafond des tarifs (decimal(10,2))
+    // ---------------------------------------------------------------
+
+    @Test
+    void eventChecker_affiliatePriceAboveColumnLimit_throwsBadRequest() {
+        validEvent.setAffiliatePrice(new BigDecimal("100000000"));
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_nonAffiliatePriceAboveColumnLimit_throwsBadRequest() {
+        validEvent.setNonAffiliatePrice(new BigDecimal("100000000"));
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_priceAtColumnLimit_isAccepted() throws HttpException {
+        validEvent.setAffiliatePrice(new BigDecimal("99999999.99"));
+        validEvent.setNonAffiliatePrice(new BigDecimal("99999999.99"));
+
+        assertThat(eventService.eventChecker(validEvent)).isTrue();
+    }
+
+    // ---------------------------------------------------------------
     // createEvent
     // ---------------------------------------------------------------
 
