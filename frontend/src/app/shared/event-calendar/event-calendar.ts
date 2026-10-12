@@ -16,7 +16,7 @@ import { CalendarEvent } from './event-calendar.models';
 })
 export class EventCalendar {
   readonly events = input.required<CalendarEvent[]>();
-  // Intégré au tableau de bord : grille plus basse, sans la vue semaine.
+  // Intégré au tableau de bord : grille plus basse.
   readonly compact = input(false);
   readonly eventSelected = output<string>();
 
@@ -36,7 +36,7 @@ export class EventCalendar {
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: this.compact() ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth',
+      right: 'dayGridMonth,timeGridWeek,listMonth',
     },
     events: this.events().map((e) => ({
       id: e.id,
