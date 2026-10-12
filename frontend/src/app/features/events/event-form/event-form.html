@@ -173,7 +173,22 @@
         <section class="gallery">
           <h2>Galerie photos</h2>
           @if (!isEdit) {
-            <p class="hint">Enregistrez le brouillon pour pouvoir ajouter des images.</p>
+            <ul class="images">
+              @for (item of pendingImages(); track item.url; let i = $index) {
+                <li>
+                  <img [src]="item.url" alt="Photo à ajouter" />
+                  <button class="btn remove" type="button" (click)="removePending(i)">Retirer</button>
+                </li>
+              }
+            </ul>
+            @if (pendingImages().length < maxImages) {
+              <input #pendingFile class="file" type="file" accept="image/*"
+                aria-label="Ajouter une image" (change)="onPendingFileSelected(pendingFile)" />
+              <button class="btn" type="button" (click)="pendingFile.click()">
+                + Ajouter une image
+              </button>
+            }
+            <p class="hint">Les images sont envoyées quand vous enregistrez le brouillon.</p>
           } @else {
             <ul class="images">
               @for (image of detail()?.imageGallery ?? []; track image.id) {
