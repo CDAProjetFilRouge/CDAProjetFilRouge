@@ -76,6 +76,17 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendInscriptionPromotedEmail(String toEmail, String eventTitle) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderAddress);
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Une place s'est libérée !");
+        message.setText("Bonne nouvelle : une place s'est libérée pour l'évènement \"" + eventTitle + "\".\n\n"
+                + "Votre inscription, jusqu'ici en liste d'attente, est maintenant confirmée.");
+
+        mailSender.send(message);
+    }
+
     public void sendAccountInfoUpdatedEmail(String toEmail) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(senderAddress);
