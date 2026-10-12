@@ -52,8 +52,8 @@
   </tbody>
 </table>
 
-<div class="toolbar">
-  <button (click)="goToPage(page() - 1)" [disabled]="page() === 0">Précédent</button>
-  <span>Page {{ page() + 1 }} sur {{ totalPages() || 1 }}</span>
-  <button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()">Suivant</button>
-</div>
+<nav class="pagination" aria-label="Pagination">
+  <button (click)="goToPage(page() - 1)" [disabled]="page() === 0" aria-label="Page précédente">‹</button>
+  <span>Page {{ page() + 1 }} / {{ totalPages() || 1 }}</span>
+  <button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()" aria-label="Page suivante">›</button>
+</nav>

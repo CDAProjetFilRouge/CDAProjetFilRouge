@@ -18,7 +18,7 @@ export interface Club {
   email: string;
   phone: string;
   endValidityDate?: string | null;
-  address: Address;
+  address: Address | null;
   appUsers: AppUserSummary[];
 }
 
