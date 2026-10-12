@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.Event;
+import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -38,19 +40,52 @@ public class WaitingListService {
      */
     @Transactional
     public void promoteNext(Long eventId) throws NotFoundException {
-        Event event = eventRepo.findByIdForUpdate(eventId)
-                .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
+        Event event = lockEvent(eventId);
+        if (hasStarted(event)) {
+            return;
+        }
+        promote(eventId, 1);
+    }
 
-        if (event.getStartDateTime() != null && event.getStartDateTime().isBefore(LocalDateTime.now())) {
+    /**
+     * Fills every free spot of the event from the waiting list, oldest first.
+     * Used when the capacity of an event is raised.
+     *
+     * @param eventId id of the event whose waiting list is promoted
+     * @throws NotFoundException if the event does not exist
+     */
+    @Transactional
+    public void fillFreeSpots(Long eventId) throws NotFoundException {
+        Event event = lockEvent(eventId);
+        if (hasStarted(event) || event.getMaxCapacity() == null) {
             return;
         }
 
-        inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(eventId, InscriptionStatus.WAITING_LIST)
-                .stream()
+        long confirmed = inscriptionRepo.countByEventIdAndStatus(eventId, InscriptionStatus.CONFIRMED);
+        long freeSpots = event.getMaxCapacity() - confirmed;
+        if (freeSpots > 0) {
+            promote(eventId, freeSpots);
+        }
+    }
+
+    private Event lockEvent(Long eventId) throws NotFoundException {
+        return eventRepo.findByIdForUpdate(eventId)
+                .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
+    }
+
+    private boolean hasStarted(Event event) {
+        return event.getStartDateTime() != null && event.getStartDateTime().isBefore(LocalDateTime.now());
+    }
+
+    private void promote(Long eventId, long count) {
+        List<Inscription> waiting = inscriptionRepo
+                .findByEventIdAndStatusOrderByInscriptionDateAsc(eventId, InscriptionStatus.WAITING_LIST);
+
+        waiting.stream()
                 .filter(inscription -> inscription.getUser() == null
                         || !NOT_PROMOTABLE.contains(inscription.getUser().getStatus()))
-                .findFirst()
-                .ifPresent(next -> {
+                .limit(count)
+                .forEach(next -> {
                     next.setStatus(InscriptionStatus.CONFIRMED);
                     inscriptionRepo.save(next);
                 });

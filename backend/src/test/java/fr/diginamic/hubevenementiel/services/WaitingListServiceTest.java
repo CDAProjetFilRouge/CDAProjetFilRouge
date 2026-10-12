@@ -135,4 +135,45 @@ class WaitingListServiceTest {
         verify(inscriptionRepo, never()).findByEventIdAndStatusOrderByInscriptionDateAsc(any(), any());
         verify(inscriptionRepo, never()).save(any());
     }
+
+    @Test
+    void fillFreeSpots_promotesAsManyAsThereAreFreeSpots() throws NotFoundException {
+        event.setMaxCapacity(10);
+        Inscription first = waitingInscription(AccountStatus.ACTIVE);
+        Inscription second = waitingInscription(AccountStatus.ACTIVE);
+        Inscription third = waitingInscription(AccountStatus.ACTIVE);
+        givenWaitingList(first, second, third);
+        when(inscriptionRepo.countByEventIdAndStatus(2L, InscriptionStatus.CONFIRMED)).thenReturn(8L);
+
+        waitingListService.fillFreeSpots(2L);
+
+        assertThat(first.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        assertThat(second.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        assertThat(third.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
+    }
+
+    @Test
+    void fillFreeSpots_eventFull_promotesNobody() throws NotFoundException {
+        event.setMaxCapacity(10);
+        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(event));
+        when(inscriptionRepo.countByEventIdAndStatus(2L, InscriptionStatus.CONFIRMED)).thenReturn(10L);
+
+        waitingListService.fillFreeSpots(2L);
+
+        verify(inscriptionRepo, never()).save(any());
+    }
+
+    @Test
+    void fillFreeSpots_skipsSuspendedAccounts() throws NotFoundException {
+        event.setMaxCapacity(10);
+        Inscription suspended = waitingInscription(AccountStatus.SUSPENDED);
+        Inscription active = waitingInscription(AccountStatus.ACTIVE);
+        givenWaitingList(suspended, active);
+        when(inscriptionRepo.countByEventIdAndStatus(2L, InscriptionStatus.CONFIRMED)).thenReturn(8L);
+
+        waitingListService.fillFreeSpots(2L);
+
+        assertThat(suspended.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
+        assertThat(active.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+    }
 }
