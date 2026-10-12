@@ -1,5 +1,7 @@
-<button (click)="selectStatus('PENDING')">En attente</button>
-<button (click)="selectStatus('VALIDATE')">Validées</button>
+<div class="toolbar">
+  <button class="tab" [class.active]="status() === 'PENDING'" (click)="selectStatus('PENDING')">En attente</button>
+  <button class="tab" [class.active]="status() === 'VALIDATE'" (click)="selectStatus('VALIDATE')">Validées</button>
+</div>
 
 @if (errorMessage()) {
   <p role="alert">{{ errorMessage() }}</p>
@@ -32,7 +34,7 @@
           }</td>
           <td>{{ demand.approvedDate | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td>@if (demand.requestStatus === 'PENDING') {
-            <button (click)="onValidate(demand.id)">Valider</button>
+            <button class="primary" (click)="onValidate(demand.id)">Valider</button>
           } @else {
             -
           }
