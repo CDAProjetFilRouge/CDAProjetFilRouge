@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/auth/admin-guard';
+import { anonymousGuard } from './core/auth/anonymous-guard';
 import { authGuard } from './core/auth/auth-guard';
 import { organizerGuard } from './core/auth/organizer-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
@@ -75,7 +76,17 @@ export const routes: Routes = [
     component: EventDetails,
   },
   {
+    // Les visiteurs non connectés arrivent sur la page d'accueil ; les membres connectés sur le catalogue.
     path: '',
+    canMatch: [anonymousGuard],
+    loadComponent: () => import('./features/home/home').then((m) => m.Home),
+  },
+  {
+    path: '',
+    component: Event,
+  },
+  {
+    path: 'catalogue',
     component: Event,
   },
   {

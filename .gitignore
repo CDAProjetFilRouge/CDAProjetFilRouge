@@ -39,6 +39,7 @@ application-local.yml
 # Claude Code (config/etat local)
 .claude/
 claude.md
+.impeccable
 
 # Codex code
 .codex/
