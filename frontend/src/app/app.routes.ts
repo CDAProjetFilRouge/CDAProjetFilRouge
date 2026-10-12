@@ -3,6 +3,7 @@ import { adminGuard } from './core/auth/admin-guard';
 import { authGuard } from './core/auth/auth-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
 import { Club } from './features/clubs/club/club';
+import { EventDetails } from './features/events/event-details/event-details';
 import { Event } from './features/events/event/event';
 
 export const routes: Routes = [
@@ -67,6 +68,10 @@ export const routes: Routes = [
     path: 'activate-account',
     loadComponent: () =>
       import('./features/auth/activate-account/activate-account').then((m) => m.ActivateAccount),
+  },
+  {
+    path: 'event-details/:id',
+    component: EventDetails,
   },
   {
     path: '',

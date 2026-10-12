@@ -4,10 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventSummaryResponseDto;
+import fr.diginamic.hubevenementiel.dtos.event.*;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -72,14 +69,14 @@ public interface EventApi {
             @Parameter(description = "Prix maximum") Integer maxPrice,
             @Parameter(description = "Filtre optionnel par statut") EventStatus status) throws HttpException;
 
-    @Operation(summary = "Consulter le détail d'un évènement en résumé",
+    @Operation(summary = "Consulter le détail d'un évènement ",
             description = "Un évènement au statut DRAFT n'est visible que par son organisateur et les administrateurs.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Évènement trouvé"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable ou non visible pour l'appelant")
     })
-    EventResponseDto getById(@Parameter(description = "Identifiant de l'évènement", required = true) Long id) throws HttpException;
+    EventDetailsReponseDto getById(@Parameter(description = "Identifiant de l'évènement", required = true) Long id) throws HttpException;
 
     @Operation(summary = "Rechercher un évènement par titre exact")
     @ApiResponses({

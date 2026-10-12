@@ -1,18 +1,34 @@
-<h1>Mon calendrier</h1>
+<div class="calendar-page">
+  <h1>Mon calendrier</h1>
 
-<p>{{ inscriptions().length }} inscription(s) chargée(s) </p>
-@if (errorMessage()) {
-    <p>{{ errorMessage() }}</p>
-}
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
 
-<full-calendar [options]="options()"></full-calendar>
+  <div class="calendar-layout">
+    <app-event-calendar [events]="calendarEvents()" (eventSelected)="select($event)" />
 
-@if (selected(); as ins) {
-  <section class="detail">
-    <h2>{{ ins.event.title }}</h2>
-    <p>Le {{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</p>
-    <p>Statut : {{ statusLabels[ins.status] }}</p>
-    <p>Tarif : {{ ins.price }} €</p>
-    <button type="button" (click)="selected.set(null)">Fermer</button>
-  </section>
-}
+    <aside class="detail">
+      @if (selected(); as ins) {
+        <h2>{{ ins.event.title }}</h2>
+        <p>Le {{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</p>
+        <p>Statut : {{ statusLabels[ins.status] }}</p>
+        <p>Tarif : {{ ins.price }} €</p>
+        <div class="actions">
+          @if (confirming()) {
+            <p class="confirm">Confirmer la désinscription ?</p>
+            <button class="btn cancel" type="button" (click)="cancel()">Oui, me désinscrire</button>
+            <button class="btn" type="button" (click)="confirming.set(false)">Non, garder</button>
+          } @else {
+            @if (canCancel()) {
+              <button class="btn cancel" type="button" (click)="askCancel()">Me désinscrire</button>
+            }
+            <button class="btn" type="button" (click)="close()">Fermer</button>
+          }
+        </div>
+      } @else {
+        <p class="empty">Sélectionnez un évènement pour voir son détail.</p>
+      }
+    </aside>
+  </div>
+</div>

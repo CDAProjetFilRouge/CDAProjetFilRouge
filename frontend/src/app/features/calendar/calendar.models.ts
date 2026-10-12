@@ -6,6 +6,7 @@ export interface InscriptionModel {
     id: number;
     title: string;
     startDateTime: string;
+    endDateTime: string;
   };
   inscriptionDate: string;
   status: InscriptionStatus;

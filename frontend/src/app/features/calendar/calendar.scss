@@ -1,6 +1,50 @@
+.calendar-page {
+  padding: 36px var(--page-padding) 48px;
+}
+
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 16px;
+}
+
 .detail {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  position: sticky;
+  top: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+
+  p {
+    margin-top: 6px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .confirm {
+    flex-basis: 100%;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .cancel {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+
+  .empty {
+    color: var(--color-muted);
+  }
+}
+
+.error {
+  color: var(--color-danger);
 }

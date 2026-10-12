@@ -53,11 +53,19 @@ class EventControllerIntegrationTest {
 
     private AppUser organizer;
     private AppUser otherOrganizer;
+    private fr.diginamic.hubevenementiel.entities.Club eventClub;
 
     @BeforeEach
     void setUp() {
         organizer = createActiveUser("organizer-" + System.nanoTime() + "@example.com", Role.ORGANIZER);
         otherOrganizer = createActiveUser("other-organizer-" + System.nanoTime() + "@example.com", Role.ORGANIZER);
+
+        eventClub = new fr.diginamic.hubevenementiel.entities.Club();
+        eventClub.setName("Club evenements-" + System.nanoTime());
+        eventClub.setCategory(Category.SPORT);
+        eventClub.setEmail("club-evenements@example.com");
+        eventClub.setPhone("0600000000");
+        eventClub = clubRepo.save(eventClub);
     }
 
     private AppUser createActiveUser(String email, Role role) {
@@ -102,7 +110,8 @@ class EventControllerIntegrationTest {
                 "endDateTime", LocalDateTime.now().plusDays(10).plusHours(2).toString(),
                 "affiliatePrice", 10,
                 "nonAffiliatePrice", 20,
-                "maxCapacity", 50
+                "maxCapacity", 50,
+                "idClub", eventClub.getId()
         );
 
         return objectMapper.writeValueAsString(body);
@@ -422,7 +431,8 @@ class EventControllerIntegrationTest {
                 "endDateTime", end.toString(),
                 "affiliatePrice", 10,
                 "nonAffiliatePrice", 20,
-                "maxCapacity", capacity
+                "maxCapacity", capacity,
+                "idClub", eventClub.getId()
         );
 
         String response = mockMvc.perform(post("/events")
