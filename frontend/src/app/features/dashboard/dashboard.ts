@@ -19,6 +19,7 @@ const KPI_LINKS: Record<string, KpiTarget> = {
   SUSPENDED_ACCOUNTS: { link: '/admin/users', queryParams: { status: 'SUSPENDED' } },
   PENDING_ANONYMIZATIONS: { link: '/admin/anonymization-demands' },
   ACTIVE_CLUBS: { link: '/admin/clubs' },
+  ORGANIZED_DRAFTS: { link: '/', queryParams: { status: 'DRAFT' } },
 };
 
 function toKpiView(kpi: Kpi): KpiView {
@@ -43,6 +44,7 @@ const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
     { label: 'Mon compte', link: '/account' },
   ],
   ORGANIZER: [
+    { label: 'Créer un événement', link: '/events/new' },
     { label: 'Parcourir les événements', link: '/' },
     { label: 'Mon calendrier', link: '/calendar' },
     { label: 'Mon compte', link: '/account' },

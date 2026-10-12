@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { URL_BACKEND } from '../../../core/api/api.config';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { URL_IMAGES } from '../../../core/api/api.config';
 
 @Component({
@@ -16,6 +16,7 @@ import { URL_IMAGES } from '../../../core/api/api.config';
 })
 export class Event {
   private readonly eventService = inject(EventService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly events = signal<EventModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
@@ -45,6 +46,11 @@ export class Event {
   }
 
   ngOnInit(): void {
+    // Pré-filtre possible depuis le tableau de bord : /?status=DRAFT
+    const status = this.route.snapshot.queryParamMap.get('status');
+    if (status && ['PUBLISHED', 'CANCELLED', 'DRAFT'].includes(status)) {
+      this.filters.patchValue({ status });
+    }
     this.loadEvents();
   }
 
