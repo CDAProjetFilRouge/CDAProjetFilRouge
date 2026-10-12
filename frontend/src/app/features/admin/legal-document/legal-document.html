@@ -16,7 +16,9 @@
 
 
 <quill-editor [formField]="legalDocumentForm.content"></quill-editor>
-<button (click)="publish()">Publier</button>
+<div class="toolbar">
+  <button class="primary" (click)="publish()">Publier</button>
+</div>
 
 
 @if (publishError()) { <p role="alert">{{ publishError() }}</p> }

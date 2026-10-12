@@ -19,6 +19,7 @@ const KPI_LINKS: Record<string, KpiTarget> = {
   SUSPENDED_ACCOUNTS: { link: '/admin/users', queryParams: { status: 'SUSPENDED' } },
   PENDING_ANONYMIZATIONS: { link: '/admin/anonymization-demands' },
   ACTIVE_CLUBS: { link: '/admin/clubs' },
+  UPCOMING_EVENTS: { link: '/admin/events' },
   ORGANIZED_DRAFTS: { link: '/', queryParams: { status: 'DRAFT' } },
 };
 
@@ -53,6 +54,7 @@ const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
     { label: 'Traiter les demandes', link: '/admin/anonymization-demands' },
     { label: 'Créer un compte', link: '/admin/users/new' },
     { label: 'Créer un club', link: '/admin/clubs/new' },
+    { label: 'Gérer les événements', link: '/admin/events' },
     { label: 'Documents légaux', link: '/admin/terms-of-use' },
   ],
 };

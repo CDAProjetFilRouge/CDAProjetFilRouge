@@ -1,27 +1,29 @@
 <div class="layout-header">
   <button class="logo" routerLink="/">MyHubEvent</button>
   <div class="page-space">
-      <button class="page-select" routerLink="/">Catalogue</button>
+      <button class="page-select" routerLink="/" routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }">Catalogue</button>
       @if (isAffiliated()) {
         <button class="page-select" routerLink="/">Mon club</button>
       } @else {
-        <button class="page-select" routerLink="/clubs">Clubs</button>
+        <button class="page-select" routerLink="/clubs" routerLinkActive="active">Clubs</button>
       }
 
       @if (user()) {
-        <button class="page-select" routerLink="/dashboard">Tableau de bord</button>
-        <button class="page-select" routerLink="/calendar">Mon calendrier</button>
-        <button class="page-select" routerLink="/account">Mon compte</button>
+        <button class="page-select" routerLink="/dashboard" routerLinkActive="active">Tableau de bord</button>
+        <!-- L'administrateur est un compte métier : pas de calendrier personnel -->
+        @if (user()?.role !== 'ADMINISTRATOR') {
+          <button class="page-select" routerLink="/calendar" routerLinkActive="active">Mon calendrier</button>
+        }
+        <button class="page-select" routerLink="/account" routerLinkActive="active">Mon compte</button>
       }
 
-      @if (user()?.role === 'ORGANIZER' || user()?.role === 'ADMINISTRATOR') {
-        <button class="page-select" routerLink="/events/new">Créer un évènement</button>
-      }
       @if (user()?.role === 'ORGANIZER') {
+        <button class="page-select" routerLink="/events/new" routerLinkActive="active">Créer un évènement</button>
         <button class="page-select" routerLink="/">Gérer les évènements</button>
       }
       @if (user()?.role === 'ADMINISTRATOR') {
-        <button class="page-select" routerLink="/admin">Gestion</button>
+        <button class="page-select" routerLink="/admin" routerLinkActive="active">Gestion</button>
       }
   </div>
   <div class="login-space">
