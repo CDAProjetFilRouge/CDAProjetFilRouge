@@ -15,6 +15,12 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMINISTRATOR: 'Administrateur',
 }
 
+export const ROLES = {
+  MEMBER: 'MEMBER',
+  ORGA: 'ORGANIZER',
+  ADMIN: 'ADMINISTRATOR'
+} as const;
+
 export type Category = 'CULTURE' | 'SPORT' | 'DIVERTISSEMENT';
 
 export type AccountStatus = 'INACTIVE' | 'ACTIVE' | 'SUSPENDED' | 'ANONYMIZE' | 'PENDING_ACTIVATION';

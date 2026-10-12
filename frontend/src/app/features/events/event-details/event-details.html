@@ -1,293 +1,113 @@
-@if (loading()) {
-  <div class="state" role="status">
-    <p>Chargement de l’évènement…</p>
+@if (eventDetail(); as event){
+<div class="eventDetail-main">
+  <div class="eventDetail-header">
+    <h1>{{ event.title}}</h1>
+    <p>Organisé par {{ event.organizerLastName }} {{event.organizerFirstName}}</p>
   </div>
-} @else if (eventDetail(); as event) {
-  <article class="page">
-    <header class="head">
-      <a class="back" routerLink="/catalogue">← Tous les évènements</a>
+  <div class="img-section">
+    @if (event.imageGallery.length > 0) {
+      <div class="carousel">
+        <div class="carousel-main">
+          <img [src]="imageUrl(event.imageGallery[selectedImageIndex()].path)" [alt]="'Image ' + (selectedImageIndex() + 1) + ' de l’événement '" class="main-img"/>
 
-      <div class="head-main">
-        <div class="head-text">
-          <p class="badges">
-            <span class="badge">{{ categoryLabel() }}</span>
-            @if (event.status !== 'PUBLISHED') {
-              <span class="badge" [class.badge-danger]="event.status === 'CANCELLED'">{{ statusLabel() }}</span>
-            }
-            @if (event.status === 'PUBLISHED' && isFull()) {
-              <span class="badge badge-danger">Complet · liste d’attente</span>
-            }
-          </p>
-          <h1>{{ event.title }}</h1>
-          <p class="organizer">
-            Organisé par <strong>{{ event.organizerFirstName }} {{ event.organizerLastname }}</strong>
-            @if (event.clubName) {
-              · {{ event.clubName }}
-            }
-          </p>
+          @if (event.imageGallery.length > 1) {
+            <button class="carousel-arrow prev" aria-label="Image précédente" (click)="previousImage()">&#10094;</button>
+            <button class="carousel-arrow next" aria-label="Image suivante" (click)="nextImage()">&#10095;</button>
+          }
+
+        <br><span class="image-counter">{{ selectedImageIndex() + 1}} / {{ event.imageGallery.length }}</span>
         </div>
 
-        @if (canEdit()) {
-          <a class="btn" [routerLink]="['/events', event.id, 'edit']">Modifier cet évènement</a>
+        @if (event.imageGallery.length > 1) {
+          <div class="img-thumbnails">
+            @for ( image of event.imageGallery; track image.id; let i = $index) {
+              <button class="thumbnail-btn"
+              [class.active]="selectedImageIndex() === i"
+              [attr.aria-label]="'Afficher l’image' + (i + 1)"
+              [attr.aria-pressed]="selectedImageIndex() === i"
+              (click)="selectedImage(i)">
+              <img [src]="imageUrl(image.path)" [alt]="'Miniature ' + (i + 1)" class="image-event"/>
+              </button>
+            }
+          </div>
         }
       </div>
-    </header>
-
-    <!-- Faits clés : le haut du billet -->
-    <section class="facts" aria-label="Informations clés">
-      @if (dateParts(); as date) {
-        <div class="fact fact-date">
-          <div class="date-block" aria-hidden="true">
-            <span class="date-day">{{ date.day }}</span>
-            <span class="date-month">{{ date.month }}</span>
-          </div>
-          <div>
-            <p class="fact-label">Date</p>
-            <p class="fact-value">{{ date.weekday }}</p>
-            <p class="fact-sub">{{ date.time }}</p>
-          </div>
-        </div>
-      }
-
-      <div class="fact">
-        <div>
-          <p class="fact-label">Lieu</p>
-          <p class="fact-value">{{ event.street1 }}@if (event.street2) {, {{ event.street2 }}}</p>
-          <p class="fact-sub">{{ event.postalCode }} {{ event.city }}</p>
-        </div>
-      </div>
-
-      <div class="fact">
-        <div class="fact-fill">
-          <p class="fact-label">Places</p>
-          @if (isFull()) {
-            <p class="fact-value">Complet</p>
-            <p class="fact-sub">{{ event.maxCapacity }} places · liste d’attente ouverte</p>
-          } @else {
-            <p class="fact-value">{{ event.remainingSpots }} restantes</p>
-            <p class="fact-sub">sur {{ event.maxCapacity }}</p>
-          }
-          <div
-            class="meter"
-            role="meter"
-            aria-label="Taux de remplissage"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            [attr.aria-valuenow]="takenRatio()"
-            [attr.aria-valuetext]="takenRatio() + ' % des places réservées'"
-          >
-            <span class="meter-fill" [class.meter-full]="isFull()" [style.width.%]="takenRatio()"></span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="layout">
-      <div class="content">
-        <!-- Galerie -->
-        <section class="gallery" aria-label="Galerie photos">
-          @if (galleryOrdered().length > 0) {
-            <div class="stage" (keydown.arrowleft)="previousImage()" (keydown.arrowright)="nextImage()">
-              <img
-                class="stage-img"
-                [src]="imageUrl(galleryOrdered()[selectedImageIndex()].path)"
-                [alt]="event.title + ' — photo ' + (selectedImageIndex() + 1) + ' sur ' + galleryOrdered().length"
-              />
-              @if (galleryOrdered().length > 1) {
-                <button type="button" class="arrow prev" aria-label="Photo précédente" (click)="previousImage()">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
-                </button>
-                <button type="button" class="arrow next" aria-label="Photo suivante" (click)="nextImage()">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
-                </button>
-                <span class="counter">{{ selectedImageIndex() + 1 }} / {{ galleryOrdered().length }}</span>
-              }
-            </div>
-
-            @if (galleryOrdered().length > 1) {
-              <ul class="thumbs">
-                @for (image of galleryOrdered(); track image.id; let i = $index) {
-                  <li>
-                    <button
-                      type="button"
-                      class="thumb"
-                      [class.active]="selectedImageIndex() === i"
-                      [attr.aria-label]="'Afficher la photo ' + (i + 1)"
-                      [attr.aria-current]="selectedImageIndex() === i ? 'true' : null"
-                      (click)="selectImage(i)"
-                    >
-                      <img [src]="imageUrl(image.path)" alt="" loading="lazy" />
-                    </button>
-                  </li>
-                }
-              </ul>
-            }
-          } @else {
-            <div class="stage stage-empty">
-              <p>Aucune photo pour cet évènement</p>
-            </div>
-          }
-        </section>
-
-        <!-- Description -->
-        <section class="block">
-          <h2>À propos</h2>
-          <p class="description">{{ event.description }}</p>
-        </section>
-
-        <!-- Commentaires -->
-        <section class="block" aria-labelledby="comments-title">
-          <h2 id="comments-title">
-            Commentaires <span class="count">{{ comments().length }}</span>
-          </h2>
-
-          @if (user()) {
-            <form class="composer" (submit)="$event.preventDefault(); publishComment()">
-              <label class="sr-only" for="comment-input">Votre commentaire</label>
-              <textarea
-                id="comment-input"
-                rows="3"
-                placeholder="Posez une question, partagez un retour…"
-                [value]="commentDraft()"
-                (input)="onDraftInput($event)"
-              ></textarea>
-              <div class="composer-actions">
-                @if (commentError()) {
-                  <p class="error" role="alert">{{ commentError() }}</p>
-                }
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  [disabled]="commentBusy() || commentDraft().trim() === ''"
-                >
-                  {{ commentBusy() ? 'Publication…' : 'Publier' }}
-                </button>
-              </div>
-            </form>
-          } @else {
-            <p class="login-hint">
-              <a routerLink="/login">Connectez-vous</a> pour publier un commentaire.
-            </p>
-          }
-
-          @if (comments().length > 0) {
-            <ul class="comments">
-              @for (comment of comments(); track comment.id) {
-                <li class="comment">
-                  <span class="avatar" aria-hidden="true">{{ initials(comment.author.firstName, comment.author.lastName) }}</span>
-                  <div class="comment-body">
-                    <p class="comment-meta">
-                      <strong>{{ comment.author.firstName }} {{ comment.author.lastName[0] }}.</strong>
-                      <span>{{ comment.creationDate | timeAgo }}</span>
-                    </p>
-                    <p class="comment-text">{{ comment.content }}</p>
-                  </div>
-                  @if (canDelete(comment)) {
-                    <button
-                      type="button"
-                      class="link-danger"
-                      [attr.aria-label]="'Supprimer le commentaire de ' + comment.author.firstName"
-                      (click)="deleteComment(comment)"
-                    >
-                      Supprimer
-                    </button>
-                  }
-                </li>
-              }
-            </ul>
-          } @else {
-            <p class="empty">Aucun commentaire pour le moment. Soyez le premier à réagir.</p>
-          }
-        </section>
-      </div>
-
-      <!-- Billet d'inscription -->
-      <aside class="ticket-wrap" aria-label="Inscription">
-        <div class="ticket">
-          <div class="ticket-top">
-            <h2>Réserver ma place</h2>
-            <dl class="prices">
-              <div class="price-row">
-                <dt>Tarif affilié</dt>
-                <dd>{{ formatPrice(event.affiliatePrice) }}</dd>
-              </div>
-              <div class="price-row">
-                <dt>Tarif non affilié</dt>
-                <dd>{{ formatPrice(event.nonAffiliatePrice) }}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <div class="perforation" aria-hidden="true"><span></span></div>
-
-          <div class="ticket-bottom">
-            @switch (registration()?.kind) {
-              @case ('login') {
-                <a class="btn btn-primary btn-block" routerLink="/login">Se connecter pour s’inscrire</a>
-                <p class="hint">Un compte membre est nécessaire pour réserver une place.</p>
-              }
-              @case ('blocked') {
-                <button type="button" class="btn btn-primary btn-block" disabled>Inscriptions fermées</button>
-                <p class="hint">{{ $any(registration()).reason }}</p>
-              }
-              @case ('registered') {
-                <p class="status-ok" role="status">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-                  @if ($any(registration()).waiting) {
-                    Vous êtes sur la liste d’attente
-                  } @else {
-                    Vous êtes inscrit·e
-                  }
-                </p>
-                @if (confirmingCancel()) {
-                  <p class="hint">Annuler votre inscription libérera votre place.</p>
-                  <div class="confirm-row">
-                    <button type="button" class="btn btn-danger" [disabled]="inscriptionBusy()" (click)="cancelInscription()">
-                      {{ inscriptionBusy() ? 'Annulation…' : 'Confirmer l’annulation' }}
-                    </button>
-                    <button type="button" class="btn" (click)="keepInscription()">Garder ma place</button>
-                  </div>
-                } @else {
-                  <button type="button" class="btn btn-block" (click)="askCancel()">Annuler mon inscription</button>
-                }
-              }
-              @case ('open') {
-                <button
-                  type="button"
-                  class="btn btn-primary btn-block"
-                  [disabled]="inscriptionBusy()"
-                  (click)="register()"
-                >
-                  @if (inscriptionBusy()) {
-                    Inscription en cours…
-                  } @else if ($any(registration()).waiting) {
-                    Rejoindre la liste d’attente
-                  } @else {
-                    S’inscrire à cet évènement
-                  }
-                </button>
-                <p class="hint">
-                  @if (isFull()) {
-                    L’évènement est complet : vous serez placé·e en liste d’attente, dans l’ordre d’arrivée.
-                  } @else {
-                    S’il n’y a plus de place, l’inscription vous place en liste d’attente, dans l’ordre d’arrivée.
-                  }
-                </p>
-              }
-            }
-
-            @if (inscriptionError()) {
-              <p class="error" role="alert">{{ inscriptionError() }}</p>
-            }
-          </div>
-        </div>
-      </aside>
-    </div>
-  </article>
-} @else {
-  <div class="state" role="alert">
-    <h1>Évènement introuvable</h1>
-    <p>{{ loadError() ?? 'Cet évènement n’existe pas ou n’est plus visible.' }}</p>
-    <a class="btn btn-primary" routerLink="/catalogue">Voir tous les évènements</a>
+    }@else {
+          <p>Aucune image disponible pour cet évènement</p>
+        }
   </div>
+  <div class="description-section">
+    <h3>Description</h3>
+    <p>{{ event.description}}</p>
+  </div>
+  <div class="comment-section">
+    <h3>Commentaire {{comments().length}}</h3>
+    @if (user()){
+      <div class="write-comment-section">
+        <form [formGroup]="commentContent" (ngSubmit)="submitComment()">
+          <textarea id="type-comment" rows="10" formControlName="content" placeholder="Écrivez un commentaire"></textarea>
+          <button type="submit">Publier</button>
+        </form>
+      </div>
+    }
+    <div class="comments">
+      @for (comment of comments(); track comment.id) {
+        <h5>{{ comment.author.firstName}} {{comment.author.lastName[0]}}. - {{ comment.creationDate | timeAgo}} @if(user()?.id === comment.author.id || user()?.role === roles.ADMIN){<button>SUPPRIMER</button>}</h5>
+        <p>{{ comment.content}}</p>
+      }
+    </div>
+
+  </div>
+      <div class="register-section">
+      <h3>Insription</h3>
+      <div class="register-counter">
+        <label>{{ event.remainingSpots}}/{{ event.maxCapacity}}</label>
+        <progress value="{{ event.remainingSpots}}" max="{{ event.maxCapacity}}"></progress>
+      </div>
+      <div class="register-info">
+        <div class="info-row">
+          <p>Début</p>
+          <span style="color: black;">{{ event.startDate | date:'dd/MM/yyyy'}}</span>
+        </div>
+        <div class="info-row">
+          <p>fin</p>
+          <span style="color: black;">{{ event.endDate | date:'dd/MM/yyyy'}}</span>
+        </div>
+        <div class="info-row">
+          <p>Lieu</p>
+          <span style="color: black;">
+            {{ event.street1}}
+            @if(event.street2){
+              , {{ event.street2}}
+            }
+          </span>
+        </div>
+        <div class="info-row">
+          <p>Ville</p>
+          <span style="color: black;">{{ event.city}}</span>
+        </div>
+        <div class="info-row">
+          <p>Tarif affilié</p>
+          <span style="color: black;">{{ event.affiliatePrice}} €</span>
+        </div>
+        <div class="info-row">
+          <p>Tarif non affilié</p>
+          <span style="color: black;">{{ event.nonAffiliatePrice}} €</span>
+        </div>
+      </div>
+      <button>S'inscrire à cet évènement</button>
+      <p id="register-disclosure">Si l'évènemt est complet, l'inscription vous place dans la liste d'attente, dans l'ordre d'arrivé. (RG- UC14)</p>
+    </div>
+    <div class="organizer-section">
+      <p id="organizer-title">Organisateur</p>
+      <p>{{ event.organizerFirstName}} {{ event.organizerLastName}}</p>
+      <p>{{ event.clubName}}</p>
+    </div>
+</div>
+}@else {
+  <h3 id="error">No event to be found here</h3>
+  <div id="home-btn">
+    <button id="home" routerLink="/">Go back home</button>
+  </div>
+
 }

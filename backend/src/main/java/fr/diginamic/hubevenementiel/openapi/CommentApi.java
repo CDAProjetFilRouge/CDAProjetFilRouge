@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.openapi;
 
 import java.util.List;
+import java.util.Map;
 
 import fr.diginamic.hubevenementiel.dtos.comment.CommentResponseDto;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -34,7 +35,7 @@ public interface CommentApi {
             @ApiResponse(responseCode = "404", description = "Évènement ou auteur introuvable")
     })
     ResponseEntity<CommentResponseDto> create(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
-            @Parameter(description = "Contenu du commentaire", required = true) String content) throws HttpException;
+            @Parameter(description = "Contenu du commentaire", required = true) Map<String, String> content) throws HttpException;
 
     @Operation(summary = "Modifier un commentaire", description = "Réservé à l'auteur du commentaire.")
     @ApiResponses({
