@@ -193,6 +193,63 @@ class EventServiceTest {
     }
 
     // ---------------------------------------------------------------
+    // eventChecker : règles décidées avec le PO (places, code postal, date passée)
+    // ---------------------------------------------------------------
+
+    @Test
+    void eventChecker_capacityAboveLimit_throwsBadRequest() {
+        validEvent.setMaxCapacity(100_001);
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_capacityAtLimit_isAccepted() throws HttpException {
+        validEvent.setMaxCapacity(100_000);
+
+        assertThat(eventService.eventChecker(validEvent)).isTrue();
+    }
+
+    @Test
+    void eventChecker_postalCodeWithLetters_throwsBadRequest() {
+        validEvent.getLocation().setPostalCode("AB12");
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_postalCodeWithSixDigits_throwsBadRequest() {
+        validEvent.getLocation().setPostalCode("750020");
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void eventChecker_postalCodeWithFourDigits_isAccepted() throws HttpException {
+        validEvent.getLocation().setPostalCode("1000");
+
+        assertThat(eventService.eventChecker(validEvent)).isTrue();
+    }
+
+    @Test
+    void eventChecker_startInThePast_throwsBadRequest() {
+        validEvent.setStartDateTime(LocalDateTime.now().minusHours(1));
+        validEvent.setEndDateTime(LocalDateTime.now().plusHours(1));
+
+        assertThrows(BadRequestException.class, () -> eventService.eventChecker(validEvent));
+    }
+
+    @Test
+    void createEvent_startInThePast_isRejectedAndNothingIsSaved() {
+        validEvent.setStartDateTime(LocalDateTime.now().minusDays(1));
+        validEvent.setEndDateTime(LocalDateTime.now().plusDays(1));
+
+        assertThrows(BadRequestException.class, () -> eventService.createEvent(validEvent, 1L));
+
+        verify(eventRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------
     // eventChecker : longueurs alignées sur les colonnes
     // ---------------------------------------------------------------
 

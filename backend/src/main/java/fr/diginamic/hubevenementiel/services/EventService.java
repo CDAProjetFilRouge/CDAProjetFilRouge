@@ -40,6 +40,9 @@ public class EventService {
     /** Longueur maximale de la description (la colonne est un TEXT de 65 535 octets). */
     static final int MAX_DESCRIPTION_LENGTH = 10_000;
 
+    /** Nombre de places maximum pour un évènement. */
+    static final int MAX_CAPACITY = 100_000;
+
     private final EventRepo eventRepository;
     private final InscriptionRepo inscriptionRepo;
     private final ClubService clubService;
@@ -414,6 +417,10 @@ public class EventService {
             throw new BadRequestException("L'évènement doit avoir une date de fin.");
         }
 
+        if (!start.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("La date de début doit être dans le futur.");
+        }
+
         if (!end.isAfter(start)) {
             throw new BadRequestException("La date de fin doit être postérieure à la date de début.");
         }
@@ -424,6 +431,9 @@ public class EventService {
         }
         if (maxCapacity <= 0) {
             throw new BadRequestException("La capacité maximale doit être supérieure à zéro.");
+        }
+        if (maxCapacity > MAX_CAPACITY) {
+            throw new BadRequestException("La capacité maximale ne peut pas dépasser 100 000 places.");
         }
 
         BigDecimal affiliatePrice = event.getAffiliatePrice();
@@ -465,6 +475,9 @@ public class EventService {
             throw new BadRequestException("Le complément d'adresse ne peut pas dépasser 255 caractères.");
         }
         requireLocationField(location.getPostalCode(), 10, "Le code postal");
+        if (!location.getPostalCode().matches("\\d{4,5}")) {
+            throw new BadRequestException("Le code postal doit être composé de 4 ou 5 chiffres.");
+        }
         requireLocationField(location.getCity(), 100, "La ville");
         requireLocationField(location.getCountry(), 100, "Le pays");
     }
