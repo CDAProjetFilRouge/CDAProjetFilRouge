@@ -341,6 +341,8 @@ class EventControllerIntegrationTest {
         String viewerToken = loginAndGetToken(organizer.getEmail());
         for (int i = 0; i < 5; i++) {
             AppUser eventOrganizer = createActiveUser("n1-" + i + "-" + System.nanoTime() + "@example.com", Role.ORGANIZER);
+            eventOrganizer.getClubs().add(eventClub);
+            userRepo.save(eventOrganizer);
             String token = loginAndGetToken(eventOrganizer.getEmail());
             createPublishedEvent(token, "Evenement N+1 " + i + "-" + System.nanoTime(), city, start, start.plusHours(2), 50);
         }
