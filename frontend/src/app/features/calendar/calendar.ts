@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
 import { EventCalendar } from '../../shared/event-calendar/event-calendar';
@@ -8,7 +9,7 @@ import { CalendarService } from './calendar-service';
 import { INSCRIPTION_STATUS_LABELS, InscriptionModel } from './calendar.models';
 
 @Component({
-  imports: [EventCalendar, DatePipe],
+  imports: [EventCalendar, DatePipe, RouterLink],
   selector: 'app-calendar',
   styleUrl: './calendar.scss',
   templateUrl: './calendar.html',
@@ -17,8 +18,10 @@ export class Calendar {
   private readonly auth = inject(AuthService);
   private readonly calendarService = inject(CalendarService);
 
-  // Intégré au tableau de bord : pas de titre, grille plus basse, détail flottant.
+  // Intégré au tableau de bord : pas de titre, grille plus basse.
   readonly compact = input(false);
+
+  private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('detailDialog');
 
   protected readonly inscriptions = signal<InscriptionModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
@@ -62,11 +65,29 @@ export class Calendar {
         this.load(user.id);
       }
     });
+
+    // La boîte de dialogue native suit la sélection : ouverte avec showModal() (focus piégé,
+    // fond inerte, Échap pour fermer), fermée quand la sélection est vidée.
+    effect(() => {
+      const el = this.dialog()?.nativeElement;
+      if (!el) return;
+      if (this.selected()) {
+        if (!el.open) el.showModal();
+      } else if (el.open) {
+        el.close();
+      }
+    });
   }
 
   protected select(eventId: string): void {
     this.confirming.set(false);
     this.selected.set(this.inscriptions().find((i) => i.id === Number(eventId)) ?? null);
+  }
+
+  // Appelé par l'évènement natif « close » (touche Échap, bouton de fermeture).
+  protected onDialogClosed(): void {
+    this.confirming.set(false);
+    this.selected.set(null);
   }
 
   protected askCancel(): void {

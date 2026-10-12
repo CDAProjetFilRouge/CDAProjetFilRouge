@@ -44,6 +44,11 @@ export const ADMIN_ROUTES: Routes = [
       },
 
       {
+        path: 'events',
+        loadComponent: () => import('./events/event-list/event-list').then((m) => m.EventList),
+      },
+
+      {
         path: 'clubs',
         loadComponent: () => import('./clubs/club-list/club-list').then((m) => m.ClubList),
       },

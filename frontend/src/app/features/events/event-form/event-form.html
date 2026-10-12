@@ -224,16 +224,9 @@
           </button>
         }
         @if (isEdit && canEditFields()) {
-          @if (confirmingDelete()) {
-            <p class="confirm">Supprimer définitivement cet évènement ?</p>
-            <button class="btn danger" type="button" (click)="confirmDelete()"
-              [disabled]="isSubmitting()">Oui, supprimer</button>
-            <button class="btn" type="button" (click)="cancelDelete()">Non, garder</button>
-          } @else {
-            <button class="btn danger" type="button" (click)="askDelete()">
-              Supprimer l'évènement
-            </button>
-          }
+          <button class="btn danger" type="button" (click)="askDelete()">
+            Supprimer l'évènement
+          </button>
         }
       </aside>
     </form>

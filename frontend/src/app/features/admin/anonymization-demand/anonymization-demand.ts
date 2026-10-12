@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../../core/ui/confirm.service';
 import { Component, inject, signal } from '@angular/core';
 import { AnonymizationDemandService } from './anonymization-demand.service';
 import { ANONYMIZATION_DEMAND_LABELS, AnonymizationDemand, AnonymizationDemandStatus } from '../../../core/models/anonymization-demand.models';
@@ -11,6 +12,7 @@ import { DatePipe } from '@angular/common';
   templateUrl: './anonymization-demand.html',
 })
 export class AnonymizationDemandList {
+  private readonly confirmDialog = inject(ConfirmService);
 
   private readonly service = inject(AnonymizationDemandService);
 
@@ -51,8 +53,14 @@ export class AnonymizationDemandList {
     this.load();
   }
 
-  protected onValidate(id: number): void {
-    if (!confirm('Voulez-vous vraiment anonymiser cet utilisateur ? Cette action est définitive !')) {
+  protected async onValidate(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Anonymiser cet utilisateur',
+      message: 'Les données personnelles du compte seront définitivement effacées. Cette action est irréversible.',
+      confirmLabel: 'Anonymiser',
+      tone: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
     this.service.validateDemand(id).subscribe({

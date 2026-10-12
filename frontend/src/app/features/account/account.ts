@@ -1,3 +1,4 @@
+import { ConfirmService } from '../../core/ui/confirm.service';
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -11,6 +12,7 @@ import { AnonymizationDemandService } from '../admin/anonymization-demand/anonym
   templateUrl: './account.html',
 })
 export class Account {
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly user = this.authService.currentUser;
@@ -33,9 +35,14 @@ export class Account {
     void this.router.navigateByUrl('/login');
   }
 
-  protected requestAnonymization() {
-
-    if (!confirm('Voulez-vous vraiment demander l\'anonymisation de vos données ? Cette action est irréversible.')) {
+  protected async requestAnonymization(): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: "Demander l'anonymisation",
+      message: 'Vos données personnelles seront anonymisées après validation par un administrateur. Cette action est irréversible.',
+      confirmLabel: 'Envoyer la demande',
+      tone: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
 

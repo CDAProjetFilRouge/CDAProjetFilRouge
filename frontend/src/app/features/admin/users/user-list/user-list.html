@@ -2,7 +2,11 @@
   <p role="alert">{{ errorMessage() }}</p>
 }
 
-<button [routerLink]="'/admin/users/new'">Crée un compte utilisateur</button>
+<div class="toolbar">
+  <button class="primary" [routerLink]="'/admin/users/new'">Créer un compte utilisateur</button>
+</div>
+
+<div class="toolbar">
 
 <input type="search" placeholder="Rechercher (nom, prénom, e-mail)" #searchInput
        (keydown.enter)="onSearch(searchInput.value)" />
@@ -18,7 +22,8 @@
     <option [value]="status" [selected]="status === statusFilter()">{{ accountStatusLabels[status] }}</option>
   }
 </select>
-<button (click)="onSearch(searchInput.value)">Rechercher</button>
+<button class="primary" (click)="onSearch(searchInput.value)">Rechercher</button>
+</div>
 
 <p>{{ totalElements() }}
   @if (totalElements() > 1 ) {
@@ -65,19 +70,19 @@
             Réactiver
           </button>
         } @else {
-          <button (click)="startSuspension(user.id)">Suspendre</button>
+          <button class="danger" (click)="startSuspension(user.id)">Suspendre</button>
 
           @if (suspendingId() === user.id) {
             <input type="datetime-local" #suspensionEndDate>
             <small>Laisser vide pour une suspension définitive.</small>
-            <button (click)="confirmSuspension(user.id, suspensionEndDate.value)">Confirmer</button>
+            <button class="primary" (click)="confirmSuspension(user.id, suspensionEndDate.value)">Confirmer</button>
             <button (click)="suspendingId.set(null)">Annuler</button>
           }
 
         }
 
 
-        <button (click)="onDelete(user.id)">
+        <button class="danger" (click)="onDelete(user.id)">
           Supprimer
         </button>
       </td>

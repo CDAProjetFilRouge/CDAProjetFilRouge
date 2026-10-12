@@ -1,0 +1,59 @@
+@if (errorMessage()) {
+  <p role="alert">{{ errorMessage() }}</p>
+}
+
+<div class="toolbar">
+  <input type="search" placeholder="Rechercher (titre, description)" #searchInput
+         (keydown.enter)="onSearch(searchInput.value)" />
+  <select #statusSelect (change)="onStatusFilter(statusSelect.value)">
+    <option value="">Tous les statuts</option>
+    @for (status of statuses; track status) {
+      <option [value]="status">{{ statusLabels[status] }}</option>
+    }
+  </select>
+  <button class="primary" (click)="onSearch(searchInput.value)">Rechercher</button>
+</div>
+
+<p>{{ totalElements() }} {{ totalElements() > 1 ? 'évènements.' : 'évènement.' }}</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Titre</th>
+      <th>Catégorie</th>
+      <th>Début</th>
+      <th>Ville</th>
+      <th>Places restantes</th>
+      <th>Statut</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (event of events(); track event.id) {
+      <tr>
+        <td>{{ event.title }}</td>
+        <td>{{ event.category }}</td>
+        <td>{{ event.startDateTime | date: 'dd/MM/yyyy HH:mm' }}</td>
+        <td>{{ event.location.city }}</td>
+        <td>{{ event.remainingSpots }} / {{ event.maxCapacity }}</td>
+        <td>
+          <span class="status" [class.draft]="event.status === 'DRAFT'">
+            {{ statusLabels[event.status] ?? event.status }}
+          </span>
+        </td>
+        <td>
+          <a class="action" [routerLink]="['/events', event.id, 'edit']">Modifier</a>
+          <a class="action" [routerLink]="['/event-details', event.id]">Voir</a>
+        </td>
+      </tr>
+    } @empty {
+      <tr><td colspan="7">Aucun évènement.</td></tr>
+    }
+  </tbody>
+</table>
+
+<div class="toolbar">
+  <button (click)="goToPage(page() - 1)" [disabled]="page() === 0">Précédent</button>
+  <span>Page {{ page() + 1 }} sur {{ totalPages() || 1 }}</span>
+  <button (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()">Suivant</button>
+</div>
