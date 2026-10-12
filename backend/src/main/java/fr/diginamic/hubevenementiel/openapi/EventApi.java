@@ -33,6 +33,20 @@ public interface EventApi {
             @Parameter(description = "Taille de page") int size
             ) throws HttpException;
 
+    @Operation(summary = "Liste les évènements dont je suis l'organisateur",
+            description = "Tous statuts confondus (brouillons compris), du plus proche dans le temps au plus lointain. "
+                    + "Filtre facultatif sur le statut. Réservé aux organisateurs et aux administrateurs.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Liste paginée de mes évènements"),
+            @ApiResponse(responseCode = "400", description = "Taille de page supérieure à 20"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER ou ADMINISTRATOR requis")
+    })
+    Page<EventResponseMainDto> getMyEvents(
+            @Parameter(description = "Numéro de page (0-indexé)") int page,
+            @Parameter(description = "Taille de page (20 maximum)") int size,
+            @Parameter(description = "Filtre facultatif sur le statut") EventStatus status
+            ) throws HttpException;
+
     @Operation(summary = "Récupère tous les évènements en applicant des filtres",
             description = "Récupère tous les évènements en fonction de mots présent dans son titre/description, de sa catégorie, de du nom de famille de son organisateur," +
                     "de sa ville, de ses dates de début/fin et de son status. Les évènement marqués DRAFT sont invisible pour les utilisateurs non admin/organisateur")

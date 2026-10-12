@@ -76,6 +76,11 @@ public class EventSpecifications {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("nonAffiliatePrice"), maxPrice);
     }
 
+    // Évènements dont l'utilisateur est l'organisateur, quel que soit leur statut.
+    public static Specification<Event> organizedBy(Long organizerId) {
+        return (root, query, cb) -> cb.equal(root.get("organizer").get("id"), organizerId);
+    }
+
     public static Specification<Event> hasStatus(EventStatus status) {
         if (status == null) {
             return null;

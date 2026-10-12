@@ -21,6 +21,7 @@ import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -233,6 +234,28 @@ public class EventService {
         Specification<Event> spec = EventSpecifications.visibleTo(principal);
         Pageable pageable = PageRequest.of(page, size);
 
+        return eventRepository.findAll(spec, pageable);
+    }
+
+    /**
+     * Évènements dont l'utilisateur est l'organisateur, tous statuts, du plus proche
+     * dans le temps au plus lointain.
+     *
+     * @param status filtre facultatif sur le statut
+     */
+    public Page<Event> findOrganizedBy(int page, int size, EventStatus status, AppUserPrincipal principal)
+            throws HttpException {
+        if (size > 20) {
+            throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
+        }
+
+        Specification<Event> spec = EventSpecifications.organizedBy(principal.id());
+        Specification<Event> statusFilter = EventSpecifications.hasStatus(status);
+        if (statusFilter != null) {
+            spec = spec.and(statusFilter);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDateTime"));
         return eventRepository.findAll(spec, pageable);
     }
 
