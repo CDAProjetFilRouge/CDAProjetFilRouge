@@ -55,6 +55,8 @@ class InscriptionConcurrencyIntegrationTest {
     @Autowired
     private InscriptionRepo inscriptionRepo;
     @Autowired
+    private fr.diginamic.hubevenementiel.repositories.ClubRepo clubRepo;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @MockitoBean
     private EmailService emailService;
@@ -67,6 +69,7 @@ class InscriptionConcurrencyIntegrationTest {
 
     private Long eventId;
     private Long organizerId;
+    private Long clubId;
     private final List<Long> memberIds = new java.util.ArrayList<>();
 
     @AfterEach
@@ -76,6 +79,9 @@ class InscriptionConcurrencyIntegrationTest {
                 .forEach(inscriptionRepo::delete);
         if (eventId != null) {
             eventRepo.findById(eventId).ifPresent(eventRepo::delete);
+        }
+        if (clubId != null) {
+            clubRepo.findById(clubId).ifPresent(clubRepo::delete);
         }
         List<Long> userIds = new java.util.ArrayList<>(memberIds);
         if (organizerId != null) {
@@ -132,6 +138,14 @@ class InscriptionConcurrencyIntegrationTest {
         event.setNonAffiliatePrice(BigDecimal.valueOf(20));
         event.setStatus(EventStatus.PUBLISHED);
         event.setOrganizer(organizer);
+        fr.diginamic.hubevenementiel.entities.Club club = new fr.diginamic.hubevenementiel.entities.Club();
+        club.setName("Club concurrence-" + System.nanoTime());
+        club.setCategory(Category.SPORT);
+        club.setEmail("club-concurrence@example.com");
+        club.setPhone("0600000000");
+        club = clubRepo.save(club);
+        clubId = club.getId();
+        event.setClub(club);
         event = eventRepo.save(event);
         eventId = event.getId();
         Long finalEventId = eventId;

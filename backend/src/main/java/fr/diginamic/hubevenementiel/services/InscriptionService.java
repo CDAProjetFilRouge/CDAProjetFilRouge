@@ -32,14 +32,17 @@ public class InscriptionService {
     private final AppUserService appUserService;
     private final EventService eventService;
     private final EmailService emailService;
+    private final WaitingListService waitingListService;
 
     public InscriptionService(InscriptionRepo inscriptionRepo, EventRepo eventRepo,
-            AppUserService appUserService, EventService eventService, EmailService emailService) {
+            AppUserService appUserService, EventService eventService, EmailService emailService,
+            WaitingListService waitingListService) {
         this.inscriptionRepo = inscriptionRepo;
         this.eventRepo = eventRepo;
         this.appUserService = appUserService;
         this.eventService = eventService;
         this.emailService = emailService;
+        this.waitingListService = waitingListService;
     }
 
     /**
@@ -215,7 +218,7 @@ public class InscriptionService {
         Inscription saved = inscriptionRepo.save(inscription);
 
         if (freesASpot) {
-            promoteNextInWaitingList(inscription.getEvent().getId());
+            waitingListService.promoteNext(inscription.getEvent().getId());
         }
 
         return saved;
@@ -250,27 +253,10 @@ public class InscriptionService {
                 inscription.getUser().getEmail(), inscription.getEvent().getTitle(), motif);
 
         if (freesASpot) {
-            promoteNextInWaitingList(inscription.getEvent().getId());
+            waitingListService.promoteNext(inscription.getEvent().getId());
         }
 
         return saved;
-    }
-
-    /**
-     *
-     * @param eventId id of the event to find inscription associated with
-     * @throws HttpException
-     */
-    @Transactional
-    public void promoteNextInWaitingList(Long eventId) throws HttpException {
-        eventRepo.findByIdForUpdate(eventId)
-                .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
-
-        inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(eventId, InscriptionStatus.WAITING_LIST)
-                .ifPresent(next -> {
-                    next.setStatus(InscriptionStatus.CONFIRMED);
-                    inscriptionRepo.save(next);
-                });
     }
 
     // Non utilisée par le controller, remplacée par register(). Désactivée pour

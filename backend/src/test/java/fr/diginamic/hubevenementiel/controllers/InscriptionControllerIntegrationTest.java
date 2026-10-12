@@ -8,6 +8,8 @@ import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.entities.Club;
+import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.EmailService;
@@ -44,6 +46,8 @@ class InscriptionControllerIntegrationTest {
     @Autowired
     private EventRepo eventRepo;
     @Autowired
+    private ClubRepo clubRepo;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @MockitoBean
     private EmailService emailService;
@@ -68,6 +72,15 @@ class InscriptionControllerIntegrationTest {
         return userRepo.save(user);
     }
 
+    private Club createClub() {
+        Club club = new Club();
+        club.setName("Club-" + System.nanoTime());
+        club.setCategory(Category.SPORT);
+        club.setEmail("club@example.com");
+        club.setPhone("0600000000");
+        return clubRepo.save(club);
+    }
+
     private Event createEvent(AppUser organizer, int maxCapacity, LocalDateTime start, EventStatus status) {
         Event event = new Event();
         event.setTitle("Event-" + System.nanoTime());
@@ -80,6 +93,7 @@ class InscriptionControllerIntegrationTest {
         event.setNonAffiliatePrice(BigDecimal.valueOf(20));
         event.setStatus(status);
         event.setOrganizer(organizer);
+        event.setClub(createClub());
         return eventRepo.save(event);
     }
 

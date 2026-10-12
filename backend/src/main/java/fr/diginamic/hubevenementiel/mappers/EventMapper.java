@@ -55,6 +55,7 @@ public class EventMapper {
         entity.setNonAffiliatePrice(dto.getNonAffiliatePrice());
         entity.setMaxCapacity(dto.getMaxCapacity());
         entity.setStatus(dto.getStatus());
+        entity.setClub(null);
 
         return entity;
     }

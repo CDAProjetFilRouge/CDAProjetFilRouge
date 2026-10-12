@@ -3,7 +3,8 @@ package fr.diginamic.hubevenementiel.controllers;
 import java.util.List;
 import java.util.Map;
 
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseMainDto;
+import fr.diginamic.hubevenementiel.dtos.event.*;
+import fr.diginamic.hubevenementiel.mappers.EventDetailsMapper;
 import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,6 @@ import java.time.LocalTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import fr.diginamic.hubevenementiel.dtos.event.EventRequestDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventResponseDto;
-import fr.diginamic.hubevenementiel.dtos.event.EventSummaryResponseDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -50,15 +48,17 @@ public class EventController implements EventApi {
     private final EventMapper eventMapper;
     private final EventMainMapper eventMainMapper;
     private final EventSummaryMapper eventSummaryMapper;
+    private final EventDetailsMapper eventDetailsMapper;
     private final AppUserService appUserService;
 
     public EventController(EventService eventService, EventMapper eventMapper, EventSummaryMapper eventSummaryMapper,
-            AppUserService appUserService, EventMainMapper eventMainMapper) {
+            AppUserService appUserService, EventMainMapper eventMainMapper, EventDetailsMapper eventDetailsMapper) {
         this.eventService = eventService;
         this.eventMapper = eventMapper;
         this.eventSummaryMapper = eventSummaryMapper;
         this.appUserService = appUserService;
         this.eventMainMapper = eventMainMapper;
+        this.eventDetailsMapper = eventDetailsMapper;
     }
 
     @Override
@@ -127,12 +127,30 @@ public class EventController implements EventApi {
 
     }
 
-
+    /**
     @Override
     @GetMapping("/{id}")
     public EventResponseDto getById(@PathVariable Long id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return eventMapper.toDto(eventService.findVisibleById(id, principal));
+    }
+    **/
+    @Override
+    @GetMapping("/{id}")
+    public EventDetailsReponseDto getById(@PathVariable Long id) throws HttpException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        AppUserPrincipal principal = null;
+
+        if(authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof  AppUserPrincipal) {
+            principal = (AppUserPrincipal) authentication.getPrincipal();
+        }
+
+        Event event = eventService.findVisibleById(id, principal);
+
+        Map <Long, Integer> remainingSpots = eventService.remainingSpots(List.of(event));
+
+        return eventDetailsMapper.toDto(event, remainingSpots.get(event.getId()));
     }
 
     @Override
@@ -151,7 +169,7 @@ public class EventController implements EventApi {
         AppUser organizer = appUserService.findById(principal.id());
         event.setOrganizer(organizer);
 
-        Event created = eventService.createEvent(event);
+        Event created = eventService.createEvent(event, requestDto.getIdClub());
         return ResponseEntity.status(HttpStatus.CREATED).body(eventMapper.toDto(created));
     }
 

@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -35,10 +36,16 @@ public class EventService {
 
     private final EventRepo eventRepository;
     private final InscriptionRepo inscriptionRepo;
+    private final ClubService clubService;
+    private final WaitingListService waitingListService;
 
-    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo) {
+
+    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo,
+            WaitingListService waitingListService, ClubService clubService) {
         this.eventRepository = eventRepository;
         this.inscriptionRepo = inscriptionRepo;
+        this.waitingListService = waitingListService;
+        this.clubService = clubService;
     }
 
     /**
@@ -90,14 +97,24 @@ public class EventService {
     public Event findVisibleById(Long eventId, AppUserPrincipal principal) throws HttpException {
         Event event = findById(eventId);
 
-        boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
-        boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
-
-        if (event.getStatus() == EventStatus.DRAFT && !isAdmin && !isOwner) {
-            throw new NotFoundException("Aucun évènement trouvé avec cet identifiant.");
+        if(event == null){
+            throw new NotFoundException("Aucun évènement trouvé avec cet identifiant");
         }
 
-        return event;
+        if(principal != null){
+            boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
+            boolean isOwner = event.getOrganizer() != null && event.getOrganizer().getId().equals(principal.id());
+
+            if (event.getStatus() == EventStatus.DRAFT && !isAdmin && !isOwner) {
+                throw new NotFoundException("Vous n'avez pas les accès nécessaire pour consulter cette ressource");
+            }
+            return event;
+
+        }else if(event.getStatus() != EventStatus.DRAFT){
+            return event;
+        }else{
+            throw new NotFoundException("Vous n'avez pas les accès nécessaire pour consulter cette ressource");
+        }
     }
 
     /**
@@ -244,10 +261,14 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event createEvent(Event event) throws HttpException {
+    public Event createEvent(Event event, Long clubId) throws HttpException {
 
         event.setStatus(EventStatus.DRAFT);
         eventChecker(event);
+
+        Club club = clubService.findById(clubId);
+
+        event.setClub(club);
 
         if (eventRepository.existsByTitle(event.getTitle())) {
             throw new ConflictException("Un évènement avec ce titre existe déjà.");
@@ -283,6 +304,8 @@ public class EventService {
             throw new ConflictException("Un évènement avec ce titre existe déjà.");
         }
 
+        Integer previousCapacity = eventToBeModified.getMaxCapacity();
+
         eventToBeModified.setTitle(modifiedEvent.getTitle());
         eventToBeModified.setDescription(modifiedEvent.getDescription());
         eventToBeModified.setLocation(modifiedEvent.getLocation());
@@ -294,7 +317,13 @@ public class EventService {
         eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 
-        return eventRepository.save(eventToBeModified);
+        Event saved = eventRepository.save(eventToBeModified);
+
+        if (previousCapacity != null && saved.getMaxCapacity() != null && saved.getMaxCapacity() > previousCapacity) {
+            waitingListService.fillFreeSpots(eventId);
+        }
+
+        return saved;
     }
 
     /**

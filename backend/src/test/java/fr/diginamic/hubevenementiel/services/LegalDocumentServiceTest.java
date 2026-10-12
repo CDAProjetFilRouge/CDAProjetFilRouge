@@ -139,4 +139,62 @@ class LegalDocumentServiceTest {
 
         assertThat(legalDocumentService.findLatestByType(DocumentType.GDPR_POLICY)).isEqualTo(document);
     }
+
+    // ---------------------------------------------------------------
+    // createNewVersion : nettoyage du contenu
+    // ---------------------------------------------------------------
+
+    private LegalDocument createWithContent(String content) throws HttpException {
+        validDocument.setContent(content);
+        when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
+                .thenReturn(Optional.empty());
+        when(appUserService.findById(1L)).thenReturn(administrator);
+        when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        return legalDocumentService.createNewVersion(validDocument, principal);
+    }
+
+    @Test
+    void createNewVersion_nonBreakingSpaces_areReplacedByNormalSpaces() throws HttpException {
+        LegalDocument result = createWithContent("<p>Conditions&nbsp;generales\u00a0d'utilisation</p>");
+
+        assertThat(result.getContent()).doesNotContain("&nbsp;").doesNotContain("\u00a0");
+        assertThat(result.getContent()).contains("Conditions generales d'utilisation");
+    }
+
+    @Test
+    void createNewVersion_scriptTag_isStrippedFromContent() throws HttpException {
+        LegalDocument result = createWithContent("<p>Texte</p><script>alert('xss')</script>");
+
+        assertThat(result.getContent()).doesNotContain("script").doesNotContain("alert");
+        assertThat(result.getContent()).contains("Texte");
+    }
+
+    @Test
+    void createNewVersion_eventHandlerAttribute_isStrippedFromContent() throws HttpException {
+        LegalDocument result = createWithContent("<p onclick=\"alert(1)\">Texte</p>");
+
+        assertThat(result.getContent()).doesNotContain("onclick");
+    }
+
+    @Test
+    void createNewVersion_formattingTags_areKept() throws HttpException {
+        LegalDocument result = createWithContent("<h2>Titre</h2><p><strong>Gras</strong></p><ul><li>Un</li></ul>");
+
+        assertThat(result.getContent()).contains("<h2>", "<strong>", "<ul>", "<li>");
+    }
+
+    @Test
+    void createNewVersion_classAttribute_isKept() throws HttpException {
+        LegalDocument result = createWithContent("<p class=\"ql-align-center\">Centre</p>");
+
+        assertThat(result.getContent()).contains("ql-align-center");
+    }
+
+    @Test
+    void createNewVersion_contentEmptyAfterSanitizing_throwsBadRequest() {
+        validDocument.setContent("<script>alert(1)</script>");
+
+        assertThrows(BadRequestException.class, () -> legalDocumentService.createNewVersion(validDocument, principal));
+    }
 }
