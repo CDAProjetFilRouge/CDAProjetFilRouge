@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
@@ -25,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -316,6 +318,7 @@ class EventServiceTest {
         Long clubId = 1L;
         Club club = new Club();
         club.setId(clubId);
+        organizer.setClubs(new ArrayList<>(List.of(club)));
         when(clubService.findById(clubId)).thenReturn(club);
 
         validEvent.setStatus(EventStatus.PUBLISHED);
@@ -332,6 +335,7 @@ class EventServiceTest {
         Long clubId = 1L;
         Club club = new Club();
         club.setId(clubId);
+        organizer.setClubs(new ArrayList<>(List.of(club)));
         when(clubService.findById(clubId)).thenReturn(club);
 
         when(eventRepository.existsByTitle(validEvent.getTitle())).thenReturn(true);
@@ -339,6 +343,49 @@ class EventServiceTest {
         assertThrows(ConflictException.class, () -> eventService.createEvent(validEvent, clubId));
 
         verify(eventRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------
+    // createEvent : l'organisateur doit appartenir au club
+    // ---------------------------------------------------------------
+
+    @Test
+    void createEvent_organizerNotMemberOfTheClub_throwsForbidden() throws HttpException {
+        Club ownClub = new Club();
+        ownClub.setId(4L);
+        Club otherClub = new Club();
+        otherClub.setId(9L);
+        organizer.setClubs(new ArrayList<>(List.of(ownClub)));
+        when(clubService.findById(9L)).thenReturn(otherClub);
+
+        assertThrows(ForbiddenException.class, () -> eventService.createEvent(validEvent, 9L));
+
+        verify(eventRepository, never()).save(any());
+    }
+
+    @Test
+    void createEvent_organizerWithoutAnyClub_throwsForbidden() throws HttpException {
+        Club club = new Club();
+        club.setId(4L);
+        organizer.setClubs(new ArrayList<>());
+        when(clubService.findById(4L)).thenReturn(club);
+
+        assertThrows(ForbiddenException.class, () -> eventService.createEvent(validEvent, 4L));
+    }
+
+    @Test
+    void createEvent_administratorCanChooseAnyClub() throws HttpException {
+        Club club = new Club();
+        club.setId(9L);
+        organizer.setRole(Role.ADMINISTRATOR);
+        organizer.setClubs(new ArrayList<>());
+        when(clubService.findById(9L)).thenReturn(club);
+        when(eventRepository.existsByTitle(anyString())).thenReturn(false);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Event result = eventService.createEvent(validEvent, 9L);
+
+        assertThat(result.getClub()).isSameAs(club);
     }
 
     // ---------------------------------------------------------------
