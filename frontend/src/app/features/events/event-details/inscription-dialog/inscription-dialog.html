@@ -1,0 +1,58 @@
+<dialog #dialog class="inscription" aria-labelledby="inscription-title" (close)="onClosed()">
+  <div class="body">
+    <h2 id="inscription-title">{{ eventTitle() }}</h2>
+
+    @switch (state()?.kind) {
+      @case ('open') {
+        @if ($any(state()).waiting) {
+          <p>Cet évènement est complet : vous serez placé·e en liste d’attente, dans l’ordre d’arrivée.</p>
+        } @else {
+          <p>Il reste des places. Validez pour réserver la vôtre.</p>
+        }
+      }
+      @case ('registered') {
+        @if ($any(state()).waiting) {
+          <p>Vous êtes sur la liste d’attente. Vous pouvez y renoncer.</p>
+        } @else {
+          <p>Vous êtes inscrit·e. Vous pouvez annuler votre inscription pour libérer votre place.</p>
+        }
+      }
+      @case ('blocked') {
+        <p>{{ $any(state()).reason }}</p>
+      }
+      @case ('login') {
+        <p>Vous devez être connecté pour vous inscrire à un évènement.</p>
+      }
+    }
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+  </div>
+
+  <footer>
+    <button type="button" class="btn" autofocus (click)="dismissed.emit()">Fermer</button>
+
+    @switch (state()?.kind) {
+      @case ('open') {
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="register.emit()">
+          @if (busy()) {
+            Inscription en cours…
+          } @else if ($any(state()).waiting) {
+            M’inscrire sur liste d’attente
+          } @else {
+            Valider mon inscription
+          }
+        </button>
+      }
+      @case ('registered') {
+        <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="unregister.emit()">
+          {{ busy() ? 'Annulation…' : 'Me désinscrire' }}
+        </button>
+      }
+      @case ('login') {
+        <a class="btn btn-primary" routerLink="/login">Se connecter</a>
+      }
+    }
+  </footer>
+</dialog>

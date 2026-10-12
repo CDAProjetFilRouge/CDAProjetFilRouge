@@ -1,3 +1,16 @@
+@if (large()) {
+  <div class="toolbar">
+    <button type="button" class="nav" aria-label="Mois précédent" (click)="previous()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
+    </button>
+    <p class="toolbar-title" aria-live="polite">{{ title() }}</p>
+    <button type="button" class="nav" aria-label="Mois suivant" (click)="next()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+    </button>
+    <button type="button" class="today" (click)="today()">Aujourd’hui</button>
+  </div>
+}
+
 <full-calendar [options]="options()"></full-calendar>
 
 @if (hovered(); as h) {

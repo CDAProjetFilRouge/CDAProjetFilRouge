@@ -477,8 +477,19 @@ h1 {
 // ───────── Billet d'inscription ─────────
 
 .ticket-wrap {
-  position: sticky;
-  top: 24px;
+  position: static;
+}
+
+.agenda {
+  margin-top: 20px;
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .hint {
+    margin: 4px 0 12px;
+  }
 }
 
 .ticket {
