@@ -46,6 +46,9 @@ class EventServiceTest {
     @Mock
     private InscriptionRepo inscriptionRepo;
 
+    @Mock
+    private WaitingListService waitingListService;
+
     @InjectMocks
     private EventService eventService;
 
@@ -450,6 +453,52 @@ class EventServiceTest {
                 return total;
             }
         };
+    }
+
+    // ---------------------------------------------------------------
+    // updateEvent : capacité augmentée -> liste d'attente promue (US-303)
+    // ---------------------------------------------------------------
+
+    @Test
+    void updateEvent_capacityRaised_fillsFreeSpotsFromWaitingList() throws HttpException {
+        Event existing = cloneFutureEvent();
+        existing.setMaxCapacity(10);
+        validEvent.setMaxCapacity(15);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        eventService.updateEvent(1L, validEvent, owner);
+
+        verify(waitingListService).fillFreeSpots(1L);
+    }
+
+    @Test
+    void updateEvent_capacityUnchanged_doesNotTouchWaitingList() throws HttpException {
+        Event existing = cloneFutureEvent();
+        existing.setMaxCapacity(100);
+        validEvent.setMaxCapacity(100);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        eventService.updateEvent(1L, validEvent, owner);
+
+        verify(waitingListService, never()).fillFreeSpots(any());
+    }
+
+    @Test
+    void updateEvent_capacityLowered_doesNotTouchWaitingList() throws HttpException {
+        Event existing = cloneFutureEvent();
+        existing.setMaxCapacity(100);
+        validEvent.setMaxCapacity(50);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        eventService.updateEvent(1L, validEvent, owner);
+
+        verify(waitingListService, never()).fillFreeSpots(any());
     }
 
     private Event cloneFutureEvent() {

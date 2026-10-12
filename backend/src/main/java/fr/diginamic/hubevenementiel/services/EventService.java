@@ -37,10 +37,14 @@ public class EventService {
     private final EventRepo eventRepository;
     private final InscriptionRepo inscriptionRepo;
     private final ClubService clubService;
+    private final WaitingListService waitingListService;
 
-    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo, ClubService clubService) {
+
+    public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo,
+            WaitingListService waitingListService, ClubService clubService) {
         this.eventRepository = eventRepository;
         this.inscriptionRepo = inscriptionRepo;
+        this.waitingListService = waitingListService;
         this.clubService = clubService;
     }
 
@@ -300,6 +304,8 @@ public class EventService {
             throw new ConflictException("Un évènement avec ce titre existe déjà.");
         }
 
+        Integer previousCapacity = eventToBeModified.getMaxCapacity();
+
         eventToBeModified.setTitle(modifiedEvent.getTitle());
         eventToBeModified.setDescription(modifiedEvent.getDescription());
         eventToBeModified.setLocation(modifiedEvent.getLocation());
@@ -311,7 +317,13 @@ public class EventService {
         eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 
-        return eventRepository.save(eventToBeModified);
+        Event saved = eventRepository.save(eventToBeModified);
+
+        if (previousCapacity != null && saved.getMaxCapacity() != null && saved.getMaxCapacity() > previousCapacity) {
+            waitingListService.fillFreeSpots(eventId);
+        }
+
+        return saved;
     }
 
     /**

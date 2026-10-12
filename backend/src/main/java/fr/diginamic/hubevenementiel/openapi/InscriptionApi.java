@@ -51,9 +51,8 @@ public interface InscriptionApi {
 
     @Operation(summary = "Lister les inscriptions d'un évènement")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Liste paginée des inscriptions"),
-            @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Évènement introuvable")
+            @ApiResponse(responseCode = "200", description = "Liste paginée des inscriptions (vide si aucune)"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
     List<InscriptionEventResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,
@@ -61,9 +60,8 @@ public interface InscriptionApi {
 
     @Operation(summary = "Lister les inscriptions d'un utilisateur", description = "Sert notamment à construire le calendrier d'évènements de l'utilisateur.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Liste paginée des inscriptions"),
-            @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Utilisateur introuvable")
+            @ApiResponse(responseCode = "200", description = "Liste paginée des inscriptions (vide si aucune)"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
     List<InscriptionResponseDto> getByUser(@Parameter(description = "Identifiant de l'utilisateur", required = true) Long userId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,

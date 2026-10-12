@@ -59,12 +59,13 @@ public class AppUserService {
     private final AnonymizationDemandRepo anonymizationDemandRepo;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final WaitingListService waitingListService;
 
     public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo,
             EventRepo eventRepo,
             InscriptionRepo inscriptionRepo, CommentRepo commentRepo, LegalDocumentRepo legalDocumentRepo,
             AnonymizationDemandRepo anonymizationDemandRepo, EmailService emailService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, WaitingListService waitingListService) {
         this.userRepo = userRepo;
         this.tokenRepo = tokenRepo;
         this.refreshTokenRepo = refreshTokenRepo;
@@ -76,6 +77,7 @@ public class AppUserService {
         this.anonymizationDemandRepo = anonymizationDemandRepo;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
+        this.waitingListService = waitingListService;
     }
 
     /**
@@ -799,19 +801,8 @@ public class AppUserService {
             inscriptionRepo.flush();
 
             if (freesASpot) {
-                promoteNextInWaitingList(eventId);
+                waitingListService.promoteNext(eventId);
             }
         }
-    }
-
-    private void promoteNextInWaitingList(Long eventId) throws NotFoundException {
-        eventRepo.findByIdForUpdate(eventId)
-                .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
-
-        inscriptionRepo.findFirstByEventIdAndStatusOrderByInscriptionDateAsc(eventId, InscriptionStatus.WAITING_LIST)
-                .ifPresent(next -> {
-                    next.setStatus(InscriptionStatus.CONFIRMED);
-                    inscriptionRepo.save(next);
-                });
     }
 }

@@ -1,18 +1,41 @@
-<h1>Mon calendrier</h1>
+<div class="calendar-page">
+  <h1>Mon calendrier</h1>
 
-<p>{{ inscriptions().length }} inscription(s) chargée(s) </p>
-@if (errorMessage()) {
-    <p>{{ errorMessage() }}</p>
-}
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
 
-<full-calendar [options]="options()"></full-calendar>
+  <div class="calendar-layout">
+    <full-calendar [options]="options()"></full-calendar>
 
-@if (selected(); as ins) {
-  <section class="detail">
-    <h2>{{ ins.event.title }}</h2>
-    <p>Le {{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</p>
-    <p>Statut : {{ statusLabels[ins.status] }}</p>
-    <p>Tarif : {{ ins.price }} €</p>
-    <button type="button" (click)="selected.set(null)">Fermer</button>
-  </section>
-}
+    <aside class="detail">
+      @if (selected(); as ins) {
+        <h2>{{ ins.event.title }}</h2>
+        <p>Le {{ ins.event.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</p>
+        <p>Statut : {{ statusLabels[ins.status] }}</p>
+        <p>Tarif : {{ ins.price }} €</p>
+        <div class="actions">
+          @if (canCancel()) {
+            <button class="btn cancel" type="button" (click)="cancel()">Me désinscrire</button>
+          }
+          <button class="btn" type="button" (click)="selected.set(null)">Fermer</button>
+        </div>
+      } @else {
+        <p class="empty">Sélectionnez un évènement pour voir son détail.</p>
+      }
+    </aside>
+  </div>
+
+  @if (hovered(); as h) {
+    <div class="bubble" [style.top.px]="h.top" [style.left.px]="h.left">
+      <strong>{{ h.ins.event.title }}</strong>
+      <p>
+        {{ h.ins.event.startDateTime | date: 'dd/MM/yyyy HH:mm' }}
+        → {{ h.ins.event.endDateTime | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+      @if (h.ins.status === 'WAITING_LIST') {
+        <span class="badge">Liste d'attente</span>
+      }
+    </div>
+  }
+</div>
