@@ -23,6 +23,17 @@ import {
 import { EventFormService } from './event-form.service';
 
 const MAX_PRICE = 99999999.99;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGES = 10;
+
+function yearInRange(control: AbstractControl): ValidationErrors | null {
+  const value = control.value as string;
+  if (!value) {
+    return null;
+  }
+  const year = Number(value.slice(0, 4));
+  return year >= 1900 && year <= 2100 ? null : { yearRange: true };
+}
 
 function endAfterStart(group: AbstractControl): ValidationErrors | null {
   const start = group.get('startDateTime')?.value as string;
@@ -74,6 +85,9 @@ export class EventForm {
       (user.role === 'ADMINISTRATOR' || detail.organizerId === user.id)
     );
   });
+  protected readonly canAddImage = computed(
+    () => this.isOwner() && (this.detail()?.imageGallery.length ?? 0) < MAX_IMAGES,
+  );
   protected readonly canEditFields = computed(() => this.isOwner() && !this.isPast());
   protected readonly canPublish = computed(
     () => this.isEdit && this.canEditFields() && this.status() === 'DRAFT',
@@ -82,18 +96,18 @@ export class EventForm {
   protected readonly form = this.formBuilder.group(
     {
       title: ['', [Validators.required, Validators.maxLength(200)]],
-      description: ['', Validators.required],
+      description: ['', [Validators.required, Validators.maxLength(10000)]],
       location: this.formBuilder.group({
-        street1: ['', Validators.required],
-        street2: [''],
-        postalCode: ['', Validators.required],
-        city: ['', Validators.required],
-        country: ['France', Validators.required],
+        street1: ['', [Validators.required, Validators.maxLength(255)]],
+        street2: ['', Validators.maxLength(255)],
+        postalCode: ['', [Validators.required, Validators.maxLength(10)]],
+        city: ['', [Validators.required, Validators.maxLength(100)]],
+        country: ['France', [Validators.required, Validators.maxLength(100)]],
       }),
       category: ['CULTURE' as Category],
       clubId: [null as number | null, Validators.required],
-      startDateTime: ['', Validators.required],
-      endDateTime: ['', Validators.required],
+      startDateTime: ['', [Validators.required, yearInRange]],
+      endDateTime: ['', [Validators.required, yearInRange]],
       maxCapacity: [null as number | null, [Validators.required, Validators.min(1)]],
       affiliatePrice: [
         null as number | null,
@@ -167,6 +181,21 @@ export class EventForm {
       return;
     }
     this.errorMessage.set('');
+    if (file.size > MAX_IMAGE_BYTES) {
+      input.value = '';
+      this.errorMessage.set("L'image ne peut pas dépasser 5 Mo.");
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      input.value = '';
+      this.errorMessage.set('Le fichier doit être une image.');
+      return;
+    }
+    if ((this.detail()?.imageGallery.length ?? 0) >= MAX_IMAGES) {
+      input.value = '';
+      this.errorMessage.set('Un évènement ne peut pas avoir plus de 10 images.');
+      return;
+    }
     this.eventFormService.uploadImage(this.eventId, file).subscribe({
       next: (image) => {
         this.detail.update((d) => (d ? { ...d, imageGallery: [...d.imageGallery, image] } : d));
