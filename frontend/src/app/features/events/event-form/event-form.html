@@ -84,7 +84,7 @@
 
           <div class="field">
             <label for="street2">Complément d'adresse</label>
-            <input id="street2" type="text" formControlName="street2" />
+            <input id="street2" type="text" formControlName="street2" placeholder="Bâtiment, étage, salle…" />
             @if (showError('location.street2')) {
               <p class="field-error">Le complément ne peut pas dépasser 255 caractères.</p>
             }
@@ -93,7 +93,7 @@
           <div class="row three">
             <div class="field">
               <label for="postalCode">Code postal</label>
-              <input id="postalCode" type="text" formControlName="postalCode" />
+              <input id="postalCode" type="text" formControlName="postalCode" placeholder="31000" />
               @if (showError('location.postalCode')) {
                 <p class="field-error">{{ form.controls.location.controls.postalCode.hasError("pattern") ? "Le code postal doit être composé de 4 ou 5 chiffres." : "Le code postal est obligatoire." }}</p>
               }
@@ -101,7 +101,7 @@
 
             <div class="field">
               <label for="city">Ville</label>
-              <input id="city" type="text" formControlName="city" />
+              <input id="city" type="text" formControlName="city" placeholder="Toulouse" />
               @if (showError('location.city')) {
                 <p class="field-error">{{ form.controls.location.controls.city.hasError("maxlength") ? "La ville ne peut pas dépasser 100 caractères." : "La ville est obligatoire." }}</p>
               }
@@ -109,7 +109,7 @@
 
             <div class="field">
               <label for="country">Pays</label>
-              <input id="country" type="text" formControlName="country" />
+              <input id="country" type="text" formControlName="country" placeholder="France" />
               @if (showError('location.country')) {
                 <p class="field-error">{{ form.controls.location.controls.country.hasError("maxlength") ? "Le pays ne peut pas dépasser 100 caractères." : "Le pays est obligatoire." }}</p>
               }

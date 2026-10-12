@@ -1,27 +1,53 @@
+// Formulaire de création / modification d'évènement.
+// Même rendu que les autres formulaires de l'application (cartes blanches, champs 37 px,
+// libellés 12 px), centré dans la page avec les actions en colonne latérale.
+
+:host {
+  display: block;
+}
+
 .event-form-page {
-  padding: 36px var(--page-padding) 48px;
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+  }
 }
 
 .notice {
-  margin-top: 16px;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-soft);
+  padding: 10px 12px;
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--color-primary-hover);
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-md);
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
   align-items: start;
-  margin-top: 24px;
+  margin-top: 20px;
+}
+
+// Colonne principale : une carte blanche, comme les formulaires de compte et de club.
+.main {
+  padding: 22px 22px 6px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
 }
 
 .row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 
   &.three {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -29,69 +55,146 @@
 }
 
 .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 16px;
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+  }
 
   input,
   select,
   textarea {
     width: 100%;
+    padding: 0 11px;
+    font-size: 14px;
+    color: var(--color-text);
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+
+    &:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+      border-color: var(--color-primary);
+    }
+  }
+
+  input,
+  select {
+    height: 37px;
+  }
+
+  select {
+    padding: 0 8px;
+  }
+
+  textarea {
+    min-height: 120px;
+    padding: 10px 11px;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: vertical;
   }
 }
 
+.field-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
 .location {
+  min-width: 0;
+  padding: 14px 14px 0;
   margin: 0 0 16px;
-  padding: 16px 16px 0;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 
   legend {
     padding: 0 6px;
+    font-size: 12px;
     font-weight: 600;
+  }
+
+  .field input {
+    background: #fff;
   }
 }
 
+// Colonne latérale : règles puis actions, qui suit le défilement.
 .side {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   position: sticky;
   top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .btn {
+    width: 100%;
+  }
+
+  .btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+  }
 }
 
 .rules {
   padding: 16px;
-  border-radius: var(--radius-lg);
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 
   h2 {
-    margin-bottom: 8px;
-    font-size: 15px;
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   p {
-    margin-top: 8px;
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
     color: var(--color-muted);
   }
+}
+
+.form-error,
+.form-success {
+  padding: 10px 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: var(--radius-md);
 }
 
 .form-error {
   color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
 
 .form-success {
   color: var(--color-success);
+  background: var(--color-success-bg);
 }
 
 .status-bar {
-  margin-top: 24px;
-  padding: 16px;
-  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-top: 20px;
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 
   .status-title {
-    margin-bottom: 8px;
-    color: var(--color-muted);
+    margin: 0 0 8px;
+    font-size: 12px;
     font-weight: 600;
+    color: var(--color-muted);
   }
 }
 
@@ -99,34 +202,41 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0;
   padding: 0;
+  margin: 0;
   list-style: none;
 
   li {
-    padding: 4px 14px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--color-muted);
+    background: #fff;
     border: 1px solid var(--color-border);
     border-radius: 999px;
-    background: #fff;
-    color: var(--color-muted);
 
     &.current {
-      border-color: var(--color-primary);
-      background: var(--color-primary);
+      font-weight: 600;
       color: #fff;
+      background: var(--color-primary);
+      border-color: var(--color-primary);
     }
   }
 }
 
 .gallery {
-  margin-top: 8px;
+  padding-top: 16px;
+  margin: 0 0 16px;
+  border-top: 1px solid var(--color-border);
 
   h2 {
-    margin-bottom: 12px;
-    font-size: 15px;
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .hint {
+    margin: 8px 0 0;
+    font-size: 12px;
     color: var(--color-muted);
   }
 
@@ -134,8 +244,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin: 0 0 12px;
     padding: 0;
+    margin: 0 0 12px;
     list-style: none;
 
     li {
@@ -159,17 +269,32 @@
   }
 }
 
-.confirm {
-  margin: 0;
-  font-weight: 600;
-}
-
 .danger {
-  border-color: var(--color-danger);
   color: var(--color-danger);
+  border-color: var(--color-danger);
+
+  &:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+  }
 }
 
 .remove {
   height: 28px;
   font-size: 12px;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side {
+    position: static;
+  }
+
+  .row,
+  .row.three {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
 }
