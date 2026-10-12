@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers("/internal/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/events/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/events/{eventId}/comments").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

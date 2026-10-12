@@ -19,11 +19,14 @@ public class EventRequestDto {
     private BigDecimal nonAffiliatePrice;
     private Integer maxCapacity;
     private EventStatus status;
+    private Long idClub;
 
     public EventRequestDto() {
     }
 
-    public EventRequestDto(String title, String description, AddressRequestDto location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, EventStatus status) {
+    public EventRequestDto(String title, String description, AddressRequestDto location, Category category, LocalDateTime startDateTime,
+                           LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice,
+                           Integer maxCapacity, EventStatus status, Long idClub) {
         this.title = title;
         this.description = description;
         this.location = location;
@@ -34,6 +37,7 @@ public class EventRequestDto {
         this.nonAffiliatePrice = nonAffiliatePrice;
         this.maxCapacity = maxCapacity;
         this.status = status;
+        this.idClub = idClub;
     }
 
     public String getTitle() {
@@ -115,4 +119,8 @@ public class EventRequestDto {
     public void setStatus(EventStatus status) {
         this.status = status;
     }
+
+    public Long getIdClub() { return idClub; }
+
+    public void setIdClub(Long idClub) { this.idClub = idClub; }
 }
