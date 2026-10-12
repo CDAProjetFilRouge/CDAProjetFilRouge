@@ -10,6 +10,7 @@ import { CalendarEvent } from './event-calendar.models';
 
 @Component({
   imports: [FullCalendarModule, DatePipe],
+  host: { '[class.large]': 'large()' },
   selector: 'app-event-calendar',
   styleUrl: './event-calendar.scss',
   templateUrl: './event-calendar.html',
@@ -18,6 +19,10 @@ export class EventCalendar {
   readonly events = input.required<CalendarEvent[]>();
   // Intégré au tableau de bord : grille plus basse.
   readonly compact = input(false);
+  readonly large = input(false);
+  readonly initialDate = input<string | undefined>(undefined);
+  readonly highlightedId = input<string | undefined>(undefined);
+  readonly highlightedMark = input<'plus' | 'check' | 'none'>('none');
   readonly eventSelected = output<string>();
 
   protected readonly hovered = signal<{
@@ -33,10 +38,26 @@ export class EventCalendar {
     firstDay: 1,
     initialView: 'dayGridMonth',
     ...(this.compact() ? { height: 400, dayMaxEvents: true } : {}),
+    ...(this.large()
+      ? {
+          height: 'auto',
+          dayMaxEvents: false,
+          eventDisplay: 'block',
+          displayEventTime: false,
+          initialDate: this.initialDate(),
+          dayCellClass: 'agenda-cell',
+          eventClass: (info) =>
+            info.event.id === this.highlightedId()
+              ? `agenda-event is-highlighted${info.isStart ? ` mark-${this.highlightedMark()}` : ''}`
+              : 'agenda-event',
+          eventInnerClass: 'agenda-event-inner',
+          eventTitleClass: 'agenda-event-title',
+        }
+      : {}),
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,listMonth',
+      right: this.large() ? '' : 'dayGridMonth,timeGridWeek,listMonth',
     },
     events: this.events().map((e) => ({
       id: e.id,

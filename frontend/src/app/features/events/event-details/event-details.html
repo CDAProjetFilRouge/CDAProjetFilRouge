@@ -281,6 +281,19 @@
             }
           </div>
         </div>
+
+        <section class="agenda" aria-labelledby="agenda-title">
+          <h2 id="agenda-title">Mon agenda</h2>
+          <p class="hint">Cliquez sur l’évènement surligné (+) pour gérer votre inscription.</p>
+          <app-event-calendar
+            [events]="calendarEvents()"
+            [large]="true"
+            [initialDate]="event.startDate"
+            [highlightedId]="'' + event.id"
+            [highlightedMark]="calendarMark()"
+            (eventSelected)="onCalendarSelect($event)"
+          />
+        </section>
       </aside>
     </div>
   </article>
@@ -290,4 +303,17 @@
     <p>{{ loadError() ?? 'Cet évènement n’existe pas ou n’est plus visible.' }}</p>
     <a class="btn btn-primary" routerLink="/catalogue">Voir tous les évènements</a>
   </div>
+}
+
+@if (eventDetail(); as event) {
+  <app-inscription-dialog
+    [open]="dialogOpen()"
+    [eventTitle]="event.title"
+    [state]="registration()"
+    [busy]="inscriptionBusy()"
+    [error]="inscriptionError()"
+    (register)="register()"
+    (unregister)="cancelInscription()"
+    (dismissed)="closeDialog()"
+  />
 }

@@ -6,6 +6,11 @@ import { EventDetailsService } from './event-details-service';
 import { CommentModel } from './event-details-comments-model';
 import { InscriptionModel } from './event-details-inscription-model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago-pipe';
+import { CalendarService } from '../../calendar/calendar-service';
+import { InscriptionModel as AgendaInscription } from '../../calendar/calendar.models';
+import { CalendarEvent } from '../../../shared/event-calendar/event-calendar.models';
+import { EventCalendar } from '../../../shared/event-calendar/event-calendar';
+import { InscriptionDialog } from './inscription-dialog/inscription-dialog';
 import { AuthService } from '../../../core/auth/auth.service';
 import { URL_IMAGES } from '../../../core/api/api.config';
 
@@ -30,7 +35,7 @@ const timeFormat = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '
 const priceFormat = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
 @Component({
-  imports: [RouterLink, TimeAgoPipe],
+  imports: [RouterLink, TimeAgoPipe, EventCalendar, InscriptionDialog],
   selector: 'app-event-details',
   styleUrl: './event-details.scss',
   templateUrl: './event-details.html',
@@ -40,6 +45,7 @@ export class EventDetails implements OnInit {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly calendarService = inject(CalendarService);
 
   protected readonly user = this.authService.currentUser;
   protected readonly loading = signal(true);
@@ -52,6 +58,37 @@ export class EventDetails implements OnInit {
   protected readonly inscriptionBusy = signal(false);
   protected readonly inscriptionError = signal<string | null>(null);
   protected readonly confirmingCancel = signal(false);
+  protected readonly dialogOpen = signal(false);
+  protected readonly agenda = signal<AgendaInscription[]>([]);
+
+  protected readonly calendarMark = computed<'plus' | 'check' | 'none'>(() => {
+    const kind = this.registration()?.kind;
+    if (kind === 'open') {
+      return 'plus';
+    }
+    return kind === 'registered' ? 'check' : 'none';
+  });
+
+  protected readonly calendarEvents = computed<CalendarEvent[]>(() => {
+    const event = this.eventDetail();
+    if (!event) {
+      return [];
+    }
+    const others = this.agenda()
+      .filter((i) => i.status !== 'CANCELED' && i.event.id !== event.id)
+      .map((i) => ({
+        id: String(i.event.id),
+        title: i.event.title,
+        start: i.event.startDateTime,
+        end: i.event.endDateTime,
+        muted: true,
+        badge: i.status === 'WAITING_LIST' ? 'Liste d’attente' : 'Inscrit·e',
+      }));
+    return [
+      ...others,
+      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate },
+    ];
+  });
 
   protected readonly commentDraft = signal('');
   protected readonly commentBusy = signal(false);
@@ -147,13 +184,23 @@ export class EventDetails implements OnInit {
   });
 
   ngOnInit(): void {
-    const idParam = this.activatedRoute.snapshot.paramMap.get('id');
+    this.activatedRoute.paramMap.subscribe((params) => this.load(params.get('id')));
+    this.loadAgenda();
+  }
+
+  private load(idParam: string | null): void {
     const id = idParam === null ? NaN : parseInt(idParam, 10);
 
     if (Number.isNaN(id)) {
       this.router.navigate(['/']);
       return;
     }
+
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.myInscription.set(null);
+    this.selectedImageIndex.set(0);
+    this.dialogOpen.set(false);
 
     this.eventDetailsService.getEventDetail(id).subscribe({
       next: (event) => {
@@ -229,7 +276,9 @@ export class EventDetails implements OnInit {
       next: (inscription) => {
         this.myInscription.set(inscription);
         this.inscriptionBusy.set(false);
+        this.dialogOpen.set(false);
         this.refreshEvent(event.id);
+        this.loadAgenda();
       },
       error: (err: HttpErrorResponse) => {
         this.inscriptionError.set(this.messageFrom(err, 'L’inscription a échoué. Réessayez dans un instant.'));
@@ -261,12 +310,40 @@ export class EventDetails implements OnInit {
         this.myInscription.set(null);
         this.confirmingCancel.set(false);
         this.inscriptionBusy.set(false);
+        this.dialogOpen.set(false);
         this.refreshEvent(event.id);
+        this.loadAgenda();
       },
       error: (err: HttpErrorResponse) => {
         this.inscriptionError.set(this.messageFrom(err, 'L’annulation a échoué. Réessayez dans un instant.'));
         this.inscriptionBusy.set(false);
       },
+    });
+  }
+
+  protected onCalendarSelect(eventId: string): void {
+    const current = this.eventDetail();
+    if (current && String(current.id) === eventId) {
+      this.inscriptionError.set(null);
+      this.dialogOpen.set(true);
+      return;
+    }
+    this.router.navigate(['/event-details', eventId]);
+  }
+
+  protected closeDialog(): void {
+    this.dialogOpen.set(false);
+  }
+
+  private loadAgenda(): void {
+    const user = this.user();
+    if (!user) {
+      this.agenda.set([]);
+      return;
+    }
+    this.calendarService.getByUser(user.id).subscribe({
+      next: (list) => this.agenda.set(list),
+      error: () => this.agenda.set([]),
     });
   }
 
