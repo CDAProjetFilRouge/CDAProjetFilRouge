@@ -1,19 +1,22 @@
 @use "./styles/auth";
 
 :root {
-  --color-text: #1f2430;
-  --color-muted: #6b7280;
-  --color-border: #d8dce3;
-  --color-surface: #f4f6f9;
-  --color-placeholder: #e7eaef;
-  --color-primary: #e2536b;
-  --color-primary-hover: #cf445c;
+  --color-text: #2b2023;
+  --color-muted: #6f5a55;
+  --color-border: #e9d8cd;
+  --color-field-border: #a99084;
+  --color-surface: #fbefe5;
+  --color-placeholder: #f3e4d9;
+  --color-primary: #c93752;
+  --color-primary-hover: #ae2f49;
   --color-primary-soft: #fbd3d9;
   --color-success-bg: #eaf3de;
   --color-success: #27500a;
   --color-danger-bg: #fdecec;
   --color-danger: #b3261e;
-  --color-footer-bg: #fcf8f5;
+  --color-page-bg: #fffaf4;
+  --color-header-bg: #fffdfa;
+  --color-footer-bg: #fde6dc;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -34,7 +37,7 @@ body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 14px;
   color: var(--color-text);
-  background: #fff;
+  background: var(--color-page-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -104,4 +107,13 @@ app-root .main > router-outlet + * {
   > :only-child {
     flex: 1;
   }
+}
+
+// Repère de focus clavier par défaut, que les composants peuvent surcharger
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
