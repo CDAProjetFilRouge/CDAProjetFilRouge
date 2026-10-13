@@ -64,30 +64,14 @@
 
     </div>
     <div class="carousel">
-      @for (event of events(); track event.id){
-        <div class="event-card">
-          @if (event.imageGallery.length > 0) {
-            <img alt="Image de l'évènement" [src]="imageUrl(event.imageGallery[0].path)">
-          }@else {
-            <div class="no-image">galerie · image</div>
-          }
-          @if(event.remainingSpots > 0){
-            <p class="event-card-header"><span class="badge">{{event.category}}</span><span class="badge badge-success">Places disponibles</span></p>
-          }@else {
-            <p class="event-card-header"><span class="badge">{{event.category}}</span><span class="badge badge-danger">Complet · liste d'attente</span></p>
-          }
-          <h3>{{ event.title}}</h3>
-          @if (event.clubName) {
-            <p>Organisé par : {{ event.clubName }}</p>
-          }
-          <p>Date : {{ event.startDateTime | date:'dd/MM/yyyy'}} - {{ event.endDateTime | date:'dd/MM/yyyy'}}</p>
-          <p>Lieu : {{ event.location.street1}}, {{ event.location.city}}, {{ event.location.postalCode}}</p>
-          <p>Places disponibles : {{ event.remainingSpots}}/{{ event.maxCapacity}}</p>
-          <div class="event-card-footer">
-            <p>{{ event.affiliatePrice}}€ affilié - {{ event.nonAffiliatePrice}}€ non affilié</p>
-            <button class="btn" [routerLink]="['/event-details', event.id]">Voir le détail</button>
-          </div>
-        </div>
+      @for (event of events(); track event.id) {
+        <app-event-card
+          [event]="event"
+          [registration]="registrationOf(event.id)"
+          [waitingPosition]="positionOf(event.id)"
+          [affiliated]="affiliated()"
+          (registrationClick)="openRegistration(event)"
+        />
       }
     </div>
     <div class="pagination">
@@ -105,3 +89,16 @@
     </div>
   </div>
 </div>
+
+@if (dialogEvent(); as selected) {
+  <app-inscription-dialog
+    [open]="true"
+    [eventTitle]="selected.title"
+    [state]="dialogState()"
+    [busy]="dialogBusy()"
+    [error]="dialogError()"
+    (register)="register()"
+    (unregister)="unregister()"
+    (dismissed)="closeRegistration()"
+  />
+}
