@@ -123,7 +123,8 @@ public class EventController implements EventApi {
             @RequestParam(required = false) String city,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) EventStatus status,
+            @RequestParam(required = false) List<EventStatus> status,
+            @RequestParam(defaultValue = "false") boolean hideFinished,
             @RequestParam(defaultValue = "ASC") Sort.Direction sort) throws HttpException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -136,7 +137,7 @@ public class EventController implements EventApi {
         LocalDateTime startDateTime = startDate == null ? null : startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate == null ? null : endDate.atTime(LocalTime.MAX);
         return toMainDtos(eventService.searchFilter(page, size, keyword, category, clubName, city,
-                startDateTime, endDateTime, status, sort, principal));
+                startDateTime, endDateTime, status, hideFinished, sort, principal));
 
     }
 

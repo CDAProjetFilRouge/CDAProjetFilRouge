@@ -296,6 +296,71 @@ class EventControllerIntegrationTest {
     }
 
     @Test
+    void filterEvents_hideFinished_excludesEventsWhoseEndIsPast() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String past = "Termine-" + System.nanoTime();
+        String ongoing = "En cours-" + System.nanoTime();
+        String upcoming = "A venir-" + System.nanoTime();
+        createPublishedEvent(token, past, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, ongoing, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, upcoming, city, start, start.plusHours(2), 50);
+        LocalDateTime now = LocalDateTime.now();
+        setDates(past, now.minusDays(2), now.minusDays(1));
+        setDates(ongoing, now.minusHours(1), now.plusHours(1));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED")
+                        .param("hideFinished", "true")
+                        .param("sort", "ASC")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[0].title").value(ongoing))
+                .andExpect(jsonPath("$.content[1].title").value(upcoming));
+    }
+
+    @Test
+    void filterEvents_severalStatuses_returnsPublishedAndCancelledButNotFinished() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String published = "Publie-" + System.nanoTime();
+        String cancelled = "Annule-" + System.nanoTime();
+        createPublishedEvent(token, published, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, cancelled, city, start, start.plusHours(2), 50);
+        entityManager.createQuery("update Event e set e.status = :status where e.title = :title")
+                .setParameter("status", fr.diginamic.hubevenementiel.enums.EventStatus.CANCELLED)
+                .setParameter("title", cancelled)
+                .executeUpdate();
+        entityManager.clear();
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED,CANCELLED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "CANCELLED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value(cancelled));
+    }
+
+    @Test
     void filterEvents_endDateIsInclusive_startDateExcludesEarlierEvents() throws Exception {
         String token = loginAndGetToken(organizer.getEmail());
         String city = "Ville-" + System.nanoTime();
@@ -508,6 +573,15 @@ class EventControllerIntegrationTest {
         mockMvc.perform(get("/events/mine")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
+    }
+
+    private void setDates(String title, LocalDateTime start, LocalDateTime end) {
+        entityManager.createQuery("update Event e set e.startDateTime = :start, e.endDateTime = :end where e.title = :title")
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .setParameter("title", title)
+                .executeUpdate();
+        entityManager.clear();
     }
 
     private void createPublishedEvent(String token, String title, String city, LocalDateTime start,

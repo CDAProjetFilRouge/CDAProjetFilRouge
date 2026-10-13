@@ -18,6 +18,9 @@ import { scrollToTop } from '../../../shared/scroll-to-top';
 
 const QUICK_ERROR_MS = 4000;
 
+// Statut par défaut du catalogue : les évènements annulés restent visibles, avec leur indicateur.
+const CATALOGUE_STATUSES = 'PUBLISHED,CANCELLED';
+
 interface MyRegistration {
   id: number;
   status: Exclude<CardRegistration, null>;
@@ -206,7 +209,7 @@ export class Event {
     city: new FormControl('', {nonNullable: true}),
     startDate: new FormControl('', {nonNullable: true}),
     endDate: new FormControl('', {nonNullable: true}),
-    status: new FormControl('PUBLISHED', {nonNullable: true})
+    status: new FormControl(CATALOGUE_STATUSES, {nonNullable: true})
   })
 
   private handleError(err: HttpErrorResponse): void {
@@ -223,7 +226,7 @@ export class Event {
   }
 
   loadEvents(): void {
-    const filters: EventFilter = { ...this.filters.getRawValue(), sort: this.sortOrder() };
+    const filters: EventFilter = { ...this.filters.getRawValue(), hideFinished: true, sort: this.sortOrder() };
 
     this.eventService.search(this.currentPage - 1, this.eventsPerPage, filters).subscribe({
       next: (page) => {
@@ -248,7 +251,7 @@ export class Event {
       city: '',
       startDate: '',
       endDate: '',
-      status: 'PUBLISHED'
+      status: CATALOGUE_STATUSES
     });
 
     this.search();
