@@ -37,7 +37,7 @@
         <td>{{ event.location.city }}</td>
         <td>{{ event.remainingSpots }} / {{ event.maxCapacity }}</td>
         <td>
-          <span class="status" [class.draft]="event.status === 'DRAFT'">
+          <span class="status" [attr.data-status]="event.status">
             {{ statusLabels[event.status] ?? event.status }}
           </span>
         </td>
