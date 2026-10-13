@@ -22,14 +22,26 @@ svg {
   stroke-linejoin: round;
 }
 
-// Une couleur d'accent par catégorie, le rose de la marque par défaut.
-// --stub est une teinte plus profonde, assez contrastée pour du texte blanc.
+// Direction « salle de cinéma » (voir styles.scss) : le billet est un tirage sombre éclairé par le côté.
+//   - lumière : un liseré ambre en haut (lumière rasante), un halo sous le curseur, un vignettage sur la photo ;
+//   - texture : papier noir satiné, grain fin, picots de la perforation ;
+//   - reflets : un reflet diagonal qui suit le curseur sur la photo et sur la souche ;
+//   - volume : plusieurs ombres superposées, bord intérieur éclairé, souche en bordeaux profond.
+// Rien ne repose sur un mode de fusion ni sur un filtre permanent (voir le commit da25a54).
 .card {
   --accent: var(--color-primary);
   --accent-soft: var(--color-primary-soft);
-  --accent-wash: #fff5f6;
-  --stub: #c25669;
-  --edge: var(--color-border);
+  --accent-wash: #1e1814;
+  --stub: #6b2230;
+  --paper: #1e1815;
+  --paper-2: #14100e;
+  --amber: #d9a45b;
+  --amber-light: #efc486;
+  --wine: #4a1620;
+  --sage: #9ec7a5;
+  --sage-soft: rgba(158, 199, 165, 0.14);
+  --sage-line: rgba(158, 199, 165, 0.5);
+  --edge: rgba(217, 164, 91, 0.3);
   --stub-width: 190px;
   --stub-height: 104px;
   --notch: 22px;
@@ -67,27 +79,6 @@ svg {
     calc((100% - var(--stub-width)) - var(--notch) * 0.5) 100%,
     0 100%
   );
-
-  &[data-category='CULTURE'] {
-    --accent: #7048d6;
-    --accent-soft: #e6dcfb;
-    --accent-wash: #f6f2fe;
-    --stub: #6b53b8;
-  }
-
-  &[data-category='SPORT'] {
-    --accent: #1f6fe0;
-    --accent-soft: #d3e4fc;
-    --accent-wash: #eff5fe;
-    --stub: #3668b0;
-  }
-
-  &[data-category='DIVERTISSEMENT'] {
-    --accent: #d9780a;
-    --accent-soft: #fbe3bd;
-    --accent-wash: #fff6e8;
-    --stub: #a46a22;
-  }
 }
 
 // Grain de pellicule : un bruit plus gros et plus contrasté que du simple bruit numérique.
@@ -148,15 +139,15 @@ $grain-light: url('/grain-light.png');
 
   &:hover,
   &:focus-within {
-    --edge: var(--accent);
+    --edge: var(--amber-light);
   }
 
   &[data-registration='CONFIRMED'] {
-    --edge: #9fd3ae;
+    --edge: var(--sage-line);
   }
 
   &[data-registration='WAITING_LIST'] {
-    --edge: #e6c36a;
+    --edge: #b2566a;
   }
 }
 
@@ -178,9 +169,12 @@ $grain-light: url('/grain-light.png');
   position: relative;
   display: flex;
   height: 100%;
-  min-height: 232px;
-  background: #f1e8d6;
+  min-height: 248px;
+  background:
+    linear-gradient(180deg, rgba(239, 196, 134, 0.09), transparent 38%),
+    linear-gradient(160deg, #241d19, var(--paper-2));
   border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 rgba(255, 236, 205, 0.18), inset 0 -24px 40px -30px #000;
   border-radius: var(--radius);
   transition: border-color .3s;
 
@@ -256,9 +250,11 @@ $grain-light: url('/grain-light.png');
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #fff;
-  background: var(--accent);
+  color: var(--amber-light);
+  background: rgb(15 12 11 / 0.72);
+  border: 1px solid rgb(239 196 134 / 0.35);
   border-radius: 999px;
+  box-shadow: 0 6px 14px -6px #000;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.4);
 }
 
@@ -275,7 +271,8 @@ $grain-light: url('/grain-light.png');
 
 .title {
   margin: 0;
-  font-size: 19px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 25px;
   font-weight: 700;
   line-height: 1.3;
   display: -webkit-box;
@@ -364,23 +361,18 @@ $grain-light: url('/grain-light.png');
 // --- Places ---------------------------------------------------------------
 
 .spots {
-  --spots-color: #2f9e57;
-  --spots-track: #e4f2e9;
+  --spots-color: var(--amber);
+  --spots-track: rgba(255, 255, 255, 0.08);
   margin-top: auto;
 
-  &[data-level='medium'] {
-    --spots-color: #e08a00;
-    --spots-track: #fdeccb;
+  &[data-level='high'] {
+    --spots-color: var(--sage);
   }
 
-  &[data-level='low'] {
-    --spots-color: #d9482b;
-    --spots-track: #fbdcd5;
-  }
-
+  &[data-level='low'],
   &[data-level='full'] {
-    --spots-color: #b3261e;
-    --spots-track: #f4d7d5;
+    --spots-color: #e0745f;
+    --spots-track: rgba(224, 116, 95, 0.16);
   }
 }
 
@@ -433,7 +425,7 @@ $grain-light: url('/grain-light.png');
   text-align: center;
   background:
     linear-gradient(90deg, rgb(31 36 48 / 0.12), transparent 14px),
-    linear-gradient(180deg, var(--accent-wash), #f1e8d6 130%);
+    linear-gradient(180deg, var(--accent-wash), var(--paper) 130%);
   border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
   opacity: 0;
   transition: opacity .35s ease;
@@ -445,7 +437,7 @@ $grain-light: url('/grain-light.png');
     z-index: 2;
     width: 10px;
     pointer-events: none;
-    background: radial-gradient(circle 4.6px at 0 50%, #f1e8d6 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    background: radial-gradient(circle 4.6px at 0 50%, var(--paper) 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
   }
 }
 
@@ -511,10 +503,10 @@ $grain-light: url('/grain-light.png');
   place-items: center;
   width: 44px;
   height: 44px;
-  color: #fff;
-  background: #2f9e57;
+  color: #12200f;
+  background: linear-gradient(180deg, #b8dcbf, #86b890);
   border-radius: 50%;
-  box-shadow: 0 8px 18px -6px rgb(20 83 45 / 0.6);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 22px -8px rgb(0 0 0 / 0.8);
   animation: pop .5s cubic-bezier(.34, 1.56, .64, 1);
 
   svg {
@@ -531,13 +523,13 @@ $grain-light: url('/grain-light.png');
   }
 
   &.waiting {
-    background: #b45f00;
-    box-shadow: 0 8px 18px -6px rgb(122 74 0 / 0.6);
+    background: linear-gradient(180deg, #efc486, #c98f45);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 22px -8px rgb(0 0 0 / 0.8);
   }
 
   &.error {
-    background: #b3261e;
-    box-shadow: 0 8px 18px -6px rgb(120 20 15 / 0.6);
+    background: #c2493a;
+    box-shadow: 0 10px 22px -8px rgb(0 0 0 / 0.8);
   }
 }
 
@@ -569,9 +561,9 @@ $grain-light: url('/grain-light.png');
   padding: 3px 10px 3px 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #14532d;
-  background: #d8f3e0;
-  border: 1px solid #9fd3ae;
+  color: var(--sage);
+  background: var(--sage-soft);
+  border: 1px solid var(--sage-line);
   border-radius: 999px;
 
   svg {
@@ -604,9 +596,9 @@ $grain-light: url('/grain-light.png');
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-text);
-  background: #fff;
-  border: 1px solid var(--color-border);
+  color: var(--amber-light);
+  background: rgb(239 196 134 / 0.1);
+  border: 1px solid rgb(239 196 134 / 0.45);
   border-radius: 999px;
   cursor: pointer;
   transition: background-color .15s, border-color .15s, color .15s;
@@ -677,7 +669,7 @@ $grain-light: url('/grain-light.png');
     z-index: 2;
     width: 10px;
     pointer-events: none;
-    background: radial-gradient(circle 4.6px at 0 50%, #f1e8d6 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    background: radial-gradient(circle 4.6px at 0 50%, var(--paper) 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
     transition: opacity .15s;
   }
 
@@ -774,8 +766,9 @@ $grain-light: url('/grain-light.png');
 
   .day {
     margin-top: 4px;
-    font-size: 48px;
-    font-weight: 800;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 52px;
+    font-weight: 700;
     letter-spacing: -.03em;
   }
 
@@ -810,8 +803,9 @@ $grain-light: url('/grain-light.png');
   line-height: 1.2;
 
   .amount {
-    font-size: 26px;
-    font-weight: 800;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 27px;
+    font-weight: 700;
   }
 
   .hint {
@@ -1099,14 +1093,14 @@ $grain-light: url('/grain-light.png');
     padding: 22px 16px 8px;
     background:
       linear-gradient(180deg, rgb(31 36 48 / 0.12), transparent 14px),
-      linear-gradient(180deg, var(--accent-wash), #f1e8d6 130%);
+      linear-gradient(180deg, var(--accent-wash), var(--paper) 130%);
     border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
 
     &::before {
       inset: 0 0 auto;
       width: auto;
       height: 10px;
-      background: radial-gradient(circle 4.6px at 50% 0, #f1e8d6 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+      background: radial-gradient(circle 4.6px at 50% 0, var(--paper) 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
     }
   }
 
@@ -1167,7 +1161,7 @@ $grain-light: url('/grain-light.png');
       inset: 0 0 auto;
       width: auto;
       height: 10px;
-      background: radial-gradient(circle 4.6px at 50% 0, #f1e8d6 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+      background: radial-gradient(circle 4.6px at 50% 0, var(--paper) 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
     }
 
   }
@@ -1240,9 +1234,9 @@ $grain-light: url('/grain-light.png');
 
 .card[data-registration='WAITING_LIST'] .stub {
   background:
-    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.16) 0 10px, transparent 10px 20px),
-    linear-gradient(160deg, rgb(255 255 255 / 0.12), transparent 50%, rgb(0 0 0 / 0.28)),
-    #4a4f5c;
+    repeating-linear-gradient(135deg, rgb(217 164 91 / 0.28) 0 10px, transparent 10px 20px),
+    linear-gradient(160deg, rgb(255 255 255 / 0.1), transparent 50%, rgb(0 0 0 / 0.35)),
+    #2b0e15;
 }
 
 .wait {
@@ -1283,8 +1277,9 @@ $grain-light: url('/grain-light.png');
   font-weight: 800;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: #fff;
-  background: #4a4f5c;
+  color: var(--amber-light);
+  background: #2b0e15;
+  border: 1px solid rgb(239 196 134 / 0.45);
   border-radius: 999px;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.5);
 }
@@ -1299,8 +1294,8 @@ $grain-light: url('/grain-light.png');
   width: 26px;
   height: 26px;
   place-items: center;
-  color: var(--stub);
-  background: #fffdf4;
+  color: #2b0e15;
+  background: linear-gradient(180deg, #f6d29b, #d9a45b);
   border-radius: 50%;
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
   transition: transform .3s;
@@ -1344,14 +1339,14 @@ $grain-light: url('/grain-light.png');
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  filter: blur(14px);
-  transform: translateY(16px);
+  filter: blur(20px);
+  transform: translateY(22px) scale(.97);
   transition: opacity .3s ease;
 
   > div {
     width: 100%;
     height: 100%;
-    background: rgb(31 36 48 / 0.3);
+    background: rgb(0 0 0 / 0.75);
     border-radius: var(--radius);
     clip-path: var(--ticket-shape);
   }
@@ -1384,7 +1379,8 @@ $grain-light: url('/grain-light.png');
 .live-chip {
   top: 12px;
   right: 12px;
-  background: #d92d3a;
+  color: #1a1208;
+  background: linear-gradient(180deg, #f6d29b, #d9a45b);
 }
 
 .live-dot {
@@ -1405,7 +1401,7 @@ $grain-light: url('/grain-light.png');
 .card[data-lifecycle='ongoing'],
 .card[data-lifecycle='ongoing']:hover,
 .card[data-lifecycle='ongoing']:focus-within {
-  --edge: #d92d3a;
+  --edge: var(--amber-light);
 }
 
 .card[data-lifecycle='ongoing'] .shell {
@@ -1421,7 +1417,8 @@ $grain-light: url('/grain-light.png');
 
 .card[data-lifecycle='cancelled'] {
   .shell {
-    background: #e8e3da;
+    background: linear-gradient(160deg, #1c1816, #121010);
+    box-shadow: inset 0 1px 0 rgba(255, 236, 205, 0.1);
   }
 
   .media img,
@@ -1454,7 +1451,7 @@ $grain-light: url('/grain-light.png');
       radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.11) 1px, transparent 1.4px) 0 0 / 9px 9px,
       repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 11px),
       linear-gradient(160deg, rgb(255 255 255 / 0.18), transparent 45%, rgb(0 0 0 / 0.22)),
-      color-mix(in srgb, var(--stub) 50%, #8f8d8c);
+      color-mix(in srgb, var(--stub) 55%, #3a3532);
     opacity: .66;
   }
 }
@@ -1475,9 +1472,10 @@ $grain-light: url('/grain-light.png');
   line-height: 1;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgb(205 32 32 / 0.95);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: rgb(224 96 80 / 0.95);
   background: rgb(255 255 255 / 0.16);
-  border: 4px solid rgb(205 32 32 / 0.95);
+  border: 3px solid rgb(224 96 80 / 0.95);
   text-shadow: 0 0 6px rgb(255 255 255 / 0.55);
   box-shadow: 0 0 8px rgb(255 255 255 / 0.35);
   border-radius: 6px;
@@ -1509,4 +1507,73 @@ $grain-light: url('/grain-light.png');
   white-space: nowrap;
   border: 0;
   clip-path: inset(50%);
+}
+
+// --- Lumière, reflets, volume ----------------------------------------------------------------------
+
+// Vignettage de la photo : le centre est éclairé, les bords s'éteignent, comme une image projetée.
+.media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 42%, transparent 38%, rgb(10 7 6 / 0.62) 100%),
+    linear-gradient(0deg, rgb(10 7 6 / 0.7), transparent 38%);
+}
+
+// Reflet diagonal qui suit le curseur : une bande de lumière chaude, sans mode de fusion.
+.holo {
+  background: linear-gradient(115deg, transparent 30%, rgb(255 224 176 / 0.28) 46%, rgb(255 224 176 / 0) 54%, transparent 70%);
+  background-size: 260% 100%;
+  background-position: var(--mx, 50%) 0;
+}
+
+.foil {
+  background: linear-gradient(115deg, transparent 32%, rgb(255 226 180 / 0.22) 48%, transparent 62%);
+  background-size: 280% 100%;
+  background-position: var(--mx, 50%) 0;
+}
+
+// Halo ambré sous le curseur sur le papier du billet, et bord éclairé au survol.
+.card:hover .shell {
+  background:
+    radial-gradient(420px 220px at var(--mx, 50%) var(--my, 0%), rgb(239 196 134 / 0.14), transparent 70%),
+    linear-gradient(180deg, rgba(239, 196, 134, 0.09), transparent 38%),
+    linear-gradient(160deg, #271f1a, var(--paper-2));
+}
+
+// Volume de la souche : bord supérieur éclairé, bas qui s'enfonce dans l'ombre.
+.stub {
+  box-shadow: inset 0 1px 0 rgb(255 226 180 / 0.35), inset 0 -30px 40px -28px #000;
+}
+
+// Souche : jour et mois en ambre, flèche ambrée.
+.stub {
+  .weekday,
+  .month {
+    color: var(--amber-light);
+    opacity: 1;
+  }
+
+  .cta svg {
+    stroke: var(--amber-light);
+  }
+}
+
+.live-dot {
+  background: #1a1208;
+}
+
+@media (max-width: 720px) {
+  // La pastille d'arrachage ne recouvre plus le prix.
+  .stub > .corner {
+    top: 8px;
+    right: 8px;
+  }
+
+  .stub-foot {
+    margin-right: 30px;
+  }
 }

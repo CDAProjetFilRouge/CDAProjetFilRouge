@@ -13,8 +13,9 @@
   height: 88px;
   padding: 0 80px;
   background: var(--color-header-bg);
-  border-bottom: 1px solid #f1dccf;
-  box-shadow: 0 8px 24px -14px rgba(180, 90, 60, 0.35);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 rgba(217, 164, 91, 0.2), 0 20px 44px -26px #000;
 }
 
 // Logo : 44px de haut, soit 1,8 fois la pastille de texte d'avant (24px).
@@ -40,24 +41,25 @@
 
 .page-select {
   padding: 6px 0;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
   text-decoration: none;
-  color: #5b4343;
+  color: var(--color-muted);
   background: none;
   border: 0;
   transition: color .15s;
 
   &:hover,
   &:focus-visible {
-    color: var(--color-primary);
+    color: var(--color-text);
   }
 
-  // Page courante : couleur d'accent, graisse et soulignement.
+  // Page courante : dorée, avec un filet lumineux dessous.
   &.active {
-    font-weight: 600;
     color: var(--color-primary);
-    box-shadow: 0 2px 0 var(--color-primary);
+    box-shadow: 0 2px 0 var(--color-primary), 0 10px 16px -10px rgba(217, 164, 91, 0.8);
   }
 }
 
@@ -77,7 +79,7 @@
   gap: 10px;
   padding: 4px 10px 4px 4px;
   color: var(--color-text);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   cursor: pointer;
@@ -102,8 +104,8 @@
   height: 32px;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
-  background: var(--color-primary);
+  color: var(--color-on-primary);
+  background: linear-gradient(180deg, #efc486, #c98f45);
   border-radius: 50%;
 }
 
@@ -148,10 +150,10 @@
   flex-direction: column;
   min-width: 180px;
   padding: 6px;
-  background: #fff;
+  background: #1a1513;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 32px rgba(60, 30, 25, 0.18);
+  box-shadow: 0 28px 60px -14px #000;
 }
 
 .menu-item {
