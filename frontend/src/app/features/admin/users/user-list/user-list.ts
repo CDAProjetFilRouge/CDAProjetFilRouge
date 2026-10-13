@@ -7,6 +7,7 @@ import { UserService } from '../user.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DatePicker } from '../../../../shared/date-picker/date-picker';
+import { scrollToTop } from '../../../../shared/scroll-to-top';
 
 @Component({
   imports: [DatePipe, RouterLink, ReactiveFormsModule, DatePicker],
@@ -98,6 +99,7 @@ export class UserList {
   protected goToPage(page: number): void {
     this.page.set(page);
     this.loadUsers();
+    scrollToTop();
   }
 
   private deleteUser(id: number, deleteComments: boolean): void {

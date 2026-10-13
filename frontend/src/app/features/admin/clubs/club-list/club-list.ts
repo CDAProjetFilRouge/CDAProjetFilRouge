@@ -5,6 +5,7 @@ import { Club, CLUB_CATEGORY_LABELS, ClubCategory } from '../club.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { scrollToTop } from '../../../../shared/scroll-to-top';
 
 @Component({
   imports: [DatePipe, RouterLink],
@@ -92,5 +93,6 @@ export class ClubList {
   protected goToPage(page: number): void {
     this.page.set(page);
     this.loadClubs();
+    scrollToTop();
   }
 }

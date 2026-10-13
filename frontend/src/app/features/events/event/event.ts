@@ -8,6 +8,7 @@ import { DatePicker } from '../../../shared/date-picker/date-picker';
 import { URL_BACKEND } from '../../../core/api/api.config';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { URL_IMAGES } from '../../../core/api/api.config';
+import { scrollToTop } from '../../../shared/scroll-to-top';
 
 @Component({
   imports: [ReactiveFormsModule, DatePipe, RouterLink, DatePicker],
@@ -91,6 +92,7 @@ export class Event {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
       this.loadEvents();
+      scrollToTop();
     }
   }
 
@@ -98,6 +100,7 @@ export class Event {
     if (this.currentPage > 1) {
       this.currentPage--;
       this.loadEvents();
+      scrollToTop();
     }
   }
 
