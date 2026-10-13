@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { EventFilter, EventService } from './event-service';
 import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -20,7 +20,7 @@ export class Event {
 
   protected readonly events = signal<EventModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
-  protected readonly sortOrder = signal<'asc' | 'desc'>('desc');
+  protected readonly sortOrder = signal<'asc' | 'desc'>('asc');
 
   currentPage = 1;
   eventsPerPage = 20;
@@ -55,7 +55,7 @@ export class Event {
   }
 
   loadEvents(): void {
-    const filters: EventFilter = this.filters.getRawValue();
+    const filters: EventFilter = { ...this.filters.getRawValue(), sort: this.sortOrder() };
 
     this.eventService.search(this.currentPage - 1, this.eventsPerPage, filters).subscribe({
       next: (page) => {
@@ -100,16 +100,9 @@ export class Event {
     }
   }
 
-  toggleSort(){
-    this.sortOrder.update(order => order === 'desc' ? 'asc' : 'desc');
+  toggleSort(): void {
+    this.sortOrder.update(order => order === 'asc' ? 'desc' : 'asc');
+    this.currentPage = 1;
+    this.loadEvents();
   }
-
-  sortedItems = computed(() => {
-    return [...this.events()].sort((a, b) => {
-      const dateA = new Date(a.startDateTime).getTime();
-      const dateB = new Date(b.startDateTime).getTime();
-
-      return this.sortOrder() === 'desc' ? dateA - dateB : dateB - dateA;
-    });
-  });
 }

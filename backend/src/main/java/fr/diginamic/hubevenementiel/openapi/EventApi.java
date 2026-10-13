@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Évènements", description = "Cycle de vie des évènements (brouillon, publié, annulé, terminé) et recherche multicritères.")
@@ -63,7 +64,8 @@ public interface EventApi {
             @Parameter(description = "Nom de la ville sur laquelle effectuer la recherche") String city,
             @Parameter(description = "Jour à partir duquel les évènements commencent (format AAAA-MM-JJ)") LocalDate startDate,
             @Parameter(description = "Jour jusqu'auquel les évènements se terminent, inclus (format AAAA-MM-JJ)") LocalDate endDate,
-            @Parameter(description = "Status de l'évènement sur lequel effectuer une recherche") EventStatus status
+            @Parameter(description = "Status de l'évènement sur lequel effectuer une recherche") EventStatus status,
+            @Parameter(description = "Sens du tri sur la date de début, appliqué à l'ensemble des résultats (ASC ou DESC, ASC par défaut)") Sort.Direction sort
             ) throws HttpException;
 
     @Operation(summary = "Consulter le détail d'un évènement",
