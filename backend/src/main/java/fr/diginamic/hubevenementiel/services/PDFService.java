@@ -1,35 +1,43 @@
 package fr.diginamic.hubevenementiel.services;
 
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
+import fr.diginamic.hubevenementiel.entities.Address;
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
+import fr.diginamic.hubevenementiel.repositories.UserRepo;
 
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Service
 public class PDFService {
 
     private final EventRepo eventRepo;
     private final LegalDocumentRepo legalDocumentRepo;
+    private final UserRepo userRepo;
 
-    public PDFService(EventRepo eventRepo, LegalDocumentRepo legalDocumentRepo){
+    public PDFService(EventRepo eventRepo, LegalDocumentRepo legalDocumentRepo, UserRepo userRepo){
         this.eventRepo = eventRepo;
         this.legalDocumentRepo = legalDocumentRepo;
+        this.userRepo = userRepo;
     }
 
     /**
@@ -40,45 +48,154 @@ public class PDFService {
      * @throws NotFoundException
      */
     public byte[] generateEventPDF(Long eventId) throws IOException, NotFoundException {
+        return generateEventPDF(eventId, null);
+    }
+
+    /**
+     * @param eventId id of the event we want to download a PDF of
+     * @param userId  id of the requesting user, or null if anonymous. When known, only the price that applies to
+     *                this user (affiliate or not) is displayed.
+     * @return An array of byte containing out PDF data
+     * @throws IOException
+     * @throws NotFoundException
+     */
+    @Transactional(readOnly = true)
+    public byte[] generateEventPDF(Long eventId, Long userId) throws IOException, NotFoundException {
 
         Event event = eventRepo.findById(eventId).orElseThrow(() -> new NotFoundException("No event found with id"+eventId));
 
+        Address location = event.getLocation();
         StringBuilder address = new StringBuilder();
-        address.append(event.getLocation().getStreet1() + ", ");
-        if(event.getLocation().getStreet2() != null){
-            address.append(event.getLocation().getStreet2()+ ", ");
+        if (location != null) {
+            address.append(escape(location.getStreet1()));
+            if (location.getStreet2() != null && !location.getStreet2().isBlank()) {
+                address.append("<br/>").append(escape(location.getStreet2()));
+            }
+            address.append("<br/>").append(escape(location.getPostalCode())).append(" ").append(escape(location.getCity()));
         }
-        address.append(event.getLocation().getCity()+ ", ");
-        address.append(event.getLocation().getPostalCode());
 
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.FRENCH);
+        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH'h'mm");
+        LocalDateTime start = event.getStartDateTime();
+        LocalDateTime end = event.getEndDateTime();
+        String when = start.toLocalDate().equals(end.toLocalDate())
+                ? start.format(dateFormat) + "<br/>" + start.format(timeFormat) + " – " + end.format(timeFormat)
+                : "Du " + start.format(dateFormat) + " à " + start.format(timeFormat)
+                    + "<br/>au " + end.format(dateFormat) + " à " + end.format(timeFormat);
 
-        PdfWriter writer = new PdfWriter(output);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
+        String category = event.getCategory().name();
+        String club = event.getClub() != null ? escape(event.getClub().getName()) : "";
+        String description = escape(event.getDescription()).replace("\n", "<br/>");
 
-        document.add(new Paragraph(event.getTitle()));
-        document.add(new Paragraph(event.getCategory().name()));
-        document.add(new Paragraph("Du :"+event.getStartDateTime()+" au :"+event.getEndDateTime()));
-        document.add(new Paragraph(event.getDescription()));
-        document.add(new Paragraph("Prix adhérent: "+event.getAffiliatePrice()+" € | Prix non adhérent: "+event.getNonAffiliatePrice()+" €"));
-        document.add(new Paragraph("Nombre de place disponible: "+event.getMaxCapacity()));
-        document.add(new Paragraph(address.toString()));
+        String html = "<html><head><meta charset=\"UTF-8\"/><title>" + escape(event.getTitle()) + "</title><style>"
+                + "@page { size: A4; margin: 0; }"
+                + "body { font-family: sans-serif; color: #1f2430; font-size: 12px; margin: 0; }"
+                + ".header { background-color: #e2536b; color: #ffffff; padding: 18px 40px; font-size: 16px; font-weight: bold; }"
+                + ".content { padding: 32px 40px 0 40px; }"
+                + ".badge { display: inline-block; background-color: #fbd3d9; color: #cf445c; font-size: 10px; font-weight: bold; padding: 4px 10px; }"
+                + "h1 { font-size: 26px; margin: 14px 0 4px 0; color: #1f2430; }"
+                + ".club { color: #6b7280; font-size: 13px; margin: 0 0 24px 0; }"
+                + ".card { background-color: #f4f6f9; border-left: 4px solid #e2536b; padding: 12px 16px; margin-bottom: 12px; }"
+                + ".label { color: #6b7280; font-size: 9px; font-weight: bold; margin-bottom: 4px; }"
+                + ".value { font-size: 13px; line-height: 1.5; }"
+                + "table.grid { width: 100%; border-collapse: separate; border-spacing: 0; }"
+                + "table.grid td { width: 50%; vertical-align: top; padding: 0; }"
+                + "h2 { font-size: 15px; margin: 24px 0 8px 0; padding-bottom: 6px; border-bottom: 1px solid #d8dce3; }"
+                + ".description { font-size: 12px; line-height: 1.6; }"
+                + ".footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 40px; background-color: #fcf8f5; color: #6b7280; font-size: 9px; }"
+                + "</style></head><body>"
+                + "<div class=\"header\">MyHubEvent</div>"
+                + "<div class=\"content\">"
+                + "<span class=\"badge\">" + escape(category) + "</span>"
+                + "<h1>" + escape(event.getTitle()) + "</h1>"
+                + (club.isEmpty() ? "" : "<p class=\"club\">Organisé par " + club + "</p>")
+                + "<div class=\"card\"><div class=\"label\">DATE ET HORAIRES</div><div class=\"value\">" + when + "</div></div>"
+                + (address.length() == 0 ? "" : "<div class=\"card\"><div class=\"label\">LIEU</div><div class=\"value\">" + address + "</div></div>")
+                + priceCards(event, userId)
+                + "<div class=\"card\"><div class=\"label\">CAPACITÉ</div><div class=\"value\">" + event.getMaxCapacity() + " places</div></div>"
+                + "<h2>À propos</h2>"
+                + "<div class=\"description\">" + description + "</div>"
+                + "</div>"
+                + "<div class=\"footer\">MyHubEvent – Fiche événement éditée le "
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "</div>"
+                + "</body></html>";
 
-        document.close();
-
-        return output.toByteArray();
-
+        return renderHtml(html);
     }
 
+    /**
+     * @param eventId id of the event
+     * @return a file name (without extension) derived from the event title, safe for use in a download header
+     * @throws NotFoundException if the event does not exist
+     */
+    public String eventPdfFileName(Long eventId) throws NotFoundException {
+        Event event = eventRepo.findById(eventId).orElseThrow(() -> new NotFoundException("No event found with id"+eventId));
+        String name = event.getTitle().replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", " ").replaceAll("\\s+", " ").trim();
+        return name.isEmpty() ? "Event-" + eventId : name;
+    }
+
+    private String priceCards(Event event, Long userId) {
+        AppUser user = userId == null ? null : userRepo.findById(userId).orElse(null);
+        if (user != null) {
+            boolean affiliated = user.getClubs().stream().anyMatch(
+                    club -> club.getEndValidityDate() == null || club.getEndValidityDate().isAfter(LocalDate.now()));
+            BigDecimal price = affiliated ? event.getAffiliatePrice() : event.getNonAffiliatePrice();
+            return "<div class=\"card\"><div class=\"label\">VOTRE TARIF ("
+                    + (affiliated ? "ADHÉRENT" : "NON ADHÉRENT") + ")</div><div class=\"value\">"
+                    + formatPrice(price) + "</div></div>";
+        }
+        return "<table class=\"grid\"><tr>"
+                + "<td><div class=\"card\" style=\"margin-right: 6px;\"><div class=\"label\">TARIF ADHÉRENT</div><div class=\"value\">" + formatPrice(event.getAffiliatePrice()) + "</div></div></td>"
+                + "<td><div class=\"card\" style=\"margin-left: 6px;\"><div class=\"label\">TARIF NON ADHÉRENT</div><div class=\"value\">" + formatPrice(event.getNonAffiliatePrice()) + "</div></div></td>"
+                + "</tr></table>";
+    }
+
+    private static String escape(String value) {
+        return value == null ? "" : HtmlUtils.htmlEscape(value);
+    }
+
+    private static String formatPrice(BigDecimal price) {
+        if (price == null || price.signum() == 0) {
+            return "Gratuit";
+        }
+        return price.setScale(2, RoundingMode.HALF_UP).toString().replace('.', ',') + " €";
+    }
+
+    private byte[] renderHtml(String html) throws IOException {
+        org.jsoup.nodes.Document parsed = Jsoup.parse(html);
+        parsed.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PdfRendererBuilder builder = new PdfRendererBuilder();
+        builder.withHtmlContent(parsed.html(), null);
+        builder.toStream(output);
+        builder.run();
+        return output.toByteArray();
+    }
+
+
+    /**
+     * @param id id of the legal document
+     * @return a file name (without extension) for the legal document PDF download
+     * @throws NotFoundException if the document does not exist
+     */
+    public String legalDocumentPdfFileName(Long id) throws NotFoundException {
+        LegalDocument legalDocument = legalDocumentRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Aucun document avec l'id: " + id));
+        return legalDocumentTitle(legalDocument).replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", " ").replaceAll("\\s+", " ").trim();
+    }
+
+    private static String legalDocumentTitle(LegalDocument legalDocument) {
+        return legalDocument.getDocumentType() == DocumentType.TERM_OF_USE
+                ? "Conditions d'utilisation"
+                : "Politique de confidentialité (RGPD)";
+    }
 
     public byte[] generateCUPDF(Long id) throws IOException, NotFoundException {
         LegalDocument legalDocument = legalDocumentRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Aucun document avec l'id: " + id));
 
-        String title = legalDocument.getDocumentType() == DocumentType.TERM_OF_USE
-                ? "Conditions d'utilisation"
-                : "Politique de confidentialité (RGPD)";
+        String title = legalDocumentTitle(legalDocument);
 
         String date = legalDocument.getUpdateDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
@@ -91,15 +208,6 @@ public class PDFService {
                 + "<p class=\"footer\">Version " + legalDocument.getVersion() + " | Dernière mise à jour : " + date + "</p>"
                 + "</body></html>";
 
-        org.jsoup.nodes.Document parsed = Jsoup.parse(html);
-        parsed.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
-        String xhtml = parsed.html();
-
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        PdfRendererBuilder builder = new PdfRendererBuilder();
-        builder.withHtmlContent(xhtml, null);
-        builder.toStream(output);
-        builder.run();
-        return output.toByteArray();
+        return renderHtml(html);
     }
 }

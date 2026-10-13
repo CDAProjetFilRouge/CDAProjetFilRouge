@@ -14,6 +14,10 @@ export class EventDetailsService {
     return this.http.get<EventDetailsModel>(`${URL_BACKEND}/events/${id}`);
   }
 
+  getEventPdf(id: number): Observable<Blob> {
+    return this.http.get(`${URL_BACKEND}/PDF/event/${id}`, { responseType: 'blob' });
+  }
+
   getComments(eventId: number): Observable<CommentModel[]>{
     return this.http.get<CommentModel[]>(`${URL_BACKEND}/events/${eventId}/comments`)
   }
