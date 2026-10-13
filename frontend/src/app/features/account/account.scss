@@ -1,12 +1,11 @@
-// Zone sensible : action irréversible, visuellement séparée des actions courantes
-.anonymization {
-  margin: 1.5rem 0;
-  padding: 1rem;
-  border: 1px solid var(--color-danger);
-  border-radius: 8px;
-  background: var(--color-danger-bg);
+// Même espacement (8px) que entre les deux premiers boutons (cf. _auth.scss : .btn-block + .btn-block)
+.anonymization + .btn-block {
+  margin-top: 8px;
+}
 
+.anonymization {
   .btn {
+    margin-top: 8px;
     border-color: var(--color-danger);
     background: transparent;
     color: var(--color-danger);
@@ -26,10 +25,6 @@
     margin: 0.75rem 0 0;
     font-size: 0.9rem;
     color: var(--color-text);
-  }
-
-  .warning {
-    margin: 0 0 0.75rem;
   }
 
   .error {
