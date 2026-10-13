@@ -320,6 +320,31 @@ class EventControllerIntegrationTest {
     }
 
     @Test
+    void filterEvents_sortParam_orderAppliesAcrossPages() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Tri-" + System.nanoTime();
+        LocalDateTime base = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        createPublishedEvent(token, "B milieu-" + System.nanoTime(), city, base.plusDays(1), base.plusDays(1).plusHours(2), 50);
+        createPublishedEvent(token, "C dernier-" + System.nanoTime(), city, base.plusDays(2), base.plusDays(2).plusHours(2), 50);
+        createPublishedEvent(token, "A premier-" + System.nanoTime(), city, base, base.plusHours(2), 50);
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .param("size", "1").param("page", "0").param("sort", "ASC")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content[0].title").value(org.hamcrest.Matchers.startsWith("A premier")));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city).param("status", "PUBLISHED")
+                        .param("size", "1").param("page", "0").param("sort", "DESC")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value(org.hamcrest.Matchers.startsWith("C dernier")));
+    }
+
+    @Test
     void filterEvents_withoutInscriptions_remainingSpotsEqualsCapacity() throws Exception {
         String token = loginAndGetToken(organizer.getEmail());
         String city = "Ville-" + System.nanoTime();

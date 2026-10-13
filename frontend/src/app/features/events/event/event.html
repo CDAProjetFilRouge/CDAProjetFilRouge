@@ -53,14 +53,18 @@
     <div class="event-sub-section">
       <p id="counter">{{ totalElements }} évènements trouvés</p>
       <div class="sort">
-        <button type="button" (click)="toggleSort()">
-            Trier par: {{ sortOrder() === 'desc' ? 'Date ↓' : 'Date ↑'}}
+        <button type="button" class="sort-toggle" (click)="toggleSort()"
+          [attr.aria-label]="sortOrder() === 'asc' ? 'Tri par date : les plus proches d’abord. Inverser.' : 'Tri par date : les plus lointaines d’abord. Inverser.'">
+          <svg viewBox="0 0 24 24" aria-hidden="true" [class.flipped]="sortOrder() === 'desc'">
+            <path d="M12 5v14M6 13l6 6 6-6" />
+          </svg>
+          {{ sortOrder() === 'asc' ? 'Plus proches d’abord' : 'Plus lointaines d’abord' }}
         </button>
       </div>
 
     </div>
     <div class="carousel">
-      @for (event of sortedItems(); track event.id){
+      @for (event of events(); track event.id){
         <div class="event-card">
           @if (event.imageGallery.length > 0) {
             <img alt="Image de l'évènement" [src]="imageUrl(event.imageGallery[0].path)">

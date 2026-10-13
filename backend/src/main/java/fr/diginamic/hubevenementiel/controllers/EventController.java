@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.dtos.event.*;
 import fr.diginamic.hubevenementiel.mappers.EventDetailsMapper;
 import fr.diginamic.hubevenementiel.mappers.EventMainMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -122,7 +123,8 @@ public class EventController implements EventApi {
             @RequestParam(required = false) String city,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) EventStatus status) throws HttpException {
+            @RequestParam(required = false) EventStatus status,
+            @RequestParam(defaultValue = "ASC") Sort.Direction sort) throws HttpException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -134,7 +136,7 @@ public class EventController implements EventApi {
         LocalDateTime startDateTime = startDate == null ? null : startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate == null ? null : endDate.atTime(LocalTime.MAX);
         return toMainDtos(eventService.searchFilter(page, size, keyword, category, clubName, city,
-                startDateTime, endDateTime, status, principal));
+                startDateTime, endDateTime, status, sort, principal));
 
     }
 
