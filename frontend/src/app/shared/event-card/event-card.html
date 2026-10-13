@@ -166,6 +166,11 @@
       </span>
     </div>
 
+    @if (stubInteractive()) {
+      <span class="corner" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" /></svg>
+      </span>
+    }
     <div class="foil" aria-hidden="true"></div>
     <div class="grain grain-light" aria-hidden="true"></div>
   </div>
