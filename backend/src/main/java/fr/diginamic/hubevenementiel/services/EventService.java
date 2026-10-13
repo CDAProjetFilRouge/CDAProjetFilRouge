@@ -341,6 +341,11 @@ public class EventService {
             throw new ConflictException("Un évènement avec ce titre existe déjà.");
         }
 
+        long confirmedCount = inscriptionRepo.countByEventIdAndStatus(eventId, InscriptionStatus.CONFIRMED);
+        if (modifiedEvent.getMaxCapacity() < confirmedCount) {
+            throw new ConflictException("La capacité ne peut pas être inférieure au nombre d'inscrits confirmés (" + confirmedCount + ").");
+        }
+
         Integer previousCapacity = eventToBeModified.getMaxCapacity();
 
         eventToBeModified.setTitle(modifiedEvent.getTitle());

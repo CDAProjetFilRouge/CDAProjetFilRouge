@@ -715,6 +715,35 @@ class EventServiceTest {
         verify(waitingListService, never()).fillFreeSpots(any());
     }
 
+    @Test
+    void updateEvent_capacityBelowConfirmedCount_throwsConflict() {
+        Event existing = cloneFutureEvent();
+        existing.setMaxCapacity(20);
+        validEvent.setMaxCapacity(5);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(inscriptionRepo.countByEventIdAndStatus(1L, InscriptionStatus.CONFIRMED)).thenReturn(12L);
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        assertThrows(ConflictException.class, () -> eventService.updateEvent(1L, validEvent, owner));
+
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void updateEvent_capacityEqualToConfirmedCount_isAccepted() throws HttpException {
+        Event existing = cloneFutureEvent();
+        existing.setMaxCapacity(20);
+        validEvent.setMaxCapacity(12);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(inscriptionRepo.countByEventIdAndStatus(1L, InscriptionStatus.CONFIRMED)).thenReturn(12L);
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        Event result = eventService.updateEvent(1L, validEvent, owner);
+
+        assertThat(result.getMaxCapacity()).isEqualTo(12);
+    }
+
     private Event cloneFutureEvent() {
         Event event = new Event();
         event.setOrganizer(organizer);
