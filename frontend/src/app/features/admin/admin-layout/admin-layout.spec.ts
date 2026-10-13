@@ -1,3 +1,6 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminLayout } from './admin-layout';
 
@@ -8,6 +11,7 @@ describe('AdminLayout', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminLayout],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AdminLayout);
