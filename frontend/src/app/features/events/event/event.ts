@@ -1,17 +1,29 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { EventFilter, EventService } from './event-service';
 import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
 import { DatePicker } from '../../../shared/date-picker/date-picker';
-import { URL_BACKEND } from '../../../core/api/api.config';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { URL_IMAGES } from '../../../core/api/api.config';
+import { AuthService } from '../../../core/auth/auth.service';
+import { CalendarService } from '../../calendar/calendar-service';
+import { CardRegistration, EventCard } from '../../../shared/event-card/event-card';
+import { ActivatedRoute } from '@angular/router';
+import { EventDetailsService } from '../event-details/event-details-service';
+import {
+  InscriptionDialog,
+  InscriptionDialogState,
+} from '../event-details/inscription-dialog/inscription-dialog';
 import { scrollToTop } from '../../../shared/scroll-to-top';
 
+interface MyRegistration {
+  id: number;
+  status: Exclude<CardRegistration, null>;
+  position: number | null;
+}
+
 @Component({
-  imports: [ReactiveFormsModule, DatePipe, RouterLink, DatePicker],
+  imports: [ReactiveFormsModule, DatePicker, EventCard, InscriptionDialog],
   selector: 'app-event',
   styleUrl: './event.scss',
   templateUrl: './event.html',
@@ -19,6 +31,123 @@ import { scrollToTop } from '../../../shared/scroll-to-top';
 export class Event {
   private readonly eventService = inject(EventService);
   private readonly route = inject(ActivatedRoute);
+  private readonly authService = inject(AuthService);
+  private readonly calendarService = inject(CalendarService);
+  private readonly eventDetailsService = inject(EventDetailsService);
+
+  private readonly user = this.authService.currentUser;
+  private readonly registrations = signal<Map<number, MyRegistration>>(new Map());
+  protected readonly affiliated = computed(() => (this.user()?.clubs.length ?? 0) > 0);
+
+  protected readonly dialogEvent = signal<EventModel | null>(null);
+  protected readonly dialogBusy = signal(false);
+  protected readonly dialogError = signal<string | null>(null);
+
+  protected readonly dialogState = computed<InscriptionDialogState | null>(() => {
+    const event = this.dialogEvent();
+    if (!event) {
+      return null;
+    }
+    if (!this.user()) {
+      return { kind: 'login' };
+    }
+    const mine = this.registrations().get(event.id);
+    if (mine) {
+      return { kind: 'registered', waiting: mine.status === 'WAITING_LIST', position: mine.position };
+    }
+    return { kind: 'open', waiting: event.remainingSpots <= 0 };
+  });
+
+  constructor() {
+    effect(() => {
+      if (this.user()) {
+        this.loadRegistrations();
+      } else {
+        this.registrations.set(new Map());
+      }
+    });
+  }
+
+  protected registrationOf(eventId: number): CardRegistration {
+    return this.registrations().get(eventId)?.status ?? null;
+  }
+
+  protected positionOf(eventId: number): number | null {
+    return this.registrations().get(eventId)?.position ?? null;
+  }
+
+  protected openRegistration(event: EventModel): void {
+    this.dialogError.set(null);
+    this.dialogEvent.set(event);
+  }
+
+  protected closeRegistration(): void {
+    this.dialogEvent.set(null);
+  }
+
+  protected register(): void {
+    const event = this.dialogEvent();
+    const user = this.user();
+    if (!event || !user || this.dialogBusy()) {
+      return;
+    }
+    this.runInscription(
+      this.eventDetailsService.register(user.id, event.id),
+      'L’inscription a échoué. Réessayez dans un instant.',
+    );
+  }
+
+  protected unregister(): void {
+    const event = this.dialogEvent();
+    const mine = event ? this.registrations().get(event.id) : undefined;
+    if (!mine || this.dialogBusy()) {
+      return;
+    }
+    this.runInscription(
+      this.eventDetailsService.cancelInscription(mine.id),
+      'L’annulation a échoué. Réessayez dans un instant.',
+    );
+  }
+
+  private runInscription(call: Observable<unknown>, fallback: string): void {
+    this.dialogBusy.set(true);
+    this.dialogError.set(null);
+    call.subscribe({
+      next: () => {
+        this.dialogBusy.set(false);
+        this.dialogEvent.set(null);
+        this.loadRegistrations();
+        this.loadEvents();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.dialogBusy.set(false);
+        this.dialogError.set(typeof err.error === 'string' && err.error ? err.error : fallback);
+      },
+    });
+  }
+
+  private loadRegistrations(): void {
+    const user = this.user();
+    if (!user) {
+      return;
+    }
+    this.calendarService.getByUser(user.id).subscribe({
+      next: (list) => {
+        const map = new Map<number, MyRegistration>();
+        for (const inscription of list) {
+          if (inscription.status !== 'CANCELED') {
+            map.set(inscription.event.id, {
+              id: inscription.id,
+              status: inscription.status,
+              position: inscription.waitingListPosition ?? null,
+            });
+          }
+        }
+        this.registrations.set(map);
+      },
+      error: () => this.registrations.set(new Map()),
+    });
+  }
 
   protected readonly events = signal<EventModel[]>([]);
   protected readonly errorMessage = signal<string | null>(null);
@@ -41,10 +170,6 @@ export class Event {
 
   private handleError(err: HttpErrorResponse): void {
     this.errorMessage.set(typeof err.error === 'string' ? err.error : 'Une erreur est survenue.');
-  }
-
-  protected imageUrl(path: string): string {
-    return `${URL_IMAGES}${path}`;
   }
 
   ngOnInit(): void {

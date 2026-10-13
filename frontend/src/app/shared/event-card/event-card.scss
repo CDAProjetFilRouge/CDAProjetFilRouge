@@ -1,0 +1,471 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+svg {
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+// Couleur d'accent de la carte : une teinte par catégorie, le rose de la marque par défaut.
+.card {
+  --accent: var(--color-primary);
+  --accent-soft: var(--color-primary-soft);
+  --accent-wash: #fff5f6;
+
+  &[data-category='CULTURE'] {
+    --accent: #7048d6;
+    --accent-soft: #e6dcfb;
+    --accent-wash: #f6f2fe;
+  }
+
+  &[data-category='SPORT'] {
+    --accent: #1f6fe0;
+    --accent-soft: #d3e4fc;
+    --accent-wash: #eff5fe;
+  }
+
+  &[data-category='DIVERTISSEMENT'] {
+    --accent: #d9780a;
+    --accent-soft: #fbe3bd;
+    --accent-wash: #fff6e8;
+  }
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(31 36 48 / 0.04);
+  transition: box-shadow .2s, transform .2s, border-color .2s;
+
+  &:hover,
+  &:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 14px 30px -14px rgb(31 36 48 / 0.28);
+    transform: translateY(-3px);
+  }
+
+  &.is-registered {
+    border-color: #9fd3ae;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover,
+    &:focus-within {
+      transform: none;
+    }
+  }
+}
+
+// --- Visuel ---------------------------------------------------------------
+
+.media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--color-placeholder);
+
+  // L'image est sortie du flux : sa proportion naturelle ne doit pas changer la hauteur du visuel.
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--accent);
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-wash));
+
+  svg {
+    width: 44px;
+    height: 44px;
+    opacity: .55;
+  }
+}
+
+.category {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+  box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.4);
+}
+
+// Pastille d'inscription : « + » discret qui apparaît au survol ou au focus de la carte,
+// remplacé par une coche verte une fois inscrit (ou un sablier ambre en liste d'attente).
+.pastille {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  // Au-dessus du lien étendu du titre, pour que la pastille reçoive son propre clic.
+  z-index: 2;
+
+  &:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.8;
+  }
+}
+
+.add {
+  color: var(--color-primary);
+  background: #fff;
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 6px 14px -4px rgb(31 36 48 / 0.35);
+  opacity: 0;
+  transform: scale(.4);
+  transition: opacity .15s, transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.card:hover .add,
+.card:focus-within .add {
+  opacity: 1;
+  transform: scale(1);
+}
+
+// Sans survol possible (tactile) : la pastille reste visible pour montrer qu'on peut s'inscrire.
+@media (hover: none) {
+  .add {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.card .add:hover {
+  transform: scale(1.12);
+}
+
+.registration {
+  transition: transform .2s;
+  color: #fff;
+  background: #2f9e57;
+  border: 2px solid #fff;
+  box-shadow: 0 6px 14px -4px rgb(20 83 45 / 0.5);
+  animation: pastille-pop .4s cubic-bezier(.34, 1.56, .64, 1);
+
+  &.waiting {
+    background: #e08a00;
+    box-shadow: 0 6px 14px -4px rgb(122 74 0 / 0.5);
+  }
+}
+
+.registration:has(.rank) {
+  width: auto;
+  min-width: 38px;
+  padding: 0 10px;
+  border-radius: 999px;
+}
+
+.rank {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.card .registration:hover {
+  transform: scale(1.1);
+}
+
+@keyframes pastille-pop {
+  from {
+    opacity: 0;
+    transform: scale(.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add {
+    transform: none;
+    transition: opacity .15s;
+  }
+
+  .registration {
+    animation: none;
+  }
+}
+
+.date-tile {
+  position: absolute;
+  bottom: -18px;
+  left: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+  padding: 6px 8px 7px;
+  line-height: 1;
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 6px 14px -6px rgb(31 36 48 / 0.3);
+
+  .day {
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .month {
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+}
+
+// --- Contenu --------------------------------------------------------------
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 16px 16px;
+  background: linear-gradient(180deg, #fff 55%, var(--accent-wash));
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  // Deux lignes réservées : les blocs suivants restent alignés d'une carte à l'autre.
+  min-height: 2.6em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  a {
+    color: var(--color-text);
+    text-decoration: none;
+
+    // La carte entière est cliquable : le lien du titre couvre toute la carte.
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+}
+
+.card:has(.title a:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--accent);
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .capitalize::first-letter {
+    text-transform: uppercase;
+  }
+
+  .when {
+    align-items: flex-start;
+
+    svg {
+      margin-top: 1px;
+    }
+  }
+
+  .when-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    line-height: 1.3;
+
+    > span:first-child {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+  }
+}
+
+// --- Places ---------------------------------------------------------------
+
+.spots {
+  --spots-color: #2f9e57;
+  --spots-track: #e4f2e9;
+
+  &[data-level='medium'] {
+    --spots-color: #e08a00;
+    --spots-track: #fdeccb;
+  }
+
+  &[data-level='low'] {
+    --spots-color: #d9482b;
+    --spots-track: #fbdcd5;
+  }
+
+  &[data-level='full'] {
+    --spots-color: #b3261e;
+    --spots-track: #f4d7d5;
+  }
+}
+
+.spots-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.spots-label {
+  font-weight: 700;
+  color: var(--spots-color);
+}
+
+.spots-total {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+}
+
+.bar {
+  height: 8px;
+  overflow: hidden;
+  background: var(--spots-track);
+  border-radius: 999px;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  background: var(--spots-color);
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+// --- Pied -----------------------------------------------------------------
+
+.footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--accent-soft);
+}
+
+.price {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+
+  .amount {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--color-text);
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--color-muted);
+  }
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.4;
+    transition: transform .2s;
+  }
+}
+
+.card:hover .cta svg {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover .cta svg {
+    transform: none;
+  }
+}
