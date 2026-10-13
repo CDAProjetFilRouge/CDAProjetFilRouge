@@ -1,9 +1,15 @@
+import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { Role } from '../../core/models/user.models';
 import { Calendar } from '../calendar/calendar';
+import { EventRequest } from '../events/event-form/event-form.models';
+import { EventFormService } from '../events/event-form/event-form.service';
+import { EventModel } from '../events/event/event-model';
+import { EventService } from '../events/event/event-service';
 import { Kpi, KpiView, QuickAction } from './dashboard.models';
 import { DashboardService } from './dashboard.service';
 
@@ -58,7 +64,7 @@ const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
 };
 
 @Component({
-  imports: [RouterLink, Calendar],
+  imports: [RouterLink, Calendar, DatePipe],
   selector: 'app-dashboard',
   styleUrl: './dashboard.scss',
   templateUrl: './dashboard.html',
@@ -66,6 +72,8 @@ const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
 export class Dashboard {
   private readonly auth = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
+  private readonly eventService = inject(EventService);
+  private readonly eventFormService = inject(EventFormService);
 
   protected readonly user = this.auth.currentUser;
   protected readonly kpis = signal<KpiView[]>([]);
@@ -85,13 +93,99 @@ export class Dashboard {
   });
 
   protected readonly showCalendar = computed(() => this.user()?.role !== 'ADMINISTRATOR');
+  protected readonly showDrafts = computed(() => this.user()?.role === 'ORGANIZER');
+
+  protected readonly drafts = signal<EventModel[]>([]);
+  protected readonly draftsTotal = signal(0);
+  protected readonly draftsLoading = signal(false);
+  protected readonly draftsError = signal<string | null>(null);
+  protected readonly publishingId = signal<number | null>(null);
 
   constructor() {
     effect(() => {
       if (this.user()) {
         this.loadKpis();
       }
+      if (this.showDrafts()) {
+        this.loadDrafts();
+      }
     });
+  }
+
+  protected loadDrafts(): void {
+    this.draftsLoading.set(true);
+    this.eventService
+      .search(0, 5, {
+        keyword: '',
+        category: '',
+        club: '',
+        city: '',
+        startDate: '',
+        endDate: '',
+        status: 'DRAFT',
+        sort: 'asc',
+      })
+      .subscribe({
+        next: (page) => {
+          this.drafts.set(page.content);
+          this.draftsTotal.set(page.totalElements);
+          this.draftsError.set(null);
+          this.draftsLoading.set(false);
+        },
+        error: () => {
+          this.draftsError.set('Les brouillons n’ont pas pu être chargés.');
+          this.draftsLoading.set(false);
+        },
+      });
+  }
+
+  protected publishDraft(draft: EventModel): void {
+    if (this.publishingId() !== null) {
+      return;
+    }
+    this.publishingId.set(draft.id);
+    this.draftsError.set(null);
+
+    this.eventFormService
+      .getById(draft.id)
+      .pipe(
+        switchMap((detail) => {
+          const request: EventRequest = {
+            title: detail.title,
+            description: detail.description,
+            location: {
+              street1: detail.street1,
+              street2: detail.street2 ?? '',
+              postalCode: detail.postalCode,
+              city: detail.city,
+              country: detail.country,
+            },
+            category: detail.category,
+            startDateTime: detail.startDate,
+            endDateTime: detail.endDate,
+            affiliatePrice: detail.affiliatePrice,
+            nonAffiliatePrice: detail.nonAffiliatePrice,
+            maxCapacity: detail.maxCapacity,
+            status: 'PUBLISHED',
+          };
+          return this.eventFormService.update(draft.id, request);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.publishingId.set(null);
+          this.loadDrafts();
+          this.loadKpis();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.publishingId.set(null);
+          this.draftsError.set(
+            typeof err.error === 'string' && err.error
+              ? err.error
+              : 'La publication a échoué. Ouvrez le brouillon pour corriger les informations.',
+          );
+        },
+      });
   }
 
   protected loadKpis(): void {
