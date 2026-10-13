@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-labelledby="title desc">
+  <title id="title">MyHubEvent — Le billet-lieu</title>
+  <desc id="desc">Un billet avec un repère central.</desc>
+  <path d="M30 36h120a24 24 0 0 1 24 24v14a18 18 0 0 0 0 32v14a24 24 0 0 1-24 24H30a24 24 0 0 1-24-24v-14a18 18 0 0 0 0-32V60a24 24 0 0 1 24-24Z" fill="#e2536b"/>
+  <path d="M90 46c-20 0-35 15-35 34 0 27 35 54 35 54s35-27 35-54c0-19-15-34-35-34Z" fill="#1f2430"/>
+  <circle cx="90" cy="80" r="11" fill="#fbd3d9"/>
+  <path d="M16 51h19M145 51h19M16 129h19M145 129h19" stroke="#fbd3d9" stroke-linecap="round" stroke-width="8"/>
+</svg>
