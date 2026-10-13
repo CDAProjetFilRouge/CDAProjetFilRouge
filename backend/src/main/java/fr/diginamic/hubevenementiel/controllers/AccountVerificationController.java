@@ -15,44 +15,48 @@ import fr.diginamic.hubevenementiel.dtos.appUser.AppUserPasswordReset;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.openapi.AccountVerificationApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
-import fr.diginamic.hubevenementiel.services.AppUserService;
+import fr.diginamic.hubevenementiel.services.AccountActivationService;
+import fr.diginamic.hubevenementiel.services.PasswordService;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/account")
 public class AccountVerificationController implements AccountVerificationApi {
 
-    private final AppUserService appUserService;
+    private final AccountActivationService accountActivationService;
+    private final PasswordService passwordService;
 
-    public AccountVerificationController(AppUserService appUserService) {
-        this.appUserService = appUserService;
+    public AccountVerificationController(AccountActivationService accountActivationService,
+            PasswordService passwordService) {
+        this.accountActivationService = accountActivationService;
+        this.passwordService = passwordService;
     }
 
     @Override
     @GetMapping("/verify")
     public ResponseEntity<Void> verifyAccount(@RequestParam String token) throws HttpException {
-        appUserService.confirmAccountVerification(token);
+        accountActivationService.confirmAccountVerification(token);
         return ResponseEntity.ok().build();
     }
 
     @Override
     @PostMapping("/password/forgot")
     public ResponseEntity<Void> requesPasswordReset(@RequestParam String email) {
-        appUserService.requestPasswordReset(email);
+        passwordService.requestPasswordReset(email);
         return ResponseEntity.ok().build();
     }
 
     @Override
     @PostMapping("/password/reset")
     public ResponseEntity<Void> submitNewPassword(@RequestBody AppUserPasswordReset dto) throws HttpException {
-        appUserService.submitNewPasswordAfterReset(dto.getToken(), dto.getNewPassword());
+        passwordService.submitNewPasswordAfterReset(dto.getToken(), dto.getNewPassword());
         return ResponseEntity.ok().build();
     }
 
     @Override
     @GetMapping("/password/confirm")
     public ResponseEntity<Void> confirmPasswordReset(@RequestParam String token) throws HttpException {
-        appUserService.confirmPasswordReset(token);
+        passwordService.confirmPasswordReset(token);
         return ResponseEntity.ok().build();
     }
 
@@ -62,7 +66,7 @@ public class AccountVerificationController implements AccountVerificationApi {
             @RequestBody AppUserPasswordChange dto) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
-        appUserService.requestPasswordChange(principal.id(), dto.getCurrentPassword(), dto.getNewPassword());
+        passwordService.requestPasswordChange(principal.id(), dto.getCurrentPassword(), dto.getNewPassword());
         return ResponseEntity.ok().build();
     }
 
@@ -70,7 +74,7 @@ public class AccountVerificationController implements AccountVerificationApi {
     @PostMapping("/activate")
     public ResponseEntity<Void> activateAccount(@Valid @RequestBody AccountActivationRequestDto dto)
             throws HttpException {
-        appUserService.activateAccount(dto.getToken(), dto.getTemporaryPassword(), dto.getNewPassword());
+        accountActivationService.activateAccount(dto.getToken(), dto.getTemporaryPassword(), dto.getNewPassword());
         return ResponseEntity.ok().build();
     }
 }

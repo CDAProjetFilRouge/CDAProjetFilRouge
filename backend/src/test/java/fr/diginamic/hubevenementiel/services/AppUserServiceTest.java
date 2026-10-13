@@ -2,31 +2,21 @@ package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
-import fr.diginamic.hubevenementiel.entities.Event;
-import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.entities.Token;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
-import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.enums.TokenType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
-import fr.diginamic.hubevenementiel.repositories.AnonymizationDemandRepo;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
-import fr.diginamic.hubevenementiel.repositories.CommentRepo;
-import fr.diginamic.hubevenementiel.repositories.EventRepo;
-import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
-import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
-import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,22 +45,9 @@ class AppUserServiceTest {
     @Mock
     private ClubRepo clubRepo;
     @Mock
-    private EventRepo eventRepo;
-    @Mock
-    private InscriptionRepo inscriptionRepo;
-    @Mock
-    private CommentRepo commentRepo;
-    @Mock
-    private LegalDocumentRepo legalDocumentRepo;
-    @Mock
-    private AnonymizationDemandRepo anonymizationDemandRepo;
-    @Mock
     private EmailService emailService;
     @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private RefreshTokenRepo refreshTokenRepo;
 
     private AppUserService appUserService;
 
@@ -79,9 +55,7 @@ class AppUserServiceTest {
 
     @BeforeEach
     void setUp() {
-        appUserService = new AppUserService(userRepo, tokenRepo, refreshTokenRepo, clubRepo, eventRepo,
-                inscriptionRepo, commentRepo, legalDocumentRepo, anonymizationDemandRepo, emailService,
-                passwordEncoder, new WaitingListService(eventRepo, inscriptionRepo, mock(ApplicationEventPublisher.class)));
+        appUserService = new AppUserService(userRepo, tokenRepo, clubRepo, emailService, passwordEncoder);
         validUser = new AppUser();
         validUser.setLastName("Martin");
         validUser.setFirstName("Alice");
@@ -297,78 +271,6 @@ class AppUserServiceTest {
     }
 
     // ---------------------------------------------------------------
-    // Mot de passe / tokens
-    // ---------------------------------------------------------------
-
-    @Test
-    void requestPasswordChange_wrongCurrentPassword_throwsBadRequestAndNoTokenCreated() {
-        AppUser existing = new AppUser();
-        existing.setHashedPassword("hashActuel");
-        when(userRepo.findById(1L)).thenReturn(Optional.of(existing));
-        when(passwordEncoder.matches("mauvaisMdp", "hashActuel")).thenReturn(false);
-
-        assertThrows(BadRequestException.class,
-                () -> appUserService.requestPasswordChange(1L, "mauvaisMdp", "nouveauMdp12"));
-
-        verify(tokenRepo, never()).save(any());
-    }
-
-    @Test
-    void requestPasswordReset_unknownEmail_returnsSilentlyWithoutException() {
-        when(userRepo.findByEmail("inconnu@example.com")).thenReturn(Optional.empty());
-
-        appUserService.requestPasswordReset("inconnu@example.com");
-
-        verify(tokenRepo, never()).save(any());
-        verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString());
-    }
-
-    @Test
-    void confirmPasswordReset_wrongTokenType_throwsBadRequest() {
-        Token token = new Token();
-        token.setTokenType(TokenType.ENABLE_ACCOUNT);
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
-
-        assertThrows(BadRequestException.class, () -> appUserService.confirmPasswordReset("abc"));
-    }
-
-    @Test
-    void confirmPasswordReset_alreadyUsedToken_throwsBadRequest() {
-        Token token = new Token();
-        token.setTokenType(TokenType.CHANGE_PWD);
-        token.setUseDate(LocalDateTime.now().minusMinutes(5));
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
-
-        assertThrows(BadRequestException.class, () -> appUserService.confirmPasswordReset("abc"));
-    }
-
-    @Test
-    void confirmPasswordReset_expiredToken_throwsBadRequest() {
-        Token token = new Token();
-        token.setTokenType(TokenType.CHANGE_PWD);
-        token.setExpirationDateTime(LocalDateTime.now().minusMinutes(1));
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
-
-        assertThrows(BadRequestException.class, () -> appUserService.confirmPasswordReset("abc"));
-    }
-
-    @Test
-    void confirmAccountVerification_happyPath_setsStatusActive() throws HttpException {
-        AppUser user = new AppUser();
-        user.setStatus(AccountStatus.INACTIVE);
-        Token token = new Token();
-        token.setTokenType(TokenType.ENABLE_ACCOUNT);
-        token.setExpirationDateTime(LocalDateTime.now().plusHours(1));
-        token.setUser(user);
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
-
-        appUserService.confirmAccountVerification("abc");
-
-        assertThat(user.getStatus()).isEqualTo(AccountStatus.ACTIVE);
-        verify(userRepo).save(user);
-    }
-
-    // ---------------------------------------------------------------
     // anonymizeAccount (RG31)
     // ---------------------------------------------------------------
 
@@ -390,210 +292,6 @@ class AppUserServiceTest {
         assertThat(user.getStatus()).isEqualTo(AccountStatus.ANONYMIZE);
         assertThat(user.getAddress()).isNull();
         verify(userRepo).save(user);
-    }
-
-    // ---------------------------------------------------------------
-    // deleteAccount
-    // ---------------------------------------------------------------
-
-    @Test
-    void deleteAccount_noActivity_deletesTokensAndUser() throws HttpException {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of());
-
-        appUserService.deleteAccount(5L, false);
-
-        verify(tokenRepo).deleteByUser(user);
-        verify(anonymizationDemandRepo).deleteByRequesterId(5L);
-        verify(userRepo).delete(user);
-    }
-
-    @Test
-    void deleteAccount_organizerOfEvents_throwsConflictAndDeletesNothing() {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(eventRepo.existsByOrganizerId(5L)).thenReturn(true);
-        when(clubRepo.existsByOwnerId(5L)).thenReturn(true);
-
-        ConflictException ex = assertThrows(ConflictException.class, () -> appUserService.deleteAccount(5L, false));
-
-        assertThat(ex.getMessage()).contains("organise des évènements").contains("anonymisation");
-        verify(tokenRepo, never()).deleteByUser(any());
-        verify(inscriptionRepo, never()).delete(any(Inscription.class));
-        verify(userRepo, never()).delete(any(AppUser.class));
-    }
-
-    @Test
-    void deleteAccount_confirmedInscriptionOnFutureEvent_removesItAndPromotesWaitingList() throws HttpException {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        Event event = new Event();
-        event.setId(9L);
-        event.setStartDateTime(LocalDateTime.now().plusDays(3));
-        Inscription confirmed = new Inscription();
-        confirmed.setUser(user);
-        confirmed.setEvent(event);
-        confirmed.setStatus(InscriptionStatus.CONFIRMED);
-        Inscription waiting = new Inscription();
-        waiting.setStatus(InscriptionStatus.WAITING_LIST);
-
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of(confirmed));
-        when(eventRepo.findByIdForUpdate(9L)).thenReturn(Optional.of(event));
-        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(9L, InscriptionStatus.WAITING_LIST))
-                .thenReturn(List.of(waiting));
-
-        appUserService.deleteAccount(5L, false);
-
-        verify(inscriptionRepo).delete(confirmed);
-        assertThat(waiting.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
-        verify(userRepo).delete(user);
-    }
-
-    @Test
-    void deleteAccount_inscriptionOnPastEvent_removesItWithoutPromotion() throws HttpException {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        Event event = new Event();
-        event.setId(9L);
-        event.setStartDateTime(LocalDateTime.now().minusDays(3));
-        Inscription confirmed = new Inscription();
-        confirmed.setEvent(event);
-        confirmed.setStatus(InscriptionStatus.CONFIRMED);
-
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of(confirmed));
-
-        appUserService.deleteAccount(5L, false);
-
-        verify(inscriptionRepo).delete(confirmed);
-        verify(eventRepo, never()).findByIdForUpdate(any());
-        verify(userRepo).delete(user);
-    }
-
-    @Test
-    void deleteAccount_onlyComments_throwsConflictWithCode() {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(commentRepo.existsByAuthorId(5L)).thenReturn(true);
-
-        ConflictException ex = assertThrows(ConflictException.class, () -> appUserService.deleteAccount(5L, false));
-
-        assertThat(ex.getCode()).isEqualTo(AppUserService.ACCOUNT_HAS_COMMENTS);
-        verify(commentRepo, never()).deleteByAuthorId(any());
-        verify(userRepo, never()).delete(any(AppUser.class));
-    }
-
-    @Test
-    void deleteAccount_onlyCommentsWithDeleteComments_deletesCommentsAndUser() throws HttpException {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(commentRepo.existsByAuthorId(5L)).thenReturn(true);
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of());
-
-        appUserService.deleteAccount(5L, true);
-
-        verify(commentRepo).deleteByAuthorId(5L);
-        verify(userRepo).delete(user);
-    }
-
-    @Test
-    void deleteAccount_commentsAndEventsWithDeleteComments_stillRefusedWithoutCode() {
-        AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(eventRepo.existsByOrganizerId(5L)).thenReturn(true);
-        when(commentRepo.existsByAuthorId(5L)).thenReturn(true);
-
-        ConflictException ex = assertThrows(ConflictException.class, () -> appUserService.deleteAccount(5L, true));
-
-        assertThat(ex.getCode()).isNull();
-        assertThat(ex.getMessage()).contains("organise des évènements").contains("commentaires");
-        verify(commentRepo, never()).deleteByAuthorId(any());
-        verify(userRepo, never()).delete(any(AppUser.class));
-    }
-
-    // ---------------------------------------------------------------
-    // explainLoginRefusal
-    // ---------------------------------------------------------------
-
-    @Test
-    void explainLoginRefusal_suspendedWithEndDate_correctPassword_mentionsTheDate() {
-        AppUser user = userWithStatus(AccountStatus.SUSPENDED);
-        user.setSuspensionEndDate(LocalDateTime.of(2026, 10, 10, 12, 0));
-        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
-
-        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
-
-        assertThat(result).contains("Votre compte est suspendu jusqu'au 10/10/2026.");
-    }
-
-    @Test
-    void explainLoginRefusal_suspendedWithoutEndDate_correctPassword_saysSuspended() {
-        AppUser user = userWithStatus(AccountStatus.SUSPENDED);
-        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
-
-        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
-
-        assertThat(result).contains("Votre compte est suspendu.");
-    }
-
-    @Test
-    void explainLoginRefusal_inactive_correctPassword_asksToActivate() {
-        AppUser user = userWithStatus(AccountStatus.INACTIVE);
-        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
-
-        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
-
-        assertThat(result).isPresent();
-        assertThat(result.get()).contains("pas encore activé");
-    }
-
-    @Test
-    void explainLoginRefusal_suspended_wrongPassword_revealsNothing() {
-        AppUser user = userWithStatus(AccountStatus.SUSPENDED);
-        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("mauvaisMotDePasse", "hash")).thenReturn(false);
-
-        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "mauvaisMotDePasse");
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void explainLoginRefusal_unknownEmail_revealsNothing() {
-        when(userRepo.findByEmail("inconnu@example.com")).thenReturn(Optional.empty());
-
-        Optional<String> result = appUserService.explainLoginRefusal("inconnu@example.com", "nImporteQuoi");
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    void explainLoginRefusal_anonymized_correctPassword_revealsNothing() {
-        AppUser user = userWithStatus(AccountStatus.ANONYMIZE);
-        when(userRepo.findByEmail("alice.martin@example.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("bonMotDePasse", "hash")).thenReturn(true);
-
-        Optional<String> result = appUserService.explainLoginRefusal("alice.martin@example.com", "bonMotDePasse");
-
-        assertThat(result).isEmpty();
-    }
-
-    private AppUser userWithStatus(AccountStatus status) {
-        AppUser user = new AppUser();
-        user.setEmail("alice.martin@example.com");
-        user.setHashedPassword("hash");
-        user.setStatus(status);
-        return user;
     }
 
     // ---------------------------------------------------------------
@@ -628,83 +326,5 @@ class AppUserServiceTest {
     void appUserChecker_blankPhoneWhenOptional_passes() throws HttpException {
         validUser.setPhone("  ");
         assertThat(appUserService.appUserChecker(validUser, false, false)).isTrue();
-    }
-
-    // ---------------------------------------------------------------
-    // suspend
-    // ---------------------------------------------------------------
-
-    private AppUser userWithStatus(Long id, AccountStatus status) {
-        AppUser user = new AppUser();
-        user.setId(id);
-        user.setStatus(status);
-        return user;
-    }
-
-    @Test
-    void suspend_ownAccount_throwsBadRequestAndTouchesNothing() {
-        assertThrows(BadRequestException.class, () -> appUserService.suspend(5L, null, 5L));
-        verify(userRepo, never()).save(any(AppUser.class));
-    }
-
-    @Test
-    void suspend_activeUser_setsSuspendedStatusAndEndDate() throws HttpException {
-        AppUser target = userWithStatus(7L, AccountStatus.ACTIVE);
-        LocalDateTime end = LocalDateTime.now().plusDays(3);
-        when(userRepo.findById(7L)).thenReturn(Optional.of(target));
-
-        appUserService.suspend(7L, end, 1L);
-
-        assertThat(target.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
-        assertThat(target.getSuspensionEndDate()).isEqualTo(end);
-        verify(userRepo).save(target);
-    }
-
-    @Test
-    void suspend_endDateInThePast_throwsBadRequest() {
-        AppUser target = userWithStatus(7L, AccountStatus.ACTIVE);
-        when(userRepo.findById(7L)).thenReturn(Optional.of(target));
-
-        assertThrows(BadRequestException.class,
-                () -> appUserService.suspend(7L, LocalDateTime.now().minusDays(1), 1L));
-    }
-
-    @Test
-    void suspend_notActiveUser_throwsBadRequest() {
-        AppUser target = userWithStatus(7L, AccountStatus.SUSPENDED);
-        when(userRepo.findById(7L)).thenReturn(Optional.of(target));
-
-        assertThrows(BadRequestException.class, () -> appUserService.suspend(7L, null, 1L));
-    }
-
-    // ---------------------------------------------------------------
-    // reactivateExpiredSuspensions (RG11)
-    // ---------------------------------------------------------------
-
-    @Test
-    void reactivateExpiredSuspensions_expiredAccounts_areReactivatedAndCounted() {
-        AppUser first = userWithStatus(1L, AccountStatus.SUSPENDED);
-        first.setSuspensionEndDate(LocalDateTime.now().minusHours(2));
-        AppUser second = userWithStatus(2L, AccountStatus.SUSPENDED);
-        second.setSuspensionEndDate(LocalDateTime.now().minusMinutes(1));
-        when(userRepo.findByStatusAndSuspensionEndDateLessThanEqual(eq(AccountStatus.SUSPENDED), any(LocalDateTime.class)))
-                .thenReturn(List.of(first, second));
-
-        int count = appUserService.reactivateExpiredSuspensions();
-
-        assertThat(count).isEqualTo(2);
-        assertThat(first.getStatus()).isEqualTo(AccountStatus.ACTIVE);
-        assertThat(first.getSuspensionEndDate()).isNull();
-        assertThat(second.getStatus()).isEqualTo(AccountStatus.ACTIVE);
-        assertThat(second.getSuspensionEndDate()).isNull();
-        verify(userRepo).saveAll(List.of(first, second));
-    }
-
-    @Test
-    void reactivateExpiredSuspensions_nothingExpired_returnsZero() {
-        when(userRepo.findByStatusAndSuspensionEndDateLessThanEqual(eq(AccountStatus.SUSPENDED), any(LocalDateTime.class)))
-                .thenReturn(List.of());
-
-        assertThat(appUserService.reactivateExpiredSuspensions()).isZero();
     }
 }

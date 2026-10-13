@@ -20,7 +20,7 @@ import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.openapi.LoginApi;
 import fr.diginamic.hubevenementiel.security.AppUserDetails;
 import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
-import fr.diginamic.hubevenementiel.services.AppUserService;
+import fr.diginamic.hubevenementiel.services.AccountStatusService;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import fr.diginamic.hubevenementiel.services.RefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,17 +30,17 @@ public class LoginController implements LoginApi {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final AppUserService appUserService;
+    private final AccountStatusService accountStatusService;
     private final RefreshTokenService refreshTokenService;
     private final DpopProofVerifier dpopProofVerifier;
     private final HttpServletRequest httpRequest;
 
     public LoginController(AuthenticationManager authenticationManager, JwtService jwtService,
-            AppUserService appUserService, RefreshTokenService refreshTokenService,
+            AccountStatusService accountStatusService, RefreshTokenService refreshTokenService,
             DpopProofVerifier dpopProofVerifier, HttpServletRequest httpRequest) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.appUserService = appUserService;
+        this.accountStatusService = accountStatusService;
         this.refreshTokenService = refreshTokenService;
         this.dpopProofVerifier = dpopProofVerifier;
         this.httpRequest = httpRequest;
@@ -55,7 +55,7 @@ public class LoginController implements LoginApi {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         } catch (DisabledException exception) {
-            Optional<String> explanation = appUserService.explainLoginRefusal(request.getEmail(),
+            Optional<String> explanation = accountStatusService.explainLoginRefusal(request.getEmail(),
                     request.getPassword());
 
             if (explanation.isPresent()) {

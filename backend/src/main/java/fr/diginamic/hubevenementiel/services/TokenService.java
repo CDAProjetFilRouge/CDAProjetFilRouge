@@ -1,14 +1,20 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Token;
+import fr.diginamic.hubevenementiel.enums.TokenType;
+import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class TokenService {
@@ -59,6 +65,62 @@ public class TokenService {
         tokenDB.get().setPendingData(token.getPendingData());
         tokenDB.get().setTokenType(token.getTokenType());
         tokenDB.get().setUser(token.getUser());
+    }
+
+    /**
+     * Retrieves a token and checks it can still be used.
+     *
+     * @param tokenValue   value of the token
+     * @param expectedType type the token must have
+     * @return the token
+     * @throws HttpException if the token is unknown, of the wrong type, already used or expired
+     */
+    public Token getValidToken(String tokenValue, TokenType expectedType) throws HttpException {
+        Token token = tokenRepo.findByValue(tokenValue)
+                .orElseThrow(() -> new BadRequestException("Token invalide."));
+
+        if (token.getTokenType() != expectedType) {
+            throw new BadRequestException("Type de token incorrect.");
+        }
+
+        if (token.getUseDate() != null) {
+            throw new BadRequestException("Ce token a déjà été utilisé.");
+        }
+
+        if (token.getExpirationDateTime().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Ce token a expiré.");
+        }
+
+        return token;
+    }
+
+    /**
+     * Marks a token as used, so it cannot be consumed twice.
+     */
+    public void markUsed(Token token) {
+        token.setUseDate(LocalDateTime.now());
+        tokenRepo.save(token);
+    }
+
+    /**
+     * Creates and stores a new token for a user.
+     *
+     * @param user        owner of the token
+     * @param type        type of the token
+     * @param validity    how long the token stays valid
+     * @param pendingData data kept with the token until it is confirmed (empty if none)
+     * @return the stored token
+     */
+    public Token issue(AppUser user, TokenType type, Duration validity, String pendingData) {
+        Token token = new Token();
+        token.setValue(UUID.randomUUID().toString());
+        token.setTokenType(type);
+        token.setUser(user);
+        token.setCreationDateTime(LocalDateTime.now());
+        token.setExpirationDateTime(LocalDateTime.now().plus(validity));
+        token.setPendingData(pendingData);
+        tokenRepo.save(token);
+        return token;
     }
 
     @Transactional
