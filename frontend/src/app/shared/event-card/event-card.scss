@@ -22,20 +22,22 @@ svg {
   stroke-linejoin: round;
 }
 
-// Direction « bubblegum » (voir styles.scss) : un seul rose pour tous les billets, la menthe pour « inscrit »,
-// le lilas pour la liste d'attente, le beurre pour « en cours ». Billet gonflé : grands rayons, reflet de gel
-// sur la souche, ombres roses. Les animations sont des ressorts (légers dépassements), coupées en mouvement réduit.
+// Direction « pavillon » (voir styles.scss) : billet blanc cerné d'encre, souche cobalt, ombre franche décalée.
+// Les états se lisent par la couleur de la souche : pin (inscrit), orange rayé (liste d'attente), gris (annulé).
 .card {
   --accent: var(--color-primary);
   --accent-soft: var(--color-primary-soft);
-  --accent-wash: #fff0f3;
-  --stub: #d9435f;
-  --spring: cubic-bezier(.34, 1.56, .64, 1);
-  --edge: var(--color-border);
+  --accent-wash: #f4f6ff;
+  --stub: #2a46c9;
+  --ink: #17182b;
+  --pine: #1d5a45;
+  --orange: #e2622b;
+  --sun: #ffd8a6;
+  --edge: var(--ink);
   --stub-width: 190px;
   --stub-height: 104px;
   --notch: 22px;
-  --radius: 26px;
+  --radius: 18px;
   // Silhouette du billet (coque et ombre) : le rectangle moins les deux demi-trous.
   --ticket-shape: polygon(
     0 0,
@@ -129,15 +131,15 @@ $grain-light: url('/grain-light.png');
 
   &:hover,
   &:focus-within {
-    --edge: var(--accent);
+    --edge: var(--ink);
   }
 
   &[data-registration='CONFIRMED'] {
-    --edge: #8fd6c2;
+    --edge: var(--pine);
   }
 
   &[data-registration='WAITING_LIST'] {
-    --edge: #b9adec;
+    --edge: var(--orange);
   }
 }
 
@@ -160,7 +162,7 @@ $grain-light: url('/grain-light.png');
   display: flex;
   height: 100%;
   min-height: 232px;
-  background: #fff7f8;
+  background: #fffdf8;
   border: 1px solid var(--edge);
   border-radius: var(--radius);
   transition: border-color .3s;
@@ -237,9 +239,10 @@ $grain-light: url('/grain-light.png');
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #fff;
-  background: var(--accent);
-  border-radius: 999px;
+  color: var(--ink);
+  background: var(--sun);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.4);
 }
 
@@ -256,8 +259,8 @@ $grain-light: url('/grain-light.png');
 
 .title {
   margin: 0;
-  font-family: 'Baloo 2', 'Figtree', sans-serif;
-  font-size: 21px;
+  font-family: 'Unbounded', 'DM Sans', sans-serif;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1.3;
   display: -webkit-box;
@@ -346,19 +349,19 @@ $grain-light: url('/grain-light.png');
 // --- Places ---------------------------------------------------------------
 
 .spots {
-  --spots-color: #3fae92;
-  --spots-track: #d8f4ec;
+  --spots-color: var(--pine);
+  --spots-track: #e6e1d3;
   margin-top: auto;
 
   &[data-level='medium'] {
-    --spots-color: #f0a62e;
-    --spots-track: #fff0cc;
+    --spots-color: #c25a14;
+    --spots-track: #f6dfcc;
   }
 
   &[data-level='low'],
   &[data-level='full'] {
-    --spots-color: #e2536b;
-    --spots-track: #ffd9e0;
+    --spots-color: #b3361a;
+    --spots-track: #f4d4cc;
   }
 }
 
@@ -385,14 +388,14 @@ $grain-light: url('/grain-light.png');
   height: 8px;
   overflow: hidden;
   background: var(--spots-track);
-  border-radius: 999px;
+  border-radius: 8px;
 }
 
 .fill {
   display: block;
   height: 100%;
   background: var(--spots-color);
-  border-radius: 999px;
+  border-radius: 8px;
   transition: width .4s ease;
 }
 
@@ -411,7 +414,7 @@ $grain-light: url('/grain-light.png');
   text-align: center;
   background:
     linear-gradient(90deg, rgb(31 36 48 / 0.12), transparent 14px),
-    linear-gradient(180deg, var(--accent-wash), #fff7f8 130%);
+    linear-gradient(180deg, var(--accent-wash), #fffdf8 130%);
   border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
   opacity: 0;
   transition: opacity .35s ease;
@@ -423,7 +426,7 @@ $grain-light: url('/grain-light.png');
     z-index: 2;
     width: 10px;
     pointer-events: none;
-    background: radial-gradient(circle 4.6px at 0 50%, #fff7f8 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    background: radial-gradient(circle 4.6px at 0 50%, #fffdf8 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
   }
 }
 
@@ -490,9 +493,10 @@ $grain-light: url('/grain-light.png');
   width: 44px;
   height: 44px;
   color: #fff;
-  background: linear-gradient(180deg, #6fd1b8, #3fae92);
+  background: var(--pine);
+  border: 2.5px solid var(--ink);
   border-radius: 50%;
-  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.5), 0 10px 20px -8px rgb(30 120 95 / 0.7);
+  box-shadow: 3px 3px 0 var(--ink);
   animation: pop .5s cubic-bezier(.34, 1.56, .64, 1);
 
   svg {
@@ -509,13 +513,13 @@ $grain-light: url('/grain-light.png');
   }
 
   &.waiting {
-    background: linear-gradient(180deg, #a597e6, #7e6bd2);
-    box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.5), 0 10px 20px -8px rgb(80 60 170 / 0.7);
+    background: var(--orange);
+    box-shadow: 3px 3px 0 var(--ink);
   }
 
   &.error {
-    background: #b3261e;
-    box-shadow: 0 8px 18px -6px rgb(120 20 15 / 0.6);
+    background: #b3361a;
+    box-shadow: 3px 3px 0 var(--ink);
   }
 }
 
@@ -547,10 +551,10 @@ $grain-light: url('/grain-light.png');
   padding: 3px 10px 3px 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #1c6b57;
-  background: #d8f4ec;
-  border: 1px solid #8fd6c2;
-  border-radius: 999px;
+  color: var(--pine);
+  background: var(--color-pine-soft);
+  border: 2px solid var(--pine);
+  border-radius: 8px;
 
   svg {
     width: 14px;
@@ -585,7 +589,7 @@ $grain-light: url('/grain-light.png');
   color: var(--color-text);
   background: #fff;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color .15s, border-color .15s, color .15s;
 
@@ -655,7 +659,7 @@ $grain-light: url('/grain-light.png');
     z-index: 2;
     width: 10px;
     pointer-events: none;
-    background: radial-gradient(circle 4.6px at 0 50%, #fff7f8 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    background: radial-gradient(circle 4.6px at 0 50%, #fffdf8 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
     transition: opacity .15s;
   }
 
@@ -752,8 +756,8 @@ $grain-light: url('/grain-light.png');
 
   .day {
     margin-top: 4px;
-    font-family: 'Baloo 2', 'Figtree', sans-serif;
-    font-size: 52px;
+    font-family: 'Unbounded', 'DM Sans', sans-serif;
+    font-size: 40px;
     font-weight: 800;
     letter-spacing: -.03em;
   }
@@ -772,7 +776,7 @@ $grain-light: url('/grain-light.png');
     font-size: 11px;
     font-weight: 700;
     background: rgb(255 255 255 / 0.2);
-    border-radius: 999px;
+    border-radius: 8px;
   }
 }
 
@@ -789,8 +793,8 @@ $grain-light: url('/grain-light.png');
   line-height: 1.2;
 
   .amount {
-    font-family: 'Baloo 2', 'Figtree', sans-serif;
-    font-size: 28px;
+    font-family: 'Unbounded', 'DM Sans', sans-serif;
+    font-size: 21px;
     font-weight: 800;
   }
 
@@ -1079,14 +1083,14 @@ $grain-light: url('/grain-light.png');
     padding: 22px 16px 8px;
     background:
       linear-gradient(180deg, rgb(31 36 48 / 0.12), transparent 14px),
-      linear-gradient(180deg, var(--accent-wash), #fff7f8 130%);
+      linear-gradient(180deg, var(--accent-wash), #fffdf8 130%);
     border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
 
     &::before {
       inset: 0 0 auto;
       width: auto;
       height: 10px;
-      background: radial-gradient(circle 4.6px at 50% 0, #fff7f8 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+      background: radial-gradient(circle 4.6px at 50% 0, #fffdf8 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
     }
   }
 
@@ -1147,7 +1151,7 @@ $grain-light: url('/grain-light.png');
       inset: 0 0 auto;
       width: auto;
       height: 10px;
-      background: radial-gradient(circle 4.6px at 50% 0, #fff7f8 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+      background: radial-gradient(circle 4.6px at 50% 0, #fffdf8 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
     }
 
   }
@@ -1220,9 +1224,8 @@ $grain-light: url('/grain-light.png');
 
 .card[data-registration='WAITING_LIST'] .stub {
   background:
-    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.22) 0 10px, transparent 10px 20px),
-    linear-gradient(160deg, rgb(255 255 255 / 0.14), transparent 50%, rgb(0 0 0 / 0.18)),
-    #7e6bd2;
+    repeating-linear-gradient(135deg, rgb(255 216 166 / 0.55) 0 10px, transparent 10px 20px),
+    var(--orange);
 }
 
 .wait {
@@ -1263,9 +1266,10 @@ $grain-light: url('/grain-light.png');
   font-weight: 800;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: #fff;
-  background: #7e6bd2;
-  border-radius: 999px;
+  color: var(--ink);
+  background: var(--sun);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.5);
 }
 
@@ -1281,6 +1285,7 @@ $grain-light: url('/grain-light.png');
   place-items: center;
   color: var(--stub);
   background: #fff;
+  border: 2px solid var(--ink);
   border-radius: 50%;
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
   transition: transform .3s;
@@ -1323,15 +1328,14 @@ $grain-light: url('/grain-light.png');
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0;
-  filter: blur(14px);
-  transform: translateY(16px);
-  transition: opacity .3s ease;
+  opacity: 1;
+  transform: translate(6px, 6px);
+  transition: transform .18s cubic-bezier(.2, .8, .2, 1);
 
   > div {
     width: 100%;
     height: 100%;
-    background: rgb(217 67 95 / 0.4);
+    background: var(--ink);
     border-radius: var(--radius);
     clip-path: var(--ticket-shape);
   }
@@ -1339,7 +1343,7 @@ $grain-light: url('/grain-light.png');
 
 .card:hover .shadow,
 .card:focus-within .shadow {
-  opacity: 1;
+  transform: translate(9px, 9px);
 }
 
 // --- Cycle de vie : évènement en cours, évènement annulé -------------------------------------------
@@ -1357,15 +1361,16 @@ $grain-light: url('/grain-light.png');
   text-transform: uppercase;
   white-space: nowrap;
   color: #fff;
-  border-radius: 999px;
+  border-radius: 8px;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.5);
 }
 
 .live-chip {
   top: 12px;
   right: 12px;
-  color: #4a2232;
-  background: linear-gradient(180deg, #ffe38a, #ffd45c);
+  color: var(--ink);
+  background: var(--sun);
+  border: 2px solid var(--ink);
 }
 
 .live-dot {
@@ -1386,7 +1391,7 @@ $grain-light: url('/grain-light.png');
 .card[data-lifecycle='ongoing'],
 .card[data-lifecycle='ongoing']:hover,
 .card[data-lifecycle='ongoing']:focus-within {
-  --edge: #ffd45c;
+  --edge: var(--orange);
 }
 
 .card[data-lifecycle='ongoing'] .shell {
@@ -1402,7 +1407,7 @@ $grain-light: url('/grain-light.png');
 
 .card[data-lifecycle='cancelled'] {
   .shell {
-    background: #e8e3da;
+    background: #f1eee6;
   }
 
   .media img,
@@ -1456,10 +1461,10 @@ $grain-light: url('/grain-light.png');
   line-height: 1;
   letter-spacing: .14em;
   text-transform: uppercase;
-  font-family: 'Baloo 2', 'Figtree', sans-serif;
-  color: rgb(214 52 78 / 0.95);
+  font-family: 'Unbounded', 'DM Sans', sans-serif;
+  color: rgb(226 98 43 / 0.95);
   background: rgb(255 255 255 / 0.16);
-  border: 4px solid rgb(214 52 78 / 0.95);
+  border: 4px solid rgb(226 98 43 / 0.95);
   text-shadow: 0 0 6px rgb(255 255 255 / 0.55);
   box-shadow: 0 0 8px rgb(255 255 255 / 0.35);
   border-radius: 6px;
@@ -1493,76 +1498,46 @@ $grain-light: url('/grain-light.png');
   clip-path: inset(50%);
 }
 
-// --- Gel et bulles -----------------------------------------------------------------------------------
+// --- Pavillon : détails -------------------------------------------------------------------------------
 
-// Souche gonflée : reflet brillant en haut, ombre intérieure en bas.
+// Souche : jour et mois en sable, flèche sable.
 .stub {
-  box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.4), inset 0 -14px 22px -12px rgb(110 10 40 / 0.35);
+  .weekday,
+  .month {
+    color: var(--sun);
+    opacity: 1;
+  }
+
+  .cta svg {
+    stroke: var(--sun);
+  }
 }
 
-// Pastille de catégorie : une bulle blanche.
-.category {
-  color: var(--color-primary);
-  background: #fff;
-  box-shadow: inset 0 -2px 0 rgb(217 67 95 / 0.15), 0 6px 14px -6px rgb(217 67 95 / 0.6);
+.card[data-registration='CONFIRMED'] .receipt-date,
+.card[data-registration='CONFIRMED'] .receipt-price {
+  color: var(--pine);
 }
 
-// Reflet de gel sur la photo : une tache de lumière en haut à gauche.
-.media::before {
+// Photo : une pastille ronde orange cerclée d'encre, comme un signe de la maquette.
+.media::after {
   content: '';
   position: absolute;
-  inset: 0;
   z-index: 1;
+  inset: auto 14px 14px auto;
+  width: 34px;
+  height: 34px;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--orange);
   pointer-events: none;
-  background: radial-gradient(ellipse 70% 40% at 24% 8%, rgb(255 255 255 / 0.4), transparent 70%);
 }
 
-.card[data-lifecycle='cancelled'] .shell {
-  background: #f6edef;
+.live-dot {
+  background: var(--ink);
 }
-
-// --- Animations de ressort ----------------------------------------------------------------------------
 
 @media (prefers-reduced-motion: no-preference) {
-  // Entrée : chaque billet jaillit en rebondissant, l'un après l'autre.
-  app-event-card {
-    animation: bubble-in .7s var(--spring, cubic-bezier(.34, 1.56, .64, 1)) backwards;
-  }
-
-  @for $i from 2 through 8 {
-    app-event-card:nth-child(#{$i}) {
-      animation-delay: #{($i - 1) * 70}ms;
-    }
-  }
-
-  // Survol : le billet se gonfle puis se détend, comme une bulle.
   .card {
-    transition: filter .3s ease, transform .55s cubic-bezier(.34, 1.56, .64, 1);
-  }
-
-  .card:hover {
-    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-6px) scale(1.012);
-  }
-
-  // La pastille d'arrachage pulse doucement pour dire « tire-moi ».
-  .stub > .corner {
-    animation: bubble-pulse 2.6s ease-in-out infinite;
-  }
-
-  .live-dot {
-    animation: bubble-pulse 1.4s ease-in-out infinite;
-  }
-}
-
-@keyframes bubble-in {
-  from {
-    opacity: 0;
-    transform: translateY(26px) scale(.9);
-  }
-}
-
-@keyframes bubble-pulse {
-  50% {
-    transform: scale(1.2);
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1);
   }
 }

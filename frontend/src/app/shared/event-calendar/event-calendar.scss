@@ -80,7 +80,7 @@
 }
 
 :host(.large) {
-  --fc-classic-border: #f0e0d5;
+  --fc-classic-border: var(--color-border);
   --fc-classic-today: transparent;
 
   full-calendar {
@@ -107,12 +107,12 @@
     transition: background-color .15s;
 
     &.is-weekend {
-      background: #fff7f0;
+      background: #f4efe3;
     }
 
     &.is-other {
       color: #947f77;
-      background: #fffaf6;
+      background: #faf6ec;
     }
 
     &.is-today {

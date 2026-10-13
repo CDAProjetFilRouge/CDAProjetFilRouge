@@ -13,9 +13,7 @@
   height: 88px;
   padding: 0 80px;
   background: var(--color-header-bg);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 10px 26px -18px rgba(217, 67, 95, 0.55);
+  border-bottom: 2.5px solid var(--color-ink);
 }
 
 // Logo : 44px de haut, soit 1,8 fois la pastille de texte d'avant (24px).
@@ -40,28 +38,29 @@
 }
 
 .page-select {
-  padding: 8px 16px;
-  font-size: 15px;
-  font-weight: 600;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-weight: 700;
   text-decoration: none;
   color: var(--color-muted);
-  border-radius: 999px;
+  border: 2px solid transparent;
+  border-radius: 10px;
   background: none;
   border: 0;
-  transition: color .15s, background-color .2s, transform .4s cubic-bezier(.34, 1.56, .64, 1);
+  transition: color .15s;
 
   &:hover,
   &:focus-visible {
-    color: var(--color-primary);
-    background: var(--color-primary-soft);
-    transform: translateY(-2px);
+    color: var(--color-ink);
+    background: var(--color-sun);
   }
 
-  // Page courante : une bulle rose.
+  // Page courante : encadrée d'encre, avec son ombre franche.
   &.active {
-    font-weight: 700;
-    color: var(--color-primary);
-    background: var(--color-primary-soft);
+    color: var(--color-ink);
+    background: #fff;
+    border-color: var(--color-ink);
+    box-shadow: 3px 3px 0 var(--color-ink);
   }
 }
 
@@ -82,15 +81,14 @@
   padding: 4px 10px 4px 4px;
   color: var(--color-text);
   background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border: 2px solid var(--color-ink);
+  border-radius: 14px;
   cursor: pointer;
   transition: background-color .15s, border-color .15s;
 
   &:hover,
   &[aria-expanded='true'] {
-    background: var(--color-primary-soft);
-    border-color: var(--color-primary);
+    background: var(--color-sun);
   }
 
   &:focus-visible {
@@ -108,7 +106,7 @@
   font-weight: 700;
   color: #fff;
   background: var(--color-primary);
-  border-radius: 50%;
+  border-radius: 9px;
 }
 
 .identity {
@@ -153,9 +151,9 @@
   min-width: 180px;
   padding: 6px;
   background: #fff;
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 32px rgba(60, 30, 25, 0.18);
+  box-shadow: 5px 5px 0 var(--color-ink);
 }
 
 .menu-item {
