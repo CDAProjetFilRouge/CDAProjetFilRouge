@@ -84,24 +84,25 @@ th {
   font-size: 12px;
   font-weight: 600;
 
-  &[data-status='PUBLISHED'] {
-    color: #1b6e3a;
-    background: #dcf3e4;
+  // Mêmes couleurs que les statuts du panel admin (styles/_admin.scss).
+  &[data-status='DRAFT'] {
+    color: var(--color-muted);
+    background: var(--color-placeholder);
   }
 
-  &[data-status='DRAFT'] {
-    color: #8a5300;
-    background: #fff1cc;
+  &[data-status='PUBLISHED'] {
+    color: var(--color-success);
+    background: var(--color-success-bg);
   }
 
   &[data-status='CANCELLED'] {
-    color: #a3262f;
-    background: #fde0e2;
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
   }
 
   &[data-status='FINISHED'] {
-    color: #4b5563;
-    background: #e5e8ee;
+    color: #1d4f91;
+    background: #e3edfb;
   }
 }
 
