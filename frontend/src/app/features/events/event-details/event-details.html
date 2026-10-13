@@ -62,29 +62,31 @@
         </div>
       </div>
 
-      <div class="fact">
-        <div class="fact-fill">
-          <p class="fact-label">Places</p>
-          @if (isFull()) {
-            <p class="fact-value">Complet</p>
-            <p class="fact-sub">{{ event.maxCapacity }} places · liste d’attente ouverte</p>
-          } @else {
-            <p class="fact-value">{{ event.remainingSpots }} restantes</p>
-            <p class="fact-sub">sur {{ event.maxCapacity }}</p>
-          }
-          <div
-            class="meter"
-            role="meter"
-            aria-label="Taux de remplissage"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            [attr.aria-valuenow]="takenRatio()"
-            [attr.aria-valuetext]="takenRatio() + ' % des places réservées'"
-          >
-            <span class="meter-fill" [class.meter-full]="isFull()" [style.width.%]="takenRatio()"></span>
+      @if (event.status !== 'CANCELLED') {
+        <div class="fact">
+          <div class="fact-fill">
+            <p class="fact-label">Places</p>
+            @if (isFull()) {
+              <p class="fact-value">Complet</p>
+              <p class="fact-sub">{{ event.maxCapacity }} places · liste d’attente ouverte</p>
+            } @else {
+              <p class="fact-value">{{ event.remainingSpots }} restantes</p>
+              <p class="fact-sub">sur {{ event.maxCapacity }}</p>
+            }
+            <div
+              class="meter"
+              role="meter"
+              aria-label="Taux de remplissage"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="takenRatio()"
+              [attr.aria-valuetext]="takenRatio() + ' % des places réservées'"
+            >
+              <span class="meter-fill" [class.meter-full]="isFull()" [style.width.%]="takenRatio()"></span>
+            </div>
           </div>
         </div>
-      </div>
+      }
     </section>
 
     <div class="layout">

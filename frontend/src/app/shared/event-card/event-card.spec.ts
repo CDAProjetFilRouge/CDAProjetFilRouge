@@ -245,6 +245,45 @@ describe('EventCard', () => {
   // Inscription directe : la souche se détache
   // ---------------------------------------------------------------
 
+  describe('cycle de vie de l’évènement', () => {
+    const HOUR = 60 * 60 * 1000;
+
+    it('ne signale rien pour un évènement à venir', () => {
+      const { element } = render(makeEvent());
+
+      expect(element.querySelector('.card')?.getAttribute('data-lifecycle')).toBeNull();
+      expect(element.querySelector('.live-chip')).toBeNull();
+      expect(element.querySelector('.cancel-chip')).toBeNull();
+    });
+
+    it('signale un évènement en cours', () => {
+      const now = Date.now();
+      const { element } = render(makeEvent({ startDateTime: new Date(now - HOUR), endDateTime: new Date(now + HOUR) }));
+
+      expect(element.querySelector('.card')?.getAttribute('data-lifecycle')).toBe('ongoing');
+      expect(text(element, '.live-chip')).toBe('En cours');
+    });
+
+    it('signale un évènement annulé, avec un tampon, et ne propose plus de s’inscrire', () => {
+      const { element } = render(makeEvent({ status: 'CANCELLED' }), { quick: true });
+
+      expect(element.querySelector('.card')?.getAttribute('data-lifecycle')).toBe('cancelled');
+      expect(element.querySelector('.cancel-chip')).toBeNull();
+      expect(text(element, '.title .sr-only')).toContain('annulé');
+      expect(element.querySelector('.cancel-stamp')).not.toBeNull();
+      expect(element.querySelector('.stub')?.classList).not.toContain('interactive');
+      expect(text(element, '.cta')).toContain('annulé');
+    });
+
+    it('un évènement annulé prime sur l’inscription : plus de liste d’attente ni de souche à soulever', () => {
+      const { element } = render(makeEvent({ status: 'CANCELLED' }), { registration: 'WAITING_LIST', position: 3 });
+
+      expect(element.querySelector('.wait-chip')).toBeNull();
+      expect(element.querySelector('.wait')).toBeNull();
+      expect(element.querySelector('.stub')?.classList).not.toContain('peelable');
+    });
+  });
+
   describe('inscription directe depuis la souche', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
@@ -289,7 +328,7 @@ describe('EventCard', () => {
 
       expect(requests.length).toBe(1);
       expect(phase(element)).toBe('tearing');
-      expect(stub(element).classList).not.toContain('interactive');
+      expect(element.querySelector('.stub')?.classList).not.toContain('interactive');
     });
 
     it('passe en attente après le détachement, puis confirme l’inscription quand elle arrive', () => {
@@ -355,7 +394,7 @@ describe('EventCard', () => {
 
       expect(phase(element)).toBe('idle');
       expect(element.querySelector('.receipt')).not.toBeNull();
-      expect(stub(element).classList).not.toContain('interactive');
+      expect(element.querySelector('.stub')?.classList).not.toContain('interactive');
     });
 
     it('liste d’attente : la souche revient en fondu, soulevable, avec le rang derrière', () => {
