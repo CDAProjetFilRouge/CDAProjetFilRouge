@@ -24,7 +24,10 @@
     <tbody>
       @for (demand of demands(); track demand.id) {
         <tr>
-          <td>{{ demand.requester.firstName }} {{ demand.requester.lastName }} <br> {{ demand.requester.email }}</td>
+          <td>
+            {{ demand.requester.firstName }} {{ demand.requester.lastName }}<br>
+            <a class="email" [href]="'mailto:' + demand.requester.email">{{ demand.requester.email }}</a>
+          </td>
           <td>{{ demand.demandDate | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td>{{ statusLabels[demand.requestStatus] }}</td>
           <td>@if (demand.admin; as admin) {
