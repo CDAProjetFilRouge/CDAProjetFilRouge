@@ -34,6 +34,39 @@ svg {
   --stub-height: 104px;
   --notch: 22px;
   --radius: 16px;
+  // Silhouette du billet (coque et ombre) : le rectangle moins les deux demi-trous.
+  --ticket-shape: polygon(
+    0 0,
+    calc((100% - var(--stub-width)) - var(--notch) * 0.5) 0,
+    calc((100% - var(--stub-width)) - var(--notch) * 0.483) calc(var(--notch) * 0.1294),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.433) calc(var(--notch) * 0.25),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.3536) calc(var(--notch) * 0.3536),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.25) calc(var(--notch) * 0.433),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.1294) calc(var(--notch) * 0.483),
+    calc((100% - var(--stub-width)) + var(--notch) * 0) calc(var(--notch) * 0.5),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.1294) calc(var(--notch) * 0.483),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.25) calc(var(--notch) * 0.433),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.3536) calc(var(--notch) * 0.3536),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.433) calc(var(--notch) * 0.25),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.483) calc(var(--notch) * 0.1294),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.5) 0,
+    100% 0,
+    100% 100%,
+    calc((100% - var(--stub-width)) + var(--notch) * 0.5) 100%,
+    calc((100% - var(--stub-width)) + var(--notch) * 0.483) calc(100% - var(--notch) * 0.1294),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.433) calc(100% - var(--notch) * 0.25),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.3536) calc(100% - var(--notch) * 0.3536),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.25) calc(100% - var(--notch) * 0.433),
+    calc((100% - var(--stub-width)) + var(--notch) * 0.1294) calc(100% - var(--notch) * 0.483),
+    calc((100% - var(--stub-width)) + var(--notch) * 0) calc(100% - var(--notch) * 0.5),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.1294) calc(100% - var(--notch) * 0.483),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.25) calc(100% - var(--notch) * 0.433),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.3536) calc(100% - var(--notch) * 0.3536),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.433) calc(100% - var(--notch) * 0.25),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.483) calc(100% - var(--notch) * 0.1294),
+    calc((100% - var(--stub-width)) - var(--notch) * 0.5) 100%,
+    0 100%
+  );
 
   &[data-category='CULTURE'] {
     --accent: #7048d6;
@@ -59,26 +92,31 @@ svg {
 
 // Grain de pellicule : un bruit plus gros et plus contrasté que du simple bruit numérique.
 // Deux variantes : sombre (sur le papier et la photo) et claire (sur la souche).
-$grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0'  intercept='1'/><feFuncR type='linear' slope='1.7' intercept='-0.35'/><feFuncG type='linear' slope='1.7' intercept='-0.35'/><feFuncB type='linear' slope='1.7' intercept='-0.35'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+// Le grain est une petite image de bruit transparent (public/grain-*.png), sans mode de fusion. Une image
+// SVG à filtre (feTurbulence) était recalculée à chaque fois que le navigateur déchargeait un billet
+// hors écran : les billets revenaient vides, avec du retard.
+$grain-dark: url('/grain-dark.png');
+$grain-light: url('/grain-light.png');
 
 // --- Le billet entier ------------------------------------------------------
 
 .card {
   position: relative;
   height: 100%;
-  filter: drop-shadow(0 1px 2px rgb(31 36 48 / 0.07));
-  transition: filter .3s ease, transform .18s ease-out;
+  border-radius: var(--radius);
+  transition: transform .18s ease-out;
 
-  // Une encoche est un trou dans la coque : son contour est dessiné par ces deux anneaux.
+  // Le liseré de la coque se prolonge dans chaque encoche : un anneau transparent, posé juste hors du trou,
+  // dont seule la moitié creusée dans le billet est visible. Ce n'est qu'un contour : le trou, lui, est découpé dans la coque.
   &::before,
   &::after {
     content: '';
     position: absolute;
     left: calc(100% - var(--stub-width) - var(--notch) / 2 - 1px);
-    z-index: 1;
+    z-index: 4;
     box-sizing: border-box;
-    width: var(--notch);
-    height: var(--notch);
+    width: calc(var(--notch) + 2px);
+    height: calc(var(--notch) + 2px);
     border: 1px solid var(--edge);
     border-radius: 50%;
     pointer-events: none;
@@ -86,19 +124,31 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   }
 
   &::before {
-    top: calc(var(--notch) / -2);
+    top: calc(var(--notch) / -2 - 1px);
     clip-path: inset(50% 0 0 0);
+    transition: border-color .3s, clip-path .3s;
   }
 
   &::after {
-    bottom: calc(var(--notch) / -2);
+    bottom: calc(var(--notch) / -2 - 1px);
     clip-path: inset(0 0 50% 0);
+    transition: border-color .3s, clip-path .3s;
+  }
+
+  // Au repos le liseré est neutre : il ne doit pas se dessiner sur la souche colorée, seulement côté billet.
+  &:not(:hover):not(:focus-within):not([data-registration='CONFIRMED']):not([data-registration='WAITING_LIST']) {
+    &::before {
+      clip-path: inset(50% 50% 0 0);
+    }
+
+    &::after {
+      clip-path: inset(0 50% 50% 0);
+    }
   }
 
   &:hover,
   &:focus-within {
     --edge: var(--accent);
-    filter: drop-shadow(0 20px 22px rgb(31 36 48 / 0.26));
   }
 
   &[data-registration='CONFIRMED'] {
@@ -134,12 +184,8 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   border-radius: var(--radius);
   transition: border-color .3s;
 
-  // Les deux trous de la perforation, vraiment transparents.
-  mask-image:
-    radial-gradient(circle calc(var(--notch) / 2) at calc(100% - var(--stub-width)) 0, #0000 98%, #000),
-    radial-gradient(circle calc(var(--notch) / 2) at calc(100% - var(--stub-width)) 100%, #0000 98%, #000);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  // Les deux encoches sont de vrais trous (une découpe, pas un masque : voir le commit da25a54).
+  clip-path: var(--ticket-shape);
 }
 
 // --- Photo ----------------------------------------------------------------
@@ -392,10 +438,15 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   opacity: 0;
   transition: opacity .35s ease;
 
-  // La perforation : une rangée de demi-trous le long du bord gauche.
-  mask-image: radial-gradient(circle 4.6px at 0 50%, #0000 96%, #000);
-  mask-size: 100% 15px;
-  mask-repeat: repeat-y;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    width: 10px;
+    pointer-events: none;
+    background: radial-gradient(circle 4.6px at 0 50%, #f1e8d6 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+  }
 }
 
 // Le papier apparaît dès que la souche se soulève, pendant l'inscription, et reste pour un reçu.
@@ -575,12 +626,12 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 
 .stub {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
   z-index: 2;
   display: flex;
-  width: var(--stub-width);
+  width: calc(var(--stub-width) - 1px);
   flex-direction: column;
   justify-content: space-between;
   gap: 16px;
@@ -592,25 +643,76 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
     repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 11px),
     linear-gradient(160deg, rgb(255 255 255 / 0.18), transparent 45%, rgb(0 0 0 / 0.22)),
     var(--stub);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
   // Elle laisse passer les clics vers le lien du billet, sauf quand elle sert à s'inscrire.
   pointer-events: none;
-  transform-origin: left center;
+  transform-origin: left bottom;
+  // Elle laisse 1 px de coque autour d'elle : le liseré du billet reste celui de la coque, sans raccord.
   transition: transform .5s cubic-bezier(.2, .9, .3, 1.2), filter .3s;
 
-  // Les deux encoches sont aussi découpées dans la souche.
-  mask-image:
-    radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
-    radial-gradient(circle calc(var(--notch) / 2) at 0 100%, #0000 98%, #000),
-    radial-gradient(circle 4.6px at 0 50%, #0000 96%, #000);
-  mask-size: 100% 100%, 100% 100%, 100% 15px;
-  mask-repeat: no-repeat, no-repeat, repeat-y;
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
+  // Les deux demi-encoches du billet laissent le trou entier : la souche est découpée aux mêmes endroits.
+  clip-path: polygon(
+    calc(var(--notch) * 0.5) calc(var(--notch) * 0 - 1px),
+    calc(var(--notch) * 0.483) calc(var(--notch) * 0.1294 - 1px),
+    calc(var(--notch) * 0.433) calc(var(--notch) * 0.25 - 1px),
+    calc(var(--notch) * 0.3536) calc(var(--notch) * 0.3536 - 1px),
+    calc(var(--notch) * 0.25) calc(var(--notch) * 0.433 - 1px),
+    calc(var(--notch) * 0.1294) calc(var(--notch) * 0.483 - 1px),
+    0 calc(var(--notch) * 0.5 - 1px),
+    0 calc(100% + 1px - var(--notch) * 0.5),
+    calc(var(--notch) * 0.1294) calc(100% + 1px - var(--notch) * 0.483),
+    calc(var(--notch) * 0.25) calc(100% + 1px - var(--notch) * 0.433),
+    calc(var(--notch) * 0.3536) calc(100% + 1px - var(--notch) * 0.3536),
+    calc(var(--notch) * 0.433) calc(100% + 1px - var(--notch) * 0.25),
+    calc(var(--notch) * 0.483) calc(100% + 1px - var(--notch) * 0.1294),
+    calc(var(--notch) * 0.5) calc(100% + 1px - var(--notch) * 0),
+    100% 100%,
+    100% 0
+  );
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    width: 10px;
+    pointer-events: none;
+    background: radial-gradient(circle 4.6px at 0 50%, #f1e8d6 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    transition: opacity .15s;
+  }
 
   > * {
     position: relative;
     z-index: 1;
+  }
+}
+
+// Dès que la souche bouge, ses demi-trous peints laissent place à de vrais trous (un masque) : elle part
+// avec son bord perforé et ses demi-encoches. Le masque n'existe que sur la souche qui bouge : posé en
+// permanence sur tous les billets, il faisait disparaître des billets au redimensionnement (da25a54).
+.card:has(.stub-hit:hover),
+.card:has(.stub:focus-visible),
+.card[data-phase='tearing'],
+.card[data-phase='returning'] {
+  .stub {
+    mask-image:
+      radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
+      radial-gradient(circle calc(var(--notch) / 2) at 0 100%, #0000 98%, #000),
+      radial-gradient(circle 4.6px at 0 50%, #0000 96%, #000);
+    mask-size: 100% 100%, 100% 100%, 100% 15px;
+    mask-repeat: no-repeat, no-repeat, repeat-y;
+    mask-composite: intersect;
+    -webkit-mask-composite: source-in;
+  }
+
+  .stub::before {
+    opacity: 0;
+    transition: none;
+  }
+
+  &::before,
+  &::after {
+    z-index: 2;
   }
 }
 
@@ -644,7 +746,7 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 @media (prefers-reduced-motion: no-preference) {
   .card:has(.stub-hit:hover) .stub.interactive,
   .stub.interactive:focus-visible {
-    transform: perspective(900px) translateX(14px) translateY(3px) rotateY(-16deg) rotateZ(6deg);
+    transform: perspective(900px) rotateY(-14deg) rotateZ(5deg);
     filter: drop-shadow(-10px 10px 14px rgb(31 36 48 / 0.35));
   }
 
@@ -742,7 +844,8 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 // La souche pivote autour de son coin supérieur (là où elle tient encore) et tombe, avec son ombre.
 
 .card[data-phase='tearing'] .stub {
-  transform-origin: left top;
+  z-index: 3;
+  transform-origin: left bottom;
   animation: tear .68s cubic-bezier(.5, 0, .75, .5) forwards;
 }
 
@@ -753,18 +856,19 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 }
 
 .card[data-phase='returning'] .stub {
+  z-index: 3;
   animation: stub-return .6s ease both;
 }
 
 @keyframes tear {
   0% {
-    transform: perspective(900px) translateX(14px) translateY(3px) rotateY(-16deg) rotateZ(6deg);
+    transform: perspective(900px) rotateY(-14deg) rotateZ(5deg);
     filter: drop-shadow(-10px 10px 14px rgb(31 36 48 / 0.35));
     opacity: 1;
   }
 
   35% {
-    transform: perspective(900px) translateX(14px) translateY(-4px) rotateY(-14deg) rotateZ(16deg);
+    transform: perspective(900px) translateX(4px) rotateY(-16deg) rotateZ(14deg);
     filter: drop-shadow(-16px 16px 18px rgb(31 36 48 / 0.4));
     opacity: 1;
   }
@@ -837,21 +941,22 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
     linear-gradient(
       115deg,
       transparent 28%,
-      rgb(255 255 255 / 0.55) 44%,
+      rgb(255 255 255 / 0.3) 44%,
       rgb(255 255 255 / 0) 52%,
-      rgb(0 0 0 / 0.38) 60%,
+      rgb(0 0 0 / 0.22) 60%,
       transparent 74%
     );
   background-size: 260% 100%;
   background-position: var(--mx, 50%) 0;
-  mix-blend-mode: overlay;
-  backdrop-filter: contrast(1.28) brightness(1.04);
-  -webkit-backdrop-filter: contrast(1.28) brightness(1.04);
   mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), #000 0%, #000 22%, transparent 70%);
 }
 
 .card:hover .holo {
   opacity: 1;
+  // Le filtre n'existe que pendant le survol : des filtres d'arrière-plan permanents sur toutes les cartes
+  // faisaient disparaître des billets au redimensionnement.
+  backdrop-filter: contrast(1.28) brightness(1.04);
+  -webkit-backdrop-filter: contrast(1.28) brightness(1.04);
 }
 
 // Sur la souche : un film brillant, une bande claire qui glisse sans changer la couleur.
@@ -862,10 +967,9 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   pointer-events: none;
   opacity: 0;
   transition: opacity .35s ease;
-  background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 0.4) 48%, transparent 62%);
+  background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 0.2) 48%, transparent 62%);
   background-size: 280% 100%;
   background-position: var(--mx, 50%) 0;
-  mix-blend-mode: soft-light;
 }
 
 .card:hover .foil {
@@ -890,11 +994,10 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   &::before {
     content: '';
     position: absolute;
-    inset: -20%;
+    inset: 0;
     background-image: $grain-dark;
-    background-size: 240px 240px;
-    mix-blend-mode: multiply;
-    opacity: .06;
+    background-size: 128px 128px;
+    opacity: .045;
   }
 }
 
@@ -902,8 +1005,8 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   z-index: 0;
 
   &::before {
-    mix-blend-mode: overlay;
-    opacity: .25;
+    background-image: $grain-light;
+    opacity: .06;
   }
 }
 
@@ -913,6 +1016,40 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 @media (max-width: 720px) {
   // La perforation devient horizontale, juste au-dessus de la souche (en bas du billet).
   .card {
+    --stub-height: 140px;
+    --ticket-shape: polygon(
+      0 0,
+      100% 0,
+      100% calc((100% - var(--stub-height)) - var(--notch) * 0.5),
+      calc(100% - var(--notch) * 0.1294) calc((100% - var(--stub-height)) - var(--notch) * 0.483),
+      calc(100% - var(--notch) * 0.25) calc((100% - var(--stub-height)) - var(--notch) * 0.433),
+      calc(100% - var(--notch) * 0.3536) calc((100% - var(--stub-height)) - var(--notch) * 0.3536),
+      calc(100% - var(--notch) * 0.433) calc((100% - var(--stub-height)) - var(--notch) * 0.25),
+      calc(100% - var(--notch) * 0.483) calc((100% - var(--stub-height)) - var(--notch) * 0.1294),
+      calc(100% - var(--notch) * 0.5) calc((100% - var(--stub-height)) + var(--notch) * 0),
+      calc(100% - var(--notch) * 0.483) calc((100% - var(--stub-height)) + var(--notch) * 0.1294),
+      calc(100% - var(--notch) * 0.433) calc((100% - var(--stub-height)) + var(--notch) * 0.25),
+      calc(100% - var(--notch) * 0.3536) calc((100% - var(--stub-height)) + var(--notch) * 0.3536),
+      calc(100% - var(--notch) * 0.25) calc((100% - var(--stub-height)) + var(--notch) * 0.433),
+      calc(100% - var(--notch) * 0.1294) calc((100% - var(--stub-height)) + var(--notch) * 0.483),
+      100% calc((100% - var(--stub-height)) + var(--notch) * 0.5),
+      100% 100%,
+      0 100%,
+      0 calc((100% - var(--stub-height)) + var(--notch) * 0.5),
+      calc(var(--notch) * 0.1294) calc((100% - var(--stub-height)) + var(--notch) * 0.483),
+      calc(var(--notch) * 0.25) calc((100% - var(--stub-height)) + var(--notch) * 0.433),
+      calc(var(--notch) * 0.3536) calc((100% - var(--stub-height)) + var(--notch) * 0.3536),
+      calc(var(--notch) * 0.433) calc((100% - var(--stub-height)) + var(--notch) * 0.25),
+      calc(var(--notch) * 0.483) calc((100% - var(--stub-height)) + var(--notch) * 0.1294),
+      calc(var(--notch) * 0.5) calc((100% - var(--stub-height)) + var(--notch) * 0),
+      calc(var(--notch) * 0.483) calc((100% - var(--stub-height)) - var(--notch) * 0.1294),
+      calc(var(--notch) * 0.433) calc((100% - var(--stub-height)) - var(--notch) * 0.25),
+      calc(var(--notch) * 0.3536) calc((100% - var(--stub-height)) - var(--notch) * 0.3536),
+      calc(var(--notch) * 0.25) calc((100% - var(--stub-height)) - var(--notch) * 0.433),
+      calc(var(--notch) * 0.1294) calc((100% - var(--stub-height)) - var(--notch) * 0.483),
+      0 calc((100% - var(--stub-height)) - var(--notch) * 0.5)
+    );
+
     &::before,
     &::after {
       top: auto;
@@ -920,22 +1057,30 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
     }
 
     &::before {
-      left: calc(var(--notch) / -2);
+      left: calc(var(--notch) / -2 - 1px);
       clip-path: inset(0 0 0 50%);
     }
 
     &::after {
-      right: calc(var(--notch) / -2);
+      right: calc(var(--notch) / -2 - 1px);
       left: auto;
       clip-path: inset(0 50% 0 0);
+    }
+
+    &:not(:hover):not(:focus-within):not([data-registration='CONFIRMED']):not([data-registration='WAITING_LIST']) {
+      &::before {
+        clip-path: inset(0 0 50% 50%);
+      }
+
+      &::after {
+        clip-path: inset(0 50% 50% 0);
+      }
     }
   }
 
   .shell {
     flex-direction: column;
-    mask-image:
-      radial-gradient(circle calc(var(--notch) / 2) at 0 calc(100% - var(--stub-height)), #0000 98%, #000),
-      radial-gradient(circle calc(var(--notch) / 2) at 100% calc(100% - var(--stub-height)), #0000 98%, #000);
+    clip-path: var(--ticket-shape);
   }
 
   .media {
@@ -956,9 +1101,13 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
       linear-gradient(180deg, rgb(31 36 48 / 0.12), transparent 14px),
       linear-gradient(180deg, var(--accent-wash), #f1e8d6 130%);
     border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
-    mask-image: radial-gradient(circle 4.6px at 50% 0, #0000 96%, #000);
-    mask-size: 15px 100%;
-    mask-repeat: repeat-x;
+
+    &::before {
+      inset: 0 0 auto;
+      width: auto;
+      height: 10px;
+      background: radial-gradient(circle 4.6px at 50% 0, #f1e8d6 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+    }
   }
 
   .slot-hint {
@@ -984,24 +1133,43 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 
   .stub {
     top: auto;
-    left: 0;
+    left: 1px;
     width: auto;
-    height: var(--stub-height);
+    height: calc(var(--stub-height) - 1px);
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px 16px;
     padding: 12px 16px;
     border-left: 0;
-    border-radius: 0 0 var(--radius) var(--radius);
+    border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
     transform-origin: center top;
+    clip-path: polygon(
+      calc(var(--notch) * 0.5 - 1px) calc(var(--notch) * 0 - 1px),
+      calc(var(--notch) * 0.483 - 1px) calc(var(--notch) * 0.1294 - 1px),
+      calc(var(--notch) * 0.433 - 1px) calc(var(--notch) * 0.25 - 1px),
+      calc(var(--notch) * 0.3536 - 1px) calc(var(--notch) * 0.3536 - 1px),
+      calc(var(--notch) * 0.25 - 1px) calc(var(--notch) * 0.433 - 1px),
+      calc(var(--notch) * 0.1294 - 1px) calc(var(--notch) * 0.483 - 1px),
+      calc(var(--notch) * 0 - 1px) calc(var(--notch) * 0.5 - 1px),
+      0 100%,
+      100% 100%,
+      calc(100% + 1px - var(--notch) * 0) calc(var(--notch) * 0.5 - 1px),
+      calc(100% + 1px - var(--notch) * 0.1294) calc(var(--notch) * 0.483 - 1px),
+      calc(100% + 1px - var(--notch) * 0.25) calc(var(--notch) * 0.433 - 1px),
+      calc(100% + 1px - var(--notch) * 0.3536) calc(var(--notch) * 0.3536 - 1px),
+      calc(100% + 1px - var(--notch) * 0.433) calc(var(--notch) * 0.25 - 1px),
+      calc(100% + 1px - var(--notch) * 0.483) calc(var(--notch) * 0.1294 - 1px),
+      calc(100% + 1px - var(--notch) * 0.5) calc(var(--notch) * 0 - 1px)
+    );
 
-    mask-image:
-      radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
-      radial-gradient(circle calc(var(--notch) / 2) at 100% 0, #0000 98%, #000),
-      radial-gradient(circle 4.6px at 50% 0, #0000 96%, #000);
-    mask-size: 100% 100%, 100% 100%, 15px 100%;
-    mask-repeat: no-repeat, no-repeat, repeat-x;
+    &::before {
+      inset: 0 0 auto;
+      width: auto;
+      height: 10px;
+      background: radial-gradient(circle 4.6px at 50% 0, #f1e8d6 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+    }
+
   }
 
   .card:has(.stub-hit:hover) .stub.interactive,
@@ -1150,4 +1318,46 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 
 .card:has(.stub-hit:hover) .stub > .corner {
   transform: scale(1.25);
+}
+
+@media (max-width: 720px) {
+  .card:has(.stub-hit:hover),
+  .card:has(.stub:focus-visible),
+  .card[data-phase='tearing'],
+  .card[data-phase='returning'] {
+    .stub {
+      mask-image:
+        radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
+        radial-gradient(circle calc(var(--notch) / 2) at 100% 0, #0000 98%, #000),
+        radial-gradient(circle 4.6px at 50% 0, #0000 96%, #000);
+      mask-size: 100% 100%, 100% 100%, 15px 100%;
+      mask-repeat: no-repeat, no-repeat, repeat-x;
+    }
+  }
+}
+
+// Ombre du billet survolé : une silhouette floutée posée derrière, qui suit les trous. Elle est statique
+// (pas de filtre sur le billet qui bouge), ce qui garde l'inclinaison fluide.
+.shadow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateY(16px);
+  transition: opacity .3s ease;
+
+  > div {
+    width: 100%;
+    height: 100%;
+    background: rgb(31 36 48 / 0.3);
+    border-radius: var(--radius);
+    clip-path: var(--ticket-shape);
+  }
+}
+
+.card:hover .shadow,
+.card:focus-within .shadow {
+  opacity: 1;
 }

@@ -38,7 +38,7 @@ const RETURN_MS = 600;
 const NO_ANSWER_MS = 8000;
 
 // Inclinaison maximale du billet qui suit le curseur, en degrés.
-const MAX_TILT = 4;
+const MAX_TILT = 3;
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
 const dayFormat = new Intl.DateTimeFormat('fr-FR', { day: '2-digit' });
@@ -206,29 +206,60 @@ export class EventCard {
     this.timers.clear();
   }
 
-  // Le billet s'incline vers le curseur et la brillance holographique le suit.
+  // Le billet s'incline vers le curseur et la brillance holographique le suit. Les mesures sont regroupées en
+  // une écriture par image affichée, et chaque variable n'est posée que sur l'élément qui s'en sert : une
+  // variable posée sur l'hôte force le navigateur à recalculer le style de tout le billet à chaque mouvement.
+  private frame = 0;
+  private pointer: { x: number; y: number } | null = null;
+
   @HostListener('pointermove', ['$event'])
   protected onPointerMove(event: PointerEvent): void {
     if (event.pointerType === 'touch') {
       return;
     }
     const rect = this.host.nativeElement.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width;
-    const y = (event.clientY - rect.top) / rect.height;
-    const style = this.host.nativeElement.style;
-    style.setProperty('--mx', `${(x * 100).toFixed(1)}%`);
-    style.setProperty('--my', `${(y * 100).toFixed(1)}%`);
-    style.setProperty('--ry', `${((x - 0.5) * 2 * MAX_TILT).toFixed(2)}deg`);
-    style.setProperty('--rx', `${((0.5 - y) * 2 * MAX_TILT).toFixed(2)}deg`);
+    this.pointer = {
+      x: (event.clientX - rect.left) / rect.width,
+      y: (event.clientY - rect.top) / rect.height,
+    };
+    if (!this.frame) {
+      this.frame = requestAnimationFrame(() => this.applyPointer());
+    }
   }
 
   @HostListener('pointerleave')
   protected onPointerLeave(): void {
-    const style = this.host.nativeElement.style;
-    style.removeProperty('--mx');
-    style.removeProperty('--my');
-    style.removeProperty('--rx');
-    style.removeProperty('--ry');
+    cancelAnimationFrame(this.frame);
+    this.frame = 0;
+    this.pointer = null;
+    for (const el of this.tracked()) {
+      for (const name of ['--mx', '--my', '--rx', '--ry']) {
+        el.style.removeProperty(name);
+      }
+    }
+  }
+
+  private tracked(): HTMLElement[] {
+    const root = this.host.nativeElement;
+    return [root.querySelector('.card'), root.querySelector('.holo'), root.querySelector('.foil')].filter(
+      (el): el is HTMLElement => el !== null,
+    );
+  }
+
+  private applyPointer(): void {
+    this.frame = 0;
+    const pointer = this.pointer;
+    if (!pointer) {
+      return;
+    }
+    const root = this.host.nativeElement;
+    const card = root.querySelector<HTMLElement>('.card');
+    card?.style.setProperty('--ry', `${((pointer.x - 0.5) * 2 * MAX_TILT).toFixed(2)}deg`);
+    card?.style.setProperty('--rx', `${((0.5 - pointer.y) * 2 * MAX_TILT).toFixed(2)}deg`);
+    for (const el of [root.querySelector<HTMLElement>('.holo'), root.querySelector<HTMLElement>('.foil')]) {
+      el?.style.setProperty('--mx', `${(pointer.x * 100).toFixed(1)}%`);
+      el?.style.setProperty('--my', `${(pointer.y * 100).toFixed(1)}%`);
+    }
   }
 
   protected readonly imageUrl = computed(() => {
