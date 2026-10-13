@@ -12,7 +12,14 @@
       }
       @case ('registered') {
         @if ($any(state()).waiting) {
-          <p>Vous êtes sur la liste d’attente. Vous pouvez y renoncer.</p>
+          <p>
+            @if ($any(state()).position; as position) {
+              Vous êtes n°{{ position }} sur la liste d’attente.
+            } @else {
+              Vous êtes sur la liste d’attente.
+            }
+            Vous pouvez y renoncer.
+          </p>
         } @else {
           <p>Vous êtes inscrit·e. Vous pouvez annuler votre inscription pour libérer votre place.</p>
         }

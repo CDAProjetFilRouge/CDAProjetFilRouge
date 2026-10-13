@@ -6,4 +6,5 @@ export interface InscriptionModel {
   inscriptionDate: string;
   status: InscriptionStatus;
   price: number;
+  waitingListPosition?: number | null;
 }

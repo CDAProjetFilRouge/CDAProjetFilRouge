@@ -11,6 +11,7 @@ export interface InscriptionModel {
   inscriptionDate: string;
   status: InscriptionStatus;
   price: number;
+  waitingListPosition?: number | null;
 }
 
 export const INSCRIPTION_STATUS_LABELS: Record<InscriptionStatus, string> = {

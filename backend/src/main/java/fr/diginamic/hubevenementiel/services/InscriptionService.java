@@ -108,6 +108,21 @@ public class InscriptionService {
         }
     }
 
+    /**
+     * Rang dans la liste d'attente (1 = prochain à être promu).
+     *
+     * @param inscription the inscription to rank
+     * @return the position, or null when the inscription is not on the waiting list
+     */
+    public Integer waitingListPosition(Inscription inscription) {
+        if (inscription == null || inscription.getStatus() != InscriptionStatus.WAITING_LIST) {
+            return null;
+        }
+        long ahead = inscriptionRepo.countAheadInQueue(inscription.getEvent().getId(),
+                InscriptionStatus.WAITING_LIST, inscription.getInscriptionDate(), inscription.getId());
+        return (int) ahead + 1;
+    }
+
     public List<Inscription> getAllInscription() {
         return inscriptionRepo.findAll();
     }

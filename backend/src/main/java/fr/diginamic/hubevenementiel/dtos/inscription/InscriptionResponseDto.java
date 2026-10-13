@@ -15,6 +15,7 @@ public class InscriptionResponseDto {
     private BigDecimal price;
     private LocalDateTime cancellationDate;
     private String cancelObject;
+    private Integer waitingListPosition;
 
     public InscriptionResponseDto() {
     }
@@ -83,5 +84,14 @@ public class InscriptionResponseDto {
 
     public void setCancelObject(String cancelObject) {
         this.cancelObject = cancelObject;
+    }
+
+    /** Rang dans la liste d'attente (1 = prochain promu), null si l'inscription n'est pas en liste d'attente. */
+    public Integer getWaitingListPosition() {
+        return waitingListPosition;
+    }
+
+    public void setWaitingListPosition(Integer waitingListPosition) {
+        this.waitingListPosition = waitingListPosition;
     }
 }
