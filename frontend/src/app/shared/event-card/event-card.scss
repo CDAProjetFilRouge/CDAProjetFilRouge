@@ -1,3 +1,13 @@
+// Carte « billet » : photo à gauche, contenu au centre, souche colorée à droite (date, prix)
+// séparée par une perforation à encoches transparentes.
+//
+// Trois couches :
+//   .shell  la coque du billet, percée de deux vrais trous (mask) au niveau de la perforation ;
+//   .stub   la souche, posée par-dessus, qui se soulève au survol et se détache au clic ;
+//   .holo / .foil / .grain  la matière : éclat de contraste, film sur la souche, grain de pellicule.
+// Quand la souche est arrachée, le papier du billet apparaît dessous (.slot), avec un bord perforé.
+// Sur écran étroit, le billet se retourne : la souche passe en bas et la perforation devient horizontale.
+
 :host {
   display: block;
   min-width: 0;
@@ -12,77 +22,158 @@ svg {
   stroke-linejoin: round;
 }
 
-// Couleur d'accent de la carte : une teinte par catégorie, le rose de la marque par défaut.
+// Une couleur d'accent par catégorie, le rose de la marque par défaut.
+// --stub est une teinte plus profonde, assez contrastée pour du texte blanc.
 .card {
   --accent: var(--color-primary);
   --accent-soft: var(--color-primary-soft);
   --accent-wash: #fff5f6;
+  --stub: #c25669;
+  --edge: var(--color-border);
+  --stub-width: 190px;
+  --stub-height: 104px;
+  --notch: 22px;
+  --radius: 16px;
 
   &[data-category='CULTURE'] {
     --accent: #7048d6;
     --accent-soft: #e6dcfb;
     --accent-wash: #f6f2fe;
+    --stub: #6b53b8;
   }
 
   &[data-category='SPORT'] {
     --accent: #1f6fe0;
     --accent-soft: #d3e4fc;
     --accent-wash: #eff5fe;
+    --stub: #3668b0;
   }
 
   &[data-category='DIVERTISSEMENT'] {
     --accent: #d9780a;
     --accent-soft: #fbe3bd;
     --accent-wash: #fff6e8;
+    --stub: #a46a22;
   }
 }
+
+// Grain de pellicule : un bruit plus gros et plus contrasté que du simple bruit numérique.
+// Deux variantes : sombre (sur le papier et la photo) et claire (sur la souche).
+$grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0'  intercept='1'/><feFuncR type='linear' slope='1.7' intercept='-0.35'/><feFuncG type='linear' slope='1.7' intercept='-0.35'/><feFuncB type='linear' slope='1.7' intercept='-0.35'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+
+// --- Le billet entier ------------------------------------------------------
 
 .card {
   position: relative;
-  display: flex;
-  flex-direction: column;
   height: 100%;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgb(31 36 48 / 0.04);
-  transition: box-shadow .2s, transform .2s, border-color .2s;
+  filter: drop-shadow(0 1px 2px rgb(31 36 48 / 0.07));
+  transition: filter .3s ease, transform .18s ease-out;
+
+  // Une encoche est un trou dans la coque : son contour est dessiné par ces deux anneaux.
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: calc(100% - var(--stub-width) - var(--notch) / 2 - 1px);
+    z-index: 1;
+    box-sizing: border-box;
+    width: var(--notch);
+    height: var(--notch);
+    border: 1px solid var(--edge);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: border-color .3s;
+  }
+
+  &::before {
+    top: calc(var(--notch) / -2);
+    clip-path: inset(50% 0 0 0);
+  }
+
+  &::after {
+    bottom: calc(var(--notch) / -2);
+    clip-path: inset(0 0 50% 0);
+  }
 
   &:hover,
   &:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 14px 30px -14px rgb(31 36 48 / 0.28);
-    transform: translateY(-3px);
+    --edge: var(--accent);
+    filter: drop-shadow(0 20px 22px rgb(31 36 48 / 0.26));
   }
 
-  &.is-registered {
-    border-color: #9fd3ae;
+  &[data-registration='CONFIRMED'] {
+    --edge: #9fd3ae;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    &:hover,
-    &:focus-within {
-      transform: none;
-    }
+  &[data-registration='WAITING_LIST'] {
+    --edge: #e6c36a;
   }
 }
 
-// --- Visuel ---------------------------------------------------------------
+// Inclinaison vers le curseur et léger soulèvement (pas sur écran tactile, pas en mouvement réduit).
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card {
+    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px);
+  }
+}
+
+// --- Coque ------------------------------------------------------------------
+
+.shell {
+  position: relative;
+  display: flex;
+  height: 100%;
+  min-height: 200px;
+  background: #f1e8d6;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  transition: border-color .3s;
+
+  // Les deux trous de la perforation, vraiment transparents.
+  mask-image:
+    radial-gradient(circle calc(var(--notch) / 2) at calc(100% - var(--stub-width)) 0, #0000 98%, #000),
+    radial-gradient(circle calc(var(--notch) / 2) at calc(100% - var(--stub-width)) 100%, #0000 98%, #000);
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+}
+
+// --- Photo ----------------------------------------------------------------
 
 .media {
   position: relative;
-  aspect-ratio: 16 / 9;
+  flex: 0 0 clamp(170px, 27%, 260px);
+  overflow: hidden;
   background: var(--color-placeholder);
+  border-radius: calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);
 
-  // L'image est sortie du flux : sa proportion naturelle ne doit pas changer la hauteur du visuel.
+  // L'image est sortie du flux : sa proportion naturelle ne doit pas changer la taille de la carte.
   img {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform .8s cubic-bezier(.2, .8, .2, 1);
   }
+
+  // Vignettage de film : les bords de la photo s'assombrissent légèrement.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgb(0 0 0 / 0.32) 120%);
+  }
+}
+
+.card:hover .media img {
+  transform: scale(1.07);
 }
 
 .placeholder {
@@ -90,190 +181,57 @@ svg {
   inset: 0;
   display: grid;
   place-items: center;
-  width: 100%;
-  height: 100%;
   color: var(--accent);
   background: linear-gradient(135deg, var(--accent-soft), var(--accent-wash));
 
   svg {
     width: 44px;
     height: 44px;
-    opacity: .55;
+    opacity: .25;
+    transition: transform .6s cubic-bezier(.2, .8, .2, 1);
   }
+}
+
+.card:hover .placeholder svg {
+  transform: scale(1.15) rotate(-4deg);
 }
 
 .category {
   position: absolute;
-  top: 12px;
+  z-index: 2;
+  bottom: 12px;
   left: 12px;
+  max-width: calc(100% - 24px);
   padding: 4px 11px;
-  font-size: 12px;
+  overflow: hidden;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: .04em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
   color: #fff;
   background: var(--accent);
   border-radius: 999px;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.4);
 }
 
-// Pastille d'inscription : « + » discret qui apparaît au survol ou au focus de la carte,
-// remplacé par une coche verte une fois inscrit (ou un sablier ambre en liste d'attente).
-.pastille {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  // Au-dessus du lien étendu du titre, pour que la pastille reçoive son propre clic.
-  z-index: 2;
-
-  &:focus-visible {
-    outline: 3px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-    stroke-width: 2.8;
-  }
-}
-
-.add {
-  color: var(--color-primary);
-  background: #fff;
-  border: 2px solid var(--color-primary);
-  box-shadow: 0 6px 14px -4px rgb(31 36 48 / 0.35);
-  opacity: 0;
-  transform: scale(.4);
-  transition: opacity .15s, transform .3s cubic-bezier(.34, 1.56, .64, 1);
-}
-
-.card:hover .add,
-.card:focus-within .add {
-  opacity: 1;
-  transform: scale(1);
-}
-
-// Sans survol possible (tactile) : la pastille reste visible pour montrer qu'on peut s'inscrire.
-@media (hover: none) {
-  .add {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.card .add:hover {
-  transform: scale(1.12);
-}
-
-.registration {
-  transition: transform .2s;
-  color: #fff;
-  background: #2f9e57;
-  border: 2px solid #fff;
-  box-shadow: 0 6px 14px -4px rgb(20 83 45 / 0.5);
-  animation: pastille-pop .4s cubic-bezier(.34, 1.56, .64, 1);
-
-  &.waiting {
-    background: #e08a00;
-    box-shadow: 0 6px 14px -4px rgb(122 74 0 / 0.5);
-  }
-}
-
-.registration:has(.rank) {
-  width: auto;
-  min-width: 38px;
-  padding: 0 10px;
-  border-radius: 999px;
-}
-
-.rank {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: -.02em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.card .registration:hover {
-  transform: scale(1.1);
-}
-
-@keyframes pastille-pop {
-  from {
-    opacity: 0;
-    transform: scale(.3);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .add {
-    transform: none;
-    transition: opacity .15s;
-  }
-
-  .registration {
-    animation: none;
-  }
-}
-
-.date-tile {
-  position: absolute;
-  bottom: -18px;
-  left: 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 52px;
-  padding: 6px 8px 7px;
-  line-height: 1;
-  color: var(--color-text);
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-top: 4px solid var(--accent);
-  border-radius: 10px;
-  box-shadow: 0 6px 14px -6px rgb(31 36 48 / 0.3);
-
-  .day {
-    font-size: 22px;
-    font-weight: 800;
-  }
-
-  .month {
-    margin-top: 3px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-}
-
 // --- Contenu --------------------------------------------------------------
 
-.body {
+.main {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: 14px;
-  padding: 28px 16px 16px;
-  background: linear-gradient(180deg, #fff 55%, var(--accent-wash));
+  min-width: 0;
+  padding: 18px 22px;
 }
 
 .title {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   line-height: 1.3;
-  // Deux lignes réservées : les blocs suivants restent alignés d'une carte à l'autre.
-  min-height: 2.6em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -283,7 +241,7 @@ svg {
     color: var(--color-text);
     text-decoration: none;
 
-    // La carte entière est cliquable : le lien du titre couvre toute la carte.
+    // Le billet entier est cliquable : le lien du titre couvre toute la carte.
     &::after {
       content: '';
       position: absolute;
@@ -298,7 +256,7 @@ svg {
 }
 
 .card:has(.title a:focus-visible) {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -362,6 +320,7 @@ svg {
 .spots {
   --spots-color: #2f9e57;
   --spots-track: #e4f2e9;
+  margin-top: auto;
 
   &[data-level='medium'] {
     --spots-color: #e08a00;
@@ -413,16 +372,333 @@ svg {
   transition: width .4s ease;
 }
 
-// --- Pied -----------------------------------------------------------------
+// --- Le papier du billet, là où était la souche -------------------------------------
+// Bord gauche perforé (petits trous), ombre portée par la souche arrachée.
 
-.footer {
+.slot {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  flex: 0 0 var(--stub-width);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 16px 16px 22px;
+  text-align: center;
+  background:
+    linear-gradient(90deg, rgb(31 36 48 / 0.12), transparent 14px),
+    linear-gradient(180deg, var(--accent-wash), #f1e8d6 130%);
+  border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
+  opacity: 0;
+  transition: opacity .35s ease;
+
+  // La perforation : une rangée de demi-trous le long du bord gauche.
+  mask-image: radial-gradient(circle 4.6px at 0 50%, #0000 96%, #000);
+  mask-size: 100% 15px;
+  mask-repeat: repeat-y;
+}
+
+// Le papier apparaît dès que la souche se soulève, pendant l'inscription, et reste pour un reçu.
+.card:has(.stub-hit:hover) .slot,
+.card:has(.stub.interactive:hover) .slot,
+.card:has(.stub.interactive:focus-visible) .slot,
+.card[data-phase='tearing'] .slot,
+.card[data-phase='pending'] .slot,
+.card[data-phase='confirm'] .slot,
+.card[data-registration='CONFIRMED'][data-phase='idle'] .slot {
+  opacity: 1;
+}
+
+.card[data-phase='returning'] .slot {
+  opacity: 0;
+}
+
+.slot-hint {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+
+  svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.slot-title {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.slot-detail {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.slot-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #fff;
+  background: #2f9e57;
+  border-radius: 50%;
+  box-shadow: 0 8px 18px -6px rgb(20 83 45 / 0.6);
+  animation: pop .5s cubic-bezier(.34, 1.56, .64, 1);
+
+  svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 3;
+  }
+
+  // La coche se dessine.
+  path[pathLength] {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw .45s .2s ease forwards;
+  }
+
+  &.waiting {
+    background: #b45f00;
+    box-shadow: 0 8px 18px -6px rgb(122 74 0 / 0.6);
+  }
+
+  &.error {
+    background: #b3261e;
+    box-shadow: 0 8px 18px -6px rgb(120 20 15 / 0.6);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(.3);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+// Reçu : ce qui reste du coupon une fois la souche arrachée (date, prix, accès à l'inscription).
+.receipt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.receipt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #14532d;
+  background: #d8f3e0;
+  border: 1px solid #9fd3ae;
+  border-radius: 999px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 3;
+  }
+}
+
+.receipt-date {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--color-text);
+}
+
+.receipt-price {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--accent);
+}
+
+.manage {
+  position: relative;
+  // Au-dessus du lien étendu du titre, pour recevoir son propre clic.
+  z-index: 4;
+  margin-top: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+
+  &:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+// --- Souche : date, prix, accès -------------------------------------------
+
+.stub {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  width: var(--stub-width);
+  flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: auto;
-  padding-top: 14px;
-  border-top: 1px solid var(--accent-soft);
+  gap: 16px;
+  padding: 18px 18px 16px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.11) 1px, transparent 1.4px) 0 0 / 9px 9px,
+    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 11px),
+    linear-gradient(160deg, rgb(255 255 255 / 0.18), transparent 45%, rgb(0 0 0 / 0.22)),
+    var(--stub);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  // Elle laisse passer les clics vers le lien du billet, sauf quand elle sert à s'inscrire.
+  pointer-events: none;
+  transform-origin: left center;
+  transition: transform .5s cubic-bezier(.2, .9, .3, 1.2), filter .3s;
+
+  // Les deux encoches sont aussi découpées dans la souche.
+  mask-image:
+    radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
+    radial-gradient(circle calc(var(--notch) / 2) at 0 100%, #0000 98%, #000),
+    radial-gradient(circle 4.6px at 0 50%, #0000 96%, #000);
+  mask-size: 100% 100%, 100% 100%, 100% 15px;
+  mask-repeat: no-repeat, no-repeat, repeat-y;
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.stub-hit {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  width: var(--stub-width);
+  cursor: pointer;
+}
+
+.stub.interactive,
+.stub.peelable {
+  z-index: 3;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: -6px;
+  }
+}
+
+// Une souche arrachée n'est plus là : le reçu la remplace.
+.card[data-registration='CONFIRMED'][data-phase='idle'] .stub {
+  display: none;
+}
+
+// Au survol, la souche se soulève comme un coupon qu'on commence à détacher.
+@media (prefers-reduced-motion: no-preference) {
+  .card:has(.stub-hit:hover) .stub.interactive,
+  .stub.interactive:focus-visible {
+    transform: perspective(900px) translateX(14px) translateY(3px) rotateY(-16deg) rotateZ(6deg);
+    filter: drop-shadow(-10px 10px 14px rgb(31 36 48 / 0.35));
+  }
+
+  // En liste d'attente : elle se soulève beaucoup plus, pour montrer ce qu'il y a derrière.
+  .card:has(.stub-hit:hover) .stub.peelable,
+  .stub.peelable:focus-visible {
+    transform: perspective(900px) translateX(8px) rotateY(-10deg) rotateZ(3deg);
+    filter: drop-shadow(-12px 12px 16px rgb(31 36 48 / 0.4));
+  }
+}
+
+.date-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+
+  .weekday {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .85;
+  }
+
+  .day {
+    margin-top: 4px;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -.03em;
+  }
+
+  .month {
+    margin-top: 2px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .until {
+    margin-top: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgb(255 255 255 / 0.2);
+    border-radius: 999px;
+  }
+}
+
+.stub-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .price {
@@ -432,14 +708,14 @@ svg {
   line-height: 1.2;
 
   .amount {
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 800;
-    color: var(--color-text);
   }
 
   .hint {
-    font-size: 12px;
-    color: var(--color-muted);
+    margin-top: 2px;
+    font-size: 11px;
+    opacity: .92;
   }
 }
 
@@ -449,8 +725,6 @@ svg {
   gap: 6px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--accent);
-  white-space: nowrap;
 
   svg {
     width: 16px;
@@ -464,8 +738,416 @@ svg {
   transform: translateX(3px);
 }
 
+// --- Le détachement ---------------------------------------------------------
+// La souche pivote autour de son coin supérieur (là où elle tient encore) et tombe, avec son ombre.
+
+.card[data-phase='tearing'] .stub {
+  transform-origin: left top;
+  animation: tear .68s cubic-bezier(.5, 0, .75, .5) forwards;
+}
+
+.card[data-phase='pending'] .stub,
+.card[data-phase='confirm'] .stub {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.card[data-phase='returning'] .stub {
+  animation: stub-return .6s ease both;
+}
+
+@keyframes tear {
+  0% {
+    transform: perspective(900px) translateX(14px) translateY(3px) rotateY(-16deg) rotateZ(6deg);
+    filter: drop-shadow(-10px 10px 14px rgb(31 36 48 / 0.35));
+    opacity: 1;
+  }
+
+  35% {
+    transform: perspective(900px) translateX(14px) translateY(-4px) rotateY(-14deg) rotateZ(16deg);
+    filter: drop-shadow(-16px 16px 18px rgb(31 36 48 / 0.4));
+    opacity: 1;
+  }
+
+  100% {
+    transform: perspective(900px) translate(170px, 150px) rotateY(-20deg) rotateZ(62deg);
+    filter: drop-shadow(-22px 26px 22px rgb(31 36 48 / 0.2));
+    opacity: 0;
+  }
+}
+
+@keyframes stub-return {
+  from {
+    opacity: 0;
+    transform: translateX(10px) scale(.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// En mouvement réduit : on garde les changements d'état, sans envol ni inclinaison.
 @media (prefers-reduced-motion: reduce) {
+  .slot-icon {
+    animation: none;
+  }
+
+  .card[data-phase='tearing'] .stub {
+    animation: none;
+    opacity: 0;
+  }
+
+  .card[data-phase='returning'] .stub {
+    animation: stub-return-fade .4s ease both;
+  }
+
   .card:hover .cta svg {
     transform: none;
   }
+
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}
+
+@keyframes stub-return-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// --- Matière : éclat de contraste et grain de pellicule ----------------------------
+// Pas de couleur rapportée sur la photo : une bande de lumière et d'ombre qui suit le curseur,
+// et un contraste renforcé autour d'elle, comme un reflet sur un tirage brillant.
+
+.holo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s ease;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 28%,
+      rgb(255 255 255 / 0.55) 44%,
+      rgb(255 255 255 / 0) 52%,
+      rgb(0 0 0 / 0.38) 60%,
+      transparent 74%
+    );
+  background-size: 260% 100%;
+  background-position: var(--mx, 50%) 0;
+  mix-blend-mode: overlay;
+  backdrop-filter: contrast(1.28) brightness(1.04);
+  -webkit-backdrop-filter: contrast(1.28) brightness(1.04);
+  mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), #000 0%, #000 22%, transparent 70%);
+}
+
+.card:hover .holo {
+  opacity: 1;
+}
+
+// Sur la souche : un film brillant, une bande claire qui glisse sans changer la couleur.
+.foil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s ease;
+  background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 0.4) 48%, transparent 62%);
+  background-size: 280% 100%;
+  background-position: var(--mx, 50%) 0;
+  mix-blend-mode: soft-light;
+}
+
+.card:hover .foil {
+  opacity: 1;
+}
+
+.card:has(.stub-hit:hover) .stub .foil,
+.stub.peelable:hover .foil {
+  opacity: 1;
+  filter: brightness(1.4);
+}
+
+// Grain de pellicule, fixe.
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    background-image: $grain-dark;
+    background-size: 240px 240px;
+    mix-blend-mode: multiply;
+    opacity: .06;
+  }
+}
+
+.grain-light {
+  z-index: 0;
+
+  &::before {
+    mix-blend-mode: overlay;
+    opacity: .25;
+  }
+}
+
+
+// --- Écran étroit : le billet se retourne ----------------------------------
+
+@media (max-width: 720px) {
+  // La perforation devient horizontale, juste au-dessus de la souche (en bas du billet).
+  .card {
+    &::before,
+    &::after {
+      top: auto;
+      bottom: calc(var(--stub-height) - var(--notch) / 2 - 1px);
+    }
+
+    &::before {
+      left: calc(var(--notch) / -2);
+      clip-path: inset(0 0 0 50%);
+    }
+
+    &::after {
+      right: calc(var(--notch) / -2);
+      left: auto;
+      clip-path: inset(0 50% 0 0);
+    }
+  }
+
+  .shell {
+    flex-direction: column;
+    mask-image:
+      radial-gradient(circle calc(var(--notch) / 2) at 0 calc(100% - var(--stub-height)), #0000 98%, #000),
+      radial-gradient(circle calc(var(--notch) / 2) at 100% calc(100% - var(--stub-height)), #0000 98%, #000);
+  }
+
+  .media {
+    flex: none;
+    aspect-ratio: 16 / 9;
+    border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  .slot {
+    flex: none;
+    height: var(--stub-height);
+    padding: 22px 16px 8px;
+    background:
+      linear-gradient(180deg, rgb(31 36 48 / 0.12), transparent 14px),
+      linear-gradient(180deg, var(--accent-wash), #f1e8d6 130%);
+    border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
+    mask-image: radial-gradient(circle 4.6px at 50% 0, #0000 96%, #000);
+    mask-size: 15px 100%;
+    mask-repeat: repeat-x;
+  }
+
+  .slot-hint {
+    flex-direction: row;
+    gap: 10px;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  .receipt {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 12px;
+  }
+
+  .receipt-date {
+    margin-top: 0;
+  }
+
+  .stub {
+    top: auto;
+    left: 0;
+    width: auto;
+    height: var(--stub-height);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 12px 16px;
+    border-left: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+    transform-origin: center top;
+
+    mask-image:
+      radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
+      radial-gradient(circle calc(var(--notch) / 2) at 100% 0, #0000 98%, #000),
+      radial-gradient(circle 4.6px at 50% 0, #0000 96%, #000);
+    mask-size: 100% 100%, 100% 100%, 15px 100%;
+    mask-repeat: no-repeat, no-repeat, repeat-x;
+  }
+
+  .card:has(.stub-hit:hover) .stub.interactive,
+  .stub.interactive:focus-visible {
+    transform: perspective(900px) translateY(8px) rotateX(14deg);
+  }
+
+  // En liste d'attente : la souche se relève comme un volet.
+  .card:has(.stub-hit:hover) .stub.peelable,
+  .stub.peelable:focus-visible {
+    transform: perspective(900px) translateY(6px) rotateX(8deg);
+  }
+
+  .date-tile {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+
+    .day {
+      margin-top: 0;
+      font-size: 34px;
+    }
+
+    .weekday {
+      display: none;
+    }
+
+    .until {
+      margin-top: 0;
+    }
+  }
+
+  .stub-foot {
+    min-width: 0;
+    margin-left: auto;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .price .amount {
+    font-size: 22px;
+  }
+
+  @keyframes tear {
+    0% {
+      transform: perspective(900px) translateY(8px) rotateX(14deg);
+      opacity: 1;
+    }
+
+    100% {
+      transform: perspective(900px) translateY(120px) rotateX(55deg) rotateZ(4deg);
+      opacity: 0;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .stub-hit {
+    top: auto;
+    left: 0;
+    width: auto;
+    height: var(--stub-height);
+  }
+}
+
+// --- Liste d'attente : lisible d'un coup d'œil -----------------------------
+
+.card[data-registration='WAITING_LIST'] .stub {
+  background:
+    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.16) 0 10px, transparent 10px 20px),
+    linear-gradient(160deg, rgb(255 255 255 / 0.12), transparent 50%, rgb(0 0 0 / 0.28)),
+    #4a4f5c;
+}
+
+.wait {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1;
+
+  .wait-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .wait-rank {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -.03em;
+  }
+
+  .wait-date {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: .85;
+    text-transform: capitalize;
+  }
+}
+
+.wait-chip {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  padding: 5px 12px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #4a4f5c;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.5);
+}
+
+// Pastille d'arrachage : indique que la souche s'arrache.
+.stub > .corner {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: var(--stub);
+  background: #fffdf4;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  transition: transform .3s;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.card:has(.stub-hit:hover) .stub > .corner {
+  transform: scale(1.25);
 }

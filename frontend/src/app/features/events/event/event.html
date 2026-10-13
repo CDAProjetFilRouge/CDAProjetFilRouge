@@ -70,7 +70,10 @@
           [registration]="registrationOf(event.id)"
           [waitingPosition]="positionOf(event.id)"
           [affiliated]="affiliated()"
+          [quickRegisterEnabled]="signedIn()"
+          [registerError]="quickErrorOf(event.id)"
           (registrationClick)="openRegistration(event)"
+          (quickRegister)="quickRegister(event)"
         />
       }
     </div>

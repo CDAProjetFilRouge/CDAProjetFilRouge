@@ -1,86 +1,153 @@
 <article
   class="card"
   [attr.data-category]="event().category"
-  [class.is-registered]="registration() !== null"
+  [attr.data-phase]="phase()"
+  [attr.data-registration]="registration()"
 >
-  <div class="media">
-    @if (imageUrl(); as src) {
-      <img [src]="src" alt="" loading="lazy" />
-    } @else {
-      <div class="placeholder" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-      </div>
-    }
+  <!-- Coque du billet : percée de deux vrais trous (encoches) au niveau de la perforation. -->
+  <div class="shell">
+    <div class="media">
+      @if (imageUrl(); as src) {
+        <img [src]="src" alt="" loading="lazy" />
+      } @else {
+        <div class="placeholder" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+        </div>
+      }
 
-    <span class="category" [attr.data-category]="event().category">{{ categoryLabel() }}</span>
+      <div class="holo" aria-hidden="true"></div>
 
-    @if (registration(); as state) {
-      <button
-        type="button"
-        class="pastille registration"
-        [class.waiting]="state === 'WAITING_LIST'"
-        [attr.aria-label]="registeredLabel()"
-        [attr.title]="registeredTooltip()"
-        (click)="registrationClick.emit()"
-      >
-        @if (state === 'WAITING_LIST') {
-          @if (waitingPosition(); as position) {
-            <span class="rank" aria-hidden="true">n°{{ position }}</span>
-          } @else {
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-          }
-        } @else {
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-        }
-      </button>
-    } @else if (canRegister()) {
-      <button type="button" class="pastille add" [attr.aria-label]="addLabel()" (click)="registrationClick.emit()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-      </button>
-    }
-
-    <div class="date-tile" aria-hidden="true">
-      <span class="day">{{ dateTile().day }}</span>
-      <span class="month">{{ dateTile().month }}</span>
+      <span class="category" [attr.data-category]="event().category">{{ categoryLabel() }}</span>
+      @if (registration() === 'WAITING_LIST' && phase() === 'idle') {
+        <span class="wait-chip">{{ waitingTitle() }}</span>
+      }
     </div>
+
+    <div class="main">
+      <h3 class="title">
+        <a [routerLink]="['/event-details', event().id]">{{ event().title }}</a>
+      </h3>
+
+      <ul class="facts">
+        <li class="when">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+          <span class="when-text">
+            <span class="capitalize">{{ dateLines().first }}</span>
+            <span>{{ dateLines().second }}</span>
+          </span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+          <span>{{ event().location.city }}</span>
+        </li>
+        @if (event().clubName) {
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 5.2a3.5 3.5 0 0 1 0 5.6M18 14.8c2 .7 3.2 2.4 3.5 5.2" /></svg>
+            <span>{{ event().clubName }}</span>
+          </li>
+        }
+      </ul>
+
+      <div class="spots" [attr.data-level]="spotsLevel()">
+        <div class="spots-head">
+          <span class="spots-label">{{ spotsLabel() }}</span>
+          <span class="spots-total">{{ event().remainingSpots > 0 ? event().remainingSpots : 0 }} / {{ event().maxCapacity }}</span>
+        </div>
+        <div class="bar" role="img" [attr.aria-label]="spotsLabel()">
+          <span class="fill" [style.width.%]="spotsRatio() * 100"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Le papier du billet, à l'endroit de la souche : visible quand elle est détachée ou soulevée. -->
+    <div class="slot" role="status" aria-live="polite">
+      @switch (phase()) {
+        @case ('pending') {
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="slot-title">Inscription en cours…</span>
+        }
+        @case ('confirm') {
+          @if (resultKind() === 'error') {
+            <span class="slot-icon error" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17" /></svg>
+            </span>
+          } @else {
+            <span class="slot-icon" [class.waiting]="registration() === 'WAITING_LIST'" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path pathLength="1" d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+            </span>
+          }
+          <span class="slot-title">{{ confirmTitle() }}</span>
+          <span class="slot-detail">{{ confirmDetail() }}</span>
+        }
+        @default {
+          @if (registration() === 'CONFIRMED') {
+            <!-- Souche déjà arrachée : un reçu garde la date, le prix et l'accès à l'inscription. -->
+            <div class="receipt">
+              <span class="receipt-badge">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+                Inscrit·e
+              </span>
+              <span class="receipt-date">{{ dateTile().weekday }} {{ dateTile().day }} {{ dateTile().month }}</span>
+              <span class="receipt-price">{{ price().label }}</span>
+              <button type="button" class="manage" (click)="registrationClick.emit()">Gérer mon inscription</button>
+            </div>
+          } @else if (registration() === 'WAITING_LIST') {
+            <span class="slot-icon waiting" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            </span>
+            <span class="slot-title">{{ waitingTitle() }}</span>
+            <span class="slot-detail">Pas encore inscrit·e : dans l’ordre d’arrivée</span>
+            <button type="button" class="manage" (click)="registrationClick.emit()">Gérer mon inscription</button>
+          } @else {
+            <span class="slot-hint" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3Z" /><path d="M14 7v10" stroke-dasharray="2 2.5" /></svg>
+              Cliquez pour vous inscrire
+            </span>
+          }
+        }
+      }
+    </div>
+
+    <div class="grain" aria-hidden="true"></div>
   </div>
 
-  <div class="body">
-    <h3 class="title">
-      <a [routerLink]="['/event-details', event().id]">{{ event().title }}</a>
-    </h3>
+  <!-- Zone de survol immobile : la souche, une fois soulevée, ne doit pas lui échapper. -->
+  @if (stubInteractive() || peelable()) {
+    <div class="stub-hit" aria-hidden="true" (click)="onStubClick($event)"></div>
+  }
 
-    <ul class="facts">
-      <li class="when">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
-        <span class="when-text">
-          <span class="capitalize">{{ dateLines().first }}</span>
-          <span>{{ dateLines().second }}</span>
-        </span>
-      </li>
-      <li>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
-        <span>{{ event().location.city }}</span>
-      </li>
-      @if (event().clubName) {
-        <li>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 5.2a3.5 3.5 0 0 1 0 5.6M18 14.8c2 .7 3.2 2.4 3.5 5.2" /></svg>
-          <span>{{ event().clubName }}</span>
-        </li>
+  <!-- Souche détachable : date et prix. Un clic la détache et inscrit directement. -->
+  <div
+    class="stub"
+    [class.interactive]="stubInteractive()"
+    [class.peelable]="peelable()"
+    [attr.role]="stubInteractive() || peelable() ? 'button' : null"
+    [attr.tabindex]="stubInteractive() || peelable() ? 0 : null"
+    [attr.aria-label]="stubInteractive() ? stubLabel() : peelable() ? waitingLabel() : null"
+    (click)="onStubClick($event)"
+    (keydown.enter)="onStubClick($event)"
+    (keydown.space)="onStubClick($event)"
+  >
+    @if (peelable()) {
+      <div class="wait" aria-hidden="true">
+        <span class="wait-label">Liste d’attente</span>
+        @if (waitingPosition()) {
+          <span class="wait-rank">n°{{ waitingPosition() }}</span>
+        }
+        <span class="wait-date">{{ dateTile().weekday }} {{ dateTile().day }} {{ dateTile().month }}</span>
+      </div>
+    } @else {
+    <div class="date-tile" aria-hidden="true">
+      <span class="weekday">{{ dateTile().weekday }}</span>
+      <span class="day">{{ dateTile().day }}</span>
+      <span class="month">{{ dateTile().month }}</span>
+      @if (dateTile().until) {
+        <span class="until">{{ dateTile().until }}</span>
       }
-    </ul>
-
-    <div class="spots" [attr.data-level]="spotsLevel()">
-      <div class="spots-head">
-        <span class="spots-label">{{ spotsLabel() }}</span>
-        <span class="spots-total">{{ event().remainingSpots > 0 ? event().remainingSpots : 0 }} / {{ event().maxCapacity }}</span>
-      </div>
-      <div class="bar" role="img" [attr.aria-label]="spotsLabel()">
-        <span class="fill" [style.width.%]="spotsRatio() * 100"></span>
-      </div>
     </div>
+    }
 
-    <div class="footer">
+    <div class="stub-foot">
       <div class="price">
         <span class="amount">{{ price().label }}</span>
         @if (price().hint) {
@@ -88,9 +155,23 @@
         }
       </div>
       <span class="cta" aria-hidden="true">
-        Voir le détail
+        @if (stubInteractive()) {
+          Détacher pour s’inscrire
+        } @else if (peelable()) {
+          En liste d’attente
+        } @else {
+          Voir le détail
+        }
         <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </span>
     </div>
+
+    @if (stubInteractive()) {
+      <span class="corner" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8" /></svg>
+      </span>
+    }
+    <div class="foil" aria-hidden="true"></div>
+    <div class="grain grain-light" aria-hidden="true"></div>
   </div>
 </article>
