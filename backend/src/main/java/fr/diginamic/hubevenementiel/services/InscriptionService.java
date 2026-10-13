@@ -27,6 +27,8 @@ import java.util.Optional;
 @Service
 public class InscriptionService {
 
+    static final int MAX_PAGE_SIZE = 200;
+
     private final InscriptionRepo inscriptionRepo;
     private final EventRepo eventRepo;
     private final AppUserService appUserService;
@@ -93,6 +95,19 @@ public class InscriptionService {
         return inscriptionRepo.save(inscription);
     }
 
+    /**
+     * Seul l'utilisateur concerné peut agir en son nom (s'inscrire).
+     *
+     * @param principal the authenticated caller
+     * @param userId    id of the user the action is performed for
+     * @throws HttpException 403 if the caller is not that user
+     */
+    public void checkSelf(AppUserPrincipal principal, Long userId) throws HttpException {
+        if (principal == null || userId == null || !userId.equals(principal.id())) {
+            throw new ForbiddenException("Vous ne pouvez agir que pour votre propre compte.");
+        }
+    }
+
     public List<Inscription> getAllInscription() {
         return inscriptionRepo.findAll();
     }
@@ -126,6 +141,42 @@ public class InscriptionService {
         List<Inscription> inscriptions = inscriptionRepo.findByUserId(id, pageable).getContent();
 
         return inscriptions;
+    }
+
+    /**
+     * Inscriptions d'un utilisateur : réservées à l'utilisateur lui-même ou à un administrateur.
+     */
+    public List<Inscription> findByUser(AppUserPrincipal principal, Long id, int page, int size)
+            throws HttpException {
+        boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
+        boolean isSelf = principal != null && id != null && id.equals(principal.id());
+        if (!isAdmin && !isSelf) {
+            throw new ForbiddenException("Vous ne pouvez consulter que vos propres inscriptions.");
+        }
+        checkPaging(page, size);
+        return findByUser(id, page, size);
+    }
+
+    /**
+     * Inscriptions d'un évènement : réservées à son organisateur ou à un administrateur.
+     */
+    public List<Inscription> findByEvent(AppUserPrincipal principal, Long eventId, int page, int size)
+            throws HttpException {
+        Event event = eventService.findById(eventId);
+        boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = principal != null && event.getOrganizer() != null
+                && event.getOrganizer().getId().equals(principal.id());
+        if (!isAdmin && !isOwner) {
+            throw new ForbiddenException("Seul l'organisateur de cet évènement peut consulter ses inscriptions.");
+        }
+        checkPaging(page, size);
+        return findByEvent(eventId, page, size);
+    }
+
+    private void checkPaging(int page, int size) throws HttpException {
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
+            throw new BadRequestException("Pagination invalide : page >= 0 et taille entre 1 et " + MAX_PAGE_SIZE + ".");
+        }
     }
 
     /**
