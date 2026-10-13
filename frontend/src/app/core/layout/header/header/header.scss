@@ -13,15 +13,18 @@
   border-bottom: 1px solid #bfbfbf;
 }
 
+// Logo : 44px de haut, soit 1,8 fois la pastille de texte d'avant (24px).
 .logo {
-  padding: 3px 6px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  color: var(--color-text);
-  background: var(--color-primary-soft);
-  border: 0;
+  --logo-height: 44px;
+  display: inline-flex;
+  flex-shrink: 0;
   border-radius: var(--radius-sm);
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 4px;
+  }
 }
 
 .page-space {
