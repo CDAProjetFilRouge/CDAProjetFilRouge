@@ -150,9 +150,25 @@
     border-radius: 999px;
     background: var(--color-surface);
 
-    &.draft {
-      color: var(--color-primary-hover);
-      background: var(--color-primary-soft);
+    // Couleur par statut d'évènement (attribut data-status).
+    &[data-status='DRAFT'] {
+      color: var(--color-muted);
+      background: var(--color-placeholder);
+    }
+
+    &[data-status='PUBLISHED'] {
+      color: var(--color-success);
+      background: var(--color-success-bg);
+    }
+
+    &[data-status='CANCELLED'] {
+      color: var(--color-danger);
+      background: var(--color-danger-bg);
+    }
+
+    &[data-status='FINISHED'] {
+      color: #1d4f91;
+      background: #e3edfb;
     }
   }
 
