@@ -2,8 +2,6 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { URL_IMAGES } from '../../core/api/api.config';
-import { ClubModel } from '../clubs/club/club-model';
-import { ClubService } from '../clubs/club/club-service';
 import { EventModel } from '../events/event/event-model';
 import { EventService } from '../events/event/event-service';
 
@@ -24,11 +22,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 })
 export class Home implements OnInit {
   private readonly eventService = inject(EventService);
-  private readonly clubService = inject(ClubService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly events = signal<EventModel[]>([]);
-  protected readonly clubs = signal<ClubModel[]>([]);
   protected readonly index = signal(0);
   protected readonly paused = signal(false);
   protected readonly slideCount = computed(() => this.events().length);
@@ -61,11 +57,6 @@ export class Home implements OnInit {
       },
       // La page reste utile sans le carrousel : on masque simplement la section.
       error: () => this.events.set([]),
-    });
-
-    this.clubService.getClub(0, 8).subscribe({
-      next: (page) => this.clubs.set(page.content),
-      error: () => this.clubs.set([]),
     });
 
     this.startAutoplay();
