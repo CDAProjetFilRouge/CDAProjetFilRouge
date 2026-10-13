@@ -90,13 +90,13 @@
       <h2 id="suspend-title">Suspendre {{ user.firstName }} {{ user.lastName }}</h2>
       <p>Le compte ne pourra plus se connecter pendant la suspension.</p>
       <label for="suspension-end">Date de fin de suspension</label>
-      <input id="suspension-end" type="datetime-local" #suspensionEndDate>
+      <app-date-picker inputId="suspension-end" mode="datetime" [formControl]="suspensionEnd" />
       <small>Laisser vide pour une suspension définitive.</small>
     </div>
     <footer>
       <button type="button" (click)="closeSuspension()">Annuler</button>
       <button type="button" class="warning solid"
-              (click)="confirmSuspension(user.id, suspensionEndDate.value)">Suspendre</button>
+              (click)="confirmSuspension(user.id)">Suspendre</button>
     </footer>
   }
 </dialog>

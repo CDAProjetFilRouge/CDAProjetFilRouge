@@ -4,12 +4,13 @@ import { EventModel } from './event-model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { DatePicker } from '../../../shared/date-picker/date-picker';
 import { URL_BACKEND } from '../../../core/api/api.config';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { URL_IMAGES } from '../../../core/api/api.config';
 
 @Component({
-  imports: [ReactiveFormsModule, DatePipe, RouterLink],
+  imports: [ReactiveFormsModule, DatePipe, RouterLink, DatePicker],
   selector: 'app-event',
   styleUrl: './event.scss',
   templateUrl: './event.html',

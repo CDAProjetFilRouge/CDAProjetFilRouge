@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, concatMap, from, map, Observable, of, reduce, switchMap, tap } from 'rxjs';
+import { DatePicker } from '../../../shared/date-picker/date-picker';
 import { URL_IMAGES } from '../../../core/api/api.config';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Category } from '../../../core/models/user.models';
@@ -53,7 +54,7 @@ function endAfterStart(group: AbstractControl): ValidationErrors | null {
 }
 
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DatePicker],
   selector: 'app-event-form',
   styleUrl: './event-form.scss',
   templateUrl: './event-form.html',
