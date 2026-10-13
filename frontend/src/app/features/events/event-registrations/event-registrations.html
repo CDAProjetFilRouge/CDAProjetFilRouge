@@ -1,0 +1,87 @@
+<div class="registrations">
+  <a class="back" routerLink="/my-events">← Mes évènements</a>
+
+  <header class="head">
+    <h1>Inscrits</h1>
+    @if (event(); as e) {
+      <p class="subtitle">
+        {{ e.title }} · {{ e.startDate | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+    }
+  </header>
+
+  @if (errorMessage()) {
+    <p role="alert">{{ errorMessage() }}</p>
+  } @else {
+    <section class="block" aria-labelledby="confirmed-title" [attr.aria-busy]="loading()">
+      <h2 id="confirmed-title">
+        Inscrits confirmés
+        <span class="count">
+          {{ confirmed().length }}@if (event(); as e) { / {{ e.maxCapacity }} }
+        </span>
+      </h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Inscrit le</th>
+              <th>Tarif</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of confirmed(); track r.id) {
+              <tr>
+                <td class="name" data-label="Nom">{{ r.user.firstName }} {{ r.user.lastName }}</td>
+                <td data-label="E-mail"><a [href]="'mailto:' + r.user.email">{{ r.user.email }}</a></td>
+                <td data-label="Inscrit le">{{ r.inscriptionDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td data-label="Tarif">{{ r.price }} €</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty">{{ loading() ? 'Chargement…' : 'Aucun inscrit pour le moment.' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="waiting-title">
+      <h2 id="waiting-title">
+        Liste d’attente
+        <span class="count">{{ waiting().length }}</span>
+      </h2>
+      <p class="hint">Dans l’ordre d’arrivée : la première personne est promue en premier en cas de désistement.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rang</th>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Inscrit le</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of waiting(); track r.id; let i = $index) {
+              <tr>
+                <td data-label="Rang">{{ i + 1 }}</td>
+                <td class="name" data-label="Nom">{{ r.user.firstName }} {{ r.user.lastName }}</td>
+                <td data-label="E-mail"><a [href]="'mailto:' + r.user.email">{{ r.user.email }}</a></td>
+                <td data-label="Inscrit le">{{ r.inscriptionDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty">{{ loading() ? 'Chargement…' : 'Personne en liste d’attente.' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>

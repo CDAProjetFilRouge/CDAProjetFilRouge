@@ -203,6 +203,67 @@ class InscriptionControllerIntegrationTest {
     }
 
     @Test
+    void eventInscriptions_listsConfirmedWaitingAndCanceledWithMemberInfo() throws Exception {
+        AppUser owner = createUser("owner", Role.ORGANIZER);
+        AppUser first = createUser("first", Role.MEMBER);
+        AppUser second = createUser("second", Role.MEMBER);
+        AppUser third = createUser("third", Role.MEMBER);
+        Event event = createEvent(owner, 1, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        for (AppUser member : new AppUser[] { first, second, third }) {
+            mockMvc.perform(post("/inscriptions")
+                            .header("Authorization", "Bearer " + loginAndGetToken(member.getEmail()))
+                            .param("userId", String.valueOf(member.getId()))
+                            .param("eventId", String.valueOf(event.getId())))
+                    .andExpect(status().isCreated());
+        }
+
+        String thirdToken = loginAndGetToken(third.getEmail());
+        String thirdInscriptions = mockMvc.perform(get("/inscriptions/user/" + third.getId())
+                        .header("Authorization", "Bearer " + thirdToken))
+                .andReturn().getResponse().getContentAsString();
+        Number thirdInscriptionId = (Number) objectMapper.readValue(thirdInscriptions, java.util.List.class)
+                .stream().map(o -> ((Map<?, ?>) o).get("id")).findFirst().orElseThrow();
+        mockMvc.perform(delete("/inscriptions/" + thirdInscriptionId.longValue())
+                        .header("Authorization", "Bearer " + thirdToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/inscriptions/event/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(owner.getEmail())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[?(@.status=='CONFIRMED')].user.email").value(first.getEmail()))
+                .andExpect(jsonPath("$[?(@.status=='WAITING_LIST')].user.email").value(second.getEmail()))
+                .andExpect(jsonPath("$[?(@.status=='CANCELED')].user.email").value(third.getEmail()))
+                .andExpect(jsonPath("$[0].inscriptionDate").exists())
+                .andExpect(jsonPath("$[0].price").exists());
+    }
+
+    @Test
+    void eventInscriptions_paginationIsApplied() throws Exception {
+        AppUser owner = createUser("owner", Role.ORGANIZER);
+        Event event = createEvent(owner, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+        for (int i = 0; i < 3; i++) {
+            AppUser member = createUser("member" + i, Role.MEMBER);
+            mockMvc.perform(post("/inscriptions")
+                            .header("Authorization", "Bearer " + loginAndGetToken(member.getEmail()))
+                            .param("userId", String.valueOf(member.getId()))
+                            .param("eventId", String.valueOf(event.getId())))
+                    .andExpect(status().isCreated());
+        }
+        String ownerToken = loginAndGetToken(owner.getEmail());
+
+        mockMvc.perform(get("/inscriptions/event/" + event.getId()).param("size", "2").param("page", "0")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(get("/inscriptions/event/" + event.getId()).param("size", "2").param("page", "1")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
     void register_eventFull_returns201WaitingList() throws Exception {
         AppUser organizer = createUser("organizer", Role.ORGANIZER);
         AppUser firstMember = createUser("member1", Role.MEMBER);
