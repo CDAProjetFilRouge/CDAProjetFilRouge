@@ -246,45 +246,6 @@ h2 {
   border-radius: 50%;
 }
 
-// Clubs
-.clubs {
-  padding-block: 48px;
-  background: var(--color-surface);
-
-  ul {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 12px;
-    margin: 24px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 16px;
-    background: #fff;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-  }
-}
-
-.section-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-
-  a {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-primary);
-  }
-}
-
 // Appel final
 .cta {
   display: flex;

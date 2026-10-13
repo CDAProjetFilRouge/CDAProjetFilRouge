@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { ROLE_LABELS } from '../../../models/user.models';
@@ -14,7 +14,6 @@ export class Header {
   private readonly router = inject(Router);
   protected readonly user = this.authService.currentUser;
   protected readonly roleLabels = ROLE_LABELS;
-  protected readonly isAffiliated = computed(() => (this.user()?.clubs.length ?? 0) > 0);
 
   protected logout(): void {
     this.authService.logout();

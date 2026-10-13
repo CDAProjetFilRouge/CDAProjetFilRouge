@@ -4,6 +4,15 @@
       <div class="welcome">
         <h1>Bonjour {{ u.firstName }}</h1>
         <p>{{ welcomeMessage() }}</p>
+        @if (u.role !== 'ADMINISTRATOR') {
+          <p class="club-info">
+            @if (clubNames().length > 0) {
+              {{ clubNames().length > 1 ? 'Vos clubs' : 'Votre club' }} : <strong>{{ clubNames().join(', ') }}</strong>
+            } @else {
+              Vous n’appartenez à aucun club pour le moment.
+            }
+          </p>
+        }
       </div>
     }
 
