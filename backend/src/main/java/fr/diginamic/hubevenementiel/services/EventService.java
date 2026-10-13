@@ -260,7 +260,8 @@ public class EventService {
     }
 
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
-            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
+            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, Sort.Direction direction,
+            AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
             throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
@@ -284,7 +285,8 @@ public class EventService {
             }
         }
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(direction == null ? Sort.Direction.ASC : direction, "startDateTime").and(Sort.by("id")));
         return eventRepository.findAll(spec, pageable);
     }
 

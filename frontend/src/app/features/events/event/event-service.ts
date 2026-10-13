@@ -13,7 +13,8 @@ export interface EventFilter {
   city: string;
   startDate: string;
   endDate: string;
-  status: string
+  status: string;
+  sort?: 'asc' | 'desc';
 }
 
 
@@ -58,6 +59,10 @@ export class EventService {
 
     if(filters?.status) {
       params = params.set('status', filters.status);
+    }
+
+    if(filters?.sort) {
+      params = params.set('sort', filters.sort.toUpperCase());
     }
 
 

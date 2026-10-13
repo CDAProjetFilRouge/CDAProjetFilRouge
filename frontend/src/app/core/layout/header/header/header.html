@@ -3,11 +3,7 @@
   <div class="page-space">
       <button class="page-select" [routerLink]="user() ? '/' : '/catalogue'" routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }">Catalogue</button>
-      @if (isAffiliated()) {
-        <button class="page-select" routerLink="/">Mon club</button>
-      } @else {
-        <button class="page-select" routerLink="/clubs" routerLinkActive="active">Clubs</button>
-      }
+      <button class="page-select" routerLink="/clubs" routerLinkActive="active">Clubs</button>
 
       @if (user()) {
         <button class="page-select" routerLink="/dashboard" routerLinkActive="active">Tableau de bord</button>
@@ -20,7 +16,6 @@
 
       @if (user()?.role === 'ORGANIZER') {
         <button class="page-select" routerLink="/events/new" routerLinkActive="active">Créer un évènement</button>
-        <button class="page-select" routerLink="/">Gérer les évènements</button>
       }
       @if (user()?.role === 'ADMINISTRATOR') {
         <button class="page-select" routerLink="/admin" routerLinkActive="active">Gestion</button>

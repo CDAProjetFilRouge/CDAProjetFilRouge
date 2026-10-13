@@ -37,7 +37,7 @@ public class EventMainMapper {
         dto.setRemainingSpots(remainingSpots);
         dto.setImageGallery(event.getImageGallery().stream().map(imageGaleryMapper::toDto).collect(Collectors.toList()));
         dto.setStatus(event.getStatus());
-        dto.setOrganizerClubs(event.getOrganizer().getClubs().stream().map(Club::getName).collect(Collectors.toList()));
+        dto.setClubName(event.getClub().getName());
 
         return dto;
     }

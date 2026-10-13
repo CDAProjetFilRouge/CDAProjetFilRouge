@@ -24,5 +24,5 @@ export interface EventModel{
 
     }[],
   status: string,
-  organizerClubs: string[]
+  clubName: string
 }
