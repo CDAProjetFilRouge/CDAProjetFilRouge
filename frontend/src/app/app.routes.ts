@@ -4,7 +4,6 @@ import { anonymousGuard } from './core/auth/anonymous-guard';
 import { authGuard } from './core/auth/auth-guard';
 import { organizerGuard } from './core/auth/organizer-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
-import { Club } from './features/clubs/club/club';
 import { EventDetails } from './features/events/event-details/event-details';
 import { Event } from './features/events/event/event';
 
@@ -51,10 +50,6 @@ export const routes: Routes = [
     path: 'verify',
     loadComponent: () =>
       import('./features/auth/verify-account/verify-account').then((m) => m.VerifyAccount),
-  },
-  {
-    path: 'clubs',
-    component: Club,
   },
   {
     path: 'forgot-password',
