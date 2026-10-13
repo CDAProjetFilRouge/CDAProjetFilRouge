@@ -39,6 +39,8 @@ public class InscriptionController implements InscriptionApi {
     @PostMapping
     public ResponseEntity<InscriptionResponseDto> register(@RequestParam Long userId, @RequestParam Long eventId)
             throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        inscriptionService.checkSelf(principal, userId);
         Inscription inscription = inscriptionService.register(userId, eventId);
         return ResponseEntity.status(HttpStatus.CREATED).body(inscriptionMapper.toDto(inscription));
     }
@@ -66,7 +68,8 @@ public class InscriptionController implements InscriptionApi {
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
-        return inscriptionService.findByEvent(eventId, page, size).stream()
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return inscriptionService.findByEvent(principal, eventId, page, size).stream()
                 .map(inscriptionMapper::toEventDto)
                 .toList();
     }
@@ -77,7 +80,8 @@ public class InscriptionController implements InscriptionApi {
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
-        return inscriptionService.findByUser(userId, page, size).stream()
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return inscriptionService.findByUser(principal, userId, page, size).stream()
                 .map(inscriptionMapper::toDto)
                 .toList();
     }

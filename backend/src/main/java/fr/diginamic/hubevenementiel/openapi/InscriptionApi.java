@@ -22,6 +22,7 @@ public interface InscriptionApi {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Inscription créée (confirmée ou en liste d'attente)"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "On ne peut inscrire que soi-même"),
             @ApiResponse(responseCode = "404", description = "Utilisateur ou évènement introuvable"),
             @ApiResponse(responseCode = "409", description = "Utilisateur déjà inscrit à cet évènement")
     })
@@ -49,19 +50,23 @@ public interface InscriptionApi {
     ResponseEntity<Void> cancelByOrganizer(@Parameter(description = "Identifiant de l'inscription", required = true) Long id,
             @Parameter(description = "Motif de l'annulation, communiqué au membre par email", required = true) String motif) throws HttpException;
 
-    @Operation(summary = "Lister les inscriptions d'un évènement")
+    @Operation(summary = "Lister les inscriptions d'un évènement", description = "Réservé à l'organisateur de l'évènement et aux administrateurs.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste paginée des inscriptions (vide si aucune)"),
-            @ApiResponse(responseCode = "401", description = "Non authentifié")
+            @ApiResponse(responseCode = "400", description = "Pagination invalide"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "Ni organisateur de l'évènement ni administrateur")
     })
     List<InscriptionEventResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size) throws HttpException;
 
-    @Operation(summary = "Lister les inscriptions d'un utilisateur", description = "Sert notamment à construire le calendrier d'évènements de l'utilisateur.")
+    @Operation(summary = "Lister les inscriptions d'un utilisateur", description = "Réservé à l'utilisateur concerné et aux administrateurs. Sert notamment à construire le calendrier d'évènements de l'utilisateur.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste paginée des inscriptions (vide si aucune)"),
-            @ApiResponse(responseCode = "401", description = "Non authentifié")
+            @ApiResponse(responseCode = "400", description = "Pagination invalide"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "Ni l'utilisateur concerné ni administrateur")
     })
     List<InscriptionResponseDto> getByUser(@Parameter(description = "Identifiant de l'utilisateur", required = true) Long userId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,

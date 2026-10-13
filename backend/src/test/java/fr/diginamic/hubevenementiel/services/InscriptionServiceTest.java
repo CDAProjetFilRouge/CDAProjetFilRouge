@@ -8,6 +8,7 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
@@ -232,6 +233,76 @@ class InscriptionServiceTest {
         Inscription result = inscriptionService.register(6L, 2L);
 
         assertThat(result.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
+    }
+
+    // ---------------------------------------------------------------
+    // contrôles d'identité (audit sécurité)
+    // ---------------------------------------------------------------
+
+    @Test
+    void checkSelf_sameUser_passes() {
+        assertDoesNotThrow(() -> inscriptionService.checkSelf(new AppUserPrincipal(6L, "a@example.com", "MEMBER"), 6L));
+    }
+
+    @Test
+    void checkSelf_otherUser_throwsForbidden() {
+        assertThrows(ForbiddenException.class,
+                () -> inscriptionService.checkSelf(new AppUserPrincipal(7L, "b@example.com", "MEMBER"), 6L));
+    }
+
+    @Test
+    void checkSelf_administratorCannotRegisterSomeoneElse() {
+        assertThrows(ForbiddenException.class,
+                () -> inscriptionService.checkSelf(new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR"), 6L));
+    }
+
+    @Test
+    void findByUser_otherMember_throwsForbidden() {
+        AppUserPrincipal other = new AppUserPrincipal(7L, "b@example.com", "MEMBER");
+
+        assertThrows(ForbiddenException.class, () -> inscriptionService.findByUser(other, 6L, 0, 20));
+        verify(inscriptionRepo, never()).findByUserId(anyLong(), any());
+    }
+
+    @Test
+    void findByUser_selfAndAdministrator_areAllowed() throws HttpException {
+        when(inscriptionRepo.findByUserId(eq(6L), any())).thenReturn(org.springframework.data.domain.Page.empty());
+
+        assertDoesNotThrow(() -> inscriptionService.findByUser(new AppUserPrincipal(6L, "a@example.com", "MEMBER"), 6L, 0, 20));
+        assertDoesNotThrow(() -> inscriptionService.findByUser(new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR"), 6L, 0, 20));
+    }
+
+    @Test
+    void findByUser_invalidPaging_throwsBadRequest() {
+        AppUserPrincipal self = new AppUserPrincipal(6L, "a@example.com", "MEMBER");
+
+        assertThrows(BadRequestException.class, () -> inscriptionService.findByUser(self, 6L, -1, 20));
+        assertThrows(BadRequestException.class, () -> inscriptionService.findByUser(self, 6L, 0, 0));
+        assertThrows(BadRequestException.class, () -> inscriptionService.findByUser(self, 6L, 0, 201));
+    }
+
+    @Test
+    void findByEvent_otherOrganizer_throwsForbidden() throws HttpException {
+        AppUser owner = new AppUser();
+        owner.setId(8L);
+        publishedFutureEvent.setOrganizer(owner);
+        when(eventService.findById(2L)).thenReturn(publishedFutureEvent);
+
+        assertThrows(ForbiddenException.class,
+                () -> inscriptionService.findByEvent(new AppUserPrincipal(9L, "o@example.com", "ORGANIZER"), 2L, 0, 20));
+        verify(inscriptionRepo, never()).findByEventId(anyLong(), any());
+    }
+
+    @Test
+    void findByEvent_ownerAndAdministrator_areAllowed() throws HttpException {
+        AppUser owner = new AppUser();
+        owner.setId(8L);
+        publishedFutureEvent.setOrganizer(owner);
+        when(eventService.findById(2L)).thenReturn(publishedFutureEvent);
+        when(inscriptionRepo.findByEventId(eq(2L), any())).thenReturn(org.springframework.data.domain.Page.empty());
+
+        assertDoesNotThrow(() -> inscriptionService.findByEvent(new AppUserPrincipal(8L, "o@example.com", "ORGANIZER"), 2L, 0, 20));
+        assertDoesNotThrow(() -> inscriptionService.findByEvent(new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR"), 2L, 0, 20));
     }
 
     @Test
