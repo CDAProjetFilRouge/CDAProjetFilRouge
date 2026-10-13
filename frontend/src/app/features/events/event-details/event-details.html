@@ -28,7 +28,9 @@
         </div>
 
         <div class="head-actions">
-          <a class="btn" [href]="pdfUrl(event.id)">Télécharger les détails en PDF</a>
+          <button class="btn" type="button" [disabled]="pdfBusy()" (click)="openPdf(event)">
+            Voir la fiche PDF
+          </button>
           @if (canEdit()) {
             <a class="btn" [routerLink]="['/events', event.id, 'edit']">Modifier cet évènement</a>
           }
