@@ -915,6 +915,8 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 @media (max-width: 720px) {
   // La perforation devient horizontale, juste au-dessus de la souche (en bas du billet).
   .card {
+    --stub-height: 140px;
+
     &::before,
     &::after {
       top: auto;
