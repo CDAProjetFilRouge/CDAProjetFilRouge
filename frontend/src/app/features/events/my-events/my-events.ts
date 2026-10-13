@@ -4,6 +4,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EventModel } from '../event/event-model';
 import { EventService } from '../event/event-service';
+import { scrollToTop } from '../../../shared/scroll-to-top';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Brouillon',
@@ -46,6 +47,7 @@ export class MyEvents {
   protected goToPage(page: number): void {
     this.page.set(page);
     this.load();
+    scrollToTop();
   }
 
   private load(): void {
