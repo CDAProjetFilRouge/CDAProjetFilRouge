@@ -17,6 +17,7 @@
   padding: 3px 6px;
   font-size: 14px;
   font-weight: 600;
+  text-decoration: none;
   color: var(--color-text);
   background: var(--color-primary-soft);
   border: 0;
@@ -33,6 +34,7 @@
 .page-select {
   padding: 4px 0;
   font-size: 13px;
+  text-decoration: none;
   color: #616161;
   background: none;
   border: 0;
@@ -55,11 +57,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-
-  p {
-    font-size: 13px;
-    color: var(--color-muted);
-  }
 }
 
 .account {

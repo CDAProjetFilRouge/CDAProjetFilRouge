@@ -1,24 +1,25 @@
-<div class="layout-header">
-  <button class="logo" routerLink="/">MyHubEvent</button>
-  <div class="page-space">
-      <button class="page-select" [routerLink]="user() ? '/' : '/catalogue'" routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: true }">Catalogue</button>
+<header class="layout-header">
+  <a class="logo" routerLink="/">MyHubEvent</a>
+  <nav class="page-space" aria-label="Navigation principale">
 
       @if (user()) {
-        <button class="page-select" routerLink="/dashboard" routerLinkActive="active">Tableau de bord</button>
-        <!-- L'administrateur est un compte métier : pas de calendrier personnel -->
-        @if (user()?.role !== 'ADMINISTRATOR') {
-          <button class="page-select" routerLink="/calendar" routerLinkActive="active">Mon calendrier</button>
-        }
+        <a class="page-select" routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">Tableau de bord</a>
+      }
+
+      <a class="page-select" [routerLink]="user() ? '/' : '/catalogue'" routerLinkActive="active"
+        ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">Catalogue</a>
+
+      @if (user()?.role !== 'ADMINISTRATOR') {
+        <a class="page-select" routerLink="/calendar" routerLinkActive="active" ariaCurrentWhenActive="page">Mon calendrier</a>
       }
 
       @if (user()?.role === 'ORGANIZER') {
-        <button class="page-select" routerLink="/my-events" routerLinkActive="active">Mes évènements</button>
+        <a class="page-select" routerLink="/my-events" routerLinkActive="active" ariaCurrentWhenActive="page">Mes évènements</a>
       }
       @if (user()?.role === 'ADMINISTRATOR') {
-        <button class="page-select" routerLink="/admin" routerLinkActive="active">Gestion</button>
+        <a class="page-select" routerLink="/admin" routerLinkActive="active" ariaCurrentWhenActive="page">Gestion</a>
       }
-  </div>
+  </nav>
   <div class="login-space">
     @if (user(); as u) {
       <div class="account">
@@ -40,8 +41,8 @@
         }
       </div>
     } @else {
-      <button class="btn" routerLink="/login">Se connecter</button>
-      <button class="btn btn-primary" routerLink="/createAccount">Créer un compte</button>
+      <a class="btn" routerLink="/login">Se connecter</a>
+      <a class="btn btn-primary" routerLink="/createAccount">Créer un compte</a>
     }
   </div>
-</div>
+</header>
