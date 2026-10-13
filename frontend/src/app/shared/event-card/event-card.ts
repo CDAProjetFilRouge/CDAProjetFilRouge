@@ -101,7 +101,22 @@ export class EventCard {
 
   // En liste d'attente, l'inscription n'est pas validée : la souche reste en place, mais se soulève
   // au survol pour montrer ce qu'il y a derrière. Un clic ouvre la gestion de l'inscription.
-  protected readonly peelable = computed(() => this.registration() === 'WAITING_LIST' && this.phase() === 'idle');
+  protected readonly peelable = computed(
+    () => this.registration() === 'WAITING_LIST' && this.phase() === 'idle' && this.lifecycle() !== 'cancelled',
+  );
+
+  // Cycle de vie de l'évènement : annulé, en cours (entre son début et sa fin), ou rien de particulier.
+  protected readonly lifecycle = computed<'cancelled' | 'ongoing' | null>(() => {
+    const { status, startDateTime, endDateTime } = this.event();
+    if (status === 'CANCELLED') {
+      return 'cancelled';
+    }
+    const now = Date.now();
+    if (status === 'PUBLISHED' && new Date(startDateTime).getTime() <= now && new Date(endDateTime).getTime() > now) {
+      return 'ongoing';
+    }
+    return null;
+  });
 
   protected readonly waitingTitle = computed(() => {
     const position = this.waitingPosition();

@@ -3,6 +3,7 @@
   [attr.data-category]="event().category"
   [attr.data-phase]="phase()"
   [attr.data-registration]="registration()"
+  [attr.data-lifecycle]="lifecycle()"
 >
   <div class="shadow" aria-hidden="true"><div></div></div>
 
@@ -20,14 +21,20 @@
       <div class="holo" aria-hidden="true"></div>
 
       <span class="category" [attr.data-category]="event().category">{{ categoryLabel() }}</span>
-      @if (registration() === 'WAITING_LIST' && phase() === 'idle') {
+      @if (registration() === 'WAITING_LIST' && phase() === 'idle' && lifecycle() !== 'cancelled') {
         <span class="wait-chip">{{ waitingTitle() }}</span>
+      }
+      @if (lifecycle() === 'ongoing') {
+        <span class="live-chip"><span class="live-dot" aria-hidden="true"></span>En cours</span>
       }
     </div>
 
     <div class="main">
       <h3 class="title">
         <a [routerLink]="['/event-details', event().id]">{{ event().title }}</a>
+        @if (lifecycle() === 'cancelled') {
+          <span class="sr-only"> (annulé)</span>
+        }
       </h3>
 
       <ul class="facts">
@@ -110,6 +117,10 @@
       }
     </div>
 
+    @if (lifecycle() === 'cancelled') {
+      <div class="cancel-stamp" aria-hidden="true">Annulé</div>
+    }
+
     <div class="grain" aria-hidden="true"></div>
   </div>
 
@@ -161,6 +172,8 @@
           Détacher pour s’inscrire
         } @else if (peelable()) {
           En liste d’attente
+        } @else if (lifecycle() === 'cancelled') {
+          Évènement annulé
         } @else {
           Voir le détail
         }
