@@ -13,9 +13,9 @@
   height: 88px;
   padding: 0 80px;
   background: var(--color-header-bg);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 1px 0 rgba(217, 164, 91, 0.2), 0 20px 44px -26px #000;
+  box-shadow: 0 10px 26px -18px rgba(217, 67, 95, 0.55);
 }
 
 // Logo : 44px de haut, soit 1,8 fois la pastille de texte d'avant (24px).
@@ -40,26 +40,28 @@
 }
 
 .page-select {
-  padding: 6px 0;
-  font-size: 13px;
+  padding: 8px 16px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: .12em;
-  text-transform: uppercase;
   text-decoration: none;
   color: var(--color-muted);
+  border-radius: 999px;
   background: none;
   border: 0;
-  transition: color .15s;
+  transition: color .15s, background-color .2s, transform .4s cubic-bezier(.34, 1.56, .64, 1);
 
   &:hover,
   &:focus-visible {
-    color: var(--color-text);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+    transform: translateY(-2px);
   }
 
-  // Page courante : dorée, avec un filet lumineux dessous.
+  // Page courante : une bulle rose.
   &.active {
+    font-weight: 700;
     color: var(--color-primary);
-    box-shadow: 0 2px 0 var(--color-primary), 0 10px 16px -10px rgba(217, 164, 91, 0.8);
+    background: var(--color-primary-soft);
   }
 }
 
@@ -79,7 +81,7 @@
   gap: 10px;
   padding: 4px 10px 4px 4px;
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.04);
+  background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   cursor: pointer;
@@ -104,8 +106,8 @@
   height: 32px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-on-primary);
-  background: linear-gradient(180deg, #efc486, #c98f45);
+  color: #fff;
+  background: var(--color-primary);
   border-radius: 50%;
 }
 
@@ -150,10 +152,10 @@
   flex-direction: column;
   min-width: 180px;
   padding: 6px;
-  background: #1a1513;
+  background: #fff;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 28px 60px -14px #000;
+  box-shadow: 0 12px 32px rgba(60, 30, 25, 0.18);
 }
 
 .menu-item {

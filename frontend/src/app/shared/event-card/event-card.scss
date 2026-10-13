@@ -22,30 +22,20 @@ svg {
   stroke-linejoin: round;
 }
 
-// Direction « salle de cinéma » (voir styles.scss) : le billet est un tirage sombre éclairé par le côté.
-//   - lumière : un liseré ambre en haut (lumière rasante), un halo sous le curseur, un vignettage sur la photo ;
-//   - texture : papier noir satiné, grain fin, picots de la perforation ;
-//   - reflets : un reflet diagonal qui suit le curseur sur la photo et sur la souche ;
-//   - volume : plusieurs ombres superposées, bord intérieur éclairé, souche en bordeaux profond.
-// Rien ne repose sur un mode de fusion ni sur un filtre permanent (voir le commit da25a54).
+// Direction « bubblegum » (voir styles.scss) : un seul rose pour tous les billets, la menthe pour « inscrit »,
+// le lilas pour la liste d'attente, le beurre pour « en cours ». Billet gonflé : grands rayons, reflet de gel
+// sur la souche, ombres roses. Les animations sont des ressorts (légers dépassements), coupées en mouvement réduit.
 .card {
   --accent: var(--color-primary);
   --accent-soft: var(--color-primary-soft);
-  --accent-wash: #1e1814;
-  --stub: #6b2230;
-  --paper: #1e1815;
-  --paper-2: #14100e;
-  --amber: #d9a45b;
-  --amber-light: #efc486;
-  --wine: #4a1620;
-  --sage: #9ec7a5;
-  --sage-soft: rgba(158, 199, 165, 0.14);
-  --sage-line: rgba(158, 199, 165, 0.5);
-  --edge: rgba(217, 164, 91, 0.3);
+  --accent-wash: #fff0f3;
+  --stub: #d9435f;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --edge: var(--color-border);
   --stub-width: 190px;
   --stub-height: 104px;
   --notch: 22px;
-  --radius: 16px;
+  --radius: 26px;
   // Silhouette du billet (coque et ombre) : le rectangle moins les deux demi-trous.
   --ticket-shape: polygon(
     0 0,
@@ -139,15 +129,15 @@ $grain-light: url('/grain-light.png');
 
   &:hover,
   &:focus-within {
-    --edge: var(--amber-light);
+    --edge: var(--accent);
   }
 
   &[data-registration='CONFIRMED'] {
-    --edge: var(--sage-line);
+    --edge: #8fd6c2;
   }
 
   &[data-registration='WAITING_LIST'] {
-    --edge: #b2566a;
+    --edge: #b9adec;
   }
 }
 
@@ -169,12 +159,9 @@ $grain-light: url('/grain-light.png');
   position: relative;
   display: flex;
   height: 100%;
-  min-height: 248px;
-  background:
-    linear-gradient(180deg, rgba(239, 196, 134, 0.09), transparent 38%),
-    linear-gradient(160deg, #241d19, var(--paper-2));
+  min-height: 232px;
+  background: #fff7f8;
   border: 1px solid var(--edge);
-  box-shadow: inset 0 1px 0 rgba(255, 236, 205, 0.18), inset 0 -24px 40px -30px #000;
   border-radius: var(--radius);
   transition: border-color .3s;
 
@@ -250,11 +237,9 @@ $grain-light: url('/grain-light.png');
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--amber-light);
-  background: rgb(15 12 11 / 0.72);
-  border: 1px solid rgb(239 196 134 / 0.35);
+  color: #fff;
+  background: var(--accent);
   border-radius: 999px;
-  box-shadow: 0 6px 14px -6px #000;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.4);
 }
 
@@ -271,9 +256,9 @@ $grain-light: url('/grain-light.png');
 
 .title {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 25px;
-  font-weight: 700;
+  font-family: 'Baloo 2', 'Figtree', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -361,18 +346,19 @@ $grain-light: url('/grain-light.png');
 // --- Places ---------------------------------------------------------------
 
 .spots {
-  --spots-color: var(--amber);
-  --spots-track: rgba(255, 255, 255, 0.08);
+  --spots-color: #3fae92;
+  --spots-track: #d8f4ec;
   margin-top: auto;
 
-  &[data-level='high'] {
-    --spots-color: var(--sage);
+  &[data-level='medium'] {
+    --spots-color: #f0a62e;
+    --spots-track: #fff0cc;
   }
 
   &[data-level='low'],
   &[data-level='full'] {
-    --spots-color: #e0745f;
-    --spots-track: rgba(224, 116, 95, 0.16);
+    --spots-color: #e2536b;
+    --spots-track: #ffd9e0;
   }
 }
 
@@ -425,7 +411,7 @@ $grain-light: url('/grain-light.png');
   text-align: center;
   background:
     linear-gradient(90deg, rgb(31 36 48 / 0.12), transparent 14px),
-    linear-gradient(180deg, var(--accent-wash), var(--paper) 130%);
+    linear-gradient(180deg, var(--accent-wash), #fff7f8 130%);
   border-radius: 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0;
   opacity: 0;
   transition: opacity .35s ease;
@@ -437,7 +423,7 @@ $grain-light: url('/grain-light.png');
     z-index: 2;
     width: 10px;
     pointer-events: none;
-    background: radial-gradient(circle 4.6px at 0 50%, var(--paper) 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    background: radial-gradient(circle 4.6px at 0 50%, #fff7f8 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
   }
 }
 
@@ -503,10 +489,10 @@ $grain-light: url('/grain-light.png');
   place-items: center;
   width: 44px;
   height: 44px;
-  color: #12200f;
-  background: linear-gradient(180deg, #b8dcbf, #86b890);
+  color: #fff;
+  background: linear-gradient(180deg, #6fd1b8, #3fae92);
   border-radius: 50%;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 22px -8px rgb(0 0 0 / 0.8);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.5), 0 10px 20px -8px rgb(30 120 95 / 0.7);
   animation: pop .5s cubic-bezier(.34, 1.56, .64, 1);
 
   svg {
@@ -523,13 +509,13 @@ $grain-light: url('/grain-light.png');
   }
 
   &.waiting {
-    background: linear-gradient(180deg, #efc486, #c98f45);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 22px -8px rgb(0 0 0 / 0.8);
+    background: linear-gradient(180deg, #a597e6, #7e6bd2);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.5), 0 10px 20px -8px rgb(80 60 170 / 0.7);
   }
 
   &.error {
-    background: #c2493a;
-    box-shadow: 0 10px 22px -8px rgb(0 0 0 / 0.8);
+    background: #b3261e;
+    box-shadow: 0 8px 18px -6px rgb(120 20 15 / 0.6);
   }
 }
 
@@ -561,9 +547,9 @@ $grain-light: url('/grain-light.png');
   padding: 3px 10px 3px 8px;
   font-size: 12px;
   font-weight: 800;
-  color: var(--sage);
-  background: var(--sage-soft);
-  border: 1px solid var(--sage-line);
+  color: #1c6b57;
+  background: #d8f4ec;
+  border: 1px solid #8fd6c2;
   border-radius: 999px;
 
   svg {
@@ -596,9 +582,9 @@ $grain-light: url('/grain-light.png');
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--amber-light);
-  background: rgb(239 196 134 / 0.1);
-  border: 1px solid rgb(239 196 134 / 0.45);
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid var(--color-border);
   border-radius: 999px;
   cursor: pointer;
   transition: background-color .15s, border-color .15s, color .15s;
@@ -669,7 +655,7 @@ $grain-light: url('/grain-light.png');
     z-index: 2;
     width: 10px;
     pointer-events: none;
-    background: radial-gradient(circle 4.6px at 0 50%, var(--paper) 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
+    background: radial-gradient(circle 4.6px at 0 50%, #fff7f8 0 96%, transparent 100%) 0 0 / 100% 15px repeat-y;
     transition: opacity .15s;
   }
 
@@ -766,9 +752,9 @@ $grain-light: url('/grain-light.png');
 
   .day {
     margin-top: 4px;
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Baloo 2', 'Figtree', sans-serif;
     font-size: 52px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -.03em;
   }
 
@@ -803,9 +789,9 @@ $grain-light: url('/grain-light.png');
   line-height: 1.2;
 
   .amount {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 27px;
-    font-weight: 700;
+    font-family: 'Baloo 2', 'Figtree', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
   }
 
   .hint {
@@ -1093,14 +1079,14 @@ $grain-light: url('/grain-light.png');
     padding: 22px 16px 8px;
     background:
       linear-gradient(180deg, rgb(31 36 48 / 0.12), transparent 14px),
-      linear-gradient(180deg, var(--accent-wash), var(--paper) 130%);
+      linear-gradient(180deg, var(--accent-wash), #fff7f8 130%);
     border-radius: 0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);
 
     &::before {
       inset: 0 0 auto;
       width: auto;
       height: 10px;
-      background: radial-gradient(circle 4.6px at 50% 0, var(--paper) 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+      background: radial-gradient(circle 4.6px at 50% 0, #fff7f8 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
     }
   }
 
@@ -1161,7 +1147,7 @@ $grain-light: url('/grain-light.png');
       inset: 0 0 auto;
       width: auto;
       height: 10px;
-      background: radial-gradient(circle 4.6px at 50% 0, var(--paper) 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
+      background: radial-gradient(circle 4.6px at 50% 0, #fff7f8 0 96%, transparent 100%) 0 0 / 15px 100% repeat-x;
     }
 
   }
@@ -1234,9 +1220,9 @@ $grain-light: url('/grain-light.png');
 
 .card[data-registration='WAITING_LIST'] .stub {
   background:
-    repeating-linear-gradient(135deg, rgb(217 164 91 / 0.28) 0 10px, transparent 10px 20px),
-    linear-gradient(160deg, rgb(255 255 255 / 0.1), transparent 50%, rgb(0 0 0 / 0.35)),
-    #2b0e15;
+    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.22) 0 10px, transparent 10px 20px),
+    linear-gradient(160deg, rgb(255 255 255 / 0.14), transparent 50%, rgb(0 0 0 / 0.18)),
+    #7e6bd2;
 }
 
 .wait {
@@ -1277,9 +1263,8 @@ $grain-light: url('/grain-light.png');
   font-weight: 800;
   letter-spacing: .04em;
   text-transform: uppercase;
-  color: var(--amber-light);
-  background: #2b0e15;
-  border: 1px solid rgb(239 196 134 / 0.45);
+  color: #fff;
+  background: #7e6bd2;
   border-radius: 999px;
   box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.5);
 }
@@ -1294,8 +1279,8 @@ $grain-light: url('/grain-light.png');
   width: 26px;
   height: 26px;
   place-items: center;
-  color: #2b0e15;
-  background: linear-gradient(180deg, #f6d29b, #d9a45b);
+  color: var(--stub);
+  background: #fff;
   border-radius: 50%;
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
   transition: transform .3s;
@@ -1339,14 +1324,14 @@ $grain-light: url('/grain-light.png');
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  filter: blur(20px);
-  transform: translateY(22px) scale(.97);
+  filter: blur(14px);
+  transform: translateY(16px);
   transition: opacity .3s ease;
 
   > div {
     width: 100%;
     height: 100%;
-    background: rgb(0 0 0 / 0.75);
+    background: rgb(217 67 95 / 0.4);
     border-radius: var(--radius);
     clip-path: var(--ticket-shape);
   }
@@ -1379,8 +1364,8 @@ $grain-light: url('/grain-light.png');
 .live-chip {
   top: 12px;
   right: 12px;
-  color: #1a1208;
-  background: linear-gradient(180deg, #f6d29b, #d9a45b);
+  color: #4a2232;
+  background: linear-gradient(180deg, #ffe38a, #ffd45c);
 }
 
 .live-dot {
@@ -1401,7 +1386,7 @@ $grain-light: url('/grain-light.png');
 .card[data-lifecycle='ongoing'],
 .card[data-lifecycle='ongoing']:hover,
 .card[data-lifecycle='ongoing']:focus-within {
-  --edge: var(--amber-light);
+  --edge: #ffd45c;
 }
 
 .card[data-lifecycle='ongoing'] .shell {
@@ -1417,8 +1402,7 @@ $grain-light: url('/grain-light.png');
 
 .card[data-lifecycle='cancelled'] {
   .shell {
-    background: linear-gradient(160deg, #1c1816, #121010);
-    box-shadow: inset 0 1px 0 rgba(255, 236, 205, 0.1);
+    background: #e8e3da;
   }
 
   .media img,
@@ -1451,7 +1435,7 @@ $grain-light: url('/grain-light.png');
       radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.11) 1px, transparent 1.4px) 0 0 / 9px 9px,
       repeating-linear-gradient(135deg, rgb(255 255 255 / 0.035) 0 2px, transparent 2px 11px),
       linear-gradient(160deg, rgb(255 255 255 / 0.18), transparent 45%, rgb(0 0 0 / 0.22)),
-      color-mix(in srgb, var(--stub) 55%, #3a3532);
+      color-mix(in srgb, var(--stub) 50%, #8f8d8c);
     opacity: .66;
   }
 }
@@ -1472,10 +1456,10 @@ $grain-light: url('/grain-light.png');
   line-height: 1;
   letter-spacing: .14em;
   text-transform: uppercase;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  color: rgb(224 96 80 / 0.95);
+  font-family: 'Baloo 2', 'Figtree', sans-serif;
+  color: rgb(214 52 78 / 0.95);
   background: rgb(255 255 255 / 0.16);
-  border: 3px solid rgb(224 96 80 / 0.95);
+  border: 4px solid rgb(214 52 78 / 0.95);
   text-shadow: 0 0 6px rgb(255 255 255 / 0.55);
   box-shadow: 0 0 8px rgb(255 255 255 / 0.35);
   border-radius: 6px;
@@ -1509,71 +1493,76 @@ $grain-light: url('/grain-light.png');
   clip-path: inset(50%);
 }
 
-// --- Lumière, reflets, volume ----------------------------------------------------------------------
+// --- Gel et bulles -----------------------------------------------------------------------------------
 
-// Vignettage de la photo : le centre est éclairé, les bords s'éteignent, comme une image projetée.
+// Souche gonflée : reflet brillant en haut, ombre intérieure en bas.
+.stub {
+  box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.4), inset 0 -14px 22px -12px rgb(110 10 40 / 0.35);
+}
+
+// Pastille de catégorie : une bulle blanche.
+.category {
+  color: var(--color-primary);
+  background: #fff;
+  box-shadow: inset 0 -2px 0 rgb(217 67 95 / 0.15), 0 6px 14px -6px rgb(217 67 95 / 0.6);
+}
+
+// Reflet de gel sur la photo : une tache de lumière en haut à gauche.
 .media::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 42%, transparent 38%, rgb(10 7 6 / 0.62) 100%),
-    linear-gradient(0deg, rgb(10 7 6 / 0.7), transparent 38%);
+  background: radial-gradient(ellipse 70% 40% at 24% 8%, rgb(255 255 255 / 0.4), transparent 70%);
 }
 
-// Reflet diagonal qui suit le curseur : une bande de lumière chaude, sans mode de fusion.
-.holo {
-  background: linear-gradient(115deg, transparent 30%, rgb(255 224 176 / 0.28) 46%, rgb(255 224 176 / 0) 54%, transparent 70%);
-  background-size: 260% 100%;
-  background-position: var(--mx, 50%) 0;
+.card[data-lifecycle='cancelled'] .shell {
+  background: #f6edef;
 }
 
-.foil {
-  background: linear-gradient(115deg, transparent 32%, rgb(255 226 180 / 0.22) 48%, transparent 62%);
-  background-size: 280% 100%;
-  background-position: var(--mx, 50%) 0;
-}
+// --- Animations de ressort ----------------------------------------------------------------------------
 
-// Halo ambré sous le curseur sur le papier du billet, et bord éclairé au survol.
-.card:hover .shell {
-  background:
-    radial-gradient(420px 220px at var(--mx, 50%) var(--my, 0%), rgb(239 196 134 / 0.14), transparent 70%),
-    linear-gradient(180deg, rgba(239, 196, 134, 0.09), transparent 38%),
-    linear-gradient(160deg, #271f1a, var(--paper-2));
-}
-
-// Volume de la souche : bord supérieur éclairé, bas qui s'enfonce dans l'ombre.
-.stub {
-  box-shadow: inset 0 1px 0 rgb(255 226 180 / 0.35), inset 0 -30px 40px -28px #000;
-}
-
-// Souche : jour et mois en ambre, flèche ambrée.
-.stub {
-  .weekday,
-  .month {
-    color: var(--amber-light);
-    opacity: 1;
+@media (prefers-reduced-motion: no-preference) {
+  // Entrée : chaque billet jaillit en rebondissant, l'un après l'autre.
+  app-event-card {
+    animation: bubble-in .7s var(--spring, cubic-bezier(.34, 1.56, .64, 1)) backwards;
   }
 
-  .cta svg {
-    stroke: var(--amber-light);
+  @for $i from 2 through 8 {
+    app-event-card:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 70}ms;
+    }
   }
-}
 
-.live-dot {
-  background: #1a1208;
-}
+  // Survol : le billet se gonfle puis se détend, comme une bulle.
+  .card {
+    transition: filter .3s ease, transform .55s cubic-bezier(.34, 1.56, .64, 1);
+  }
 
-@media (max-width: 720px) {
-  // La pastille d'arrachage ne recouvre plus le prix.
+  .card:hover {
+    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-6px) scale(1.012);
+  }
+
+  // La pastille d'arrachage pulse doucement pour dire « tire-moi ».
   .stub > .corner {
-    top: 8px;
-    right: 8px;
+    animation: bubble-pulse 2.6s ease-in-out infinite;
   }
 
-  .stub-foot {
-    margin-right: 30px;
+  .live-dot {
+    animation: bubble-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(.9);
+  }
+}
+
+@keyframes bubble-pulse {
+  50% {
+    transform: scale(1.2);
   }
 }
