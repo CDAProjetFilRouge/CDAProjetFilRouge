@@ -59,15 +59,20 @@ svg {
 
 // Grain de pellicule : un bruit plus gros et plus contrasté que du simple bruit numérique.
 // Deux variantes : sombre (sur le papier et la photo) et claire (sur la souche).
-$grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0'  intercept='1'/><feFuncR type='linear' slope='1.7' intercept='-0.35'/><feFuncG type='linear' slope='1.7' intercept='-0.35'/><feFuncB type='linear' slope='1.7' intercept='-0.35'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+// Le grain est une petite image de bruit transparent (public/grain-*.png), sans mode de fusion. Une image
+// SVG à filtre (feTurbulence) était recalculée à chaque fois que le navigateur déchargeait un billet
+// hors écran : les billets revenaient vides, avec du retard.
+$grain-dark: url('/grain-dark.png');
+$grain-light: url('/grain-light.png');
 
 // --- Le billet entier ------------------------------------------------------
 
 .card {
   position: relative;
   height: 100%;
-  filter: drop-shadow(0 1px 2px rgb(31 36 48 / 0.07));
-  transition: filter .3s ease, transform .18s ease-out;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgb(31 36 48 / 0.1);
+  transition: box-shadow .3s ease, transform .18s ease-out;
 
   // Une encoche est un trou dans la coque : son contour est dessiné par ces deux anneaux.
   &::before,
@@ -98,7 +103,7 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   &:hover,
   &:focus-within {
     --edge: var(--accent);
-    filter: drop-shadow(0 20px 22px rgb(31 36 48 / 0.26));
+    box-shadow: 0 20px 26px -8px rgb(31 36 48 / 0.3);
   }
 
   &[data-registration='CONFIRMED'] {
@@ -134,12 +139,6 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   border-radius: var(--radius);
   transition: border-color .3s;
 
-  // Les deux trous de la perforation, vraiment transparents.
-  mask-image:
-    radial-gradient(circle calc(var(--notch) / 2) at calc(100% - var(--stub-width)) 0, #0000 98%, #000),
-    radial-gradient(circle calc(var(--notch) / 2) at calc(100% - var(--stub-width)) 100%, #0000 98%, #000);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
 }
 
 // --- Photo ----------------------------------------------------------------
@@ -598,15 +597,6 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   transform-origin: left center;
   transition: transform .5s cubic-bezier(.2, .9, .3, 1.2), filter .3s;
 
-  // Les deux encoches sont aussi découpées dans la souche.
-  mask-image:
-    radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
-    radial-gradient(circle calc(var(--notch) / 2) at 0 100%, #0000 98%, #000),
-    radial-gradient(circle 4.6px at 0 50%, #0000 96%, #000);
-  mask-size: 100% 100%, 100% 100%, 100% 15px;
-  mask-repeat: no-repeat, no-repeat, repeat-y;
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
 
   > * {
     position: relative;
@@ -837,14 +827,13 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
     linear-gradient(
       115deg,
       transparent 28%,
-      rgb(255 255 255 / 0.55) 44%,
+      rgb(255 255 255 / 0.3) 44%,
       rgb(255 255 255 / 0) 52%,
-      rgb(0 0 0 / 0.38) 60%,
+      rgb(0 0 0 / 0.22) 60%,
       transparent 74%
     );
   background-size: 260% 100%;
   background-position: var(--mx, 50%) 0;
-  mix-blend-mode: overlay;
   mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), #000 0%, #000 22%, transparent 70%);
 }
 
@@ -864,10 +853,9 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   pointer-events: none;
   opacity: 0;
   transition: opacity .35s ease;
-  background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 0.4) 48%, transparent 62%);
+  background: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 0.2) 48%, transparent 62%);
   background-size: 280% 100%;
   background-position: var(--mx, 50%) 0;
-  mix-blend-mode: soft-light;
 }
 
 .card:hover .foil {
@@ -892,11 +880,10 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   &::before {
     content: '';
     position: absolute;
-    inset: -20%;
+    inset: 0;
     background-image: $grain-dark;
-    background-size: 240px 240px;
-    mix-blend-mode: multiply;
-    opacity: .06;
+    background-size: 128px 128px;
+    opacity: .045;
   }
 }
 
@@ -904,8 +891,8 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   z-index: 0;
 
   &::before {
-    mix-blend-mode: overlay;
-    opacity: .25;
+    background-image: $grain-light;
+    opacity: .06;
   }
 }
 
@@ -937,9 +924,6 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 
   .shell {
     flex-direction: column;
-    mask-image:
-      radial-gradient(circle calc(var(--notch) / 2) at 0 calc(100% - var(--stub-height)), #0000 98%, #000),
-      radial-gradient(circle calc(var(--notch) / 2) at 100% calc(100% - var(--stub-height)), #0000 98%, #000);
   }
 
   .media {
@@ -1000,12 +984,6 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
     border-radius: 0 0 var(--radius) var(--radius);
     transform-origin: center top;
 
-    mask-image:
-      radial-gradient(circle calc(var(--notch) / 2) at 0 0, #0000 98%, #000),
-      radial-gradient(circle calc(var(--notch) / 2) at 100% 0, #0000 98%, #000),
-      radial-gradient(circle 4.6px at 50% 0, #0000 96%, #000);
-    mask-size: 100% 100%, 100% 100%, 15px 100%;
-    mask-repeat: no-repeat, no-repeat, repeat-x;
   }
 
   .card:has(.stub-hit:hover) .stub.interactive,
