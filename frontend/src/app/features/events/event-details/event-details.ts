@@ -12,7 +12,7 @@ import { CalendarEvent } from '../../../shared/event-calendar/event-calendar.mod
 import { EventCalendar } from '../../../shared/event-calendar/event-calendar';
 import { InscriptionDialog } from './inscription-dialog/inscription-dialog';
 import { AuthService } from '../../../core/auth/auth.service';
-import { URL_BACKEND, URL_IMAGES } from '../../../core/api/api.config';
+import { URL_IMAGES } from '../../../core/api/api.config';
 
 const CATEGORY_LABELS: Record<string, string> = {
   CULTURE: 'Culture',
@@ -94,8 +94,33 @@ export class EventDetails implements OnInit {
   protected readonly commentBusy = signal(false);
   protected readonly commentError = signal<string | null>(null);
 
-  protected pdfUrl(eventId: number): string {
-    return `${URL_BACKEND}/PDF/event/${eventId}`;
+  protected readonly pdfBusy = signal(false);
+
+  // Fetched through HttpClient (not a plain link) so the auth header is sent and the PDF only shows
+  // the price that applies to the logged-in user, then shown in the browser's PDF viewer in a new tab.
+  protected openPdf(event: EventDetailsModel): void {
+    if (this.pdfBusy()) {
+      return;
+    }
+    // The tab must be opened synchronously in the click handler, otherwise popup blockers refuse it.
+    const tab = window.open('', '_blank');
+    this.pdfBusy.set(true);
+    this.eventDetailsService.getEventPdf(event.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        if (tab) {
+          tab.location.href = url;
+        } else {
+          window.location.href = url;
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        this.pdfBusy.set(false);
+      },
+      error: () => {
+        tab?.close();
+        this.pdfBusy.set(false);
+      },
+    });
   }
 
   protected readonly canEdit = computed(() => {
