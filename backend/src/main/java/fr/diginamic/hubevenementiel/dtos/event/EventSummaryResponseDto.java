@@ -8,6 +8,7 @@ public class EventSummaryResponseDto {
     private String title;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
+    private String clubName;
 
     public EventSummaryResponseDto() {
     }
@@ -25,6 +26,14 @@ public class EventSummaryResponseDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getClubName() {
+        return clubName;
+    }
+
+    public void setClubName(String clubName) {
+        this.clubName = clubName;
     }
 
     public String getTitle() {
