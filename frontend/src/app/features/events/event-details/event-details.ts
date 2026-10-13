@@ -79,7 +79,7 @@ export class EventDetails implements OnInit {
       .map((i) => toCalendarEvent(i, { id: String(i.event.id), muted: true, confirmedBadge: true }));
     return [
       ...others,
-      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate },
+      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate, club: event.clubName },
     ];
   });
 
