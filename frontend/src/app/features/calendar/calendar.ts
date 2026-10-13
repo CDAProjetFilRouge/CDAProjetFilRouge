@@ -39,6 +39,7 @@ export class Calendar {
         end: i.event.endDateTime,
         muted: i.status === 'WAITING_LIST',
         badge: i.status === 'WAITING_LIST' ? "Liste d'attente" : undefined,
+        club: i.event.clubName,
       })),
   );
 
