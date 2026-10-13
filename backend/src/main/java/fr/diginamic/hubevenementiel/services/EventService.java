@@ -260,8 +260,8 @@ public class EventService {
     }
 
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
-            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, Sort.Direction direction,
-            AppUserPrincipal principal) throws HttpException {
+            LocalDateTime startDate, LocalDateTime endDate, List<EventStatus> status, boolean hideFinished,
+            Sort.Direction direction, AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
             throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
@@ -279,7 +279,8 @@ public class EventService {
                 EventSpecifications.hasCity(city),
                 EventSpecifications.startsOnOrAfter(startDate),
                 EventSpecifications.endsOnOrBefore(endDate),
-                EventSpecifications.hasStatus(status))) {
+                EventSpecifications.hasAnyStatus(status),
+                hideFinished ? EventSpecifications.notFinishedAt(LocalDateTime.now()) : null)) {
             if (filter != null) {
                 spec = spec.and(filter);
             }

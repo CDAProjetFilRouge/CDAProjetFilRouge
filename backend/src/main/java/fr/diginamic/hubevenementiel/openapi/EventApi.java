@@ -64,7 +64,8 @@ public interface EventApi {
             @Parameter(description = "Nom de la ville sur laquelle effectuer la recherche") String city,
             @Parameter(description = "Jour à partir duquel les évènements commencent (format AAAA-MM-JJ)") LocalDate startDate,
             @Parameter(description = "Jour jusqu'auquel les évènements se terminent, inclus (format AAAA-MM-JJ)") LocalDate endDate,
-            @Parameter(description = "Status de l'évènement sur lequel effectuer une recherche") EventStatus status,
+            @Parameter(description = "Un ou plusieurs statuts (séparés par des virgules, ex. PUBLISHED,CANCELLED) sur lesquels effectuer une recherche") List<EventStatus> status,
+            @Parameter(description = "true pour masquer les évènements dont la date de fin est passée (false par défaut)") boolean hideFinished,
             @Parameter(description = "Sens du tri sur la date de début, appliqué à l'ensemble des résultats (ASC ou DESC, ASC par défaut)") Sort.Direction sort
             ) throws HttpException;
 
