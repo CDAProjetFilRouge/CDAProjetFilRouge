@@ -389,7 +389,7 @@ class EventControllerIntegrationTest {
     }
 
     @Test
-    void filterEvents_showsOrganizerClubsInsteadOfOrganizerName() throws Exception {
+    void filterEvents_showsTheClubOfTheEventInsteadOfOrganizerName() throws Exception {
         String clubName = "Club-" + System.nanoTime();
         fr.diginamic.hubevenementiel.entities.Club club = new fr.diginamic.hubevenementiel.entities.Club();
         club.setName(clubName);
@@ -409,7 +409,7 @@ class EventControllerIntegrationTest {
                         .param("city", city).param("status", "PUBLISHED")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].organizerClubs", org.hamcrest.Matchers.hasItem(clubName)))
+                .andExpect(jsonPath("$.content[0].clubName").value(eventClub.getName()))
                 .andExpect(jsonPath("$.content[0].organizerFirstName").doesNotExist())
                 .andExpect(jsonPath("$.content[0].organizerLastName").doesNotExist());
     }
