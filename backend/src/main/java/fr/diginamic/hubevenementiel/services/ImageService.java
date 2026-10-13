@@ -3,9 +3,11 @@ package fr.diginamic.hubevenementiel.services;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ImageRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -97,8 +99,9 @@ public class ImageService {
      * @throws HttpException
      */
     @Transactional
-    public Image upload(Long eventId, MultipartFile file) throws HttpException {
+    public Image upload(Long eventId, MultipartFile file, AppUserPrincipal principal) throws HttpException {
         Event event = eventService.findById(eventId);
+        checkOwnership(event, principal);
 
         imageChecker(eventId, file);
 
@@ -138,12 +141,20 @@ public class ImageService {
 
     /**
      *
+     * @param eventId id of the event the image belongs to (taken from the URL)
      * @param id id of the image to delete
+     * @param principal the authenticated caller, must own the event or be an administrator
      * @throws HttpException
      */
     @Transactional
-    public void delete(Long id) throws HttpException {
+    public void delete(Long eventId, Long id, AppUserPrincipal principal) throws HttpException {
+        Event event = eventService.findById(eventId);
+        checkOwnership(event, principal);
+
         Image image = getImageById(id);
+        if (image.getEvent() == null || !eventId.equals(image.getEvent().getId())) {
+            throw new NotFoundException("No image found with id " + id + " for event " + eventId);
+        }
 
         String storedName = image.getPath().replace("/uploads/", "");
         try {
@@ -158,6 +169,16 @@ public class ImageService {
         }
 
         imageRepo.delete(image);
+    }
+
+    // Seul le propriétaire de l'évènement ou un administrateur peut y ajouter ou en retirer des images.
+    private void checkOwnership(Event event, AppUserPrincipal principal) throws HttpException {
+        boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = principal != null && event.getOrganizer() != null
+                && event.getOrganizer().getId().equals(principal.id());
+        if (!isAdmin && !isOwner) {
+            throw new ForbiddenException("Seul l'organisateur de cet évènement peut gérer ses images.");
+        }
     }
 
     private RemoteImageStorage remoteStorage() {

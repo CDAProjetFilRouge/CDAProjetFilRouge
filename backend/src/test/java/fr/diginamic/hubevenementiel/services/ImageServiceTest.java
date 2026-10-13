@@ -1,10 +1,14 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ImageRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +41,8 @@ class ImageServiceTest {
     private ImageService imageService;
 
     private Event event;
+
+    private static final AppUserPrincipal ADMIN = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
 
     @BeforeEach
     void setUp(@TempDir Path tempDir) {
@@ -113,7 +121,7 @@ class ImageServiceTest {
         when(imageRepo.countByEventId(2L)).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Image result = imageService.upload(2L, validImage());
+        Image result = imageService.upload(2L, validImage(), ADMIN);
 
         assertThat(result.getDisplayOrder()).isZero();
         assertThat(result.getEvent()).isEqualTo(event);
@@ -126,7 +134,7 @@ class ImageServiceTest {
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
         MockMultipartFile noExtension = new MockMultipartFile("file", "photo", "image/jpeg", new byte[]{1, 2, 3});
 
-        assertDoesNotThrow(() -> imageService.upload(2L, noExtension));
+        assertDoesNotThrow(() -> imageService.upload(2L, noExtension, ADMIN));
     }
 
     // ---------------------------------------------------------------
@@ -137,9 +145,65 @@ class ImageServiceTest {
     void delete_fileAlreadyMissingOnDisk_doesNotThrow() throws HttpException {
         Image image = new Image();
         image.setId(1L);
+        image.setEvent(event);
         image.setPath("/uploads/inexistant.jpg");
+        when(eventService.findById(2L)).thenReturn(event);
         when(imageRepo.findById(1L)).thenReturn(java.util.Optional.of(image));
 
-        assertDoesNotThrow(() -> imageService.delete(1L));
+        assertDoesNotThrow(() -> imageService.delete(2L, 1L, ADMIN));
+    }
+
+    @Test
+    void delete_imageOfAnotherEvent_throwsNotFoundAndDeletesNothing() throws HttpException {
+        Event other = new Event();
+        other.setId(3L);
+        Image image = new Image();
+        image.setId(1L);
+        image.setEvent(other);
+        image.setPath("/uploads/autre.jpg");
+        when(eventService.findById(2L)).thenReturn(event);
+        when(imageRepo.findById(1L)).thenReturn(java.util.Optional.of(image));
+
+        assertThrows(NotFoundException.class, () -> imageService.delete(2L, 1L, ADMIN));
+        verify(imageRepo, never()).delete(any(Image.class));
+    }
+
+    // ---------------------------------------------------------------
+    // propriété de l'évènement
+    // ---------------------------------------------------------------
+
+    private void ownedBy(long organizerId) throws HttpException {
+        AppUser owner = new AppUser();
+        owner.setId(organizerId);
+        event.setOrganizer(owner);
+        when(eventService.findById(2L)).thenReturn(event);
+    }
+
+    @Test
+    void upload_foreignOrganizer_throwsForbiddenAndStoresNothing() throws HttpException {
+        ownedBy(8L);
+
+        assertThrows(ForbiddenException.class,
+                () -> imageService.upload(2L, validImage(), new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+        verify(imageRepo, never()).save(any(Image.class));
+    }
+
+    @Test
+    void delete_foreignOrganizer_throwsForbiddenAndDeletesNothing() throws HttpException {
+        ownedBy(8L);
+
+        assertThrows(ForbiddenException.class,
+                () -> imageService.delete(2L, 1L, new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+        verify(imageRepo, never()).delete(any(Image.class));
+    }
+
+    @Test
+    void upload_owner_isAllowed() throws HttpException {
+        ownedBy(8L);
+        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertDoesNotThrow(
+                () -> imageService.upload(2L, validImage(), new AppUserPrincipal(8L, "o@example.com", "ORGANIZER")));
     }
 }

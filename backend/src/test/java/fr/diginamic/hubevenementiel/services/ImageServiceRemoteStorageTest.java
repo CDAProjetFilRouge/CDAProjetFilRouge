@@ -5,6 +5,7 @@ import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.repositories.ImageRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,8 @@ class ImageServiceRemoteStorageTest {
 
     private record Received(String method, String path, String key, String contentType, byte[] body) {
     }
+
+    private static final AppUserPrincipal ADMIN = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
 
     @Mock
     private ImageRepo imageRepo;
@@ -88,7 +91,7 @@ class ImageServiceRemoteStorageTest {
         stubUpload();
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3});
 
-        Image saved = imageService.upload(2L, file);
+        Image saved = imageService.upload(2L, file, ADMIN);
 
         assertThat(received).hasSize(1);
         Received request = received.get(0);
@@ -108,19 +111,23 @@ class ImageServiceRemoteStorageTest {
         responseStatus = 403;
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1});
 
-        HttpException error = assertThrows(HttpException.class, () -> imageService.upload(2L, file));
+        HttpException error = assertThrows(HttpException.class, () -> imageService.upload(2L, file, ADMIN));
 
         assertThat(error.getStatus().value()).isEqualTo(502);
     }
 
     @Test
     void delete_withRemoteStorage_sendsDeleteAndToleratesMissingFile() throws Exception {
+        Event event = new Event();
+        event.setId(2L);
         Image image = new Image();
+        image.setEvent(event);
         image.setPath("/uploads/3f2b8c1e-9d4a-4e7b-8f10-2a6c5d9e1b34.jpg");
+        when(eventService.findById(2L)).thenReturn(event);
         when(imageRepo.findById(1L)).thenReturn(Optional.of(image));
         responseStatus = 404;
 
-        imageService.delete(1L);
+        imageService.delete(2L, 1L, ADMIN);
 
         assertThat(received).hasSize(1);
         assertThat(received.get(0).method()).isEqualTo("DELETE");
@@ -133,7 +140,7 @@ class ImageServiceRemoteStorageTest {
         ReflectionTestUtils.setField(imageService, "storageKey", "");
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3});
 
-        imageService.upload(2L, file);
+        imageService.upload(2L, file, ADMIN);
 
         assertThat(received).isEmpty();
         try (Stream<Path> files = Files.list(uploadDir)) {
