@@ -192,7 +192,7 @@ $grain-light: url('/grain-light.png');
 
 .media {
   position: relative;
-  flex: 0 0 clamp(170px, 27%, 260px);
+  flex: 0 0 clamp(190px, 29%, 300px);
   overflow: hidden;
   background: var(--color-placeholder);
   border-radius: calc(var(--radius) - 1px) 0 0 calc(var(--radius) - 1px);
@@ -1467,7 +1467,7 @@ $grain-light: url('/grain-light.png');
   position: absolute;
   z-index: 3;
   // Centré aux deux tiers de la zone des détails (entre la photo et la souche) ; le fond transparent laisse lire dessous.
-  left: calc(clamp(170px, 27%, 260px) + (100% - var(--stub-width) - clamp(170px, 27%, 260px)) * 2 / 3);
+  left: calc(clamp(190px, 29%, 300px) + (100% - var(--stub-width) - clamp(190px, 29%, 300px)) * 2 / 3);
   top: 45%;
   padding: 3px 14px;
   font-size: 36px;
