@@ -105,6 +105,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/calendar/calendar').then((m) => m.Calendar),
   },
   {
+    path: 'my-events',
+    canActivate: [authGuard, organizerGuard],
+    loadComponent: () =>
+      import('./features/events/my-events/my-events').then((m) => m.MyEvents),
+  },
+  {
     path: 'events/new',
     canActivate: [authGuard, organizerGuard],
     loadComponent: () =>
