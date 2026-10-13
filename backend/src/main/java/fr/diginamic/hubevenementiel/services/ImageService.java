@@ -84,11 +84,23 @@ public class ImageService {
             throw new BadRequestException("L'image ne peut pas dépasser 5 Mo.");
         }
 
+        detectFormat(file);
+
         if (imageRepo.countByEventId(eventId) >= MAX_IMAGES_PER_EVENT) {
             throw new BadRequestException("Un évènement ne peut pas avoir plus de 10 images.");
         }
 
         return true;
+    }
+
+    // Le format est reconnu à son contenu : le type annoncé par le client et le nom du fichier ne comptent pas.
+    private ImageFormat detectFormat(MultipartFile file) throws HttpException {
+        try {
+            return ImageFormat.detect(file.getBytes()).orElseThrow(
+                    () -> new BadRequestException("Format d'image non accepté : JPEG, PNG ou WebP uniquement."));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Impossible de lire le fichier.", e);
+        }
     }
 
     /**
@@ -106,16 +118,13 @@ public class ImageService {
         imageChecker(eventId, file);
 
         String originalName = file.getOriginalFilename();
-        String extension = "";
-        if (originalName != null && originalName.contains(".")) {
-            extension = originalName.substring(originalName.lastIndexOf('.'));
-        }
-        String storedName = UUID.randomUUID() + extension;
+        ImageFormat format = detectFormat(file);
+        String storedName = UUID.randomUUID() + format.extension();
 
         try {
             RemoteImageStorage remote = remoteStorage();
             if (remote != null) {
-                remote.put(storedName, file.getBytes(), file.getContentType());
+                remote.put(storedName, file.getBytes(), format.mimeType());
             } else {
                 Path targetDir = Path.of(uploadDir);
                 Files.createDirectories(targetDir);
@@ -130,7 +139,7 @@ public class ImageService {
         Image image = new Image();
         image.setFileName(originalName);
         image.setPath("/uploads/" + storedName);
-        image.setMimeType(file.getContentType());
+        image.setMimeType(format.mimeType());
         image.setSizeByte(file.getSize());
         image.setUploadDate(LocalDateTime.now());
         image.setDisplayOrder((int) displayOrder);

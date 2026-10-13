@@ -89,7 +89,7 @@ class ImageServiceRemoteStorageTest {
     @Test
     void upload_withRemoteStorage_sendsTheFileAndKeepsNothingLocally() throws Exception {
         stubUpload();
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01});
 
         Image saved = imageService.upload(2L, file, ADMIN);
 
@@ -99,7 +99,7 @@ class ImageServiceRemoteStorageTest {
         assertThat(request.path()).isEqualTo("/internal/uploads/" + saved.getPath().replace("/uploads/", ""));
         assertThat(request.key()).isEqualTo("secret-key");
         assertThat(request.contentType()).isEqualTo("image/jpeg");
-        assertThat(request.body()).containsExactly(1, 2, 3);
+        assertThat(request.body()).containsExactly((byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0x01);
         try (Stream<Path> files = Files.list(uploadDir)) {
             assertThat(files).isEmpty();
         }
@@ -109,7 +109,7 @@ class ImageServiceRemoteStorageTest {
     void upload_whenRemoteRefuses_failsAndSavesNothing() throws Exception {
         stubUpload();
         responseStatus = 403;
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1});
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01});
 
         HttpException error = assertThrows(HttpException.class, () -> imageService.upload(2L, file, ADMIN));
 
@@ -138,7 +138,7 @@ class ImageServiceRemoteStorageTest {
     void upload_withoutKey_staysLocal() throws Exception {
         stubUpload();
         ReflectionTestUtils.setField(imageService, "storageKey", "");
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01});
 
         imageService.upload(2L, file, ADMIN);
 

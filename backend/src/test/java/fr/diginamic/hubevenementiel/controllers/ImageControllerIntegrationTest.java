@@ -15,6 +15,7 @@ import fr.diginamic.hubevenementiel.repositories.ImageRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -24,14 +25,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -51,6 +56,9 @@ class ImageControllerIntegrationTest {
     private ImageRepo imageRepo;
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Value("${app.upload-dir}")
+    private String uploadDir;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String PASSWORD = "motdepasse123456";
@@ -118,7 +126,7 @@ class ImageControllerIntegrationTest {
         long before = imageRepo.countByEventId(event.getId());
 
         mockMvc.perform(multipart("/events/" + event.getId() + "/images")
-                        .file(new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3}))
+                        .file(new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01}))
                         .header("Authorization", "Bearer " + loginAndGetToken(stranger.getEmail())))
                 .andExpect(status().isForbidden());
 
@@ -152,5 +160,40 @@ class ImageControllerIntegrationTest {
                 .andExpect(status().isNotFound());
 
         assertThat(imageRepo.findById(theirImage.getId())).isPresent();
+    }
+
+    // Reproduction HTTP du constat : un SVG contenant du script, annoncé comme image, est refusé.
+    @Test
+    void upload_svgWithScript_returns400AndStoresNothing() throws Exception {
+        AppUser owner = createUser("owner", Role.ORGANIZER);
+        Event event = createEvent(owner);
+        byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(document.domain)</script></svg>".getBytes();
+
+        mockMvc.perform(multipart("/events/" + event.getId() + "/images")
+                        .file(new MockMultipartFile("file", "logo.svg", "image/svg+xml", svg))
+                        .header("Authorization", "Bearer " + loginAndGetToken(owner.getEmail())))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(multipart("/events/" + event.getId() + "/images")
+                        .file(new MockMultipartFile("file", "logo.png", "image/png", svg))
+                        .header("Authorization", "Bearer " + loginAndGetToken(owner.getEmail())))
+                .andExpect(status().isBadRequest());
+
+        assertThat(imageRepo.countByEventId(event.getId())).isZero();
+    }
+
+    // Les fichiers publics sont servis avec X-Content-Type-Options: nosniff.
+    @Test
+    void uploadedFiles_areServedWithNosniff() throws Exception {
+        Path dir = Path.of(uploadDir);
+        Files.createDirectories(dir);
+        Path file = dir.resolve("00000000-0000-0000-0000-00000000aaaa.jpg");
+        Files.write(file, new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01});
+        try {
+            mockMvc.perform(get("/uploads/" + file.getFileName()))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+        } finally {
+            Files.deleteIfExists(file);
+        }
     }
 }
