@@ -120,7 +120,7 @@
         <div class="row">
           <div class="field">
             <label for="startDateTime">Date et heure de début</label>
-            <input id="startDateTime" type="datetime-local" formControlName="startDateTime" />
+            <app-date-picker inputId="startDateTime" mode="datetime" formControlName="startDateTime" />
             @if (showError('startDateTime')) {
               <p class="field-error">{{ form.controls.startDateTime.hasError("startInPast") ? "La date de début doit être dans le futur." : form.controls.startDateTime.hasError("yearRange") ? "L'année doit être comprise entre 1900 et 2100." : "La date de début est obligatoire." }}</p>
             }
@@ -128,7 +128,7 @@
 
           <div class="field">
             <label for="endDateTime">Date et heure de fin</label>
-            <input id="endDateTime" type="datetime-local" formControlName="endDateTime" />
+            <app-date-picker inputId="endDateTime" mode="datetime" formControlName="endDateTime" />
             @if (showError('endDateTime')) {
               <p class="field-error">{{ form.controls.endDateTime.hasError("yearRange") ? "L'année doit être comprise entre 1900 et 2100." : "La date de fin est obligatoire." }}</p>
             }

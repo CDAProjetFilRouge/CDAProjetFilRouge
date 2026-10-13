@@ -5,9 +5,11 @@ import { Component, effect, ElementRef, inject, signal, viewChild } from '@angul
 import { ACCOUNT_STATUS_LABELS, AccountStatus, AppUser, Role, ROLE_LABELS } from '../../../../core/models/user.models';
 import { UserService } from '../user.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { DatePicker } from '../../../../shared/date-picker/date-picker';
 
 @Component({
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, ReactiveFormsModule, DatePicker],
   selector: 'app-user-list',
   styleUrl: './user-list.scss',
   templateUrl: './user-list.html',
@@ -18,6 +20,8 @@ export class UserList {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly users = signal<AppUser[]>([]);
+  // Date de fin de suspension (vide = suspension définitive)
+  protected readonly suspensionEnd = new FormControl('', { nonNullable: true });
 
   protected readonly totalElements = signal(0);
   protected readonly totalPages = signal(0);
@@ -153,6 +157,7 @@ export class UserList {
   }
 
   protected startSuspension(user: AppUser): void {
+    this.suspensionEnd.reset();
     this.suspendingUser.set(user);
   }
 
@@ -165,8 +170,8 @@ export class UserList {
     this.suspendingUser.set(null);
   }
 
-  protected confirmSuspension(id: number, suspensionEndDate: string): void {
-    this.appUserService.suspendUser(id, suspensionEndDate || undefined).subscribe({
+  protected confirmSuspension(id: number): void {
+    this.appUserService.suspendUser(id, this.suspensionEnd.value || undefined).subscribe({
       next: (updated) => {
         this.users.update((list) => list.map((u) => (u.id === id ? updated : u)));
         this.suspendingUser.set(null);
