@@ -13,7 +13,7 @@
       }
 
       @if (user()?.role === 'ORGANIZER') {
-        <button class="page-select" routerLink="/events/new" routerLinkActive="active">Créer un évènement</button>
+        <button class="page-select" routerLink="/my-events" routerLinkActive="active">Mes évènements</button>
       }
       @if (user()?.role === 'ADMINISTRATOR') {
         <button class="page-select" routerLink="/admin" routerLinkActive="active">Gestion</button>

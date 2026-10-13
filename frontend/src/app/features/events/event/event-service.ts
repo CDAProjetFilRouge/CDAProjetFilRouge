@@ -28,6 +28,16 @@ export class EventService {
     return this.http.get<PageResponse<EventModel>>(`${URL_BACKEND}/events`, { params });
   }
 
+  getMine(page: number = 0, size: number = 20, status: string = ''): Observable<PageResponse<EventModel>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+
+    if (status) {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<PageResponse<EventModel>>(`${URL_BACKEND}/events/mine`, { params });
+  }
+
   search(page: number = 0, size: number = 20, filters?: EventFilter): Observable<PageResponse<EventModel>>{
     let params = new HttpParams()
           .set("page", page)

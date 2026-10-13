@@ -1,0 +1,74 @@
+<div class="my-events">
+  <header class="head">
+    <div>
+      <h1>Mes évènements</h1>
+      <p class="subtitle">Les évènements que vous organisez, brouillons compris.</p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p role="alert">{{ errorMessage() }}</p>
+  }
+
+  <div class="toolbar">
+    <button type="button" class="tab" [class.active]="statusFilter() === ''" (click)="onStatusFilter('')">Tous</button>
+    @for (status of statuses; track status) {
+      <button type="button" class="tab" [class.active]="statusFilter() === status" (click)="onStatusFilter(status)">
+        {{ statusLabels[status] }}
+      </button>
+    }
+    <a class="primary" routerLink="/events/new">Créer un évènement</a>
+  </div>
+
+  <p class="count" aria-live="polite">
+    {{ totalElements() }} {{ totalElements() > 1 ? 'évènements' : 'évènement' }}
+  </p>
+
+  <div class="table-wrap" [attr.aria-busy]="loading()">
+    <table>
+      <thead>
+        <tr>
+          <th>Titre</th>
+          <th>Statut</th>
+          <th>Début</th>
+          <th>Places restantes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (event of events(); track event.id) {
+          <tr>
+            <td class="title" data-label="Titre">{{ event.title }}</td>
+            <td data-label="Statut">
+              <span class="status" [attr.data-status]="event.status">
+                {{ statusLabels[event.status] ?? event.status }}
+              </span>
+            </td>
+            <td data-label="Début">{{ event.startDateTime | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td data-label="Places restantes">{{ event.remainingSpots }} / {{ event.maxCapacity }}</td>
+            <td class="actions">
+              <a class="action" [routerLink]="['/events', event.id, 'edit']">Modifier</a>
+              <a class="action" [routerLink]="['/event-details', event.id]">Voir</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty">
+              @if (loading()) {
+                Chargement…
+              } @else {
+                Aucun évènement pour le moment.
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="pagination" aria-label="Pagination">
+    <button type="button" (click)="goToPage(page() - 1)" [disabled]="page() === 0" aria-label="Page précédente">‹</button>
+    <span>Page {{ page() + 1 }} / {{ totalPages() || 1 }}</span>
+    <button type="button" (click)="goToPage(page() + 1)" [disabled]="page() + 1 >= totalPages()" aria-label="Page suivante">›</button>
+  </nav>
+</div>
