@@ -20,7 +20,7 @@ public interface InscriptionApi {
     @Operation(summary = "S'inscrire à un évènement",
             description = "Inscrit l'utilisateur à l'évènement s'il reste des places, sinon le place en liste d'attente.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Inscription créée (confirmée ou en liste d'attente)"),
+            @ApiResponse(responseCode = "201", description = "Inscription créée (confirmée ou en liste d'attente, avec son rang `waitingListPosition` dans ce cas)"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "403", description = "On ne peut inscrire que soi-même"),
             @ApiResponse(responseCode = "404", description = "Utilisateur ou évènement introuvable"),

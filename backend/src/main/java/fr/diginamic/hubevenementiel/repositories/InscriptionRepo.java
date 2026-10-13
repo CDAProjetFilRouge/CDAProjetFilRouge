@@ -103,6 +103,15 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
     List<Inscription> findByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
 
     /**
+     * Nombre d'inscriptions de même statut arrivées avant celle donnée (date, puis identifiant pour départager).
+     * Sert à calculer le rang dans la liste d'attente, dans l'ordre de promotion.
+     */
+    @Query("select count(i) from Inscription i where i.event.id = :eventId and i.status = :status "
+            + "and (i.inscriptionDate < :date or (i.inscriptionDate = :date and i.id < :id))")
+    long countAheadInQueue(@Param("eventId") Long eventId, @Param("status") InscriptionStatus status,
+            @Param("date") LocalDateTime date, @Param("id") Long id);
+
+    /**
      *
      * @param userId id of the user you want to find every inscription for
      * @return all the inscriptions of the user, whatever their status

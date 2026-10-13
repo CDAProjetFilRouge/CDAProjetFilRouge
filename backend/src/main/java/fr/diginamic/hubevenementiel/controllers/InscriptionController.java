@@ -42,7 +42,7 @@ public class InscriptionController implements InscriptionApi {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         inscriptionService.checkSelf(principal, userId);
         Inscription inscription = inscriptionService.register(userId, eventId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(inscriptionMapper.toDto(inscription));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toDto(inscription));
     }
 
     @Override
@@ -82,7 +82,13 @@ public class InscriptionController implements InscriptionApi {
             @RequestParam(defaultValue = "20") int size) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return inscriptionService.findByUser(principal, userId, page, size).stream()
-                .map(inscriptionMapper::toDto)
+                .map(this::toDto)
                 .toList();
+    }
+
+    private InscriptionResponseDto toDto(Inscription inscription) {
+        InscriptionResponseDto dto = inscriptionMapper.toDto(inscription);
+        dto.setWaitingListPosition(inscriptionService.waitingListPosition(inscription));
+        return dto;
     }
 }

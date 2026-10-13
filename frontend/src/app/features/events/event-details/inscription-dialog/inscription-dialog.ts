@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 export type InscriptionDialogState =
   | { kind: 'login' }
   | { kind: 'blocked'; reason: string }
-  | { kind: 'registered'; waiting: boolean }
+  | { kind: 'registered'; waiting: boolean; position?: number | null }
   | { kind: 'open'; waiting: boolean };
 
 @Component({

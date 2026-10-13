@@ -15,6 +15,9 @@
         <div>
           <span class="status" [class.waiting]="ins.status === 'WAITING_LIST'">
             {{ statusLabels[ins.status] }}
+            @if (ins.waitingListPosition) {
+              · n°{{ ins.waitingListPosition }}
+            }
           </span>
           <h2 id="detail-title">{{ ins.event.title }}</h2>
         </div>

@@ -240,6 +240,41 @@ class InscriptionServiceTest {
     // ---------------------------------------------------------------
 
     @Test
+    void waitingListPosition_confirmedInscription_isNull() {
+        Inscription confirmed = new Inscription();
+        confirmed.setStatus(InscriptionStatus.CONFIRMED);
+
+        assertThat(inscriptionService.waitingListPosition(confirmed)).isNull();
+        verify(inscriptionRepo, never()).countAheadInQueue(anyLong(), any(), any(), anyLong());
+    }
+
+    @Test
+    void waitingListPosition_isOnePlusTheNumberOfWaitingInscriptionsAhead() {
+        Inscription waiting = new Inscription();
+        waiting.setId(30L);
+        waiting.setEvent(publishedFutureEvent);
+        waiting.setStatus(InscriptionStatus.WAITING_LIST);
+        waiting.setInscriptionDate(LocalDateTime.now());
+        when(inscriptionRepo.countAheadInQueue(eq(2L), eq(InscriptionStatus.WAITING_LIST), any(), eq(30L)))
+                .thenReturn(2L);
+
+        assertThat(inscriptionService.waitingListPosition(waiting)).isEqualTo(3);
+    }
+
+    @Test
+    void waitingListPosition_firstInQueueIsOne() {
+        Inscription waiting = new Inscription();
+        waiting.setId(10L);
+        waiting.setEvent(publishedFutureEvent);
+        waiting.setStatus(InscriptionStatus.WAITING_LIST);
+        waiting.setInscriptionDate(LocalDateTime.now());
+        when(inscriptionRepo.countAheadInQueue(eq(2L), eq(InscriptionStatus.WAITING_LIST), any(), eq(10L)))
+                .thenReturn(0L);
+
+        assertThat(inscriptionService.waitingListPosition(waiting)).isEqualTo(1);
+    }
+
+    @Test
     void checkSelf_sameUser_passes() {
         assertDoesNotThrow(() -> inscriptionService.checkSelf(new AppUserPrincipal(6L, "a@example.com", "MEMBER"), 6L));
     }

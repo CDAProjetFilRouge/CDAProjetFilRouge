@@ -185,7 +185,7 @@ export class EventDetails implements OnInit {
   protected readonly registration = computed<
     | { kind: 'login' }
     | { kind: 'blocked'; reason: string }
-    | { kind: 'registered'; waiting: boolean }
+    | { kind: 'registered'; waiting: boolean; position: number | null }
     | { kind: 'open'; waiting: boolean }
     | null
   >(() => {
@@ -198,7 +198,11 @@ export class EventDetails implements OnInit {
     }
     const mine = this.myInscription();
     if (mine) {
-      return { kind: 'registered', waiting: mine.status === 'WAITING_LIST' };
+      return {
+        kind: 'registered',
+        waiting: mine.status === 'WAITING_LIST',
+        position: mine.waitingListPosition ?? null,
+      };
     }
     if (event.status === 'CANCELLED') {
       return { kind: 'blocked', reason: 'Cet évènement a été annulé.' };

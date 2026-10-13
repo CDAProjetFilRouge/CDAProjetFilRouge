@@ -203,6 +203,63 @@ class InscriptionControllerIntegrationTest {
     }
 
     @Test
+    void waitingListPosition_isReturnedAndAdvancesWhenSomeoneLeaves() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser first = createUser("first", Role.MEMBER);
+        AppUser second = createUser("second", Role.MEMBER);
+        AppUser third = createUser("third", Role.MEMBER);
+        Event event = createEvent(organizer, 1, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        String firstToken = loginAndGetToken(first.getEmail());
+        String secondToken = loginAndGetToken(second.getEmail());
+        String thirdToken = loginAndGetToken(third.getEmail());
+
+        String firstResponse = mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + firstToken)
+                        .param("userId", String.valueOf(first.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("CONFIRMED"))
+                .andExpect(jsonPath("$.waitingListPosition").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+        Number firstInscriptionId = (Number) objectMapper.readValue(firstResponse, Map.class).get("id");
+
+        mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + secondToken)
+                        .param("userId", String.valueOf(second.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("WAITING_LIST"))
+                .andExpect(jsonPath("$.waitingListPosition").value(1));
+
+        mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + thirdToken)
+                        .param("userId", String.valueOf(third.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.waitingListPosition").value(2));
+
+        mockMvc.perform(get("/inscriptions/user/" + third.getId())
+                        .header("Authorization", "Bearer " + thirdToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].waitingListPosition").value(2));
+
+        mockMvc.perform(delete("/inscriptions/" + firstInscriptionId.longValue())
+                        .header("Authorization", "Bearer " + firstToken))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/inscriptions/user/" + third.getId())
+                        .header("Authorization", "Bearer " + thirdToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].waitingListPosition").value(1));
+        mockMvc.perform(get("/inscriptions/user/" + second.getId())
+                        .header("Authorization", "Bearer " + secondToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("CONFIRMED"))
+                .andExpect(jsonPath("$[0].waitingListPosition").doesNotExist());
+    }
+
+    @Test
     void register_eventFull_returns201WaitingList() throws Exception {
         AppUser organizer = createUser("organizer", Role.ORGANIZER);
         AppUser firstMember = createUser("member1", Role.MEMBER);
