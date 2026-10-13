@@ -1,3 +1,23 @@
 @use "../../../../styles/admin";
 
 @include admin.page;
+
+// Une adresse longue passe à la ligne au lieu de déborder de la cellule.
+a.email {
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color .15s;
+
+  &:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    color: var(--color-primary-hover);
+    outline: 2px solid var(--color-primary-soft);
+    outline-offset: 2px;
+    border-radius: var(--radius-md);
+  }
+}
