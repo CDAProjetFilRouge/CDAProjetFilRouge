@@ -31,7 +31,7 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
-import fr.diginamic.hubevenementiel.services.AppUserService;
+import fr.diginamic.hubevenementiel.services.AccountDeletionService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Jwks;
 import jakarta.persistence.EntityManager;
@@ -54,7 +54,7 @@ class RefreshTokenIntegrationTest {
     @Autowired
     private EntityManager entityManager;
     @Autowired
-    private AppUserService appUserService;
+    private AccountDeletionService accountDeletionService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -240,7 +240,7 @@ class RefreshTokenIntegrationTest {
         login();
         assertThat(tokensOfUser()).hasSize(1);
 
-        appUserService.deleteAccount(user.getId(), false);
+        accountDeletionService.deleteAccount(user.getId(), false);
         syncWithDatabase();
 
         assertThat(userRepo.findById(user.getId())).isEmpty();

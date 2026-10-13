@@ -2,11 +2,9 @@ package fr.diginamic.hubevenementiel.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -18,10 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
-import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.entities.Token;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
-import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.enums.TokenType;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
@@ -29,14 +25,8 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
-import fr.diginamic.hubevenementiel.repositories.AnonymizationDemandRepo;
 import fr.diginamic.hubevenementiel.repositories.AppUserSpecifications;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
-import fr.diginamic.hubevenementiel.repositories.CommentRepo;
-import fr.diginamic.hubevenementiel.repositories.EventRepo;
-import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
-import fr.diginamic.hubevenementiel.repositories.LegalDocumentRepo;
-import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.TokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
@@ -46,38 +36,19 @@ import jakarta.transaction.Transactional;
 @Service
 public class AppUserService {
 
-    public static final String ACCOUNT_HAS_COMMENTS = "ACCOUNT_HAS_COMMENTS";
-
     private final UserRepo userRepo;
     private final TokenRepo tokenRepo;
-    private final RefreshTokenRepo refreshTokenRepo;
     private final ClubRepo clubRepo;
-    private final EventRepo eventRepo;
-    private final InscriptionRepo inscriptionRepo;
-    private final CommentRepo commentRepo;
-    private final LegalDocumentRepo legalDocumentRepo;
-    private final AnonymizationDemandRepo anonymizationDemandRepo;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    private final WaitingListService waitingListService;
 
-    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, RefreshTokenRepo refreshTokenRepo, ClubRepo clubRepo,
-            EventRepo eventRepo,
-            InscriptionRepo inscriptionRepo, CommentRepo commentRepo, LegalDocumentRepo legalDocumentRepo,
-            AnonymizationDemandRepo anonymizationDemandRepo, EmailService emailService,
-            PasswordEncoder passwordEncoder, WaitingListService waitingListService) {
+    public AppUserService(UserRepo userRepo, TokenRepo tokenRepo, ClubRepo clubRepo, EmailService emailService,
+            PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.tokenRepo = tokenRepo;
-        this.refreshTokenRepo = refreshTokenRepo;
         this.clubRepo = clubRepo;
-        this.eventRepo = eventRepo;
-        this.inscriptionRepo = inscriptionRepo;
-        this.commentRepo = commentRepo;
-        this.legalDocumentRepo = legalDocumentRepo;
-        this.anonymizationDemandRepo = anonymizationDemandRepo;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
-        this.waitingListService = waitingListService;
     }
 
     /**
@@ -220,91 +191,6 @@ public class AppUserService {
             }
         }
         return userRepo.findAll(spec, pageable);
-    }
-
-    @Transactional
-    public void suspend(Long id, LocalDateTime endDate, Long actingAdminId) throws HttpException {
-        if (id.equals(actingAdminId)) {
-            throw new BadRequestException("Vous ne pouvez pas suspendre votre propre compte.");
-        }
-
-        AppUser user = findById(id);
-
-        if (endDate != null && endDate.isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Impossible de définir une date de suspension dans le passé");
-        }
-
-        if (user.getStatus() != AccountStatus.ACTIVE) {
-            throw new BadRequestException("Impossible de suspendre un compte qui n'a pas le statut Actif");
-        }
-
-        user.setStatus(AccountStatus.SUSPENDED);
-        user.setSuspensionEndDate(endDate);
-
-        userRepo.save(user);
-    }
-
-    @Transactional
-    public void reactivate(Long id) throws HttpException {
-        AppUser user = findById(id);
-
-        if (user.getStatus() != AccountStatus.SUSPENDED) {
-            throw new BadRequestException("Le statut du compte que vous avez sélectionné n'est pas suspendu.");
-        }
-
-        user.setStatus(AccountStatus.ACTIVE);
-        user.setSuspensionEndDate(null);
-
-        userRepo.save(user);
-    }
-
-    /**
-     * Reactivates every suspended account whose suspension end date is reached (RG11).
-     *
-     * @return the number of accounts reactivated
-     */
-    @Transactional
-    public int reactivateExpiredSuspensions() {
-        List<AppUser> expired = userRepo.findByStatusAndSuspensionEndDateLessThanEqual(
-                AccountStatus.SUSPENDED, LocalDateTime.now());
-
-        for (AppUser user : expired) {
-            user.setStatus(AccountStatus.ACTIVE);
-            user.setSuspensionEndDate(null);
-        }
-
-        userRepo.saveAll(expired);
-        return expired.size();
-    }
-
-    /**
-     * Explains why a login was refused, but only to someone who knows the password,
-     * so that the state of an account is never revealed to a stranger.
-     *
-     * @param email       email used to log in
-     * @param rawPassword password typed by the user
-     * @return a message when the password is correct and the account cannot log in
-     *         (suspended, not activated), otherwise empty
-     */
-    public Optional<String> explainLoginRefusal(String email, String rawPassword) {
-        return userRepo.findByEmail(email)
-                .filter(user -> passwordEncoder.matches(rawPassword, user.getHashedPassword()))
-                .flatMap(user -> switch (user.getStatus()) {
-                    case SUSPENDED -> Optional.of(suspensionMessage(user));
-                    case INACTIVE, PENDING_ACTIVATION -> Optional.of(
-                            "Votre compte n'est pas encore activé. Cliquez sur le lien d'activation reçu par email.");
-                    default -> Optional.empty();
-                });
-    }
-
-    private String suspensionMessage(AppUser user) {
-        LocalDateTime endDate = user.getSuspensionEndDate();
-
-        if (endDate == null) {
-            return "Votre compte est suspendu.";
-        }
-
-        return "Votre compte est suspendu jusqu'au " + endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".";
     }
 
     /**
@@ -541,64 +427,6 @@ public class AppUserService {
         return savedUser;
     }
 
-    /**
-     *
-     * @param userId          id of the AppUser requesting the password change
-     * @param currentPassword current password, verified before issuing the change
-     *                        token
-     * @param newPassword     new password to apply once the change is confirmed
-     * @throws HttpException if the AppUser cannot be found or currentPassword
-     *                       doesn't match
-     */
-    @Transactional
-    public void requestPasswordChange(Long userId, String currentPassword, String newPassword) throws HttpException {
-        if (newPassword == null || newPassword.length() < 12) {
-            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
-        }
-
-        AppUser user = findById(userId);
-
-        if (!passwordEncoder.matches(currentPassword, user.getHashedPassword())) {
-            throw new BadRequestException("Mot de passe actuel incorrect.");
-        }
-
-        createPasswordChangeToken(user, newPassword);
-    }
-
-    /**
-     *
-     * @param email email of the AppUser requesting a password reset; silently
-     *              ignored if unknown
-     */
-    @Transactional
-    public void requestPasswordReset(String email) {
-        Optional<AppUser> userOptional = userRepo.findByEmail(email);
-
-        if (userOptional.isEmpty()) {
-            return;
-        }
-
-        createPasswordChangeToken(userOptional.get(), null);
-    }
-
-    private void createPasswordChangeToken(AppUser user, String newPassword) {
-        Token token = new Token();
-        token.setValue(UUID.randomUUID().toString());
-        token.setTokenType(TokenType.CHANGE_PWD);
-        token.setUser(user);
-        token.setCreationDateTime(LocalDateTime.now());
-        token.setExpirationDateTime(LocalDateTime.now().plusHours(1));
-        token.setPendingData(newPassword != null ? passwordEncoder.encode(newPassword) : "");
-        tokenRepo.save(token);
-
-        if (newPassword != null) {
-            emailService.sendPasswordChangeConfirmationEmail(user.getEmail(), token.getValue());
-        } else {
-            emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
-        }
-
-    }
-
     private void createAccountActivationToken(AppUser user, String temporaryPassword) {
         Token token = new Token();
         token.setValue(UUID.randomUUID().toString());
@@ -614,195 +442,5 @@ public class AppUserService {
 
     private String generateTemporaryPassword() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-    }
-
-    /**
-     *
-     * @param tokenValue  value of the pending CHANGE_PWD token
-     * @param newPassword new password to store as the token's pending data
-     * @throws HttpException if the token is invalid, of the wrong type, already
-     *                       used or expired
-     */
-    @Transactional
-    public void submitNewPasswordAfterReset(String tokenValue, String newPassword) throws HttpException {
-        if (newPassword == null || newPassword.length() < 12) {
-            throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
-        }
-
-        Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
-
-        AppUser user = token.getUser();
-        user.setHashedPassword(passwordEncoder.encode(newPassword));
-        userRepo.save(user);
-
-        token.setUseDate(LocalDateTime.now());
-        tokenRepo.save(token);
-    }
-
-    /**
-     *
-     * @param tokenValue value of the CHANGE_PWD token to confirm
-     * @throws HttpException if the token is invalid, of the wrong type, already
-     *                       used, expired, or has no pending password
-     */
-    @Transactional
-    public void confirmPasswordReset(String tokenValue) throws HttpException {
-        Token token = getValidToken(tokenValue, TokenType.CHANGE_PWD);
-
-        if (token.getPendingData() == null || token.getPendingData().isBlank()) {
-            throw new BadRequestException("Aucun mot de passe en attente pour ce token.");
-        }
-
-        AppUser user = token.getUser();
-        user.setHashedPassword(token.getPendingData());
-        userRepo.save(user);
-
-        token.setUseDate(LocalDateTime.now());
-        tokenRepo.save(token);
-    }
-
-    private Token getValidToken(String tokenVaue, TokenType expectedType) throws HttpException {
-        Token token = tokenRepo.findByValue(tokenVaue)
-                .orElseThrow(() -> new BadRequestException("Token invalide."));
-
-        if (token.getTokenType() != expectedType) {
-            throw new BadRequestException("Type de token incorrect.");
-        }
-
-        if (token.getUseDate() != null) {
-            throw new BadRequestException("Ce token a déjà été utilisé.");
-        }
-
-        if (token.getExpirationDateTime().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Ce token a expiré.");
-        }
-
-        return token;
-    }
-
-    /**
-     *
-     * @param tokenValue value of the ENABLE_ACCOUNT token to confirm
-     * @throws HttpException if the token is invalid, of the wrong type, already
-     *                       used or expired
-     */
-    @Transactional
-    public void confirmAccountVerification(String tokenValue) throws HttpException {
-        Token token = getValidToken(tokenValue, TokenType.ENABLE_ACCOUNT);
-
-        AppUser user = token.getUser();
-        user.setStatus(AccountStatus.ACTIVE);
-        userRepo.save(user);
-
-        token.setUseDate(LocalDateTime.now());
-        tokenRepo.save(token);
-    }
-
-    /**
-     *
-     * @param tokenValue        value of the ACCOUNT_ACTIVATION token to confirm
-     * @param temporaryPassword temporary password sent to the AppUser, verified
-     *                          before activation
-     * @param newPassword       new password to set once the account is activated
-     * @throws HttpException if the token is invalid, of the wrong type, already
-     *                       used, expired, or temporaryPassword doesn't match
-     */
-    @Transactional
-    public void activateAccount(String tokenValue, String temporaryPassword, String newPassword) throws HttpException {
-        Token token = getValidToken(tokenValue, TokenType.ACCOUNT_ACTIVATION);
-
-        AppUser user = token.getUser();
-
-        if (!passwordEncoder.matches(temporaryPassword, user.getHashedPassword())) {
-            throw new BadRequestException("Mot de passe temporaire incorrect.");
-        }
-
-        user.setHashedPassword(passwordEncoder.encode(newPassword));
-        user.setStatus(AccountStatus.ACTIVE);
-        userRepo.save(user);
-
-        token.setUseDate(LocalDateTime.now());
-        tokenRepo.save(token);
-    }
-
-    /**
-     * Deletes an account that has no meaningful activity. Its tokens, inscriptions
-     * (spots are given back to the waiting list) and own anonymization demands are
-     * removed with it. Accounts that organize events, own a club, authored a legal
-     * document or handled anonymization demands are refused: anonymization is the
-     * way to go for them. Posted comments also refuse the deletion, unless
-     * deleteComments is true, in which case they are deleted with the account.
-     *
-     * @param id             id of the AppUser to delete
-     * @param deleteComments true to delete the comments of the account along with
-     *                       it
-     * @throws HttpException NotFoundException if the user does not exist,
-     *                       ConflictException if the account has activity that
-     *                       prevents its deletion (code ACCOUNT_HAS_COMMENTS when
-     *                       the comments are the only obstacle)
-     */
-    @Transactional
-    public void deleteAccount(Long id, boolean deleteComments) throws HttpException {
-        AppUser user = findById(id);
-
-        List<String> blockers = new ArrayList<>();
-        if (eventRepo.existsByOrganizerId(id)) {
-            blockers.add("organise des évènements");
-        }
-        if (clubRepo.existsByOwnerId(id)) {
-            blockers.add("est propriétaire d'un club");
-        }
-        if (legalDocumentRepo.existsByUserId(id)) {
-            blockers.add("a publié des documents légaux");
-        }
-        if (anonymizationDemandRepo.existsByAdminId(id)) {
-            blockers.add("a traité des demandes d'anonymisation");
-        }
-
-        boolean hasComments = commentRepo.existsByAuthorId(id);
-
-        if (!blockers.isEmpty()) {
-            if (hasComments) {
-                blockers.add("a posté des commentaires");
-            }
-            throw new ConflictException("Ce compte ne peut pas être supprimé car il " + String.join(", ", blockers)
-                    + ". Utilisez plutôt l'anonymisation.");
-        }
-        if (hasComments && !deleteComments) {
-            throw new ConflictException(
-                    "Ce compte a posté des commentaires. Utilisez plutôt l'anonymisation, ou confirmez la suppression du compte avec ses commentaires.",
-                    ACCOUNT_HAS_COMMENTS);
-        }
-
-        if (hasComments) {
-            commentRepo.deleteByAuthorId(id);
-        }
-        cancelInscriptionsOf(id);
-        tokenRepo.deleteByUser(user);
-        refreshTokenRepo.deleteByUser(user);
-        anonymizationDemandRepo.deleteByRequesterId(id);
-        userRepo.delete(user);
-    }
-
-    /**
-     * Removes every inscription of the user. A removed confirmed inscription on an
-     * upcoming event frees a spot, which goes to the next person in the waiting
-     * list.
-     */
-    private void cancelInscriptionsOf(Long userId) throws NotFoundException {
-        List<Inscription> inscriptions = inscriptionRepo.findAllByUserId(userId);
-
-        for (Inscription inscription : inscriptions) {
-            boolean freesASpot = inscription.getStatus() == InscriptionStatus.CONFIRMED
-                    && inscription.getEvent().getStartDateTime().isAfter(LocalDateTime.now());
-            Long eventId = inscription.getEvent().getId();
-
-            inscriptionRepo.delete(inscription);
-            inscriptionRepo.flush();
-
-            if (freesASpot) {
-                waitingListService.promoteNext(eventId);
-            }
-        }
     }
 }

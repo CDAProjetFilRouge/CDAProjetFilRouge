@@ -33,6 +33,8 @@ import fr.diginamic.hubevenementiel.mappers.AppUserMapper;
 import fr.diginamic.hubevenementiel.mappers.AppUserSummaryMapper;
 import fr.diginamic.hubevenementiel.openapi.AppUserApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import fr.diginamic.hubevenementiel.services.AccountDeletionService;
+import fr.diginamic.hubevenementiel.services.AccountStatusService;
 import fr.diginamic.hubevenementiel.services.AppUserService;
 import jakarta.validation.Valid;
 
@@ -41,12 +43,17 @@ import jakarta.validation.Valid;
 public class AppUserController implements AppUserApi {
 
     private final AppUserService appUserService;
+    private final AccountStatusService accountStatusService;
+    private final AccountDeletionService accountDeletionService;
     private final AppUserMapper appUserMapper;
     private final AppUserSummaryMapper appUserSummaryMapper;
 
-    public AppUserController(AppUserService appUserService, AppUserMapper appUserMapper,
+    public AppUserController(AppUserService appUserService, AccountStatusService accountStatusService,
+            AccountDeletionService accountDeletionService, AppUserMapper appUserMapper,
             AppUserSummaryMapper appUserSummaryMapper) {
         this.appUserService = appUserService;
+        this.accountStatusService = accountStatusService;
+        this.accountDeletionService = accountDeletionService;
         this.appUserMapper = appUserMapper;
         this.appUserSummaryMapper = appUserSummaryMapper;
     }
@@ -115,7 +122,7 @@ public class AppUserController implements AppUserApi {
         }
         
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        appUserService.suspend(id, suspenstionEndDate, principal.id());
+        accountStatusService.suspend(id, suspenstionEndDate, principal.id());
         AppUser suspendedAppUser = appUserService.findById(id);
         return appUserMapper.toDto(suspendedAppUser); 
     }
@@ -123,7 +130,7 @@ public class AppUserController implements AppUserApi {
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/reactivate")
     public AppUserResponseDto reactivateAccount(@PathVariable Long id) throws HttpException {
-        appUserService.reactivate(id);
+        accountStatusService.reactivate(id);
         AppUser reactivatedAppUser = appUserService.findById(id);
         return appUserMapper.toDto(reactivatedAppUser);
     }
@@ -155,7 +162,7 @@ public class AppUserController implements AppUserApi {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id,
             @RequestParam(defaultValue = "false") boolean deleteComments) throws HttpException {
-        appUserService.deleteAccount(id, deleteComments);
+        accountDeletionService.deleteAccount(id, deleteComments);
         return ResponseEntity.noContent().build();
     }
 }

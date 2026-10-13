@@ -52,6 +52,32 @@ public class WaitingListService {
     }
 
     /**
+     * Removes every inscription of a user. A removed confirmed inscription on an
+     * upcoming event frees a spot, which goes to the next person in the waiting list.
+     * Used when an account is deleted.
+     *
+     * @param userId id of the user whose inscriptions are removed
+     * @throws NotFoundException if an event of the inscriptions does not exist
+     */
+    @Transactional
+    public void removeInscriptionsOf(Long userId) throws NotFoundException {
+        List<Inscription> inscriptions = inscriptionRepo.findAllByUserId(userId);
+
+        for (Inscription inscription : inscriptions) {
+            boolean freesASpot = inscription.getStatus() == InscriptionStatus.CONFIRMED
+                    && inscription.getEvent().getStartDateTime().isAfter(LocalDateTime.now());
+            Long eventId = inscription.getEvent().getId();
+
+            inscriptionRepo.delete(inscription);
+            inscriptionRepo.flush();
+
+            if (freesASpot) {
+                promoteNext(eventId);
+            }
+        }
+    }
+
+    /**
      * Fills every free spot of the event from the waiting list, oldest first.
      * Used when the capacity of an event is raised.
      *

@@ -10,10 +10,10 @@ public class SuspensionScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(SuspensionScheduler.class);
 
-    private final AppUserService appUserService;
+    private final AccountStatusService accountStatusService;
 
-    public SuspensionScheduler(AppUserService appUserService) {
-        this.appUserService = appUserService;
+    public SuspensionScheduler(AccountStatusService accountStatusService) {
+        this.accountStatusService = accountStatusService;
     }
 
     /**
@@ -21,7 +21,7 @@ public class SuspensionScheduler {
      */
     @Scheduled(cron = "0 0 * * * *")
     public void reactivateExpiredSuspensions() {
-        int count = appUserService.reactivateExpiredSuspensions();
+        int count = accountStatusService.reactivateExpiredSuspensions();
 
         if (count > 0) {
             log.info("{} compte(s) réactivé(s) automatiquement après expiration de la suspension.", count);

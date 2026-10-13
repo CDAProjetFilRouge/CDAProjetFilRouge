@@ -16,23 +16,23 @@ import static org.mockito.Mockito.when;
 class SuspensionSchedulerTest {
 
     @Mock
-    private AppUserService appUserService;
+    private AccountStatusService accountStatusService;
 
     @InjectMocks
     private SuspensionScheduler suspensionScheduler;
 
     @Test
     void reactivateExpiredSuspensions_delegatesToTheService() {
-        when(appUserService.reactivateExpiredSuspensions()).thenReturn(3);
+        when(accountStatusService.reactivateExpiredSuspensions()).thenReturn(3);
 
         suspensionScheduler.reactivateExpiredSuspensions();
 
-        verify(appUserService).reactivateExpiredSuspensions();
+        verify(accountStatusService).reactivateExpiredSuspensions();
     }
 
     @Test
     void reactivateExpiredSuspensions_nothingToReactivate_doesNotFail() {
-        when(appUserService.reactivateExpiredSuspensions()).thenReturn(0);
+        when(accountStatusService.reactivateExpiredSuspensions()).thenReturn(0);
 
         assertThatCode(() -> suspensionScheduler.reactivateExpiredSuspensions()).doesNotThrowAnyException();
     }
