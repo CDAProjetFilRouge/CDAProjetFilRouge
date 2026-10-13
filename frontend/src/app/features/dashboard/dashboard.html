@@ -59,4 +59,44 @@
       </section>
     }
   </div>
+
+  @if (showDrafts()) {
+    <section class="drafts" aria-labelledby="drafts-title" [attr.aria-busy]="draftsLoading()">
+      <header class="drafts-head">
+        <h2 id="drafts-title">Mes brouillons</h2>
+        @if (draftsTotal() > 0) {
+          <span class="count">{{ draftsTotal() }}</span>
+        }
+      </header>
+
+      @if (draftsError()) {
+        <p class="drafts-error" role="alert">{{ draftsError() }}</p>
+      }
+
+      @if (drafts().length > 0) {
+        <ul class="draft-list">
+          @for (draft of drafts(); track draft.id) {
+            <li class="draft">
+              <div class="draft-info">
+                <span class="draft-title">{{ draft.title }}</span>
+                <span class="draft-meta">{{ draft.startDateTime | date: 'dd/MM/yyyy HH:mm' }} · {{ draft.location.city }}</span>
+              </div>
+              <div class="draft-actions">
+                <a class="btn" [routerLink]="['/events', draft.id, 'edit']">Modifier</a>
+                <button type="button" class="btn btn-primary" [disabled]="publishingId() !== null"
+                  (click)="publishDraft(draft)">
+                  {{ publishingId() === draft.id ? 'Publication…' : 'Publier' }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else if (!draftsLoading()) {
+        <p class="drafts-empty">
+          Aucun brouillon pour le moment.
+          <a routerLink="/events/new">Créer un évènement</a>
+        </p>
+      }
+    </section>
+  }
 </div>
