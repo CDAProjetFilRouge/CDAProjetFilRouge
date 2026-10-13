@@ -260,7 +260,8 @@ public class EventService {
     }
 
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
-            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, AppUserPrincipal principal) throws HttpException {
+            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, Sort.Direction direction,
+            AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
             throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
@@ -284,7 +285,8 @@ public class EventService {
             }
         }
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(direction == null ? Sort.Direction.ASC : direction, "startDateTime").and(Sort.by("id")));
         return eventRepository.findAll(spec, pageable);
     }
 
@@ -337,6 +339,11 @@ public class EventService {
         if (!eventToBeModified.getTitle().equalsIgnoreCase(modifiedEvent.getTitle())
                 && eventRepository.existsByTitle(modifiedEvent.getTitle())) {
             throw new ConflictException("Un évènement avec ce titre existe déjà.");
+        }
+
+        long confirmedCount = inscriptionRepo.countByEventIdAndStatus(eventId, InscriptionStatus.CONFIRMED);
+        if (modifiedEvent.getMaxCapacity() < confirmedCount) {
+            throw new ConflictException("La capacité ne peut pas être inférieure au nombre d'inscrits confirmés (" + confirmedCount + ").");
         }
 
         Integer previousCapacity = eventToBeModified.getMaxCapacity();

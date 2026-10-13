@@ -41,8 +41,8 @@
               <h2>{{ event.title }}</h2>
               <p>
                 {{ event.startDateTime | date: 'dd/MM/yyyy' }} · {{ event.location.city }}
-                @if (event.organizerClubs.length > 0) {
-                  · {{ event.organizerClubs.join(', ') }}
+                @if (event.clubName) {
+                  · {{ event.clubName }}
                 }
               </p>
               <a class="btn" [routerLink]="['/event-details', event.id]">Voir le détail</a>
