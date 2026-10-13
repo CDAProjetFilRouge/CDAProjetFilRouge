@@ -30,6 +30,7 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -124,6 +125,81 @@ class InscriptionControllerIntegrationTest {
                         .param("eventId", String.valueOf(event.getId())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
+    }
+
+    // ---------------------------------------------------------------
+    // contrôles d'identité (audit sécurité)
+    // ---------------------------------------------------------------
+
+    @Test
+    void register_forAnotherUser_returns403AndCreatesNothing() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser attacker = createUser("attacker", Role.MEMBER);
+        AppUser victim = createUser("victim", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + loginAndGetToken(attacker.getEmail()))
+                        .param("userId", String.valueOf(victim.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/inscriptions/user/" + victim.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(victim.getEmail())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void userInscriptions_ownerAndAdministratorCanRead_otherMemberCannot() throws Exception {
+        AppUser member = createUser("member", Role.MEMBER);
+        AppUser other = createUser("other", Role.MEMBER);
+        AppUser admin = createUser("admin", Role.ADMINISTRATOR);
+
+        mockMvc.perform(get("/inscriptions/user/" + member.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(member.getEmail())))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/inscriptions/user/" + member.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(admin.getEmail())))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/inscriptions/user/" + member.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(other.getEmail())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void userInscriptions_invalidPaging_returns400() throws Exception {
+        AppUser member = createUser("member", Role.MEMBER);
+        String token = loginAndGetToken(member.getEmail());
+
+        mockMvc.perform(get("/inscriptions/user/" + member.getId()).param("size", "0")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/inscriptions/user/" + member.getId()).param("page", "-1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void eventInscriptions_onlyOwnerAndAdministratorCanRead() throws Exception {
+        AppUser owner = createUser("owner", Role.ORGANIZER);
+        AppUser otherOrganizer = createUser("other-organizer", Role.ORGANIZER);
+        AppUser member = createUser("member", Role.MEMBER);
+        AppUser admin = createUser("admin", Role.ADMINISTRATOR);
+        Event event = createEvent(owner, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        mockMvc.perform(get("/inscriptions/event/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(owner.getEmail())))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/inscriptions/event/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(admin.getEmail())))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/inscriptions/event/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(otherOrganizer.getEmail())))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/inscriptions/event/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(member.getEmail())))
+                .andExpect(status().isForbidden());
     }
 
     @Test
