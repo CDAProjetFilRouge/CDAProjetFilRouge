@@ -845,13 +845,15 @@ $grain-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
   background-size: 260% 100%;
   background-position: var(--mx, 50%) 0;
   mix-blend-mode: overlay;
-  backdrop-filter: contrast(1.28) brightness(1.04);
-  -webkit-backdrop-filter: contrast(1.28) brightness(1.04);
   mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), #000 0%, #000 22%, transparent 70%);
 }
 
 .card:hover .holo {
   opacity: 1;
+  // Le filtre n'existe que pendant le survol : des filtres d'arrière-plan permanents sur toutes les cartes
+  // faisaient disparaître des billets au redimensionnement.
+  backdrop-filter: contrast(1.28) brightness(1.04);
+  -webkit-backdrop-filter: contrast(1.28) brightness(1.04);
 }
 
 // Sur la souche : un film brillant, une bande claire qui glisse sans changer la couleur.
