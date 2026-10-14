@@ -6,7 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
 import { EventCalendar } from '../../shared/event-calendar/event-calendar';
 import { CalendarService } from './calendar-service';
-import { INSCRIPTION_STATUS_LABELS, InscriptionModel } from './calendar.models';
+import { INSCRIPTION_STATUS_LABELS, InscriptionModel, toCalendarEvent } from './calendar.models';
 
 @Component({
   imports: [EventCalendar, DatePipe, RouterLink],
@@ -32,14 +32,7 @@ export class Calendar {
   protected readonly calendarEvents = computed<CalendarEvent[]>(() =>
     this.inscriptions()
       .filter((i) => i.status !== 'CANCELED')
-      .map((i) => ({
-        id: String(i.id),
-        title: i.event.title,
-        start: i.event.startDateTime,
-        end: i.event.endDateTime,
-        muted: i.status === 'WAITING_LIST',
-        badge: i.status === 'WAITING_LIST' ? "Liste d'attente" : undefined,
-      })),
+      .map((i) => toCalendarEvent(i, { id: String(i.id) })),
   );
 
   protected readonly canCancel = computed(() => {

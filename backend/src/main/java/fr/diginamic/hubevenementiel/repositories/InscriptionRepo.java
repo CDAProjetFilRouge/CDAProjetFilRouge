@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,8 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of inscription with pagination info
      */
+    // L'évènement et son club sont chargés avec la page : le calendrier affiche le club de chaque inscription.
+    @EntityGraph(attributePaths = {"event", "event.club"})
     Page<Inscription> findByUserId(Long id, Pageable pageable);
 
     /**
@@ -101,6 +104,21 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @return an optional of type inscription
      */
     List<Inscription> findByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
+
+    /**
+     *
+     * @param eventId id of the event
+     * @param statuses statuses to keep
+     * @return the event's inscriptions having one of the given statuses
+     */
+    List<Inscription> findByEventIdAndStatusIn(Long eventId, Collection<InscriptionStatus> statuses);
+
+    /**
+     * Removes every inscription of an event, whatever its status.
+     *
+     * @param eventId id of the event
+     */
+    void deleteByEventId(Long eventId);
 
     /**
      * Nombre d'inscriptions de même statut arrivées avant celle donnée (date, puis identifiant pour départager).

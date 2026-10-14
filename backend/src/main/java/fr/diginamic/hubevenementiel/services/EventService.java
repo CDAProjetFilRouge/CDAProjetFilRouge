@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
@@ -50,14 +51,17 @@ public class EventService {
     private final InscriptionRepo inscriptionRepo;
     private final ClubService clubService;
     private final WaitingListService waitingListService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo,
-            WaitingListService waitingListService, ClubService clubService) {
+            WaitingListService waitingListService, ClubService clubService,
+            ApplicationEventPublisher eventPublisher) {
         this.eventRepository = eventRepository;
         this.inscriptionRepo = inscriptionRepo;
         this.waitingListService = waitingListService;
         this.clubService = clubService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -387,7 +391,15 @@ public class EventService {
             throw new ConflictException("Seul un évènement futur peut être supprimé.");
         }
 
+        List<String> emails = inscriptionRepo
+                .findByEventIdAndStatusIn(eventId, List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST))
+                .stream()
+                .map(inscription -> inscription.getUser().getEmail())
+                .toList();
+
+        inscriptionRepo.deleteByEventId(eventId);
         eventRepository.delete(event);
+        eventPublisher.publishEvent(new EventDeletedEvent(emails, event.getTitle()));
     }
 
     /**

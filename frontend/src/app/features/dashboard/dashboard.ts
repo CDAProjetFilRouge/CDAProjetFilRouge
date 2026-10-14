@@ -25,7 +25,7 @@ const KPI_LINKS: Record<string, KpiTarget> = {
   PENDING_ANONYMIZATIONS: { link: '/admin/anonymization-demands' },
   ACTIVE_CLUBS: { link: '/admin/clubs' },
   UPCOMING_EVENTS: { link: '/admin/events' },
-  ORGANIZED_DRAFTS: { link: '/', queryParams: { status: 'DRAFT' } },
+  ORGANIZED_DRAFTS: { link: '/my-events', queryParams: { status: 'DRAFT' } },
 };
 
 function toKpiView(kpi: Kpi): KpiView {

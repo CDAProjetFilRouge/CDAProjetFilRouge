@@ -31,7 +31,7 @@ public interface ImageApi {
             @ApiResponse(responseCode = "201", description = "Image ajoutée"),
             @ApiResponse(responseCode = "400", description = "Fichier invalide ou absent"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis, ou évènement dont l'appelant n'est pas propriétaire"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
     ResponseEntity<ImageSummaryResponseDto> upload(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
@@ -42,7 +42,7 @@ public interface ImageApi {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Image supprimée"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis, ou évènement dont l'appelant n'est pas propriétaire"),
             @ApiResponse(responseCode = "404", description = "Image ou évènement introuvable")
     })
     ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
