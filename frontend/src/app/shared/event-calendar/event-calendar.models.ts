@@ -5,4 +5,5 @@ export interface CalendarEvent {
   end?: string;
   muted?: boolean;
   badge?: string;
+  club?: string | null;
 }

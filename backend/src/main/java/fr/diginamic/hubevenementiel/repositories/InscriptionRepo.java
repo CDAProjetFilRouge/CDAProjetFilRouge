@@ -7,6 +7,7 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,8 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of inscription with pagination info
      */
+    // L'évènement et son club sont chargés avec la page : le calendrier affiche le club de chaque inscription.
+    @EntityGraph(attributePaths = {"event", "event.club"})
     Page<Inscription> findByUserId(Long id, Pageable pageable);
 
     /**

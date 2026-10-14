@@ -167,6 +167,25 @@ class InscriptionControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Le calendrier affiche le club de l'évènement dans la bulle : il doit figurer dans les inscriptions de l'utilisateur.
+    @Test
+    void userInscriptions_carryTheClubNameOfTheEvent() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser member = createUser("member", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+        String token = loginAndGetToken(member.getEmail());
+        mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + token)
+                        .param("userId", String.valueOf(member.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/inscriptions/user/" + member.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].event.clubName").value(event.getClub().getName()));
+    }
+
     @Test
     void userInscriptions_invalidPaging_returns400() throws Exception {
         AppUser member = createUser("member", Role.MEMBER);
@@ -398,6 +417,31 @@ class InscriptionControllerIntegrationTest {
                         .header("Authorization", "Bearer " + organizerToken)
                         .param("motif", ""))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void cancelByOrganizer_foreignOrganizer_returns403AndSendsNoEmail() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser stranger = createUser("stranger", Role.ORGANIZER);
+        AppUser member = createUser("member", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        String memberToken = loginAndGetToken(member.getEmail());
+        String response = mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .param("userId", String.valueOf(member.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long inscriptionId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+
+        String strangerToken = loginAndGetToken(stranger.getEmail());
+        mockMvc.perform(delete("/inscriptions/" + inscriptionId + "/organizer")
+                        .header("Authorization", "Bearer " + strangerToken)
+                        .param("motif", "Tentative"))
+                .andExpect(status().isForbidden());
+
+        verify(emailService, org.mockito.Mockito.never()).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
     }
 
     // canceledById reste null meme apres une annulation organisateur : bug connu

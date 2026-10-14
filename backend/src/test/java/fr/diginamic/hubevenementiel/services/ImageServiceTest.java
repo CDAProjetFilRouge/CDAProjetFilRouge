@@ -1,10 +1,14 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ImageRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +40,17 @@ class ImageServiceTest {
     @InjectMocks
     private ImageService imageService;
 
+    private static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01};
+
+    private static byte[] jpegOfSize(int size) {
+        byte[] content = new byte[size];
+        System.arraycopy(JPEG, 0, content, 0, JPEG.length);
+        return content;
+    }
+
     private Event event;
+
+    private static final AppUserPrincipal ADMIN = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
 
     @BeforeEach
     void setUp(@TempDir Path tempDir) {
@@ -44,7 +60,7 @@ class ImageServiceTest {
     }
 
     private MockMultipartFile validImage() {
-        return new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3});
+        return new MockMultipartFile("file", "photo.jpg", "image/jpeg", JPEG);
     }
 
     // ---------------------------------------------------------------
@@ -76,7 +92,7 @@ class ImageServiceTest {
 
     @Test
     void imageChecker_exactly5MB_passes() throws HttpException {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[5 * 1024 * 1024]);
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", jpegOfSize(5 * 1024 * 1024));
         when(imageRepo.countByEventId(2L)).thenReturn(0L);
 
         assertThat(imageService.imageChecker(2L, file)).isTrue();
@@ -84,7 +100,7 @@ class ImageServiceTest {
 
     @Test
     void imageChecker_5MBPlusOneByte_throwsBadRequest() {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[5 * 1024 * 1024 + 1]);
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", jpegOfSize(5 * 1024 * 1024 + 1));
 
         assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, file));
     }
@@ -104,6 +120,53 @@ class ImageServiceTest {
     }
 
     // ---------------------------------------------------------------
+    // formats acceptés : raster uniquement, reconnus à leur contenu
+    // ---------------------------------------------------------------
+
+    private static MockMultipartFile file(String name, String declaredType, byte[] content) {
+        return new MockMultipartFile("file", name, declaredType, content);
+    }
+
+    @Test
+    void imageChecker_svgDeclaredAsImage_isRefused() {
+        byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>".getBytes();
+
+        assertThrows(BadRequestException.class,
+                () -> imageService.imageChecker(2L, file("logo.svg", "image/svg+xml", svg)));
+        assertThrows(BadRequestException.class,
+                () -> imageService.imageChecker(2L, file("logo.png", "image/png", svg)));
+    }
+
+    @Test
+    void imageChecker_htmlRenamedAsJpeg_isRefused() {
+        byte[] html = "<html><script>alert(1)</script></html>".getBytes();
+
+        assertThrows(BadRequestException.class,
+                () -> imageService.imageChecker(2L, file("photo.jpg", "image/jpeg", html)));
+    }
+
+    @Test
+    void imageChecker_pngAndWebp_areAccepted() throws HttpException {
+        byte[] png = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00};
+        byte[] webp = {0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50};
+
+        assertThat(imageService.imageChecker(2L, file("a.png", "image/png", png))).isTrue();
+        assertThat(imageService.imageChecker(2L, file("a.webp", "image/webp", webp))).isTrue();
+    }
+
+    @Test
+    void upload_storesTheDetectedExtensionAndTypeNotTheClientOnes() throws HttpException {
+        when(eventService.findById(2L)).thenReturn(event);
+        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Image result = imageService.upload(2L, file("evil.svg.html", "image/jpeg", JPEG), ADMIN);
+
+        assertThat(result.getPath()).endsWith(".jpg").doesNotContain("svg").doesNotContain("html");
+        assertThat(result.getMimeType()).isEqualTo("image/jpeg");
+    }
+
+    // ---------------------------------------------------------------
     // upload
     // ---------------------------------------------------------------
 
@@ -113,7 +176,7 @@ class ImageServiceTest {
         when(imageRepo.countByEventId(2L)).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Image result = imageService.upload(2L, validImage());
+        Image result = imageService.upload(2L, validImage(), ADMIN);
 
         assertThat(result.getDisplayOrder()).isZero();
         assertThat(result.getEvent()).isEqualTo(event);
@@ -124,9 +187,9 @@ class ImageServiceTest {
         when(eventService.findById(2L)).thenReturn(event);
         when(imageRepo.countByEventId(2L)).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        MockMultipartFile noExtension = new MockMultipartFile("file", "photo", "image/jpeg", new byte[]{1, 2, 3});
+        MockMultipartFile noExtension = new MockMultipartFile("file", "photo", "image/jpeg", JPEG);
 
-        assertDoesNotThrow(() -> imageService.upload(2L, noExtension));
+        assertDoesNotThrow(() -> imageService.upload(2L, noExtension, ADMIN));
     }
 
     // ---------------------------------------------------------------
@@ -137,9 +200,65 @@ class ImageServiceTest {
     void delete_fileAlreadyMissingOnDisk_doesNotThrow() throws HttpException {
         Image image = new Image();
         image.setId(1L);
+        image.setEvent(event);
         image.setPath("/uploads/inexistant.jpg");
+        when(eventService.findById(2L)).thenReturn(event);
         when(imageRepo.findById(1L)).thenReturn(java.util.Optional.of(image));
 
-        assertDoesNotThrow(() -> imageService.delete(1L));
+        assertDoesNotThrow(() -> imageService.delete(2L, 1L, ADMIN));
+    }
+
+    @Test
+    void delete_imageOfAnotherEvent_throwsNotFoundAndDeletesNothing() throws HttpException {
+        Event other = new Event();
+        other.setId(3L);
+        Image image = new Image();
+        image.setId(1L);
+        image.setEvent(other);
+        image.setPath("/uploads/autre.jpg");
+        when(eventService.findById(2L)).thenReturn(event);
+        when(imageRepo.findById(1L)).thenReturn(java.util.Optional.of(image));
+
+        assertThrows(NotFoundException.class, () -> imageService.delete(2L, 1L, ADMIN));
+        verify(imageRepo, never()).delete(any(Image.class));
+    }
+
+    // ---------------------------------------------------------------
+    // propriété de l'évènement
+    // ---------------------------------------------------------------
+
+    private void ownedBy(long organizerId) throws HttpException {
+        AppUser owner = new AppUser();
+        owner.setId(organizerId);
+        event.setOrganizer(owner);
+        when(eventService.findById(2L)).thenReturn(event);
+    }
+
+    @Test
+    void upload_foreignOrganizer_throwsForbiddenAndStoresNothing() throws HttpException {
+        ownedBy(8L);
+
+        assertThrows(ForbiddenException.class,
+                () -> imageService.upload(2L, validImage(), new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+        verify(imageRepo, never()).save(any(Image.class));
+    }
+
+    @Test
+    void delete_foreignOrganizer_throwsForbiddenAndDeletesNothing() throws HttpException {
+        ownedBy(8L);
+
+        assertThrows(ForbiddenException.class,
+                () -> imageService.delete(2L, 1L, new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+        verify(imageRepo, never()).delete(any(Image.class));
+    }
+
+    @Test
+    void upload_owner_isAllowed() throws HttpException {
+        ownedBy(8L);
+        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertDoesNotThrow(
+                () -> imageService.upload(2L, validImage(), new AppUserPrincipal(8L, "o@example.com", "ORGANIZER")));
     }
 }

@@ -178,14 +178,19 @@ public class InscriptionService {
     public List<Inscription> findByEvent(AppUserPrincipal principal, Long eventId, int page, int size)
             throws HttpException {
         Event event = eventService.findById(eventId);
+        checkOrganizerOrAdmin(event, principal, "Seul l'organisateur de cet évènement peut consulter ses inscriptions.");
+        checkPaging(page, size);
+        return findByEvent(eventId, page, size);
+    }
+
+    // Réservé à l'organisateur de l'évènement ou à un administrateur.
+    private void checkOrganizerOrAdmin(Event event, AppUserPrincipal principal, String message) throws HttpException {
         boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
         boolean isOwner = principal != null && event.getOrganizer() != null
                 && event.getOrganizer().getId().equals(principal.id());
         if (!isAdmin && !isOwner) {
-            throw new ForbiddenException("Seul l'organisateur de cet évènement peut consulter ses inscriptions.");
+            throw new ForbiddenException(message);
         }
-        checkPaging(page, size);
-        return findByEvent(eventId, page, size);
     }
 
     private void checkPaging(int page, int size) throws HttpException {
@@ -298,13 +303,16 @@ public class InscriptionService {
      * @throws HttpException
      */
     @Transactional
-    public Inscription cancelByOrganizer(Long id, String motif) throws HttpException {
+    public Inscription cancelByOrganizer(Long id, String motif, AppUserPrincipal principal) throws HttpException {
         if (motif == null || motif.isBlank()) {
             throw new BadRequestException(
                     "Un motif est obligatoire pour annuler une inscription en tant qu'organisateur.");
         }
 
         Inscription inscription = getInscriptionById(id);
+
+        checkOrganizerOrAdmin(inscription.getEvent(), principal,
+                "Seul l'organisateur de cet évènement peut annuler ses inscriptions.");
 
         if (inscription.getStatus() == InscriptionStatus.CANCELED) {
             throw new ConflictException("Cette inscription est déjà annulée.");
