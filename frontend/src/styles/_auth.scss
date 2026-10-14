@@ -13,8 +13,8 @@
   max-width: 440px;
   padding: 22px 22px 18px;
   background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-md);
 
   &.auth-card-wide {
     max-width: 560px;
@@ -48,7 +48,7 @@
       height: 37px;
       padding: 0 11px;
       background: var(--color-card);
-      border: 1px solid var(--color-field-border);
+      border: 2px solid var(--color-ink);
       border-radius: var(--radius-md);
 
       &:focus {
@@ -136,7 +136,7 @@
     height: 37px;
     padding: 0 8px;
     background: var(--color-card);
-    border: 1px solid var(--color-field-border);
+    border: 2px solid var(--color-ink);
     border-radius: var(--radius-md);
   }
 

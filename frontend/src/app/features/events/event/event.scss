@@ -32,7 +32,6 @@
   margin-bottom: 28px;
   background: #fff;
   border: 2.5px solid var(--color-ink);
-  box-shadow: 6px 6px 0 var(--color-ink);
   border-radius: var(--radius-lg);
 }
 
@@ -51,7 +50,7 @@
   p {
     font-size: 12px;
     font-weight: 500;
-    color: #6f5a55;
+    color: var(--color-muted);
   }
 
   input,
@@ -59,7 +58,7 @@
     height: 37px;
     padding: 0 11px;
     background: #fff;
-    border: 1px solid var(--color-field-border);
+    border: 2px solid var(--color-ink);
     border-radius: var(--radius-md);
 
     &::placeholder {
@@ -117,7 +116,7 @@
   font-weight: 600;
   color: var(--color-text);
   background: #fff;
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: 999px;
   cursor: pointer;
   transition: background-color .15s, border-color .15s, color .15s;

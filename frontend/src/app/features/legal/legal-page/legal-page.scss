@@ -47,7 +47,7 @@ h1 {
     overflow-x: auto;
     white-space: pre-wrap;
     background: var(--color-surface);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
   }
 
   img, video, iframe {
@@ -65,7 +65,7 @@ h1 {
 
   td, th {
     padding: 6px 10px;
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-ink);
   }
 
   h1, h2, h3 {

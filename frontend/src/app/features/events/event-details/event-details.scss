@@ -78,7 +78,7 @@ textarea:focus-visible {
   line-height: 16px;
   color: var(--color-muted);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: var(--radius-sm);
 
   &.badge-danger {
@@ -115,7 +115,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 32px;
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: var(--radius-lg);
   background: var(--color-card);
 }
@@ -368,7 +368,7 @@ h1 {
     resize: vertical;
     min-height: 88px;
     background: var(--color-card);
-    border: 1px solid var(--color-field-border);
+    border: 2px solid var(--color-ink);
     border-radius: var(--radius-md);
 
     &::placeholder {
@@ -430,7 +430,7 @@ h1 {
   font-weight: 600;
   color: var(--color-text);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: 50%;
 }
 
@@ -494,9 +494,8 @@ h1 {
 
 .ticket {
   position: relative;
-  overflow: hidden;
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: var(--radius-lg);
   box-shadow: 0 1px 2px rgb(31 36 48 / 0.04), 0 12px 32px -12px rgb(31 36 48 / 0.18);
 }
@@ -552,17 +551,21 @@ h1 {
     top: -11px;
     width: 20px;
     height: 20px;
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
+    background: var(--color-page-bg);
+    border: 2px solid var(--color-ink);
     border-radius: 50%;
   }
 
+  // Les encoches sont centrées sur le bord du billet et ne gardent que leur moitié intérieure : elles
+  // recouvrent la bordure droite du billet, il ne reste que l'arc, comme sur les billets du catalogue.
   &::before {
-    left: -31px;
+    left: -32px;
+    clip-path: inset(0 0 0 50%);
   }
 
   &::after {
-    right: -31px;
+    right: -32px;
+    clip-path: inset(0 50% 0 0);
   }
 }
 
@@ -572,6 +575,11 @@ h1 {
   gap: 14px;
   padding: 24px;
   background: var(--color-footer-bg);
+  border-radius: 0 0 calc(var(--radius-lg) - 2px) calc(var(--radius-lg) - 2px);
+
+  .hint {
+    color: var(--color-pine-soft);
+  }
 }
 
 .btn-block {
@@ -592,8 +600,8 @@ h1 {
   border-color: var(--color-danger);
 
   &:hover:not(:disabled) {
-    background: #8f1d17;
-    border-color: #8f1d17;
+    background: var(--color-danger-strong);
+    border-color: var(--color-danger-strong);
   }
 }
 

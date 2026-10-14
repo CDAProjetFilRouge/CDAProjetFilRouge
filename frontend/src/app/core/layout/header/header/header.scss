@@ -44,7 +44,7 @@
   text-decoration: none;
   color: var(--color-muted);
   border: 2px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: none;
   border: 0;
   transition: color .15s;
@@ -60,7 +60,7 @@
     color: var(--color-ink);
     background: #fff;
     border-color: var(--color-ink);
-    box-shadow: 3px 3px 0 var(--color-ink);
+    box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.3);
   }
 }
 
@@ -82,7 +82,7 @@
   color: var(--color-text);
   background: #fff;
   border: 2px solid var(--color-ink);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: background-color .15s, border-color .15s;
 
@@ -106,7 +106,7 @@
   font-weight: 700;
   color: #fff;
   background: var(--color-primary);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
 }
 
 .identity {
@@ -153,7 +153,7 @@
   background: #fff;
   border: 2px solid var(--color-ink);
   border-radius: var(--radius-lg);
-  box-shadow: 5px 5px 0 var(--color-ink);
+  box-shadow: 0 12px 32px rgba(60, 30, 25, 0.18);
 }
 
 .menu-item {

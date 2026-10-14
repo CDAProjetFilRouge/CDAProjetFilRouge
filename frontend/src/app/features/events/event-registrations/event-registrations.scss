@@ -68,7 +68,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-ink);
   border-radius: var(--radius-lg);
 }
 
@@ -128,7 +128,7 @@ td a {
     margin-bottom: 12px;
     padding: 8px 4px;
     background: var(--color-card);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-ink);
     border-radius: var(--radius-lg);
   }
 

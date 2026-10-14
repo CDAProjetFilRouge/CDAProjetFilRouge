@@ -2,7 +2,7 @@
 
 :root {
   // Direction « pavillon » : une géométrie joyeuse mais adulte. Crème, cobalt, pin et orange brûlé, encre pour
-  // les traits. Grandes formes simples, traits épais, ombres franches décalées : c'est un choix assumé du thème.
+  // les traits. Grandes formes simples, traits épais à l'encre, ombres douces : c'est un choix assumé du thème.
   --color-ink: #17182b;
   --color-text: #17182b;
   --color-muted: #4a4a63;
@@ -22,6 +22,10 @@
   --color-success: #14513c;
   --color-danger-bg: #fde3da;
   --color-danger: #b3361a;
+  --color-danger-strong: #8f1d17;
+  --color-warning-bg: #ffe7bf;
+  --color-warning: #7a3b0c;
+  --color-warning-border: #e2622b;
   --color-page-bg: #f4efe3;
   --color-header-bg: #f4efe3;
   --color-footer-bg: #1d5a45;
@@ -30,6 +34,7 @@
   --radius-md: 10px;
   --radius-lg: 18px;
   --page-padding: 64px;
+  --font-display: 'Unbounded', 'DM Sans', system-ui, sans-serif;
 }
 
 *, *::before, *::after {
@@ -54,7 +59,7 @@ h1, h2, h3, p {
 }
 
 h1, h2, h3 {
-  font-family: 'Unbounded', 'DM Sans', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -.02em;
   line-height: 1.15;
@@ -147,18 +152,18 @@ a {
   background: #fff;
   border: 2px solid var(--color-ink);
   border-radius: var(--radius-md);
-  box-shadow: 3px 3px 0 var(--color-ink);
+  box-shadow: 0 4px 10px -3px rgb(31 36 48 / 0.3);
   transition: transform .18s cubic-bezier(.2, .8, .2, 1), box-shadow .18s cubic-bezier(.2, .8, .2, 1), background-color .15s;
 
   &:hover {
     background: var(--color-sun);
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0 var(--color-ink);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px -6px rgb(31 36 48 / 0.35);
   }
 
   &:active {
-    transform: translate(3px, 3px);
-    box-shadow: 0 0 0 var(--color-ink);
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgb(31 36 48 / 0.25);
   }
 
   &:focus-visible {

@@ -259,7 +259,7 @@ $grain-light: url('/grain-light.png');
 
 .title {
   margin: 0;
-  font-family: 'Unbounded', 'DM Sans', sans-serif;
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 800;
   line-height: 1.3;
@@ -496,7 +496,7 @@ $grain-light: url('/grain-light.png');
   background: var(--pine);
   border: 2.5px solid var(--ink);
   border-radius: 50%;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: 0 8px 18px -6px rgb(20 83 45 / 0.6);
   animation: pop .5s cubic-bezier(.34, 1.56, .64, 1);
 
   svg {
@@ -514,12 +514,12 @@ $grain-light: url('/grain-light.png');
 
   &.waiting {
     background: var(--orange);
-    box-shadow: 3px 3px 0 var(--ink);
+    box-shadow: 0 8px 18px -6px rgb(122 74 0 / 0.6);
   }
 
   &.error {
     background: #b3361a;
-    box-shadow: 3px 3px 0 var(--ink);
+    box-shadow: 0 8px 18px -6px rgb(120 20 15 / 0.6);
   }
 }
 
@@ -756,7 +756,7 @@ $grain-light: url('/grain-light.png');
 
   .day {
     margin-top: 4px;
-    font-family: 'Unbounded', 'DM Sans', sans-serif;
+    font-family: var(--font-display);
     font-size: 40px;
     font-weight: 800;
     letter-spacing: -.03em;
@@ -793,7 +793,7 @@ $grain-light: url('/grain-light.png');
   line-height: 1.2;
 
   .amount {
-    font-family: 'Unbounded', 'DM Sans', sans-serif;
+    font-family: var(--font-display);
     font-size: 21px;
     font-weight: 800;
   }
@@ -1328,14 +1328,15 @@ $grain-light: url('/grain-light.png');
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 1;
-  transform: translate(6px, 6px);
-  transition: transform .18s cubic-bezier(.2, .8, .2, 1);
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateY(16px);
+  transition: opacity .3s ease;
 
   > div {
     width: 100%;
     height: 100%;
-    background: var(--ink);
+    background: rgb(31 36 48 / 0.3);
     border-radius: var(--radius);
     clip-path: var(--ticket-shape);
   }
@@ -1343,7 +1344,7 @@ $grain-light: url('/grain-light.png');
 
 .card:hover .shadow,
 .card:focus-within .shadow {
-  transform: translate(9px, 9px);
+  opacity: 1;
 }
 
 // --- Cycle de vie : évènement en cours, évènement annulé -------------------------------------------
@@ -1369,7 +1370,7 @@ $grain-light: url('/grain-light.png');
   top: 12px;
   right: 12px;
   color: var(--ink);
-  background: var(--sun);
+  background: var(--orange);
   border: 2px solid var(--ink);
 }
 
@@ -1461,7 +1462,7 @@ $grain-light: url('/grain-light.png');
   line-height: 1;
   letter-spacing: .14em;
   text-transform: uppercase;
-  font-family: 'Unbounded', 'DM Sans', sans-serif;
+  font-family: var(--font-display);
   color: rgb(226 98 43 / 0.95);
   background: rgb(255 255 255 / 0.16);
   border: 4px solid rgb(226 98 43 / 0.95);
@@ -1516,20 +1517,6 @@ $grain-light: url('/grain-light.png');
 .card[data-registration='CONFIRMED'] .receipt-date,
 .card[data-registration='CONFIRMED'] .receipt-price {
   color: var(--pine);
-}
-
-// Photo : une pastille ronde orange cerclée d'encre, comme un signe de la maquette.
-.media::after {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  inset: auto 14px 14px auto;
-  width: 34px;
-  height: 34px;
-  border: 2.5px solid var(--ink);
-  border-radius: 50%;
-  background: var(--orange);
-  pointer-events: none;
 }
 
 .live-dot {
