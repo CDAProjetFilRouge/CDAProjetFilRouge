@@ -846,6 +846,13 @@ $grain-light: url('/grain-light.png');
   animation: stub-attach .8s cubic-bezier(.25, .5, .5, 1) both;
 }
 
+// Sortie de la liste d'attente : la souche n'avait pas quitté le billet, elle se repose en place.
+.card[data-phase='rejoining'] .stub {
+  z-index: 3;
+  transform-origin: left bottom;
+  animation: stub-rejoin .5s cubic-bezier(.3, .6, .4, 1) both;
+}
+
 @keyframes tear {
   0% {
     transform: perspective(900px) rotateY(-14deg) rotateZ(5deg);
@@ -863,6 +870,23 @@ $grain-light: url('/grain-light.png');
     transform: perspective(900px) translate(170px, 150px) rotateY(-20deg) rotateZ(62deg);
     filter: drop-shadow(-22px 26px 22px rgb(31 36 48 / 0.2));
     opacity: 0;
+  }
+}
+
+@keyframes stub-rejoin {
+  0% {
+    transform: perspective(900px) translate(5px, -7px) rotateY(-12deg) rotateZ(5deg);
+    filter: drop-shadow(-12px 14px 14px rgb(31 36 48 / 0.3));
+  }
+
+  60% {
+    transform: perspective(900px) translateY(1px) rotateY(2deg) rotateZ(-0.5deg);
+    filter: drop-shadow(-3px 3px 5px rgb(31 36 48 / 0.15));
+  }
+
+  100% {
+    transform: none;
+    filter: drop-shadow(0 0 0 rgb(31 36 48 / 0));
   }
 }
 
@@ -909,7 +933,8 @@ $grain-light: url('/grain-light.png');
     opacity: 0;
   }
 
-  .card[data-phase='reattaching'] .stub {
+  .card[data-phase='reattaching'] .stub,
+  .card[data-phase='rejoining'] .stub {
     animation: stub-return-fade .4s ease both;
   }
 
