@@ -1,7 +1,12 @@
 package fr.diginamic.hubevenementiel.services;
 
 import org.springframework.beans.factory.annotation.Value;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.web.util.HtmlUtils;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
@@ -21,49 +26,24 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String toEmail, String tokenValue) {
-        String verificationLink = frontendUrl + "/verify?token=" + tokenValue;
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Vérifiez votre compte!");
-        message.setText("Bienvenue !\n\nCliquez sur ce lien pour activer votre compte :\n"
-                + verificationLink
-                + "\n\nCe lien expire dans 24h.");
-
-        mailSender.send(message);
+        sendLinkEmail(toEmail, "MyHubEvent - Vérifiez votre compte!",
+                "Bienvenue !\n\nCliquez sur ce lien pour activer votre compte :",
+                frontendUrl + "/verify?token=" + tokenValue,
+                "Ce lien expire dans 24h.");
     }
 
     public void sendPasswordResetEmail(String toEmail, String tokenValue) {
-        String resetLink = frontendUrl + "/reset-password?token=" + tokenValue;
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Confirmation de changement de mot de passe!");
-        message.setText("Une demande de changement de mot de passe a été effectuée.\n\n"
-                + "Cliquez sur ce lien pour confirmer :\n"
-                + resetLink
-                + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n"
-                + "Ce lien expire dans 1h.");
-
-        mailSender.send(message);
+        sendLinkEmail(toEmail, "MyHubEvent - Confirmation de changement de mot de passe!",
+                "Une demande de changement de mot de passe a été effectuée.\n\nCliquez sur ce lien pour confirmer :",
+                frontendUrl + "/reset-password?token=" + tokenValue,
+                "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\nCe lien expire dans 1h.");
     }
 
     public void sendPasswordChangeConfirmationEmail(String toEmail, String tokenValue) {
-        String confirmLink = frontendUrl + "/confirm-password-change?token=" + tokenValue;
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Confirmez votre nouveau mot de passe");
-        message.setText("Vous avez choisi un nouveau mot de passe.\n\n"
-                + "Cliquez sur ce lien pour confirmer et l'appliquer définitivement :\n"
-                + confirmLink
-                + "\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet email.\n"
-                + "Ce lien expire dans 1h.");
-
-        mailSender.send(message);
+        sendLinkEmail(toEmail, "MyHubEvent - Confirmez votre nouveau mot de passe",
+                "Vous avez choisi un nouveau mot de passe.\n\nCliquez sur ce lien pour confirmer et l'appliquer définitivement :",
+                frontendUrl + "/confirm-password-change?token=" + tokenValue,
+                "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\nCe lien expire dans 1h.");
     }
 
     public void sendInscriptionCancellationEmail(String toEmail, String eventTitle, String motif) {
@@ -111,18 +91,35 @@ public class EmailService {
     }
 
     public void sendAccountActivationEmail(String toEmail, String tokenValue, String temporaryPassword) {
-        String activationLink = frontendUrl + "/activate-account?token=" + tokenValue;
+        sendLinkEmail(toEmail, "MyHubEvent - Activation de votre compte",
+                "Un compte a été créé pour vous sur MyHubEvent.\n\nMot de passe temporaire : " + temporaryPassword
+                        + "\n\nCliquez sur ce lien pour l'activer et choisir votre mot de passe définitif :",
+                frontendUrl + "/activate-account?token=" + tokenValue,
+                "Ce lien expire dans 1h.");
+    }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Activation de votre compte");
-        message.setText("Un compte a été créé pour vous sur MyHubEvent.\n\n"
-                + "Mot de passe temporaire : " + temporaryPassword + "\n\n"
-                + "Cliquez sur ce lien pour l'activer et choisir votre mot de passe définitif :\n"
-                + activationLink
-                + "\n\nCe lien expire dans 1h.");
+    /**
+     * Sends a mail whose link is clickable: an HTML body, with the same text as plain-text fallback.
+     */
+    private void sendLinkEmail(String toEmail, String subject, String intro, String link, String outro) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(senderAddress);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            String plain = intro + "\n" + link + "\n\n" + outro;
+            String html = "<p>" + toHtml(intro) + "</p>"
+                    + "<p><a href=\"" + HtmlUtils.htmlEscape(link) + "\">" + HtmlUtils.htmlEscape(link) + "</a></p>"
+                    + "<p>" + toHtml(outro) + "</p>";
+            helper.setText(plain, html);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new MailPreparationException("Impossible de préparer l'email.", e);
+        }
+    }
 
-        mailSender.send(message);
+    private static String toHtml(String text) {
+        return HtmlUtils.htmlEscape(text).replace("\n\n", "</p><p>").replace("\n", "<br>");
     }
 }
