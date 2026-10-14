@@ -47,3 +47,6 @@ AGENTS.MD
 
 # Playwright MCP (captures et journaux locaux)
 .playwright-mcp/
+
+# Contexte produit local pour les outils de design (non versionné)
+PRODUCT.md

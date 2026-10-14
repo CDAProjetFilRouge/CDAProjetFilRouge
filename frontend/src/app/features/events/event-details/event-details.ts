@@ -7,7 +7,7 @@ import { CommentModel } from './event-details-comments-model';
 import { InscriptionModel } from './event-details-inscription-model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago-pipe';
 import { CalendarService } from '../../calendar/calendar-service';
-import { InscriptionModel as AgendaInscription } from '../../calendar/calendar.models';
+import { InscriptionModel as AgendaInscription, toCalendarEvent } from '../../calendar/calendar.models';
 import { CalendarEvent } from '../../../shared/event-calendar/event-calendar.models';
 import { EventCalendar } from '../../../shared/event-calendar/event-calendar';
 import { InscriptionDialog } from './inscription-dialog/inscription-dialog';
@@ -76,17 +76,10 @@ export class EventDetails implements OnInit {
     }
     const others = this.agenda()
       .filter((i) => i.status !== 'CANCELED' && i.event.id !== event.id)
-      .map((i) => ({
-        id: String(i.event.id),
-        title: i.event.title,
-        start: i.event.startDateTime,
-        end: i.event.endDateTime,
-        muted: true,
-        badge: i.status === 'WAITING_LIST' ? 'Liste d’attente' : 'Inscrit·e',
-      }));
+      .map((i) => toCalendarEvent(i, { id: String(i.event.id), muted: true, confirmedBadge: true }));
     return [
       ...others,
-      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate },
+      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate, club: event.clubName },
     ];
   });
 

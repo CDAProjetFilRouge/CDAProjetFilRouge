@@ -22,6 +22,9 @@
         → {{ h.event.end | date: 'dd/MM/yyyy HH:mm' }}
       }
     </p>
+    @if (h.event.club) {
+      <p class="club">{{ h.event.club }}</p>
+    }
     @if (h.event.badge) {
       <span class="badge">{{ h.event.badge }}</span>
     }
