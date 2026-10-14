@@ -148,7 +148,7 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 600px), 1fr));
   // L'écart entre les deux colonnes grandit légèrement avec la largeur de la fenêtre.
   --gap: clamp(28px, calc(28px + (100vw - 1300px) / 12), 64px);
-  gap: 28px var(--gap);
+  gap: 40px var(--gap);
   max-width: calc(1500px + var(--gap));
   margin: 24px auto 0;
 }
@@ -176,6 +176,7 @@
   }
 
   .carousel {
-    gap: 22px;
+    row-gap: 32px;
+    column-gap: 22px;
   }
 }
