@@ -75,7 +75,7 @@ class PasswordServiceTest {
     void confirmPasswordReset_wrongTokenType_throwsBadRequest() {
         Token token = new Token();
         token.setTokenType(TokenType.ENABLE_ACCOUNT);
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
+        when(tokenRepo.findByValue(TokenHasher.sha256Hex("abc"))).thenReturn(Optional.of(token));
 
         assertThrows(BadRequestException.class, () -> passwordService.confirmPasswordReset("abc"));
     }
@@ -85,7 +85,7 @@ class PasswordServiceTest {
         Token token = new Token();
         token.setTokenType(TokenType.CHANGE_PWD);
         token.setUseDate(LocalDateTime.now().minusMinutes(5));
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
+        when(tokenRepo.findByValue(TokenHasher.sha256Hex("abc"))).thenReturn(Optional.of(token));
 
         assertThrows(BadRequestException.class, () -> passwordService.confirmPasswordReset("abc"));
     }
@@ -95,7 +95,7 @@ class PasswordServiceTest {
         Token token = new Token();
         token.setTokenType(TokenType.CHANGE_PWD);
         token.setExpirationDateTime(LocalDateTime.now().minusMinutes(1));
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
+        when(tokenRepo.findByValue(TokenHasher.sha256Hex("abc"))).thenReturn(Optional.of(token));
 
         assertThrows(BadRequestException.class, () -> passwordService.confirmPasswordReset("abc"));
     }

@@ -76,7 +76,11 @@ public class TokenService {
      * @throws HttpException if the token is unknown, of the wrong type, already used or expired
      */
     public Token getValidToken(String tokenValue, TokenType expectedType) throws HttpException {
-        Token token = tokenRepo.findByValue(tokenValue)
+        if (tokenValue == null || tokenValue.isBlank()) {
+            throw new BadRequestException("Token invalide.");
+        }
+
+        Token token = tokenRepo.findByValue(TokenHasher.sha256Hex(tokenValue))
                 .orElseThrow(() -> new BadRequestException("Token invalide."));
 
         if (token.getTokenType() != expectedType) {
@@ -109,11 +113,13 @@ public class TokenService {
      * @param type        type of the token
      * @param validity    how long the token stays valid
      * @param pendingData data kept with the token until it is confirmed (empty if none)
-     * @return the stored token
+     * @return the stored token, whose rawValue (the only copy of the secret) is meant to be sent to the user
      */
     public Token issue(AppUser user, TokenType type, Duration validity, String pendingData) {
+        String rawValue = UUID.randomUUID().toString();
         Token token = new Token();
-        token.setValue(UUID.randomUUID().toString());
+        token.setRawValue(rawValue);
+        token.setValue(TokenHasher.sha256Hex(rawValue));
         token.setTokenType(type);
         token.setUser(user);
         token.setCreationDateTime(LocalDateTime.now());
