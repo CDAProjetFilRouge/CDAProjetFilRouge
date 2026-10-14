@@ -167,8 +167,8 @@
     }
 
     &[data-status='FINISHED'] {
-      color: #1d4f91;
-      background: #e3edfb;
+      color: var(--color-primary-hover);
+      background: var(--color-primary-soft);
     }
   }
 
