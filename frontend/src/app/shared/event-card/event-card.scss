@@ -860,6 +860,13 @@ $grain-light: url('/grain-light.png');
   animation: stub-return .6s ease both;
 }
 
+// Désinscription : la souche revient se coller, comme l'arrachement filmé à l'envers.
+.card[data-phase='reattaching'] .stub {
+  z-index: 3;
+  transform-origin: left bottom;
+  animation: stub-attach .8s cubic-bezier(.25, .5, .5, 1) both;
+}
+
 @keyframes tear {
   0% {
     transform: perspective(900px) rotateY(-14deg) rotateZ(5deg);
@@ -877,6 +884,26 @@ $grain-light: url('/grain-light.png');
     transform: perspective(900px) translate(170px, 150px) rotateY(-20deg) rotateZ(62deg);
     filter: drop-shadow(-22px 26px 22px rgb(31 36 48 / 0.2));
     opacity: 0;
+  }
+}
+
+@keyframes stub-attach {
+  0% {
+    transform: perspective(900px) translate(170px, 150px) rotateY(-20deg) rotateZ(62deg);
+    filter: drop-shadow(-22px 26px 22px rgb(31 36 48 / 0.2));
+    opacity: 0;
+  }
+
+  55% {
+    transform: perspective(900px) translateX(4px) rotateY(-16deg) rotateZ(14deg);
+    filter: drop-shadow(-16px 16px 18px rgb(31 36 48 / 0.4));
+    opacity: 1;
+  }
+
+  100% {
+    transform: none;
+    filter: drop-shadow(0 0 0 rgb(31 36 48 / 0));
+    opacity: 1;
   }
 }
 
@@ -901,6 +928,10 @@ $grain-light: url('/grain-light.png');
   .card[data-phase='tearing'] .stub {
     animation: none;
     opacity: 0;
+  }
+
+  .card[data-phase='reattaching'] .stub {
+    animation: stub-return-fade .4s ease both;
   }
 
   .card[data-phase='returning'] .stub {
@@ -1223,6 +1254,18 @@ $grain-light: url('/grain-light.png');
     100% {
       transform: perspective(900px) translateY(120px) rotateX(55deg) rotateZ(4deg);
       opacity: 0;
+    }
+  }
+
+  @keyframes stub-attach {
+    0% {
+      transform: perspective(900px) translateY(120px) rotateX(55deg) rotateZ(4deg);
+      opacity: 0;
+    }
+
+    100% {
+      transform: none;
+      opacity: 1;
     }
   }
 }
