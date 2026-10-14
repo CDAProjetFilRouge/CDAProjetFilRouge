@@ -1,7 +1,7 @@
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'FINISHED';
 
 export interface EventDetailsModel{
-  id: number;
+  id: string;
   title: string;
   description: string;
   street1: string;
@@ -17,7 +17,7 @@ export interface EventDetailsModel{
   maxCapacity: number;
   remainingSpots: number;
   imageGallery: {
-      id: number;
+      id: string;
       path: string;
       displayOrder: number
     }[],
@@ -26,5 +26,5 @@ export interface EventDetailsModel{
   organizerFirstName: string;
   // Le backend sérialise ce champ en « organizerLastname » (getter getOrganizerLastname).
   organizerLastname: string;
-  organizerId: number;
+  organizerId: string;
 }

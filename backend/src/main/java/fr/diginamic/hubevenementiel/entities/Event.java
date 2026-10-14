@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import org.hibernate.annotations.BatchSize;
@@ -15,8 +18,10 @@ import java.util.List;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @Column(name = "title", nullable = false, length = 200)
     private String title;
@@ -66,7 +71,7 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String title, String description, Address location, Category category, LocalDateTime startDateTime,
+    public Event(UUID id, String title, String description, Address location, Category category, LocalDateTime startDateTime,
                  LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice,
                  Integer maxCapacity, List<Image> imageGallery, EventStatus status) {
         this.id = id;
@@ -84,11 +89,11 @@ public class Event {
     }
 
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -38,7 +39,7 @@ public class AccountDataCleaner {
      * @throws NotFoundException if an event of one of its inscriptions does not exist
      */
     public void clean(AppUser user, boolean deleteComments) throws NotFoundException {
-        Long id = user.getId();
+        UUID id = user.getId();
 
         if (deleteComments) {
             commentRepo.deleteByAuthorId(id);

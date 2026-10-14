@@ -99,7 +99,7 @@ export class Dashboard {
   protected readonly draftsTotal = signal(0);
   protected readonly draftsLoading = signal(false);
   protected readonly draftsError = signal<string | null>(null);
-  protected readonly publishingId = signal<number | null>(null);
+  protected readonly publishingId = signal<string | null>(null);
 
   constructor() {
     effect(() => {

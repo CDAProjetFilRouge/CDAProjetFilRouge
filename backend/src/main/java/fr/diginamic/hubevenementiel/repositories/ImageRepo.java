@@ -1,23 +1,24 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ImageRepo extends JpaRepository<Image, Long> {
+public interface ImageRepo extends JpaRepository<Image, UUID> {
 
     /**
      *
      * @param eventId id of the event you want to find all the images of
      * @return an ordered list of image
      */
-    List<Image> findByEventIdOrderByDisplayOrderAsc(Long eventId);
+    List<Image> findByEventIdOrderByDisplayOrderAsc(UUID eventId);
 
     /**
      *
      * @param eventId id of the event you want to search images of
      * @return numbers of images for this event
      */
-    long countByEventId(Long eventId);
+    long countByEventId(UUID eventId);
 }

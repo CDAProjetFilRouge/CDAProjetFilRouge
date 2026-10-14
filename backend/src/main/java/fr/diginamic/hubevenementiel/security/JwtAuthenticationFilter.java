@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.security;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -44,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(BEARER_PREFIX.length());
 
             if (jwtService.isTokenValid(token)) {
-                Long id = jwtService.extractUserId(token);
+                UUID id = jwtService.extractUserId(token);
 
                 boolean accountIsActive = userRepo.findById(id)
                         .map(user -> user.getStatus() == AccountStatus.ACTIVE)

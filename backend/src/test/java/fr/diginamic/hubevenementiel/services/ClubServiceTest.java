@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -154,26 +155,26 @@ class ClubServiceTest {
 
     @Test
     void updateClub_unknownId_throwsNotFound() {
-        when(clubRepository.findById(1L)).thenReturn(Optional.empty());
+        when(clubRepository.findById(uuid(1))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> clubService.updateClub(1L, validClub));
+        assertThrows(NotFoundException.class, () -> clubService.updateClub(uuid(1), validClub));
     }
 
     @Test
     void deleteClub_unknownId_throwsNotFound() {
-        when(clubRepository.findById(1L)).thenReturn(Optional.empty());
+        when(clubRepository.findById(uuid(1))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> clubService.deleteClub(1L));
+        assertThrows(NotFoundException.class, () -> clubService.deleteClub(uuid(1)));
     }
 
     @Test
     void updateClub_nameUnchangedCaseInsensitive_doesNotCheckDuplicate() throws HttpException {
         Club existing = new Club();
         existing.setName(validClub.getName().toUpperCase());
-        when(clubRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(clubRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(clubRepository.save(any(Club.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        clubService.updateClub(1L, validClub);
+        clubService.updateClub(uuid(1), validClub);
 
         verify(clubRepository, never()).existsByName(anyString());
     }
@@ -182,10 +183,10 @@ class ClubServiceTest {
     void updateClub_nameChangedToExistingOne_throwsConflict() {
         Club existing = new Club();
         existing.setName("Autre nom");
-        when(clubRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(clubRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(clubRepository.existsByName(validClub.getName())).thenReturn(true);
 
-        assertThrows(ConflictException.class, () -> clubService.updateClub(1L, validClub));
+        assertThrows(ConflictException.class, () -> clubService.updateClub(uuid(1), validClub));
     }
 
     // ---------------------------------------------------------------
@@ -195,9 +196,9 @@ class ClubServiceTest {
     @Test
     void deleteClub_doesNotDeleteTheRow() throws HttpException {
         Club existing = new Club();
-        when(clubRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(clubRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
 
-        clubService.deleteClub(1L);
+        clubService.deleteClub(uuid(1));
 
         verify(clubRepository, never()).delete(any(Club.class));
     }
@@ -205,9 +206,9 @@ class ClubServiceTest {
     @Test
     void deleteClub_setsEndValidityDateToToday() throws HttpException {
         Club existing = new Club();
-        when(clubRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(clubRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
 
-        clubService.deleteClub(1L);
+        clubService.deleteClub(uuid(1));
 
         assertThat(existing.getEndValidityDate()).isEqualTo(LocalDate.now());
         verify(clubRepository).save(existing);

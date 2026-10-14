@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -10,8 +13,10 @@ import java.util.List;
 public class Address {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
     @Column(name = "address_line1", nullable = false)
     private String street1;
     @Column(name = "address_line2")
@@ -35,7 +40,7 @@ public class Address {
     public Address() {
     }
 
-    public Address(Long id, String street1, String street2, String postalCode, String city, String country,
+    public Address(UUID id, String street1, String street2, String postalCode, String city, String country,
             List<Club> clubs, List<AppUser> users, List<Event> events) {
         this.id = id;
         this.street1 = street1;
@@ -48,11 +53,11 @@ public class Address {
         this.events = events;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

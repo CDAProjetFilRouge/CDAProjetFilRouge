@@ -8,7 +8,7 @@ export const ANONYMIZATION_DEMAND_LABELS: Record<AnonymizationDemandStatus, stri
 };
 
 export interface AnonymizationDemand {
-  id: number;
+  id: string;
   requestStatus: AnonymizationDemandStatus,
   demandDate: string,
   approvedDate: string | null,

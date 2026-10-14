@@ -40,7 +40,7 @@ export class Calendar {
     return ins !== null && new Date(ins.event.startDateTime) > new Date();
   });
 
-  private load(userId: number): void {
+  private load(userId: string): void {
     this.calendarService.getByUser(userId).subscribe({
       next: (list) => this.inscriptions.set(list),
       error: (err: HttpErrorResponse) => this.handleError(err),
@@ -74,7 +74,7 @@ export class Calendar {
 
   protected select(eventId: string): void {
     this.confirming.set(false);
-    this.selected.set(this.inscriptions().find((i) => i.id === Number(eventId)) ?? null);
+    this.selected.set(this.inscriptions().find((i) => i.id === eventId) ?? null);
   }
 
   // Appelé par l'évènement natif « close » (touche Échap, bouton de fermeture).

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class DashboardService {
         };
     }
 
-    private List<KpiResponseDto> memberKpis(Long userId, LocalDateTime now) {
+    private List<KpiResponseDto> memberKpis(UUID userId, LocalDateTime now) {
         return List.of(
                 new KpiResponseDto("MY_UPCOMING_EVENTS", "Événements à venir",
                         inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
@@ -65,7 +66,7 @@ public class DashboardService {
                 new KpiResponseDto("MY_CLUBS", "Mes clubs", clubRepo.countActiveByMemberId(userId)));
     }
 
-    private List<KpiResponseDto> organizerKpis(Long organizerId, LocalDateTime now) {
+    private List<KpiResponseDto> organizerKpis(UUID organizerId, LocalDateTime now) {
         long confirmed = inscriptionRepo.countForOrganizerEvents(
                 organizerId, EventStatus.PUBLISHED, InscriptionStatus.CONFIRMED, now);
         long capacity = eventRepo.sumCapacityByOrganizer(organizerId, EventStatus.PUBLISHED, now);

@@ -23,7 +23,7 @@ export class UserService {
     return this.http.get<Page<AppUser>>(`${URL_BACKEND}/users`, { params });
   }
 
-  deleteUser(id: number, deleteComments = false): Observable<void> {
+  deleteUser(id: string, deleteComments = false): Observable<void> {
     let params = new HttpParams();
     if (deleteComments) {
       params = params.set('deleteComments', deleteComments = true);
@@ -31,19 +31,19 @@ export class UserService {
     return this.http.delete<void>(`${URL_BACKEND}/users/${id}`, { params });
   }
 
-  suspendUser(id: number, suspensionEndDate?: string): Observable<AppUser> {
+  suspendUser(id: string, suspensionEndDate?: string): Observable<AppUser> {
     return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/suspend`, { suspensionEndDate });
   }
 
-  reactivateUser(id: number): Observable<AppUser> {
+  reactivateUser(id: string): Observable<AppUser> {
     return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/reactivate`, {});
   }
 
-  getUserByAdmin(id: number): Observable<AppUser> {
+  getUserByAdmin(id: string): Observable<AppUser> {
     return this.http.get<AppUser>(`${URL_BACKEND}/users/${id}`);
   }
 
-  updateUserByAdmin(id: number, updatedUser: AdminUserUpdate): Observable<AppUser> {
+  updateUserByAdmin(id: string, updatedUser: AdminUserUpdate): Observable<AppUser> {
     return this.http.put<AppUser>(`${URL_BACKEND}/users/${id}/admin`, updatedUser);
   }
 

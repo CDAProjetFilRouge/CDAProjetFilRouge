@@ -46,7 +46,7 @@ describe('ClubService', () => {
   });
 
   it('deleteClub appelle DELETE /clubs/{id}', () => {
-    service.deleteClub(5).subscribe();
+    service.deleteClub('5').subscribe();
 
     const req = httpMock.expectOne(`${URL_BACKEND}/clubs/5`);
     expect(req.request.method).toBe('DELETE');

@@ -1,8 +1,10 @@
 package fr.diginamic.hubevenementiel.dtos.appUser;
 
+import java.util.UUID;
+
 public class AppUserSummaryResponseDto {
 
-    private Long id;
+    private UUID id;
     private String firstName;
     private String lastName;
     private String email;
@@ -10,18 +12,18 @@ public class AppUserSummaryResponseDto {
     public AppUserSummaryResponseDto() {
     }
 
-    public AppUserSummaryResponseDto(Long id, String firstName, String lastName, String email) {
+    public AppUserSummaryResponseDto(UUID id, String firstName, String lastName, String email) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

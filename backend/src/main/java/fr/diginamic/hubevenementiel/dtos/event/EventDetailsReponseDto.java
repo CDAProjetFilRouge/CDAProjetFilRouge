@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.event;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -12,7 +13,7 @@ import java.util.List;
 public class EventDetailsReponseDto {
 
     //region Properties
-    private long id;
+    private UUID id;
     private String title;
     private String description;
     private String street1;
@@ -32,13 +33,13 @@ public class EventDetailsReponseDto {
     private String clubName;
     private String organizerFirstName;
     private String organizerLastname;
-    private Long organizerId;
+    private UUID organizerId;
     //endregion
 
     //region Constructor
     public EventDetailsReponseDto(){};
 
-    public EventDetailsReponseDto(long id, String title, String description, String street1, String street2,
+    public EventDetailsReponseDto(UUID id, String title, String description, String street1, String street2,
                                   String city, String postalCode, String country, Category category, LocalDateTime startDate,
                                   LocalDateTime endDate, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity,
                                   Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery, EventStatus status, String clubName,
@@ -68,11 +69,11 @@ public class EventDetailsReponseDto {
 
     //region Getters and Setters
 
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -228,11 +229,11 @@ public class EventDetailsReponseDto {
         this.organizerLastname = organizerLastname;
     }
 
-    public Long getOrganizerId() {
+    public UUID getOrganizerId() {
         return organizerId;
     }
 
-    public void setOrganizerId(Long organizerId) {
+    public void setOrganizerId(UUID organizerId) {
         this.organizerId = organizerId;
     }
     //endregion

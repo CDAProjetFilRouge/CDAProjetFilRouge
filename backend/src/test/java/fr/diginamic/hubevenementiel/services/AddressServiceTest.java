@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -90,7 +91,7 @@ class AddressServiceTest {
     @Test
     void createAddress_identicalExisting_returnsExistingWithoutDuplicating() throws HttpException {
         Address existing = new Address();
-        existing.setId(5L);
+        existing.setId(uuid(5));
         when(addressRepository.findByStreet1AndPostalCodeAndCity(
                 validAddress.getStreet1(), validAddress.getPostalCode(), validAddress.getCity()))
                 .thenReturn(Optional.of(existing));
@@ -121,15 +122,15 @@ class AddressServiceTest {
     @Test
     void updateAddress_collidesWithAnotherExistingAddress_returnsThatOtherAddress() throws HttpException {
         Address existing = new Address();
-        existing.setId(1L);
+        existing.setId(uuid(1));
         Address otherAddress = new Address();
-        otherAddress.setId(2L);
-        when(addressRepository.findById(1L)).thenReturn(Optional.of(existing));
+        otherAddress.setId(uuid(2));
+        when(addressRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(addressRepository.findByStreet1AndPostalCodeAndCity(
                 validAddress.getStreet1(), validAddress.getPostalCode(), validAddress.getCity()))
                 .thenReturn(Optional.of(otherAddress));
 
-        Address result = addressService.updateAddress(1L, validAddress);
+        Address result = addressService.updateAddress(uuid(1), validAddress);
 
         assertThat(result).isEqualTo(otherAddress);
         verify(addressRepository, never()).save(any(Address.class));
@@ -138,14 +139,14 @@ class AddressServiceTest {
     @Test
     void updateAddress_noCollision_updatesExistingAddress() throws HttpException {
         Address existing = new Address();
-        existing.setId(1L);
-        when(addressRepository.findById(1L)).thenReturn(Optional.of(existing));
+        existing.setId(uuid(1));
+        when(addressRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(addressRepository.findByStreet1AndPostalCodeAndCity(
                 validAddress.getStreet1(), validAddress.getPostalCode(), validAddress.getCity()))
                 .thenReturn(Optional.empty());
         when(addressRepository.save(any(Address.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Address result = addressService.updateAddress(1L, validAddress);
+        Address result = addressService.updateAddress(uuid(1), validAddress);
 
         assertThat(result.getStreet1()).isEqualTo(validAddress.getStreet1());
         verify(addressRepository).save(existing);

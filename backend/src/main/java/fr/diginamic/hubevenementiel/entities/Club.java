@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.Category;
 import jakarta.persistence.*;
 
@@ -12,8 +15,10 @@ import java.util.List;
 public class Club {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
     @Column(name = "name", nullable = false, length = 150)
     private String name;
     @Column(name = "category", nullable = false, length = 20)
@@ -43,7 +48,7 @@ public class Club {
     public Club() {
     }
 
-    public Club(Long id, String name, Category category, Address address, String email, String phone,
+    public Club(UUID id, String name, Category category, Address address, String email, String phone,
             LocalDate endValidityDate) {
         this.id = id;
         this.name = name;
@@ -54,11 +59,11 @@ public class Club {
         this.endValidityDate = endValidityDate;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

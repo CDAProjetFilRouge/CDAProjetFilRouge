@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;

@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
@@ -16,8 +19,10 @@ import java.util.List;
 public class AppUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @Column(name = "lastname", length = 100)
     private String lastName;
@@ -71,7 +76,7 @@ public class AppUser {
 
     public AppUser(LocalDate creationDate, LocalDateTime suspensionEndDate, AccountStatus status, Role role,
             String phone,
-            String hashedPassword, String email, String firstName, String lastName, Long id) {
+            String hashedPassword, String email, String firstName, String lastName, UUID id) {
         this.creationDate = creationDate;
         this.suspensionEndDate = suspensionEndDate;
         this.status = status;
@@ -156,11 +161,11 @@ public class AppUser {
         this.lastName = lastName;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
@@ -78,26 +79,26 @@ class AccountDeletionServiceTest {
     @Test
     void deleteAccount_noActivity_deletesTokensAndUser() throws HttpException {
         AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of());
+        user.setId(uuid(5));
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(inscriptionRepo.findAllByUserId(uuid(5))).thenReturn(List.of());
 
-        accountDeletionService.deleteAccount(5L, false);
+        accountDeletionService.deleteAccount(uuid(5), false);
 
         verify(tokenRepo).deleteByUser(user);
-        verify(anonymizationDemandRepo).deleteByRequesterId(5L);
+        verify(anonymizationDemandRepo).deleteByRequesterId(uuid(5));
         verify(userRepo).delete(user);
     }
 
     @Test
     void deleteAccount_organizerOfEvents_throwsConflictAndDeletesNothing() {
         AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(eventRepo.existsByOrganizerId(5L)).thenReturn(true);
-        when(clubRepo.existsByOwnerId(5L)).thenReturn(true);
+        user.setId(uuid(5));
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(eventRepo.existsByOrganizerId(uuid(5))).thenReturn(true);
+        when(clubRepo.existsByOwnerId(uuid(5))).thenReturn(true);
 
-        ConflictException ex = assertThrows(ConflictException.class, () -> accountDeletionService.deleteAccount(5L, false));
+        ConflictException ex = assertThrows(ConflictException.class, () -> accountDeletionService.deleteAccount(uuid(5), false));
 
         assertThat(ex.getMessage()).contains("organise des évènements").contains("anonymisation");
         verify(tokenRepo, never()).deleteByUser(any());
@@ -108,9 +109,9 @@ class AccountDeletionServiceTest {
     @Test
     void deleteAccount_confirmedInscriptionOnFutureEvent_removesItAndPromotesWaitingList() throws HttpException {
         AppUser user = new AppUser();
-        user.setId(5L);
+        user.setId(uuid(5));
         Event event = new Event();
-        event.setId(9L);
+        event.setId(uuid(9));
         event.setStartDateTime(LocalDateTime.now().plusDays(3));
         Inscription confirmed = new Inscription();
         confirmed.setUser(user);
@@ -119,13 +120,13 @@ class AccountDeletionServiceTest {
         Inscription waiting = new Inscription();
         waiting.setStatus(InscriptionStatus.WAITING_LIST);
 
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of(confirmed));
-        when(eventRepo.findByIdForUpdate(9L)).thenReturn(Optional.of(event));
-        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(9L, InscriptionStatus.WAITING_LIST))
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(inscriptionRepo.findAllByUserId(uuid(5))).thenReturn(List.of(confirmed));
+        when(eventRepo.findByIdForUpdate(uuid(9))).thenReturn(Optional.of(event));
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(uuid(9), InscriptionStatus.WAITING_LIST))
                 .thenReturn(List.of(waiting));
 
-        accountDeletionService.deleteAccount(5L, false);
+        accountDeletionService.deleteAccount(uuid(5), false);
 
         verify(inscriptionRepo).delete(confirmed);
         assertThat(waiting.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
@@ -135,18 +136,18 @@ class AccountDeletionServiceTest {
     @Test
     void deleteAccount_inscriptionOnPastEvent_removesItWithoutPromotion() throws HttpException {
         AppUser user = new AppUser();
-        user.setId(5L);
+        user.setId(uuid(5));
         Event event = new Event();
-        event.setId(9L);
+        event.setId(uuid(9));
         event.setStartDateTime(LocalDateTime.now().minusDays(3));
         Inscription confirmed = new Inscription();
         confirmed.setEvent(event);
         confirmed.setStatus(InscriptionStatus.CONFIRMED);
 
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of(confirmed));
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(inscriptionRepo.findAllByUserId(uuid(5))).thenReturn(List.of(confirmed));
 
-        accountDeletionService.deleteAccount(5L, false);
+        accountDeletionService.deleteAccount(uuid(5), false);
 
         verify(inscriptionRepo).delete(confirmed);
         verify(eventRepo, never()).findByIdForUpdate(any());
@@ -156,11 +157,11 @@ class AccountDeletionServiceTest {
     @Test
     void deleteAccount_onlyComments_throwsConflictWithCode() {
         AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(commentRepo.existsByAuthorId(5L)).thenReturn(true);
+        user.setId(uuid(5));
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(commentRepo.existsByAuthorId(uuid(5))).thenReturn(true);
 
-        ConflictException ex = assertThrows(ConflictException.class, () -> accountDeletionService.deleteAccount(5L, false));
+        ConflictException ex = assertThrows(ConflictException.class, () -> accountDeletionService.deleteAccount(uuid(5), false));
 
         assertThat(ex.getCode()).isEqualTo(AccountDeletionGuard.ACCOUNT_HAS_COMMENTS);
         verify(commentRepo, never()).deleteByAuthorId(any());
@@ -170,26 +171,26 @@ class AccountDeletionServiceTest {
     @Test
     void deleteAccount_onlyCommentsWithDeleteComments_deletesCommentsAndUser() throws HttpException {
         AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(commentRepo.existsByAuthorId(5L)).thenReturn(true);
-        when(inscriptionRepo.findAllByUserId(5L)).thenReturn(List.of());
+        user.setId(uuid(5));
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(commentRepo.existsByAuthorId(uuid(5))).thenReturn(true);
+        when(inscriptionRepo.findAllByUserId(uuid(5))).thenReturn(List.of());
 
-        accountDeletionService.deleteAccount(5L, true);
+        accountDeletionService.deleteAccount(uuid(5), true);
 
-        verify(commentRepo).deleteByAuthorId(5L);
+        verify(commentRepo).deleteByAuthorId(uuid(5));
         verify(userRepo).delete(user);
     }
 
     @Test
     void deleteAccount_commentsAndEventsWithDeleteComments_stillRefusedWithoutCode() {
         AppUser user = new AppUser();
-        user.setId(5L);
-        when(userRepo.findById(5L)).thenReturn(Optional.of(user));
-        when(eventRepo.existsByOrganizerId(5L)).thenReturn(true);
-        when(commentRepo.existsByAuthorId(5L)).thenReturn(true);
+        user.setId(uuid(5));
+        when(userRepo.findById(uuid(5))).thenReturn(Optional.of(user));
+        when(eventRepo.existsByOrganizerId(uuid(5))).thenReturn(true);
+        when(commentRepo.existsByAuthorId(uuid(5))).thenReturn(true);
 
-        ConflictException ex = assertThrows(ConflictException.class, () -> accountDeletionService.deleteAccount(5L, true));
+        ConflictException ex = assertThrows(ConflictException.class, () -> accountDeletionService.deleteAccount(uuid(5), true));
 
         assertThat(ex.getCode()).isNull();
         assertThat(ex.getMessage()).contains("organise des évènements").contains("commentaires");

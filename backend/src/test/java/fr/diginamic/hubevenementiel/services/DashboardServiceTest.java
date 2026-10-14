@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,14 +50,14 @@ class DashboardServiceTest {
 
     @Test
     void getKpis_member_returnsInscriptionAndClubCounters() {
-        AppUserPrincipal principal = new AppUserPrincipal(4L, "m@example.com", "MEMBER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(4), "m@example.com", "MEMBER");
         when(inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
-                eq(4L), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(3L);
+                eq(uuid(4)), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(3L);
         when(inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
-                eq(4L), eq(InscriptionStatus.WAITING_LIST), any(LocalDateTime.class))).thenReturn(1L);
+                eq(uuid(4)), eq(InscriptionStatus.WAITING_LIST), any(LocalDateTime.class))).thenReturn(1L);
         when(inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeLessThan(
-                eq(4L), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(7L);
-        when(clubRepo.countActiveByMemberId(4L)).thenReturn(2L);
+                eq(uuid(4)), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(7L);
+        when(clubRepo.countActiveByMemberId(uuid(4))).thenReturn(2L);
 
         List<KpiResponseDto> kpis = dashboardService.getKpis(principal);
 
@@ -69,14 +70,14 @@ class DashboardServiceTest {
 
     @Test
     void getKpis_organizer_computesFillRate() {
-        AppUserPrincipal principal = new AppUserPrincipal(5L, "o@example.com", "ORGANIZER");
-        when(inscriptionRepo.countForOrganizerEvents(eq(5L), eq(EventStatus.PUBLISHED),
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(5), "o@example.com", "ORGANIZER");
+        when(inscriptionRepo.countForOrganizerEvents(eq(uuid(5)), eq(EventStatus.PUBLISHED),
                 eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(30L);
-        when(eventRepo.sumCapacityByOrganizer(eq(5L), eq(EventStatus.PUBLISHED), any(LocalDateTime.class)))
+        when(eventRepo.sumCapacityByOrganizer(eq(uuid(5)), eq(EventStatus.PUBLISHED), any(LocalDateTime.class)))
                 .thenReturn(120L);
         when(eventRepo.countByOrganizerIdAndStatusAndStartDateTimeGreaterThanEqual(
-                eq(5L), eq(EventStatus.PUBLISHED), any(LocalDateTime.class))).thenReturn(4L);
-        when(eventRepo.countByOrganizerIdAndStatus(5L, EventStatus.DRAFT)).thenReturn(2L);
+                eq(uuid(5)), eq(EventStatus.PUBLISHED), any(LocalDateTime.class))).thenReturn(4L);
+        when(eventRepo.countByOrganizerIdAndStatus(uuid(5), EventStatus.DRAFT)).thenReturn(2L);
 
         List<KpiResponseDto> kpis = dashboardService.getKpis(principal);
 
@@ -88,7 +89,7 @@ class DashboardServiceTest {
 
     @Test
     void getKpis_organizerWithoutCapacity_fillRateIsZero() {
-        AppUserPrincipal principal = new AppUserPrincipal(5L, "o@example.com", "ORGANIZER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(5), "o@example.com", "ORGANIZER");
 
         List<KpiResponseDto> kpis = dashboardService.getKpis(principal);
 
@@ -97,7 +98,7 @@ class DashboardServiceTest {
 
     @Test
     void getKpis_administrator_returnsGlobalCounters() {
-        AppUserPrincipal principal = new AppUserPrincipal(1L, "a@example.com", "ADMINISTRATOR");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(1), "a@example.com", "ADMINISTRATOR");
         when(userRepo.countByStatus(AccountStatus.ACTIVE)).thenReturn(40L);
         when(userRepo.countByStatus(AccountStatus.SUSPENDED)).thenReturn(3L);
         when(anonymizationDemandRepo.countByRequestStatus(RequestStatus.PENDING)).thenReturn(5L);

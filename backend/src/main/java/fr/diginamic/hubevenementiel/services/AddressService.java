@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
@@ -43,7 +44,7 @@ public class AddressService {
      * @return an object of address
      * @throws HttpException
      */
-    public Address findById(Long addressId) throws HttpException {
+    public Address findById(UUID addressId) throws HttpException {
         Optional<Address> optionalAddress = addressRepository.findById(addressId);
 
         if (optionalAddress.isEmpty()) {
@@ -80,7 +81,7 @@ public class AddressService {
      * @throws HttpException
      */
     @Transactional
-    public Address updateAddress(Long id, Address addressDetails) throws HttpException {
+    public Address updateAddress(UUID id, Address addressDetails) throws HttpException {
 
         Address existing = addressRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Adresse introuvable avec l'id " + id));
@@ -113,7 +114,7 @@ public class AddressService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteAddress(Long id) throws HttpException {
+    public void deleteAddress(UUID id) throws HttpException {
 
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Adresse introuvable avec l'id " + id));

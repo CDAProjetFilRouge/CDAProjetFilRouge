@@ -6,8 +6,8 @@ import { URL_BACKEND } from '../../../core/api/api.config';
 export type RegistrationStatus = 'CONFIRMED' | 'WAITING_LIST' | 'CANCELED';
 
 export interface Registration {
-  id: number;
-  user: { id: number; firstName: string; lastName: string; email: string };
+  id: string;
+  user: { id: string; firstName: string; lastName: string; email: string };
   inscriptionDate: string;
   status: RegistrationStatus;
   price: number;
@@ -19,7 +19,7 @@ const PAGE_SIZE = 200;
 export class EventRegistrationsService {
   private readonly http = inject(HttpClient);
 
-  getAll(eventId: number): Observable<Registration[]> {
+  getAll(eventId: string): Observable<Registration[]> {
     return this.fetchPage(eventId, 0).pipe(
       expand(({ items, index }) => (items.length === PAGE_SIZE ? this.fetchPage(eventId, index + 1) : EMPTY)),
       map(({ items }) => items),
@@ -27,7 +27,7 @@ export class EventRegistrationsService {
     );
   }
 
-  private fetchPage(eventId: number, index: number): Observable<{ items: Registration[]; index: number }> {
+  private fetchPage(eventId: string, index: number): Observable<{ items: Registration[]; index: number }> {
     return this.http
       .get<Registration[]>(`${URL_BACKEND}/inscriptions/event/${eventId}`, {
         params: { page: index, size: PAGE_SIZE },

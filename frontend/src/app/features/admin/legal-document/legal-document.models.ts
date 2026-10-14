@@ -1,7 +1,7 @@
 import { AppUserSummary } from "../../../core/models/user.models";
 
 export interface LegalDocument {
-  id: number;
+  id: string;
   documentType: DocumentType;
   content: string;
   version: number;

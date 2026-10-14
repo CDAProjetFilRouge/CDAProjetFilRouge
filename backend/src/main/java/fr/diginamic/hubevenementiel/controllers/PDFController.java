@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.openapi.PdfApi;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
@@ -30,10 +31,10 @@ public class PDFController implements PdfApi {
 
     @Override
     @GetMapping("/event/{idEvent}")
-    public ResponseEntity<byte[]> eventPDF(@PathVariable Long idEvent) throws IOException, NotFoundException {
+    public ResponseEntity<byte[]> eventPDF(@PathVariable UUID idEvent) throws IOException, NotFoundException {
         // The endpoint is public: the principal is only present when a valid token was sent.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = authentication != null && authentication.getPrincipal() instanceof AppUserPrincipal principal
+        UUID userId = authentication != null && authentication.getPrincipal() instanceof AppUserPrincipal principal
                 ? principal.id()
                 : null;
 
@@ -48,7 +49,7 @@ public class PDFController implements PdfApi {
 
     @Override
     @GetMapping("/legalDocument/{idDocument}")
-    public ResponseEntity<byte[]> legalDocumentPDF(@PathVariable Long idDocument) throws IOException, NotFoundException {
+    public ResponseEntity<byte[]> legalDocumentPDF(@PathVariable UUID idDocument) throws IOException, NotFoundException {
         byte[] pdf = pdfService.generateCUPDF(idDocument);
 
         ContentDisposition disposition = ContentDisposition.attachment()

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -76,7 +77,7 @@ class RgpdIntegrationTest {
 
         mockMvc.perform(post("/anonymization-demands").header("Authorization", "Bearer " + token))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.requester.id").value(requester.getId()))
+                .andExpect(jsonPath("$.requester.id").value(requester.getId().toString()))
                 .andExpect(jsonPath("$.requestStatus").value("PENDING"));
     }
 
@@ -90,7 +91,7 @@ class RgpdIntegrationTest {
                         .header("Authorization", "Bearer " + requesterToken))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long demandId = ((Number) objectMapper.readValue(demandResponse, Map.class).get("id")).longValue();
+        UUID demandId = UUID.fromString((String) objectMapper.readValue(demandResponse, Map.class).get("id"));
 
         AppUser admin = createUser("admin-rgpd", Role.ADMINISTRATOR);
         String adminToken = loginAndGetToken(admin.getEmail());
@@ -99,7 +100,7 @@ class RgpdIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.requestStatus").value("VALIDATE"))
-                .andExpect(jsonPath("$.admin.id").value(admin.getId()));
+                .andExpect(jsonPath("$.admin.id").value(admin.getId().toString()));
 
         AppUser refreshed = userRepo.findById(requester.getId()).orElseThrow();
         assertThat(refreshed.getEmail()).isNotEqualTo(originalEmail);
@@ -119,7 +120,7 @@ class RgpdIntegrationTest {
                         .header("Authorization", "Bearer " + requesterToken))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long demandId = ((Number) objectMapper.readValue(demandResponse, Map.class).get("id")).longValue();
+        UUID demandId = UUID.fromString((String) objectMapper.readValue(demandResponse, Map.class).get("id"));
 
         mockMvc.perform(put("/anonymization-demands/" + demandId + "/validate")
                         .header("Authorization", "Bearer " + requesterToken))
@@ -135,7 +136,7 @@ class RgpdIntegrationTest {
                         .header("Authorization", "Bearer " + requesterToken))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long demandId = ((Number) objectMapper.readValue(demandResponse, Map.class).get("id")).longValue();
+        UUID demandId = UUID.fromString((String) objectMapper.readValue(demandResponse, Map.class).get("id"));
 
         AppUser adminA = createUser("admin-a", Role.ADMINISTRATOR);
         String adminAToken = loginAndGetToken(adminA.getEmail());
@@ -143,6 +144,6 @@ class RgpdIntegrationTest {
         mockMvc.perform(put("/anonymization-demands/" + demandId + "/validate")
                         .header("Authorization", "Bearer " + adminAToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.admin.id").value(adminA.getId()));
+                .andExpect(jsonPath("$.admin.id").value(adminA.getId().toString()));
     }
 }

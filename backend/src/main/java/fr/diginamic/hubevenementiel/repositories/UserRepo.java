@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepo extends JpaRepository<AppUser, Long>, JpaSpecificationExecutor<AppUser> {
+public interface UserRepo extends JpaRepository<AppUser, UUID>, JpaSpecificationExecutor<AppUser> {
 
     /**
      * @param status accounts with this status

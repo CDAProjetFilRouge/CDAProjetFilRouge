@@ -11,10 +11,10 @@ const END = new Date(START.getTime() + 2 * 60 * 60 * 1000);
 
 function makeEvent(overrides: Partial<EventModel> = {}): EventModel {
   return {
-    id: 7,
+    id: '7',
     title: 'Tournoi de tennis',
     description: '',
-    location: { id: 1, street1: '12 rue de la Paix', street2: '', postalCode: '31000', city: 'Toulouse', country: 'France' },
+    location: { id: '1', street1: '12 rue de la Paix', street2: '', postalCode: '31000', city: 'Toulouse', country: 'France' },
     category: 'SPORT',
     startDateTime: START,
     endDateTime: END,

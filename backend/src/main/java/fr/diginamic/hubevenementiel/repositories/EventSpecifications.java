@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
@@ -78,7 +79,7 @@ public class EventSpecifications {
     }
 
     // Évènements dont l'utilisateur est l'organisateur, quel que soit leur statut.
-    public static Specification<Event> organizedBy(Long organizerId) {
+    public static Specification<Event> organizedBy(UUID organizerId) {
         return (root, query, cb) -> cb.equal(root.get("organizer").get("id"), organizerId);
     }
 

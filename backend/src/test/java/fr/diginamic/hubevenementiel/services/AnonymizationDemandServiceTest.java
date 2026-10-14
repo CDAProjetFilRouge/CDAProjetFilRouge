@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
@@ -45,10 +46,10 @@ class AnonymizationDemandServiceTest {
     @BeforeEach
     void setUp() {
         requester = new AppUser();
-        requester.setId(6L);
+        requester.setId(uuid(6));
 
         admin = new AppUser();
-        admin.setId(9L);
+        admin.setId(uuid(9));
     }
 
     // ---------------------------------------------------------------
@@ -57,16 +58,16 @@ class AnonymizationDemandServiceTest {
 
     @Test
     void request_unknownUser_throwsNotFound() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(999L, "inconnu@example.com", "MEMBER");
-        when(appUserService.findById(999L)).thenThrow(new NotFoundException("User not found with id: 999"));
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(999), "inconnu@example.com", "MEMBER");
+        when(appUserService.findById(uuid(999))).thenThrow(new NotFoundException("User not found with id: 999"));
 
         assertThrows(NotFoundException.class, () -> anonymizationDemandService.request(principal));
     }
 
     @Test
     void request_createsDemandForTheCallerHimself() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
-        when(appUserService.findById(6L)).thenReturn(requester);
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
+        when(appUserService.findById(uuid(6))).thenReturn(requester);
         when(anonymizationDemandRepository.save(any(AnonymizationDemand.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -81,27 +82,27 @@ class AnonymizationDemandServiceTest {
 
     @Test
     void validate_unknownDemandId_throwsNotFound() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(9L, "emma@example.com", "ADMINISTRATOR");
-        when(appUserService.findById(9L)).thenReturn(admin);
-        when(anonymizationDemandRepository.findById(1L)).thenReturn(Optional.empty());
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(9), "emma@example.com", "ADMINISTRATOR");
+        when(appUserService.findById(uuid(9))).thenReturn(admin);
+        when(anonymizationDemandRepository.findById(uuid(1))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> anonymizationDemandService.validate(1L, principal));
+        assertThrows(NotFoundException.class, () -> anonymizationDemandService.validate(uuid(1), principal));
     }
 
     @Test
     void validate_happyPath_setsAdminApprovedDateAndStatusValidate() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(9L, "emma@example.com", "ADMINISTRATOR");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(9), "emma@example.com", "ADMINISTRATOR");
         AnonymizationDemand demand = new AnonymizationDemand();
-        demand.setId(1L);
+        demand.setId(uuid(1));
         demand.setRequester(requester);
         demand.setRequestStatus(RequestStatus.PENDING);
 
-        when(appUserService.findById(9L)).thenReturn(admin);
-        when(anonymizationDemandRepository.findById(1L)).thenReturn(Optional.of(demand));
+        when(appUserService.findById(uuid(9))).thenReturn(admin);
+        when(anonymizationDemandRepository.findById(uuid(1))).thenReturn(Optional.of(demand));
         when(anonymizationDemandRepository.save(any(AnonymizationDemand.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        AnonymizationDemand result = anonymizationDemandService.validate(1L, principal);
+        AnonymizationDemand result = anonymizationDemandService.validate(uuid(1), principal);
 
         assertThat(result.getRequestStatus()).isEqualTo(RequestStatus.VALIDATE);
         assertThat(result.getAdmin()).isEqualTo(admin);
@@ -110,21 +111,21 @@ class AnonymizationDemandServiceTest {
 
     @Test
     void validate_adminIsTheAuthenticatedCaller_notAClientSuppliedId() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(9L, "emma@example.com", "ADMINISTRATOR");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(9), "emma@example.com", "ADMINISTRATOR");
         AnonymizationDemand demand = new AnonymizationDemand();
-        demand.setId(1L);
+        demand.setId(uuid(1));
         demand.setRequester(requester);
         demand.setRequestStatus(RequestStatus.PENDING);
 
-        when(appUserService.findById(9L)).thenReturn(admin);
-        when(anonymizationDemandRepository.findById(1L)).thenReturn(Optional.of(demand));
+        when(appUserService.findById(uuid(9))).thenReturn(admin);
+        when(anonymizationDemandRepository.findById(uuid(1))).thenReturn(Optional.of(demand));
         when(anonymizationDemandRepository.save(any(AnonymizationDemand.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        anonymizationDemandService.validate(1L, principal);
+        anonymizationDemandService.validate(uuid(1), principal);
 
-        // appUserService.findById n'est appelé qu'avec l'id du principal (9L), jamais un id arbitraire
-        org.mockito.Mockito.verify(appUserService).findById(9L);
+        // appUserService.findById n'est appelé qu'avec l'id du principal (uuid(9)), jamais un id arbitraire
+        org.mockito.Mockito.verify(appUserService).findById(uuid(9));
     }
 
     // ---------------------------------------------------------------
@@ -148,7 +149,7 @@ class AnonymizationDemandServiceTest {
     void anonymizationDemandChecker_unknownRequester_throwsNotFound() throws HttpException {
         AnonymizationDemand demand = new AnonymizationDemand();
         demand.setRequester(requester);
-        when(appUserService.findById(6L)).thenThrow(new NotFoundException("User not found with id: 6"));
+        when(appUserService.findById(uuid(6))).thenThrow(new NotFoundException("User not found with id: 6"));
 
         assertThrows(NotFoundException.class, () -> anonymizationDemandService.anonymizationDemandChecker(demand));
     }
@@ -164,7 +165,7 @@ class AnonymizationDemandServiceTest {
         demand.setRequestStatus(RequestStatus.VALIDATE);
         demand.setAdmin(admin);
         demand.setApprovedDate(LocalDateTime.now());
-        when(appUserService.findById(6L)).thenReturn(requester);
+        when(appUserService.findById(uuid(6))).thenReturn(requester);
         when(anonymizationDemandRepository.save(any(AnonymizationDemand.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -204,9 +205,9 @@ class AnonymizationDemandServiceTest {
 
     @Test
     void request_pendingDemandAlreadyExists_throwsConflictAndSavesNothing() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
-        when(appUserService.findById(6L)).thenReturn(requester);
-        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(6L, RequestStatus.PENDING))
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
+        when(appUserService.findById(uuid(6))).thenReturn(requester);
+        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(uuid(6), RequestStatus.PENDING))
                 .thenReturn(true);
 
         assertThrows(ConflictException.class, () -> anonymizationDemandService.request(principal));
@@ -219,8 +220,8 @@ class AnonymizationDemandServiceTest {
 
     @Test
     void hasPendingDemand_pendingDemandExists_returnsTrue() {
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
-        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(6L, RequestStatus.PENDING))
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
+        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(uuid(6), RequestStatus.PENDING))
                 .thenReturn(true);
 
         assertThat(anonymizationDemandService.hasPendingDemand(principal)).isTrue();
@@ -228,8 +229,8 @@ class AnonymizationDemandServiceTest {
 
     @Test
     void hasPendingDemand_noPendingDemand_returnsFalse() {
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
-        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(6L, RequestStatus.PENDING))
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
+        when(anonymizationDemandRepository.existsByRequesterIdAndRequestStatus(uuid(6), RequestStatus.PENDING))
                 .thenReturn(false);
 
         assertThat(anonymizationDemandService.hasPendingDemand(principal)).isFalse();

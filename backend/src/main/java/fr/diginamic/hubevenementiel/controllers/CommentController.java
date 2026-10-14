@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
@@ -31,7 +32,7 @@ public class CommentController implements CommentApi {
     @Override
     @GetMapping
     public List<CommentResponseDto> getByEvent(
-            @PathVariable Long eventId,
+            @PathVariable UUID eventId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
         return commentService.findByEvent(eventId, page, size).stream()
@@ -41,7 +42,7 @@ public class CommentController implements CommentApi {
 
     @Override
     @PostMapping
-    public ResponseEntity<CommentResponseDto> create(@PathVariable Long eventId, @RequestParam String content) throws HttpException {
+    public ResponseEntity<CommentResponseDto> create(@PathVariable UUID eventId, @RequestParam String content) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment created = commentService.createComment(eventId, principal.id(), content);
         return ResponseEntity.status(HttpStatus.CREATED).body(commentMapper.toDto(created));
@@ -50,7 +51,7 @@ public class CommentController implements CommentApi {
     @Override
     @Secured({"ROLE_MEMBER", "ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PutMapping("/{id}")
-    public ResponseEntity<CommentResponseDto> update(@PathVariable Long eventId, @PathVariable("id") Long commentId, @RequestParam String newContent) throws HttpException {
+    public ResponseEntity<CommentResponseDto> update(@PathVariable UUID eventId, @PathVariable("id") UUID commentId, @RequestParam String newContent) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment updatedComment = commentService.updateComment(eventId, commentId, newContent, principal);
         return ResponseEntity.status(HttpStatus.OK).body(commentMapper.toDto(updatedComment));
@@ -59,7 +60,7 @@ public class CommentController implements CommentApi {
     @Override
     @Secured({"ROLE_MEMBER", "ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable("id") Long commentId) throws HttpException {
+    public ResponseEntity<Void> delete(@PathVariable UUID eventId, @PathVariable("id") UUID commentId) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         commentService.deleteComment(eventId, commentId, principal);
         return ResponseEntity.noContent().build();

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.comment.CommentResponseDto;
@@ -22,7 +23,7 @@ public interface CommentApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
-    List<CommentResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
+    List<CommentResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size) throws HttpException;
 
@@ -33,7 +34,7 @@ public interface CommentApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Évènement ou auteur introuvable")
     })
-    ResponseEntity<CommentResponseDto> create(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
+    ResponseEntity<CommentResponseDto> create(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
             @Parameter(description = "Contenu du commentaire", required = true) String content) throws HttpException;
 
     @Operation(summary = "Modifier un commentaire", description = "Réservé à l'auteur du commentaire.")
@@ -43,8 +44,8 @@ public interface CommentApi {
             @ApiResponse(responseCode = "403", description = "Seul l'auteur peut modifier son commentaire"),
             @ApiResponse(responseCode = "404", description = "Commentaire introuvable pour cet évènement")
     })
-    ResponseEntity<CommentResponseDto> update(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
-            @Parameter(description = "Identifiant du commentaire", required = true) Long commentId,
+    ResponseEntity<CommentResponseDto> update(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
+            @Parameter(description = "Identifiant du commentaire", required = true) UUID commentId,
             @Parameter(description = "Nouveau contenu du commentaire", required = true) String newContent) throws HttpException;
 
     @Operation(summary = "Supprimer un commentaire",
@@ -55,6 +56,6 @@ public interface CommentApi {
             @ApiResponse(responseCode = "403", description = "Droits insuffisants pour supprimer ce commentaire"),
             @ApiResponse(responseCode = "404", description = "Commentaire introuvable pour cet évènement")
     })
-    ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
-            @Parameter(description = "Identifiant du commentaire", required = true) Long commentId) throws HttpException;
+    ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
+            @Parameter(description = "Identifiant du commentaire", required = true) UUID commentId) throws HttpException;
 }

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Comment;
 import fr.diginamic.hubevenementiel.entities.Event;
@@ -40,7 +41,7 @@ public class CommentService {
      * @return a list of comments
      * @throws HttpException
      */
-    public List<Comment> findByEvent(Long eventId, int page, int size) throws HttpException {
+    public List<Comment> findByEvent(UUID eventId, int page, int size) throws HttpException {
         eventService.findById(eventId);
 
         Pageable pageable = PageRequest.of(page, size);
@@ -56,7 +57,7 @@ public class CommentService {
      * @throws HttpException
      */
     @Transactional
-    public Comment createComment(Long eventId, Long authorId, String content) throws HttpException {
+    public Comment createComment(UUID eventId, UUID authorId, String content) throws HttpException {
         Event event = eventService.findById(eventId);
         AppUser author = appUserService.findById(authorId);
 
@@ -89,7 +90,7 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment updateComment(Long eventId, Long commentId, String newComment, AppUserPrincipal principal) throws HttpException {
+    public Comment updateComment(UUID eventId, UUID commentId, String newComment, AppUserPrincipal principal) throws HttpException {
         Comment comment = findCommentById(commentId);
 
         if (!comment.getEvent().getId().equals(eventId)) {
@@ -110,7 +111,7 @@ public class CommentService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteComment(Long eventId, Long commentId, AppUserPrincipal principal) throws HttpException {
+    public void deleteComment(UUID eventId, UUID commentId, AppUserPrincipal principal) throws HttpException {
         Comment comment = findCommentById(commentId);
 
         if (!comment.getEvent().getId().equals(eventId)) {
@@ -136,7 +137,7 @@ public class CommentService {
      * @return object of type Comment
      * @throws HttpException
      */
-    public Comment findCommentById(Long id) throws HttpException {
+    public Comment findCommentById(UUID id) throws HttpException {
         Optional<Comment> c = commentRepo.findById(id);
         if (c.isEmpty()) {
             throw new NotFoundException("Aucun commentaire trouvé avec l'id : " + id);
@@ -153,7 +154,7 @@ public class CommentService {
      * @return a list of comments
      * @throws HttpException
      */
-    public List<Comment> findByAuthorId(Long id, int page, int size) throws HttpException {
+    public List<Comment> findByAuthorId(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Comment> comments = commentRepo.findByAuthorId(id, pageable).getContent();
 
@@ -172,7 +173,7 @@ public class CommentService {
      * @return a list of comments
      * @throws HttpException
      */
-    public List<Comment> findByEventId(Long id, int page, int size) throws HttpException {
+    public List<Comment> findByEventId(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Comment> comments = commentRepo.findByEventId(id, pageable).getContent();
 

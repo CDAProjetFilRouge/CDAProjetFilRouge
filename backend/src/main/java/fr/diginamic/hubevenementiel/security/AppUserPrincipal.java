@@ -1,4 +1,6 @@
 package fr.diginamic.hubevenementiel.security;
 
-public record AppUserPrincipal(Long id, String email, String role) {
+import java.util.UUID;
+
+public record AppUserPrincipal(UUID id, String email, String role) {
 }

@@ -17,12 +17,12 @@ export class ClubForm {
   private readonly clubService = inject(ClubService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly id = Number(this.route.snapshot.paramMap.get('id'));
+  private readonly id = this.route.snapshot.paramMap.get('id') ?? '';
   protected readonly CLUB_CATEGORY_LABELS = CLUB_CATEGORY_LABELS;
   protected readonly categories = Object.keys(CLUB_CATEGORY_LABELS) as ClubCategory[];
   readonly errorMessage = signal('');
   readonly isSubmitting = signal(false);
-  readonly isEdit = this.id !== 0;
+  readonly isEdit = this.id !== '';
 
   readonly form = this.formBuilder.group({
     name: ['', Validators.required],

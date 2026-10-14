@@ -29,7 +29,7 @@ public class TokenService {
         return tokenRepo.findAll();
     }
 
-    public Token findTokenById(Long id) throws HttpException {
+    public Token findTokenById(UUID id) throws HttpException {
         Optional<Token> token = tokenRepo.findById(id);
         if(token.isEmpty()){
             throw new NotFoundException("No token found with id: "+id);
@@ -124,7 +124,7 @@ public class TokenService {
     }
 
     @Transactional
-    public void deleteToken(Long id) throws  HttpException {
+    public void deleteToken(UUID id) throws  HttpException {
         Optional<Token> token = tokenRepo.findById(id);
 
         if(token.isEmpty()){

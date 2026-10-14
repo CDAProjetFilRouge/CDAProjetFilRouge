@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.security;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -71,8 +72,8 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_validToken_populatesSecurityContextWithPrincipal() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
         when(jwtService.isTokenValid("token-valide")).thenReturn(true);
-        when(jwtService.extractUserId("token-valide")).thenReturn(6L);
-        when(userRepo.findById(6L)).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
         when(jwtService.extractEmail("token-valide")).thenReturn("alice.martin@example.com");
         when(jwtService.extractRole("token-valide")).thenReturn("ORGANIZER");
 
@@ -81,7 +82,7 @@ class JwtAuthenticationFilterTest {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertThat(auth).isNotNull();
         AppUserPrincipal principal = (AppUserPrincipal) auth.getPrincipal();
-        assertThat(principal.id()).isEqualTo(6L);
+        assertThat(principal.id()).isEqualTo(uuid(6));
         assertThat(principal.email()).isEqualTo("alice.martin@example.com");
         assertThat(principal.role()).isEqualTo("ORGANIZER");
         verify(filterChain).doFilter(request, response);
@@ -91,8 +92,8 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_validTokenOfSuspendedUser_continuesUnauthenticated() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
         when(jwtService.isTokenValid("token-valide")).thenReturn(true);
-        when(jwtService.extractUserId("token-valide")).thenReturn(6L);
-        when(userRepo.findById(6L)).thenReturn(Optional.of(userWithStatus(AccountStatus.SUSPENDED)));
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.SUSPENDED)));
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -104,8 +105,8 @@ class JwtAuthenticationFilterTest {
     void doFilterInternal_validTokenOfUnknownUser_continuesUnauthenticated() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
         when(jwtService.isTokenValid("token-valide")).thenReturn(true);
-        when(jwtService.extractUserId("token-valide")).thenReturn(6L);
-        when(userRepo.findById(6L)).thenReturn(Optional.empty());
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.empty());
 
         filter.doFilterInternal(request, response, filterChain);
 

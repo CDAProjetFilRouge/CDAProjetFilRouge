@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -246,9 +247,9 @@ class InscriptionControllerIntegrationTest {
         String thirdInscriptions = mockMvc.perform(get("/inscriptions/user/" + third.getId())
                         .header("Authorization", "Bearer " + thirdToken))
                 .andReturn().getResponse().getContentAsString();
-        Number thirdInscriptionId = (Number) objectMapper.readValue(thirdInscriptions, java.util.List.class)
+        String thirdInscriptionId = (String) objectMapper.readValue(thirdInscriptions, java.util.List.class)
                 .stream().map(o -> ((Map<?, ?>) o).get("id")).findFirst().orElseThrow();
-        mockMvc.perform(delete("/inscriptions/" + thirdInscriptionId.longValue())
+        mockMvc.perform(delete("/inscriptions/" + thirdInscriptionId)
                         .header("Authorization", "Bearer " + thirdToken))
                 .andExpect(status().isNoContent());
 
@@ -377,7 +378,7 @@ class InscriptionControllerIntegrationTest {
                         .param("eventId", String.valueOf(event.getId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long confirmedInscriptionId = ((Number) objectMapper.readValue(confirmedResponse, Map.class).get("id")).longValue();
+        UUID confirmedInscriptionId = UUID.fromString((String) objectMapper.readValue(confirmedResponse, Map.class).get("id"));
 
         String waitingToken = loginAndGetToken(waitingMember.getEmail());
         mockMvc.perform(post("/inscriptions")
@@ -415,7 +416,7 @@ class InscriptionControllerIntegrationTest {
                         .param("eventId", String.valueOf(event.getId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long inscriptionId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        UUID inscriptionId = UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
 
         String organizerToken = loginAndGetToken(organizer.getEmail());
         mockMvc.perform(delete("/inscriptions/" + inscriptionId + "/organizer")
@@ -438,7 +439,7 @@ class InscriptionControllerIntegrationTest {
                         .param("eventId", String.valueOf(event.getId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long inscriptionId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        UUID inscriptionId = UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
 
         String strangerToken = loginAndGetToken(stranger.getEmail());
         mockMvc.perform(delete("/inscriptions/" + inscriptionId + "/organizer")
@@ -464,7 +465,7 @@ class InscriptionControllerIntegrationTest {
                         .param("eventId", String.valueOf(event.getId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long inscriptionId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        UUID inscriptionId = UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
 
         String organizerToken = loginAndGetToken(organizer.getEmail());
         mockMvc.perform(delete("/inscriptions/" + inscriptionId + "/organizer")

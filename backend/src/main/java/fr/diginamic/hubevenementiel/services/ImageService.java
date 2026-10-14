@@ -53,7 +53,7 @@ public class ImageService {
      * @return a list of images
      * @throws HttpException
      */
-    public List<Image> findByEvent(Long eventId) throws HttpException {
+    public List<Image> findByEvent(UUID eventId) throws HttpException {
         eventService.findById(eventId);
 
         return imageRepo.findByEventIdOrderByDisplayOrderAsc(eventId);
@@ -69,7 +69,7 @@ public class ImageService {
      * @return true if all checks passed else false
      * @throws HttpException
      */
-    public boolean imageChecker(Long eventId, MultipartFile file) throws HttpException {
+    public boolean imageChecker(UUID eventId, MultipartFile file) throws HttpException {
 
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Le fichier ne peut pas être vide.");
@@ -111,7 +111,7 @@ public class ImageService {
      * @throws HttpException
      */
     @Transactional
-    public Image upload(Long eventId, MultipartFile file, AppUserPrincipal principal) throws HttpException {
+    public Image upload(UUID eventId, MultipartFile file, AppUserPrincipal principal) throws HttpException {
         Event event = eventService.findById(eventId);
         checkOwnership(event, principal);
 
@@ -156,7 +156,7 @@ public class ImageService {
      * @throws HttpException
      */
     @Transactional
-    public void delete(Long eventId, Long id, AppUserPrincipal principal) throws HttpException {
+    public void delete(UUID eventId, UUID id, AppUserPrincipal principal) throws HttpException {
         Event event = eventService.findById(eventId);
         checkOwnership(event, principal);
 
@@ -203,7 +203,7 @@ public class ImageService {
      * @return object of type Image
      * @throws HttpException
      */
-    public Image getImageById(Long id) throws HttpException {
+    public Image getImageById(UUID id) throws HttpException {
         Optional<Image> i = imageRepo.findById(id);
 
         if (i.isEmpty()) {

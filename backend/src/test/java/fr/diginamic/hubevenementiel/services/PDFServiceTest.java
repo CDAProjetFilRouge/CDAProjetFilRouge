@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
@@ -37,7 +38,7 @@ class PDFServiceTest {
     @BeforeEach
     void setUp() {
         document = new LegalDocument();
-        document.setId(1L);
+        document.setId(uuid(1));
         document.setDocumentType(DocumentType.TERM_OF_USE);
         document.setVersion(2);
         document.setUpdateDate(LocalDateTime.of(2026, 10, 9, 12, 0));
@@ -50,40 +51,40 @@ class PDFServiceTest {
 
     @Test
     void generateCUPDF_unknownDocument_throwsNotFound() {
-        when(legalDocumentRepo.findById(99L)).thenReturn(Optional.empty());
+        when(legalDocumentRepo.findById(uuid(99))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> pdfService.generateCUPDF(99L));
+        assertThrows(NotFoundException.class, () -> pdfService.generateCUPDF(uuid(99)));
     }
 
     @Test
     void generateCUPDF_validDocument_returnsAPdf() throws IOException, NotFoundException {
-        when(legalDocumentRepo.findById(1L)).thenReturn(Optional.of(document));
+        when(legalDocumentRepo.findById(uuid(1))).thenReturn(Optional.of(document));
 
-        assertThat(isPdf(pdfService.generateCUPDF(1L))).isTrue();
+        assertThat(isPdf(pdfService.generateCUPDF(uuid(1)))).isTrue();
     }
 
     @Test
     void generateCUPDF_unclosedBrTag_stillProducesAPdf() throws IOException, NotFoundException {
         // Quill produit du HTML : une balise <br> non fermée ferait échouer un parseur XML strict.
         document.setContent("<p>Ligne un<br>Ligne deux</p><p>Suite</p>");
-        when(legalDocumentRepo.findById(1L)).thenReturn(Optional.of(document));
+        when(legalDocumentRepo.findById(uuid(1))).thenReturn(Optional.of(document));
 
-        assertThat(isPdf(pdfService.generateCUPDF(1L))).isTrue();
+        assertThat(isPdf(pdfService.generateCUPDF(uuid(1)))).isTrue();
     }
 
     @Test
     void generateCUPDF_gdprDocument_returnsAPdf() throws IOException, NotFoundException {
         document.setDocumentType(DocumentType.GDPR_POLICY);
-        when(legalDocumentRepo.findById(1L)).thenReturn(Optional.of(document));
+        when(legalDocumentRepo.findById(uuid(1))).thenReturn(Optional.of(document));
 
-        assertThat(isPdf(pdfService.generateCUPDF(1L))).isTrue();
+        assertThat(isPdf(pdfService.generateCUPDF(uuid(1)))).isTrue();
     }
 
     @Test
     void generateCUPDF_listsAndSpecialCharacters_stillProducesAPdf() throws IOException, NotFoundException {
         document.setContent("<ul><li>Données &amp; vie privée</li><li>Café &lt;test&gt;</li></ul><p>À bientôt</p>");
-        when(legalDocumentRepo.findById(1L)).thenReturn(Optional.of(document));
+        when(legalDocumentRepo.findById(uuid(1))).thenReturn(Optional.of(document));
 
-        assertThat(isPdf(pdfService.generateCUPDF(1L))).isTrue();
+        assertThat(isPdf(pdfService.generateCUPDF(uuid(1)))).isTrue();
     }
 }

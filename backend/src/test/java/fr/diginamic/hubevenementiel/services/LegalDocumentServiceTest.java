@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
@@ -42,7 +43,7 @@ class LegalDocumentServiceTest {
 
     @BeforeEach
     void setUp() {
-        principal = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
+        principal = new AppUserPrincipal(uuid(1), "admin@example.com", "ADMINISTRATOR");
         administrator = new AppUser();
 
         validDocument = new LegalDocument();
@@ -85,7 +86,7 @@ class LegalDocumentServiceTest {
     void createNewVersion_firstVersionOfType_setsVersionOne() throws HttpException {
         when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
                 .thenReturn(Optional.empty());
-        when(appUserService.findById(1L)).thenReturn(administrator);
+        when(appUserService.findById(uuid(1))).thenReturn(administrator);
         when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         LegalDocument result = legalDocumentService.createNewVersion(validDocument, principal);
@@ -99,7 +100,7 @@ class LegalDocumentServiceTest {
         previous.setVersion(3);
         when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
                 .thenReturn(Optional.of(previous));
-        when(appUserService.findById(1L)).thenReturn(administrator);
+        when(appUserService.findById(uuid(1))).thenReturn(administrator);
         when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         LegalDocument result = legalDocumentService.createNewVersion(validDocument, principal);
@@ -111,7 +112,7 @@ class LegalDocumentServiceTest {
     void createNewVersion_setsConnectedAdministratorAsAuthor() throws HttpException {
         when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
                 .thenReturn(Optional.empty());
-        when(appUserService.findById(1L)).thenReturn(administrator);
+        when(appUserService.findById(uuid(1))).thenReturn(administrator);
         when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         LegalDocument result = legalDocumentService.createNewVersion(validDocument, principal);
@@ -148,7 +149,7 @@ class LegalDocumentServiceTest {
         validDocument.setContent(content);
         when(legalDocumentRepo.findFirstByDocumentTypeOrderByVersionDesc(DocumentType.TERM_OF_USE))
                 .thenReturn(Optional.empty());
-        when(appUserService.findById(1L)).thenReturn(administrator);
+        when(appUserService.findById(uuid(1))).thenReturn(administrator);
         when(legalDocumentRepo.save(any(LegalDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         return legalDocumentService.createNewVersion(validDocument, principal);

@@ -15,7 +15,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 function makeUser(overrides: Partial<AppUser> = {}): AppUser {
   return {
-    id: 8,
+    id: '8',
     firstName: 'Claire',
     lastName: 'Membre',
     email: 'claire@example.com',
@@ -35,7 +35,7 @@ function makeEvent(overrides: Partial<EventDetailsModel> = {}): EventDetailsMode
   start.setHours(18, 0, 0, 0);
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
   return {
-    id: 5,
+    id: EVENT_ID,
     title: 'Tournoi de tennis',
     description: 'Un tournoi',
     street1: '12 rue de la Paix',
@@ -55,12 +55,12 @@ function makeEvent(overrides: Partial<EventDetailsModel> = {}): EventDetailsMode
     clubName: 'Tennis Club',
     organizerFirstName: 'David',
     organizerLastname: 'Orga',
-    organizerId: 42,
+    organizerId: '42',
     ...overrides,
   };
 }
 
-function makeComment(id: number, authorId: number, content = 'Super'): CommentModel {
+function makeComment(id: string, authorId: string, content = 'Super'): CommentModel {
   return {
     id,
     author: { id: authorId, firstName: 'Léa', lastName: 'Martin', email: 'lea@example.com' },
@@ -68,6 +68,9 @@ function makeComment(id: number, authorId: number, content = 'Super'): CommentMo
     creationDate: '2026-10-01T10:00:00',
   };
 }
+
+const EVENT_ID = '3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e';
+const MISSING_EVENT_ID = '7a1d9e20-5b3c-4f6a-9c8d-1e2f3a4b5c6d';
 
 describe('EventDetails', () => {
   let fixture: ComponentFixture<EventDetails>;
@@ -89,7 +92,7 @@ describe('EventDetails', () => {
   const flushAll = (requests: TestRequest[], body: object | null) => requests.forEach((request) => request.flush(body));
   const inscriptionLists = () => http.match((r) => r.method === 'GET' && r.url.startsWith(`${URL_BACKEND}/inscriptions/user/`));
 
-  async function setup(user: AppUser | null, backend: Backend = {}, idParam: string | null = '5') {
+  async function setup(user: AppUser | null, backend: Backend = {}, idParam: string | null = EVENT_ID) {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [EventDetails],
@@ -144,7 +147,7 @@ describe('EventDetails', () => {
           provideRouter([]),
           provideHttpClient(),
           provideHttpClientTesting(),
-          { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: '404' })) } },
+          { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: MISSING_EVENT_ID })) } },
         ],
       }).compileComponents();
       http = TestBed.inject(HttpTestingController);
@@ -152,14 +155,14 @@ describe('EventDetails', () => {
       component = fixture.componentInstance;
       fixture.detectChanges();
 
-      http.expectOne(`${URL_BACKEND}/events/404`).flush('Évènement introuvable', { status: 404, statusText: 'Not Found' });
-      http.expectOne(`${URL_BACKEND}/events/404/comments`).flush([]);
+      http.expectOne(`${URL_BACKEND}/events/${MISSING_EVENT_ID}`).flush('Évènement introuvable', { status: 404, statusText: 'Not Found' });
+      http.expectOne(`${URL_BACKEND}/events/${MISSING_EVENT_ID}/comments`).flush([]);
 
       expect(val<string>('loadError')).toBe('Évènement introuvable');
       expect(val<boolean>('loading')).toBe(false);
     });
 
-    it('renvoie à l’accueil quand l’identifiant n’est pas un nombre', async () => {
+    it('renvoie à l’accueil quand l’identifiant n’est pas un UUID', async () => {
       await setup(null, {}, 'abc');
 
       expect(router.navigate).toHaveBeenCalledWith(['/']);
@@ -168,13 +171,13 @@ describe('EventDetails', () => {
 
   describe('droits', () => {
     it('autorise la modification à l’organisateur et à l’administrateur seulement', async () => {
-      await setup(makeUser({ id: 42, role: 'ORGANIZER' }));
+      await setup(makeUser({ id: '42', role: 'ORGANIZER' }));
       expect(val<boolean>('canEdit')).toBe(true);
 
-      auth.currentUser.set(makeUser({ id: 99, role: 'ADMINISTRATOR' }));
+      auth.currentUser.set(makeUser({ id: '99', role: 'ADMINISTRATOR' }));
       expect(val<boolean>('canEdit')).toBe(true);
 
-      auth.currentUser.set(makeUser({ id: 99, role: 'ORGANIZER' }));
+      auth.currentUser.set(makeUser({ id: '99', role: 'ORGANIZER' }));
       expect(val<boolean>('canEdit')).toBe(false);
 
       auth.currentUser.set(null);
@@ -182,12 +185,12 @@ describe('EventDetails', () => {
     });
 
     it('autorise la suppression d’un commentaire à son auteur et à l’administrateur', async () => {
-      await setup(makeUser({ id: 8 }));
-      expect(call('canDelete', makeComment(1, 8))).toBe(true);
-      expect(call('canDelete', makeComment(2, 99))).toBe(false);
+      await setup(makeUser({ id: '8' }));
+      expect(call('canDelete', makeComment('1', '8'))).toBe(true);
+      expect(call('canDelete', makeComment('2', '99'))).toBe(false);
 
-      auth.currentUser.set(makeUser({ id: 1, role: 'ADMINISTRATOR' }));
-      expect(call('canDelete', makeComment(2, 99))).toBe(true);
+      auth.currentUser.set(makeUser({ id: '1', role: 'ADMINISTRATOR' }));
+      expect(call('canDelete', makeComment('2', '99'))).toBe(true);
     });
   });
 
@@ -214,7 +217,7 @@ describe('EventDetails', () => {
 
     it('reconnaît une inscription confirmée', async () => {
       await setup(makeUser(), {
-        inscriptions: [{ id: 3, event: { id: 5, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
+        inscriptions: [{ id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
       });
 
       expect(val('registration')).toEqual({ kind: 'registered', waiting: false, position: null });
@@ -224,7 +227,7 @@ describe('EventDetails', () => {
     it('reconnaît une place en liste d’attente avec son rang', async () => {
       await setup(makeUser(), {
         inscriptions: [
-          { id: 3, event: { id: 5, title: 'x', startDateTime: '', endDateTime: '' }, status: 'WAITING_LIST', waitingListPosition: 2 },
+          { id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status: 'WAITING_LIST', waitingListPosition: 2 },
         ],
       });
 
@@ -234,8 +237,8 @@ describe('EventDetails', () => {
     it('ignore une inscription annulée et les inscriptions à d’autres évènements', async () => {
       await setup(makeUser(), {
         inscriptions: [
-          { id: 3, event: { id: 5, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CANCELED' },
-          { id: 4, event: { id: 6, title: 'y', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' },
+          { id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CANCELED' },
+          { id: '4', event: { id: '6', title: 'y', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' },
         ],
       });
 
@@ -268,10 +271,10 @@ describe('EventDetails', () => {
 
       const post = http.expectOne((r) => r.method === 'POST' && r.url === `${URL_BACKEND}/inscriptions`);
       expect(post.request.params.get('userId')).toBe('8');
-      expect(post.request.params.get('eventId')).toBe('5');
-      post.flush({ id: 3, event: { id: 5 }, status: 'CONFIRMED', price: 10 });
+      expect(post.request.params.get('eventId')).toBe(EVENT_ID);
+      post.flush({ id: '3', event: { id: EVENT_ID }, status: 'CONFIRMED', price: 10 });
 
-      http.expectOne(`${URL_BACKEND}/events/5`).flush(makeEvent({ remainingSpots: 3 }));
+      http.expectOne(`${URL_BACKEND}/events/${EVENT_ID}`).flush(makeEvent({ remainingSpots: 3 }));
       flushAll(inscriptionLists(), []);
 
       expect(val<{ kind: string }>('registration').kind).toBe('registered');
@@ -311,7 +314,7 @@ describe('EventDetails', () => {
 
     it('annule l’inscription après confirmation et la retire de la carte', async () => {
       await setup(makeUser(), {
-        inscriptions: [{ id: 3, event: { id: 5, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
+        inscriptions: [{ id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
       });
 
       call('askCancel');
@@ -320,7 +323,7 @@ describe('EventDetails', () => {
       call('cancelInscription');
       const del = http.expectOne((r) => r.method === 'DELETE' && r.url === `${URL_BACKEND}/inscriptions/3`);
       del.flush(null);
-      http.expectOne(`${URL_BACKEND}/events/5`).flush(makeEvent({ remainingSpots: 5 }));
+      http.expectOne(`${URL_BACKEND}/events/${EVENT_ID}`).flush(makeEvent({ remainingSpots: 5 }));
       flushAll(inscriptionLists(), []);
 
       expect(val<{ kind: string }>('registration').kind).toBe('open');
@@ -338,7 +341,7 @@ describe('EventDetails', () => {
 
     it('garde l’inscription et prévient quand l’annulation échoue', async () => {
       await setup(makeUser(), {
-        inscriptions: [{ id: 3, event: { id: 5, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
+        inscriptions: [{ id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
       });
 
       call('cancelInscription');
@@ -353,14 +356,14 @@ describe('EventDetails', () => {
     it('affiche les autres inscriptions estompées et l’évènement courant', async () => {
       await setup(makeUser(), {
         inscriptions: [
-          { id: 9, event: { id: 6, title: 'Soirée jeux', startDateTime: '2030-01-01T18:00:00', endDateTime: '2030-01-01T20:00:00' }, status: 'WAITING_LIST' },
-          { id: 10, event: { id: 7, title: 'Annulée', startDateTime: '2030-02-01T18:00:00', endDateTime: '2030-02-01T20:00:00' }, status: 'CANCELED' },
+          { id: '9', event: { id: '6', title: 'Soirée jeux', startDateTime: '2030-01-01T18:00:00', endDateTime: '2030-01-01T20:00:00' }, status: 'WAITING_LIST' },
+          { id: '10', event: { id: '7', title: 'Annulée', startDateTime: '2030-02-01T18:00:00', endDateTime: '2030-02-01T20:00:00' }, status: 'CANCELED' },
         ],
       });
 
       const events = val<{ id: string; title: string; muted?: boolean; badge?: string }[]>('calendarEvents');
 
-      expect(events.map((e) => e.id)).toEqual(['6', '5']);
+      expect(events.map((e) => e.id)).toEqual(['6', EVENT_ID]);
       expect(events[0]).toMatchObject({ muted: true, badge: 'Liste d’attente' });
       expect(events[1].muted).toBeUndefined();
     });
@@ -368,7 +371,7 @@ describe('EventDetails', () => {
     it('ouvre la fenêtre d’inscription au clic sur l’évènement courant', async () => {
       await setup(makeUser());
 
-      call('onCalendarSelect', '5');
+      call('onCalendarSelect', EVENT_ID);
 
       expect(val<boolean>('dialogOpen')).toBe(true);
       expect(router.navigate).not.toHaveBeenCalled();
@@ -430,15 +433,15 @@ describe('EventDetails', () => {
 
   describe('galerie', () => {
     const gallery = [
-      { id: 1, path: '/b.png', displayOrder: 2 },
-      { id: 2, path: '/a.png', displayOrder: 1 },
-      { id: 3, path: '/c.png', displayOrder: 3 },
+      { id: '1', path: '/b.png', displayOrder: 2 },
+      { id: '2', path: '/a.png', displayOrder: 1 },
+      { id: '3', path: '/c.png', displayOrder: 3 },
     ];
 
     it('trie les images par ordre d’affichage', async () => {
       await setup(makeUser(), { event: makeEvent({ imageGallery: gallery }) });
 
-      expect(val<{ id: number }[]>('galleryOrdered').map((i) => i.id)).toEqual([2, 1, 3]);
+      expect(val<{ id: string }[]>('galleryOrdered').map((i) => i.id)).toEqual(['2', '1', '3']);
     });
 
     it('fait le tour de la galerie dans les deux sens', async () => {
@@ -463,15 +466,15 @@ describe('EventDetails', () => {
 
   describe('commentaires', () => {
     it('publie un commentaire en tête de liste et vide le brouillon', async () => {
-      await setup(makeUser(), { comments: [makeComment(1, 99, 'Ancien')] });
+      await setup(makeUser(), { comments: [makeComment('1', '99', 'Ancien')] });
       call('onDraftInput', { target: { value: '  Bravo  ' } } as unknown as Event);
 
       call('publishComment');
-      const post = http.expectOne((r) => r.method === 'POST' && r.url === `${URL_BACKEND}/events/5/comments`);
+      const post = http.expectOne((r) => r.method === 'POST' && r.url === `${URL_BACKEND}/events/${EVENT_ID}/comments`);
       expect(post.request.params.get('content')).toBe('Bravo');
-      post.flush(makeComment(2, 8, 'Bravo'));
+      post.flush(makeComment('2', '8', 'Bravo'));
 
-      expect(val<CommentModel[]>('comments').map((c) => c.id)).toEqual([2, 1]);
+      expect(val<CommentModel[]>('comments').map((c) => c.id)).toEqual(['2', '1']);
       expect(val<string>('commentDraft')).toBe('');
     });
 
@@ -496,18 +499,18 @@ describe('EventDetails', () => {
     });
 
     it('supprime un commentaire de la liste', async () => {
-      await setup(makeUser(), { comments: [makeComment(1, 8), makeComment(2, 99)] });
+      await setup(makeUser(), { comments: [makeComment('1', '8'), makeComment('2', '99')] });
 
-      call('deleteComment', makeComment(1, 8));
-      http.expectOne((r) => r.method === 'DELETE' && r.url === `${URL_BACKEND}/events/5/comments/1`).flush(null);
+      call('deleteComment', makeComment('1', '8'));
+      http.expectOne((r) => r.method === 'DELETE' && r.url === `${URL_BACKEND}/events/${EVENT_ID}/comments/1`).flush(null);
 
-      expect(val<CommentModel[]>('comments').map((c) => c.id)).toEqual([2]);
+      expect(val<CommentModel[]>('comments').map((c) => c.id)).toEqual(['2']);
     });
 
     it('garde le commentaire et prévient quand la suppression échoue', async () => {
-      await setup(makeUser(), { comments: [makeComment(1, 8)] });
+      await setup(makeUser(), { comments: [makeComment('1', '8')] });
 
-      call('deleteComment', makeComment(1, 8));
+      call('deleteComment', makeComment('1', '8'));
       http.expectOne((r) => r.method === 'DELETE').flush(null, { status: 403, statusText: 'Forbidden' });
 
       expect(val<CommentModel[]>('comments').length).toBe(1);

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -33,7 +34,7 @@ public class AccountStatusService {
     }
 
     @Transactional
-    public void suspend(Long id, LocalDateTime endDate, Long actingAdminId) throws HttpException {
+    public void suspend(UUID id, LocalDateTime endDate, UUID actingAdminId) throws HttpException {
         if (id.equals(actingAdminId)) {
             throw new BadRequestException("Vous ne pouvez pas suspendre votre propre compte.");
         }
@@ -55,7 +56,7 @@ public class AccountStatusService {
     }
 
     @Transactional
-    public void reactivate(Long id) throws HttpException {
+    public void reactivate(UUID id) throws HttpException {
         AppUser user = appUserService.findById(id);
 
         if (user.getStatus() != AccountStatus.SUSPENDED) {

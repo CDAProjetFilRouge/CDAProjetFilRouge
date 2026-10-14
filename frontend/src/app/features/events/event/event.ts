@@ -22,7 +22,7 @@ const QUICK_ERROR_MS = 4000;
 const CATALOGUE_STATUSES = 'PUBLISHED,CANCELLED';
 
 interface MyRegistration {
-  id: number;
+  id: string;
   status: Exclude<CardRegistration, null>;
   position: number | null;
 }
@@ -41,11 +41,11 @@ export class Event {
   private readonly eventDetailsService = inject(EventDetailsService);
 
   private readonly user = this.authService.currentUser;
-  private readonly registrations = signal<Map<number, MyRegistration>>(new Map());
+  private readonly registrations = signal<Map<string, MyRegistration>>(new Map());
   protected readonly affiliated = computed(() => (this.user()?.clubs.length ?? 0) > 0);
 
   protected readonly signedIn = computed(() => this.user() !== null);
-  private readonly quickErrors = signal<Map<number, string>>(new Map());
+  private readonly quickErrors = signal<Map<string, string>>(new Map());
 
   protected readonly dialogEvent = signal<EventModel | null>(null);
   protected readonly dialogBusy = signal(false);
@@ -76,15 +76,15 @@ export class Event {
     });
   }
 
-  protected registrationOf(eventId: number): CardRegistration {
+  protected registrationOf(eventId: string): CardRegistration {
     return this.registrations().get(eventId)?.status ?? null;
   }
 
-  protected positionOf(eventId: number): number | null {
+  protected positionOf(eventId: string): number | null {
     return this.registrations().get(eventId)?.position ?? null;
   }
 
-  protected quickErrorOf(eventId: number): string | null {
+  protected quickErrorOf(eventId: string): string | null {
     return this.quickErrors().get(eventId) ?? null;
   }
 
@@ -107,7 +107,7 @@ export class Event {
     });
   }
 
-  private showQuickError(eventId: number, message: string): void {
+  private showQuickError(eventId: string, message: string): void {
     this.quickErrors.update((map) => new Map(map).set(eventId, message));
     setTimeout(
       () =>
@@ -177,7 +177,7 @@ export class Event {
     }
     this.calendarService.getByUser(user.id).subscribe({
       next: (list) => {
-        const map = new Map<number, MyRegistration>();
+        const map = new Map<string, MyRegistration>();
         for (const inscription of list) {
           if (inscription.status !== 'CANCELED') {
             map.set(inscription.event.id, {

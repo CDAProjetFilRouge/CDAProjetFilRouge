@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.legalDocument;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
 
@@ -7,7 +8,7 @@ import java.time.LocalDateTime;
 
 public class LegalDocumentResponseDto {
 
-    private Long id;
+    private UUID id;
     private DocumentType documentType;
     private String content;
     private int version;
@@ -18,7 +19,7 @@ public class LegalDocumentResponseDto {
     public LegalDocumentResponseDto() {
     }
 
-    public LegalDocumentResponseDto(Long id, DocumentType documentType, String content, int version, LocalDateTime updateDate, String pdfPath, AppUserSummaryResponseDto user) {
+    public LegalDocumentResponseDto(UUID id, DocumentType documentType, String content, int version, LocalDateTime updateDate, String pdfPath, AppUserSummaryResponseDto user) {
         this.id = id;
         this.documentType = documentType;
         this.content = content;
@@ -28,11 +29,11 @@ public class LegalDocumentResponseDto {
         this.user = user;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
