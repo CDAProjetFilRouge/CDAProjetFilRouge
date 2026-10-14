@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Token;
 import fr.diginamic.hubevenementiel.enums.TokenType;
@@ -51,11 +52,11 @@ class PasswordServiceTest {
     void requestPasswordChange_wrongCurrentPassword_throwsBadRequestAndNoTokenCreated() {
         AppUser existing = new AppUser();
         existing.setHashedPassword("hashActuel");
-        when(userRepo.findById(1L)).thenReturn(Optional.of(existing));
+        when(userRepo.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(passwordEncoder.matches("mauvaisMdp", "hashActuel")).thenReturn(false);
 
         assertThrows(BadRequestException.class,
-                () -> passwordService.requestPasswordChange(1L, "mauvaisMdp", "nouveauMdp12"));
+                () -> passwordService.requestPasswordChange(uuid(1), "mauvaisMdp", "nouveauMdp12"));
 
         verify(tokenRepo, never()).save(any());
     }

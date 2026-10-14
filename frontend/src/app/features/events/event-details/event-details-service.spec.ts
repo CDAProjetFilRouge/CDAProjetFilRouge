@@ -19,7 +19,7 @@ describe('EventDetailsService', () => {
   });
 
   it('charge un évènement par son identifiant', () => {
-    service.getEventDetail(5).subscribe();
+    service.getEventDetail('5').subscribe();
 
     const request = http.expectOne(`${URL_BACKEND}/events/5`);
     expect(request.request.method).toBe('GET');
@@ -27,7 +27,7 @@ describe('EventDetailsService', () => {
   });
 
   it('charge le PDF d’un évènement en binaire', () => {
-    service.getEventPdf(5).subscribe();
+    service.getEventPdf('5').subscribe();
 
     const request = http.expectOne(`${URL_BACKEND}/PDF/event/5`);
     expect(request.request.responseType).toBe('blob');
@@ -35,13 +35,13 @@ describe('EventDetailsService', () => {
   });
 
   it('charge les commentaires d’un évènement', () => {
-    service.getComments(5).subscribe();
+    service.getComments('5').subscribe();
 
     http.expectOne(`${URL_BACKEND}/events/5/comments`).flush([]);
   });
 
   it('publie un commentaire avec son texte en paramètre', () => {
-    service.postComment(5, 'Bravo').subscribe();
+    service.postComment('5', 'Bravo').subscribe();
 
     const request = http.expectOne((r) => r.url === `${URL_BACKEND}/events/5/comments`);
     expect(request.request.method).toBe('POST');
@@ -50,7 +50,7 @@ describe('EventDetailsService', () => {
   });
 
   it('supprime un commentaire', () => {
-    service.deleteComment(5, 9).subscribe();
+    service.deleteComment('5', '9').subscribe();
 
     const request = http.expectOne(`${URL_BACKEND}/events/5/comments/9`);
     expect(request.request.method).toBe('DELETE');
@@ -58,7 +58,7 @@ describe('EventDetailsService', () => {
   });
 
   it('charge les inscriptions d’un utilisateur, jusqu’à 100 par page', () => {
-    service.getUserInscriptions(8).subscribe();
+    service.getUserInscriptions('8').subscribe();
 
     const request = http.expectOne((r) => r.url === `${URL_BACKEND}/inscriptions/user/8`);
     expect(request.request.params.get('size')).toBe('100');
@@ -66,7 +66,7 @@ describe('EventDetailsService', () => {
   });
 
   it('inscrit un utilisateur à un évènement', () => {
-    service.register(8, 5).subscribe();
+    service.register('8', '5').subscribe();
 
     const request = http.expectOne((r) => r.url === `${URL_BACKEND}/inscriptions`);
     expect(request.request.method).toBe('POST');
@@ -76,7 +76,7 @@ describe('EventDetailsService', () => {
   });
 
   it('annule une inscription', () => {
-    service.cancelInscription(3).subscribe();
+    service.cancelInscription('3').subscribe();
 
     const request = http.expectOne(`${URL_BACKEND}/inscriptions/3`);
     expect(request.request.method).toBe('DELETE');

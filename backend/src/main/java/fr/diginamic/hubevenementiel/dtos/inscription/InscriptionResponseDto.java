@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.inscription;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.event.EventSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 
 public class InscriptionResponseDto {
 
-    private Long id;
+    private UUID id;
     private EventSummaryResponseDto event;
     private LocalDateTime inscriptionDate;
     private InscriptionStatus status;
@@ -20,7 +21,7 @@ public class InscriptionResponseDto {
     public InscriptionResponseDto() {
     }
 
-    public InscriptionResponseDto(Long id, EventSummaryResponseDto event, LocalDateTime inscriptionDate, InscriptionStatus status, BigDecimal price, LocalDateTime cancellationDate, String cancelObject) {
+    public InscriptionResponseDto(UUID id, EventSummaryResponseDto event, LocalDateTime inscriptionDate, InscriptionStatus status, BigDecimal price, LocalDateTime cancellationDate, String cancelObject) {
         this.id = id;
         this.event = event;
         this.inscriptionDate = inscriptionDate;
@@ -30,11 +31,11 @@ public class InscriptionResponseDto {
         this.cancelObject = cancelObject;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

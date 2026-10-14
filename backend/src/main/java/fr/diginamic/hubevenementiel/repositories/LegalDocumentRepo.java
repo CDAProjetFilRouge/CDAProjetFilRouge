@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import org.springframework.data.domain.Page;
@@ -9,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface LegalDocumentRepo extends JpaRepository<LegalDocument, Long> {
+public interface LegalDocumentRepo extends JpaRepository<LegalDocument, UUID> {
 
     /**
      *
@@ -34,7 +35,7 @@ public interface LegalDocumentRepo extends JpaRepository<LegalDocument, Long> {
      * @param pageable status of the inscription you want to find
      * @return a list of document with pagination
      */
-    Page<LegalDocument> findByUserId(Long id, Pageable pageable);
+    Page<LegalDocument> findByUserId(UUID id, Pageable pageable);
 
     /**
      *
@@ -48,5 +49,5 @@ public interface LegalDocumentRepo extends JpaRepository<LegalDocument, Long> {
      * @param userId id of the author
      * @return true if the user authored at least one legal document version
      */
-    boolean existsByUserId(Long userId);
+    boolean existsByUserId(UUID userId);
 }

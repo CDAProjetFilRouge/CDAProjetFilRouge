@@ -1,28 +1,29 @@
 package fr.diginamic.hubevenementiel.dtos.club;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.Category;
 
 
 public class ClubSummaryResponseDto {
 
-    private Long id;
+    private UUID id;
     private String name;
     private Category category;
 
     public ClubSummaryResponseDto() {
     }
 
-    public ClubSummaryResponseDto(Long id, String name, Category category) {
+    public ClubSummaryResponseDto(UUID id, String name, Category category) {
         this.id = id;
         this.name = name;
         this.category = category;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

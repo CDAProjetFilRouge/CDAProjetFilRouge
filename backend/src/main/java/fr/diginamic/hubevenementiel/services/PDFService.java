@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 
+import java.util.UUID;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
 import fr.diginamic.hubevenementiel.entities.Address;
@@ -47,7 +48,7 @@ public class PDFService {
      * @throws IOException
      * @throws NotFoundException
      */
-    public byte[] generateEventPDF(Long eventId) throws IOException, NotFoundException {
+    public byte[] generateEventPDF(UUID eventId) throws IOException, NotFoundException {
         return generateEventPDF(eventId, null);
     }
 
@@ -60,7 +61,7 @@ public class PDFService {
      * @throws NotFoundException
      */
     @Transactional(readOnly = true)
-    public byte[] generateEventPDF(Long eventId, Long userId) throws IOException, NotFoundException {
+    public byte[] generateEventPDF(UUID eventId, UUID userId) throws IOException, NotFoundException {
 
         Event event = eventRepo.findById(eventId).orElseThrow(() -> new NotFoundException("No event found with id"+eventId));
 
@@ -128,13 +129,13 @@ public class PDFService {
      * @return a file name (without extension) derived from the event title, safe for use in a download header
      * @throws NotFoundException if the event does not exist
      */
-    public String eventPdfFileName(Long eventId) throws NotFoundException {
+    public String eventPdfFileName(UUID eventId) throws NotFoundException {
         Event event = eventRepo.findById(eventId).orElseThrow(() -> new NotFoundException("No event found with id"+eventId));
         String name = event.getTitle().replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", " ").replaceAll("\\s+", " ").trim();
         return name.isEmpty() ? "Event-" + eventId : name;
     }
 
-    private String priceCards(Event event, Long userId) {
+    private String priceCards(Event event, UUID userId) {
         AppUser user = userId == null ? null : userRepo.findById(userId).orElse(null);
         if (user != null) {
             boolean affiliated = user.getClubs().stream().anyMatch(
@@ -179,7 +180,7 @@ public class PDFService {
      * @return a file name (without extension) for the legal document PDF download
      * @throws NotFoundException if the document does not exist
      */
-    public String legalDocumentPdfFileName(Long id) throws NotFoundException {
+    public String legalDocumentPdfFileName(UUID id) throws NotFoundException {
         LegalDocument legalDocument = legalDocumentRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Aucun document avec l'id: " + id));
         return legalDocumentTitle(legalDocument).replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", " ").replaceAll("\\s+", " ").trim();
@@ -191,7 +192,7 @@ public class PDFService {
                 : "Politique de confidentialité (RGPD)";
     }
 
-    public byte[] generateCUPDF(Long id) throws IOException, NotFoundException {
+    public byte[] generateCUPDF(UUID id) throws IOException, NotFoundException {
         LegalDocument legalDocument = legalDocumentRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Aucun document avec l'id: " + id));
 

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import org.springframework.data.domain.Page;
@@ -8,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 
-public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDemand, Long> {
+public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDemand, UUID> {
 
     /**
      *
@@ -43,7 +44,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific requester with pagination info
      */
-    Page<AnonymizationDemand> findByRequesterId(Pageable pageable, Long id);
+    Page<AnonymizationDemand> findByRequesterId(Pageable pageable, UUID id);
 
     /**
      *
@@ -75,7 +76,7 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of anonymmizationDemand from a specific admin with pagination info
      */
-    Page<AnonymizationDemand> findByAdminId(Pageable pageable, Long id);
+    Page<AnonymizationDemand> findByAdminId(Pageable pageable, UUID id);
 
     /**
      *
@@ -106,15 +107,15 @@ public interface AnonymizationDemandRepo extends JpaRepository<AnonymizationDema
      * @param adminId id of the administrator
      * @return true if the user handled at least one anonymization demand
      */
-    boolean existsByAdminId(Long adminId);
+    boolean existsByAdminId(UUID adminId);
 
     /**
      *
      * @param requesterId id of the requester whose demands must be removed
      */
-    void deleteByRequesterId(Long requesterId);
+    void deleteByRequesterId(UUID requesterId);
 
     long countByRequestStatus(RequestStatus status);
 
-    boolean existsByRequesterIdAndRequestStatus(Long requesterId, RequestStatus requestStatus);
+    boolean existsByRequesterIdAndRequestStatus(UUID requesterId, RequestStatus requestStatus);
 }

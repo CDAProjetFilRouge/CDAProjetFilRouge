@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -17,8 +20,10 @@ import jakarta.persistence.Table;
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
     @Column(name = "token_hash", nullable = false, length = 64, unique = true)
     private String tokenHash;
 
@@ -54,7 +59,7 @@ public class RefreshToken {
         this.keyThumbprint = keyThumbprint;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

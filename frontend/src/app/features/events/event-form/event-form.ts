@@ -67,7 +67,7 @@ export class EventForm implements OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly eventId = Number(this.route.snapshot.paramMap.get('id')) || null;
+  protected readonly eventId = this.route.snapshot.paramMap.get('id') || null;
   protected readonly isEdit = this.eventId !== null;
   protected readonly statusSteps = EVENT_STATUS_STEPS;
   protected readonly categoryLabels = EVENT_CATEGORY_LABELS;
@@ -119,7 +119,7 @@ export class EventForm implements OnDestroy {
         country: ['France', [Validators.required, Validators.maxLength(100)]],
       }),
       category: ['CULTURE' as Category],
-      clubId: [null as number | null, Validators.required],
+      clubId: [null as string | null, Validators.required],
       startDateTime: ['', [Validators.required, yearInRange, startInFuture]],
       endDateTime: ['', [Validators.required, yearInRange]],
       maxCapacity: [
@@ -264,7 +264,7 @@ export class EventForm implements OnDestroy {
     });
   }
 
-  protected removeImage(imageId: number): void {
+  protected removeImage(imageId: string): void {
     if (this.eventId === null) {
       return;
     }
@@ -318,7 +318,7 @@ export class EventForm implements OnDestroy {
     }
 
     const request = this.toRequest();
-    let createdId: number | null = null;
+    let createdId: string | null = null;
 
     this.isSubmitting.set(true);
     this.errorMessage.set('');
@@ -362,7 +362,7 @@ export class EventForm implements OnDestroy {
     });
   }
 
-  private uploadPending(eventId: number): Observable<number> {
+  private uploadPending(eventId: string): Observable<number> {
     const files = this.pendingImages().map((item) => item.file);
     if (files.length === 0) {
       return of(0);
@@ -430,7 +430,7 @@ export class EventForm implements OnDestroy {
       maxCapacity: value.maxCapacity as number,
     };
     if (!this.isEdit) {
-      request.idClub = value.clubId as number;
+      request.idClub = value.clubId as string;
     }
     return request;
   }

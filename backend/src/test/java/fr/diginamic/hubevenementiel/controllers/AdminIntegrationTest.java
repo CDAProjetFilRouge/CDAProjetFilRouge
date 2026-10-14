@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
@@ -225,7 +226,7 @@ class AdminIntegrationTest {
                         .content(validClubPayload(name)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long clubId = ((Number) objectMapper.readValue(createResponse, Map.class).get("id")).longValue();
+        UUID clubId = UUID.fromString((String) objectMapper.readValue(createResponse, Map.class).get("id"));
 
         mockMvc.perform(get("/clubs?size=200").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())

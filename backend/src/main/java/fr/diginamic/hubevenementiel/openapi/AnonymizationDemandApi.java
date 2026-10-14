@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.anonymizerDemand.AnonymizationDemandResponseDto;
@@ -45,5 +46,5 @@ public interface AnonymizationDemandApi {
             @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
             @ApiResponse(responseCode = "404", description = "Demande introuvable")
     })
-    AnonymizationDemandResponseDto validate(@Parameter(description = "Identifiant de la demande", required = true) Long id) throws HttpException;
+    AnonymizationDemandResponseDto validate(@Parameter(description = "Identifiant de la demande", required = true) UUID id) throws HttpException;
 }

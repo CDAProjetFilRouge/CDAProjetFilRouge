@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -47,7 +48,7 @@ public class PasswordService {
      *                       doesn't match
      */
     @Transactional
-    public void requestPasswordChange(Long userId, String currentPassword, String newPassword) throws HttpException {
+    public void requestPasswordChange(UUID userId, String currentPassword, String newPassword) throws HttpException {
         if (newPassword == null || newPassword.length() < 12) {
             throw new BadRequestException("Le mot de passe doit contenir au moins 12 caractères.");
         }

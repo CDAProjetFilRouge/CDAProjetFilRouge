@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.event;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.address.AddressResponseDto;
 import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -12,7 +13,7 @@ import java.util.List;
 
 public class EventResponseMainDto {
 
-    private Long id;
+    private UUID id;
     private String title;
     private String description;
     private AddressResponseDto location;
@@ -29,7 +30,7 @@ public class EventResponseMainDto {
 
     public EventResponseMainDto() {}
 
-    public EventResponseMainDto(Long id, String title, String description, AddressResponseDto location, Category category,
+    public EventResponseMainDto(UUID id, String title, String description, AddressResponseDto location, Category category,
                                 LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice,
                                 BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery,
                                 EventStatus status, String clubName){
@@ -49,11 +50,11 @@ public class EventResponseMainDto {
         this.clubName = clubName;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

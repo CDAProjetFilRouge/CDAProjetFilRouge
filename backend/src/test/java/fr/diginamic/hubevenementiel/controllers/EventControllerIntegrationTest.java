@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
@@ -135,7 +136,7 @@ class EventControllerIntegrationTest {
                         .content(validEventPayload("Marathon IT-" + System.nanoTime())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("DRAFT"))
-                .andExpect(jsonPath("$.organizer.id").value(organizer.getId()));
+                .andExpect(jsonPath("$.organizer.id").value(organizer.getId().toString()));
     }
 
     @Test
@@ -166,7 +167,7 @@ class EventControllerIntegrationTest {
     @Test
     void publishEvent_setsStatusPublishedInDatabase() throws Exception {
         String token = loginAndGetToken(organizer.getEmail());
-        Long eventId = createDraftEventAndReturnId(token, "Event a publier-" + System.nanoTime());
+        UUID eventId = createDraftEventAndReturnId(token, "Event a publier-" + System.nanoTime());
 
         AddressRequestDto address = new AddressRequestDto();
         address.setStreet1("12 rue de la Paix");
@@ -236,7 +237,7 @@ class EventControllerIntegrationTest {
     @Test
     void updateEvent_byNonOwner_returns403() throws Exception {
         String ownerToken = loginAndGetToken(organizer.getEmail());
-        Long eventId = createDraftEventAndReturnId(ownerToken, "Event proprietaire-" + System.nanoTime());
+        UUID eventId = createDraftEventAndReturnId(ownerToken, "Event proprietaire-" + System.nanoTime());
 
         String otherToken = loginAndGetToken(otherOrganizer.getEmail());
 
@@ -250,7 +251,7 @@ class EventControllerIntegrationTest {
     @Test
     void deleteEvent_byNonOwner_returns403() throws Exception {
         String ownerToken = loginAndGetToken(organizer.getEmail());
-        Long eventId = createDraftEventAndReturnId(ownerToken, "Event a supprimer-" + System.nanoTime());
+        UUID eventId = createDraftEventAndReturnId(ownerToken, "Event a supprimer-" + System.nanoTime());
 
         String otherToken = loginAndGetToken(otherOrganizer.getEmail());
 
@@ -610,7 +611,7 @@ class EventControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long eventId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        UUID eventId = UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
 
         Map<String, Object> published = new java.util.HashMap<>(body);
         published.put("status", "PUBLISHED");
@@ -621,7 +622,7 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    private Long createDraftEventAndReturnId(String token, String title) throws Exception {
+    private UUID createDraftEventAndReturnId(String token, String title) throws Exception {
         String response = mockMvc.perform(post("/events")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -629,7 +630,7 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        return ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        return UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
     }
 
 }

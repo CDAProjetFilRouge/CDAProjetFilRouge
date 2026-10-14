@@ -1,8 +1,8 @@
 export type InscriptionStatus = 'CONFIRMED' | 'WAITING_LIST' | 'CANCELED';
 
 export interface InscriptionModel {
-  id: number;
-  event: { id: number } | null;
+  id: string;
+  event: { id: string } | null;
   inscriptionDate: string;
   status: InscriptionStatus;
   price: number;

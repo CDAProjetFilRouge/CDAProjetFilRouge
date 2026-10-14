@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
@@ -43,7 +44,7 @@ public class WaitingListService {
      * @throws NotFoundException if the event does not exist
      */
     @Transactional
-    public void promoteNext(Long eventId) throws NotFoundException {
+    public void promoteNext(UUID eventId) throws NotFoundException {
         Event event = lockEvent(eventId);
         if (hasStarted(event)) {
             return;
@@ -60,13 +61,13 @@ public class WaitingListService {
      * @throws NotFoundException if an event of the inscriptions does not exist
      */
     @Transactional
-    public void removeInscriptionsOf(Long userId) throws NotFoundException {
+    public void removeInscriptionsOf(UUID userId) throws NotFoundException {
         List<Inscription> inscriptions = inscriptionRepo.findAllByUserId(userId);
 
         for (Inscription inscription : inscriptions) {
             boolean freesASpot = inscription.getStatus() == InscriptionStatus.CONFIRMED
                     && inscription.getEvent().getStartDateTime().isAfter(LocalDateTime.now());
-            Long eventId = inscription.getEvent().getId();
+            UUID eventId = inscription.getEvent().getId();
 
             inscriptionRepo.delete(inscription);
             inscriptionRepo.flush();
@@ -85,7 +86,7 @@ public class WaitingListService {
      * @throws NotFoundException if the event does not exist
      */
     @Transactional
-    public void fillFreeSpots(Long eventId) throws NotFoundException {
+    public void fillFreeSpots(UUID eventId) throws NotFoundException {
         Event event = lockEvent(eventId);
         if (hasStarted(event) || event.getMaxCapacity() == null) {
             return;
@@ -98,7 +99,7 @@ public class WaitingListService {
         }
     }
 
-    private Event lockEvent(Long eventId) throws NotFoundException {
+    private Event lockEvent(UUID eventId) throws NotFoundException {
         return eventRepo.findByIdForUpdate(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
     }
@@ -107,7 +108,7 @@ public class WaitingListService {
         return event.getStartDateTime() != null && event.getStartDateTime().isBefore(LocalDateTime.now());
     }
 
-    private void promote(Long eventId, long count) {
+    private void promote(UUID eventId, long count) {
         List<Inscription> waiting = inscriptionRepo
                 .findByEventIdAndStatusOrderByInscriptionDateAsc(eventId, InscriptionStatus.WAITING_LIST);
 

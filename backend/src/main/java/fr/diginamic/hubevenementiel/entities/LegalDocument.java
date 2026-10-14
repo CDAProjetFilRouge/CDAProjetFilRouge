@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
 import jakarta.persistence.*;
 
@@ -10,8 +13,10 @@ import java.time.LocalDateTime;
 public class LegalDocument {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @Column(name = "type", length = 30)
     @Enumerated(EnumType.STRING)
@@ -35,7 +40,7 @@ public class LegalDocument {
 
     public LegalDocument(){};
 
-    public LegalDocument(AppUser user, String pdfPath, LocalDateTime updateDate, String content, DocumentType documentType, long id, int version) {
+    public LegalDocument(AppUser user, String pdfPath, LocalDateTime updateDate, String content, DocumentType documentType, UUID id, int version) {
         this.user = user;
         this.pdfPath = pdfPath;
         this.updateDate = updateDate;
@@ -45,11 +50,11 @@ public class LegalDocument {
         this.version = version;
     }
 
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

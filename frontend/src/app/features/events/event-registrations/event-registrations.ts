@@ -1,3 +1,4 @@
+import { isUuid } from '../../../core/validator/is-uuid';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
@@ -38,8 +39,8 @@ export class EventRegistrations {
   );
 
   constructor() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!Number.isInteger(id) || id <= 0) {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!isUuid(id)) {
       this.errorMessage.set('Évènement introuvable.');
       this.loading.set(false);
       return;

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class AccountDeletionGuard {
      * @throws ConflictException if the account has activity that prevents its deletion
      *                           (code ACCOUNT_HAS_COMMENTS when the comments are the only obstacle)
      */
-    public boolean check(Long id, boolean deleteComments) throws ConflictException {
+    public boolean check(UUID id, boolean deleteComments) throws ConflictException {
         List<String> blockers = new ArrayList<>();
         if (eventRepo.existsByOrganizerId(id)) {
             blockers.add("organise des évènements");

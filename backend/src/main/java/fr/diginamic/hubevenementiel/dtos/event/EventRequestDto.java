@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.event;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -19,14 +20,14 @@ public class EventRequestDto {
     private BigDecimal nonAffiliatePrice;
     private Integer maxCapacity;
     private EventStatus status;
-    private Long idClub;
+    private UUID idClub;
 
     public EventRequestDto() {
     }
 
     public EventRequestDto(String title, String description, AddressRequestDto location, Category category, LocalDateTime startDateTime,
                            LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice,
-                           Integer maxCapacity, EventStatus status, Long idClub) {
+                           Integer maxCapacity, EventStatus status, UUID idClub) {
         this.title = title;
         this.description = description;
         this.location = location;
@@ -120,7 +121,7 @@ public class EventRequestDto {
         this.status = status;
     }
 
-    public Long getIdClub() { return idClub; }
+    public UUID getIdClub() { return idClub; }
 
-    public void setIdClub(Long idClub) { this.idClub = idClub; }
+    public void setIdClub(UUID idClub) { this.idClub = idClub; }
 }

@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
@@ -52,7 +54,7 @@ class AccountStatusServiceTest {
     // suspend
     // ---------------------------------------------------------------
 
-    private AppUser userWithStatus(Long id, AccountStatus status) {
+    private AppUser userWithStatus(UUID id, AccountStatus status) {
         AppUser user = new AppUser();
         user.setId(id);
         user.setStatus(status);
@@ -61,17 +63,17 @@ class AccountStatusServiceTest {
 
     @Test
     void suspend_ownAccount_throwsBadRequestAndTouchesNothing() {
-        assertThrows(BadRequestException.class, () -> accountStatusService.suspend(5L, null, 5L));
+        assertThrows(BadRequestException.class, () -> accountStatusService.suspend(uuid(5), null, uuid(5)));
         verify(userRepo, never()).save(any(AppUser.class));
     }
 
     @Test
     void suspend_activeUser_setsSuspendedStatusAndEndDate() throws HttpException {
-        AppUser target = userWithStatus(7L, AccountStatus.ACTIVE);
+        AppUser target = userWithStatus(uuid(7), AccountStatus.ACTIVE);
         LocalDateTime end = LocalDateTime.now().plusDays(3);
-        when(userRepo.findById(7L)).thenReturn(Optional.of(target));
+        when(userRepo.findById(uuid(7))).thenReturn(Optional.of(target));
 
-        accountStatusService.suspend(7L, end, 1L);
+        accountStatusService.suspend(uuid(7), end, uuid(1));
 
         assertThat(target.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
         assertThat(target.getSuspensionEndDate()).isEqualTo(end);
@@ -80,19 +82,19 @@ class AccountStatusServiceTest {
 
     @Test
     void suspend_endDateInThePast_throwsBadRequest() {
-        AppUser target = userWithStatus(7L, AccountStatus.ACTIVE);
-        when(userRepo.findById(7L)).thenReturn(Optional.of(target));
+        AppUser target = userWithStatus(uuid(7), AccountStatus.ACTIVE);
+        when(userRepo.findById(uuid(7))).thenReturn(Optional.of(target));
 
         assertThrows(BadRequestException.class,
-                () -> accountStatusService.suspend(7L, LocalDateTime.now().minusDays(1), 1L));
+                () -> accountStatusService.suspend(uuid(7), LocalDateTime.now().minusDays(1), uuid(1)));
     }
 
     @Test
     void suspend_notActiveUser_throwsBadRequest() {
-        AppUser target = userWithStatus(7L, AccountStatus.SUSPENDED);
-        when(userRepo.findById(7L)).thenReturn(Optional.of(target));
+        AppUser target = userWithStatus(uuid(7), AccountStatus.SUSPENDED);
+        when(userRepo.findById(uuid(7))).thenReturn(Optional.of(target));
 
-        assertThrows(BadRequestException.class, () -> accountStatusService.suspend(7L, null, 1L));
+        assertThrows(BadRequestException.class, () -> accountStatusService.suspend(uuid(7), null, uuid(1)));
     }
 
     // ---------------------------------------------------------------
@@ -101,9 +103,9 @@ class AccountStatusServiceTest {
 
     @Test
     void reactivateExpiredSuspensions_expiredAccounts_areReactivatedAndCounted() {
-        AppUser first = userWithStatus(1L, AccountStatus.SUSPENDED);
+        AppUser first = userWithStatus(uuid(1), AccountStatus.SUSPENDED);
         first.setSuspensionEndDate(LocalDateTime.now().minusHours(2));
-        AppUser second = userWithStatus(2L, AccountStatus.SUSPENDED);
+        AppUser second = userWithStatus(uuid(2), AccountStatus.SUSPENDED);
         second.setSuspensionEndDate(LocalDateTime.now().minusMinutes(1));
         when(userRepo.findByStatusAndSuspensionEndDateLessThanEqual(eq(AccountStatus.SUSPENDED), any(LocalDateTime.class)))
                 .thenReturn(List.of(first, second));

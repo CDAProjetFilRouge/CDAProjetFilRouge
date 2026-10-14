@@ -12,7 +12,7 @@ export type ClubAddress = Omit<Address, 'id'>;
 
 
 export interface Club {
-  id: number;
+  id: string;
   name: string;
   category: ClubCategory;
   email: string;

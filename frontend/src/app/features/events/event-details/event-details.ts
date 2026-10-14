@@ -1,3 +1,4 @@
+import { isUuid } from '../../../core/validator/is-uuid';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -215,12 +216,12 @@ export class EventDetails implements OnInit {
   }
 
   private load(idParam: string | null): void {
-    const id = idParam === null ? NaN : parseInt(idParam, 10);
-
-    if (Number.isNaN(id)) {
+    if (!isUuid(idParam)) {
       this.router.navigate(['/']);
       return;
     }
+
+    const id = idParam;
 
     this.loading.set(true);
     this.loadError.set(null);
@@ -373,7 +374,7 @@ export class EventDetails implements OnInit {
     });
   }
 
-  private loadMyInscription(eventId: number): void {
+  private loadMyInscription(eventId: string): void {
     const user = this.user();
     if (!user) {
       return;
@@ -389,7 +390,7 @@ export class EventDetails implements OnInit {
     });
   }
 
-  private refreshEvent(eventId: number): void {
+  private refreshEvent(eventId: string): void {
     this.eventDetailsService.getEventDetail(eventId).subscribe({
       next: (event) => this.eventDetail.set(event),
     });

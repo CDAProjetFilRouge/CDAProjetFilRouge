@@ -102,7 +102,7 @@ export class UserList {
     scrollToTop();
   }
 
-  private deleteUser(id: number, deleteComments: boolean): void {
+  private deleteUser(id: string, deleteComments: boolean): void {
     this.appUserService.deleteUser(id, deleteComments).subscribe({
       next: () => {
         this.loadUsers();
@@ -127,7 +127,7 @@ export class UserList {
   });
   }
 
-  protected async onDelete(id: number): Promise<void> {
+  protected async onDelete(id: string): Promise<void> {
     const confirmed = await this.confirmDialog.ask({
       title: 'Supprimer cet utilisateur',
       message: 'Le compte sera définitivement supprimé.',
@@ -140,7 +140,7 @@ export class UserList {
     this.deleteUser(id, false);
   }
 
-  protected async onReactivate(id: number): Promise<void> {
+  protected async onReactivate(id: string): Promise<void> {
     const confirmed = await this.confirmDialog.ask({
       title: 'Réhabiliter cet utilisateur',
       message: 'Le compte pourra de nouveau se connecter.',
@@ -172,7 +172,7 @@ export class UserList {
     this.suspendingUser.set(null);
   }
 
-  protected confirmSuspension(id: number): void {
+  protected confirmSuspension(id: string): void {
     this.appUserService.suspendUser(id, this.suspensionEnd.value || undefined).subscribe({
       next: (updated) => {
         this.users.update((list) => list.map((u) => (u.id === id ? updated : u)));

@@ -15,7 +15,7 @@ const FUTURE_END = '2099-06-01T12:00';
 
 function makeUser(overrides: Partial<AppUser> = {}): AppUser {
   return {
-    id: 8,
+    id: '8',
     firstName: 'David',
     lastName: 'Orga',
     email: 'david@example.com',
@@ -25,14 +25,14 @@ function makeUser(overrides: Partial<AppUser> = {}): AppUser {
     suspensionEndDate: null,
     creationDate: '2026-01-01',
     address: null,
-    clubs: [{ id: 3, name: 'Tennis Club' }],
+    clubs: [{ id: '3', name: 'Tennis Club' }],
     ...overrides,
   } as AppUser;
 }
 
 function makeDetail(overrides: Partial<EventDetail> = {}): EventDetail {
   return {
-    id: 5,
+    id: '5',
     title: 'Tournoi',
     description: 'Un tournoi',
     street1: '12 rue de la Paix',
@@ -47,7 +47,7 @@ function makeDetail(overrides: Partial<EventDetail> = {}): EventDetail {
     nonAffiliatePrice: 20,
     maxCapacity: 30,
     status: 'DRAFT',
-    organizerId: 8,
+    organizerId: '8',
     imageGallery: [],
     ...overrides,
   };
@@ -59,7 +59,7 @@ function validValues() {
     description: 'Un tournoi',
     location: { street1: '12 rue de la Paix', street2: '', postalCode: '31000', city: 'Toulouse', country: 'France' },
     category: 'SPORT' as const,
-    clubId: 3,
+    clubId: '3',
     startDateTime: FUTURE_START,
     endDateTime: FUTURE_END,
     maxCapacity: 30,
@@ -114,7 +114,7 @@ describe('EventForm', () => {
     });
 
     it('préremplit le club quand l’organisateur n’en a qu’un', () => {
-      expect(control('clubId').value).toBe(3);
+      expect(control('clubId').value).toBe('3');
     });
 
     it('refuse d’envoyer un formulaire vide et affiche les erreurs', () => {
@@ -187,12 +187,12 @@ describe('EventForm', () => {
 
       const create = http.expectOne(`${URL_BACKEND}/events`);
       expect(create.request.method).toBe('POST');
-      expect(create.request.body.idClub).toBe(3);
+      expect(create.request.body.idClub).toBe('3');
       expect(create.request.body.title).toBe('Tournoi');
       expect(create.request.body.status).toBeUndefined();
-      create.flush({ id: 42, status: 'DRAFT' });
+      create.flush({ id: '42', status: 'DRAFT' });
 
-      expect(router.navigate).toHaveBeenCalledWith(['/events', 42, 'edit']);
+      expect(router.navigate).toHaveBeenCalledWith(['/events', '42', 'edit']);
     });
 
     it('publie : crée puis passe l’évènement en PUBLISHED', () => {
@@ -200,11 +200,11 @@ describe('EventForm', () => {
 
       (component as unknown as { publish(): void }).publish();
 
-      http.expectOne(`${URL_BACKEND}/events`).flush({ id: 42, status: 'DRAFT' });
+      http.expectOne(`${URL_BACKEND}/events`).flush({ id: '42', status: 'DRAFT' });
       const update = http.expectOne(`${URL_BACKEND}/events/42`);
       expect(update.request.method).toBe('PUT');
       expect(update.request.body.status).toBe('PUBLISHED');
-      update.flush({ id: 42, status: 'PUBLISHED' });
+      update.flush({ id: '42', status: 'PUBLISHED' });
 
       expect(router.navigateByUrl).toHaveBeenCalledWith('/');
     });
@@ -214,7 +214,7 @@ describe('EventForm', () => {
 
       (component as unknown as { publish(): void }).publish();
 
-      http.expectOne(`${URL_BACKEND}/events`).flush({ id: 42, status: 'DRAFT' });
+      http.expectOne(`${URL_BACKEND}/events`).flush({ id: '42', status: 'DRAFT' });
       http.expectOne(`${URL_BACKEND}/events/42`).flush('Dates invalides', { status: 400, statusText: 'Bad Request' });
 
       const message = (component as unknown as { errorMessage(): string }).errorMessage();
@@ -280,9 +280,9 @@ describe('EventForm', () => {
 
         (component as unknown as { publish(): void }).publish();
 
-        http.expectOne(`${URL_BACKEND}/events`).flush({ id: 42, status: 'DRAFT' });
-        http.expectOne(`${URL_BACKEND}/events/42/images`).flush({ id: 1, path: '/uploads/a.png', displayOrder: 1 });
-        http.expectOne(`${URL_BACKEND}/events/42`).flush({ id: 42, status: 'PUBLISHED' });
+        http.expectOne(`${URL_BACKEND}/events`).flush({ id: '42', status: 'DRAFT' });
+        http.expectOne(`${URL_BACKEND}/events/42/images`).flush({ id: '1', path: '/uploads/a.png', displayOrder: 1 });
+        http.expectOne(`${URL_BACKEND}/events/42`).flush({ id: '42', status: 'PUBLISHED' });
 
         expect(router.navigateByUrl).toHaveBeenCalledWith('/');
       });
@@ -293,11 +293,11 @@ describe('EventForm', () => {
 
         (component as unknown as { publish(): void }).publish();
 
-        http.expectOne(`${URL_BACKEND}/events`).flush({ id: 42, status: 'DRAFT' });
+        http.expectOne(`${URL_BACKEND}/events`).flush({ id: '42', status: 'DRAFT' });
         http.expectOne(`${URL_BACKEND}/events/42/images`).flush('refusée', { status: 400, statusText: 'Bad Request' });
         http.expectNone(`${URL_BACKEND}/events/42`);
 
-        expect(router.navigate).toHaveBeenCalledWith(['/events', 42, 'edit'], {
+        expect(router.navigate).toHaveBeenCalledWith(['/events', '42', 'edit'], {
           state: { notice: expect.stringContaining('1 image(s)') },
         });
       });
@@ -326,7 +326,7 @@ describe('EventForm', () => {
       expect(update.request.method).toBe('PUT');
       expect(update.request.body.status).toBe('DRAFT');
       expect(update.request.body.idClub).toBeUndefined();
-      update.flush({ id: 5, status: 'DRAFT' });
+      update.flush({ id: '5', status: 'DRAFT' });
 
       expect((component as unknown as { successMessage(): string }).successMessage()).toBe('Modifications enregistrées.');
     });
@@ -339,7 +339,7 @@ describe('EventForm', () => {
 
       const update = http.expectOne(`${URL_BACKEND}/events/5`);
       expect(update.request.body.status).toBe('PUBLISHED');
-      update.flush({ id: 5, status: 'PUBLISHED' });
+      update.flush({ id: '5', status: 'PUBLISHED' });
 
       expect((component as unknown as { successMessage(): string }).successMessage()).toBe('Évènement publié.');
       expect((component as unknown as { status(): string }).status()).toBe('PUBLISHED');
@@ -356,11 +356,11 @@ describe('EventForm', () => {
     });
 
     it('n’autorise pas un autre organisateur, mais autorise un administrateur', async () => {
-      await setup('5', makeUser({ id: 99 }));
-      http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ organizerId: 8 }));
+      await setup('5', makeUser({ id: '99' }));
+      http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ organizerId: '8' }));
       expect((component as unknown as { isOwner(): boolean }).isOwner()).toBe(false);
 
-      auth.currentUser.set(makeUser({ id: 99, role: 'ADMINISTRATOR' }));
+      auth.currentUser.set(makeUser({ id: '99', role: 'ADMINISTRATOR' }));
       expect((component as unknown as { isOwner(): boolean }).isOwner()).toBe(true);
     });
 
@@ -375,13 +375,13 @@ describe('EventForm', () => {
       await setup('5');
       http
         .expectOne(`${URL_BACKEND}/events/5`)
-        .flush(makeDetail({ imageGallery: [{ id: 1, path: '/a.png', displayOrder: 1 }, { id: 2, path: '/b.png', displayOrder: 2 }] }));
+        .flush(makeDetail({ imageGallery: [{ id: '1', path: '/a.png', displayOrder: 1 }, { id: '2', path: '/b.png', displayOrder: 2 }] }));
 
-      (component as unknown as { removeImage(id: number): void }).removeImage(1);
+      (component as unknown as { removeImage(id: string): void }).removeImage('1');
       http.expectOne(`${URL_BACKEND}/events/5/images/1`).flush(null);
 
       const gallery = (component as unknown as { detail(): EventDetail }).detail().imageGallery;
-      expect(gallery.map((image) => image.id)).toEqual([2]);
+      expect(gallery.map((image) => image.id)).toEqual(['2']);
     });
   });
 });

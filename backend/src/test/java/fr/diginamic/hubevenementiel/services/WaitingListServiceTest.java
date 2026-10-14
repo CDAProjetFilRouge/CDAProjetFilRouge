@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
@@ -47,7 +48,7 @@ class WaitingListServiceTest {
     @BeforeEach
     void setUp() {
         event = new Event();
-        event.setId(2L);
+        event.setId(uuid(2));
         event.setTitle("Marathon");
         event.setStartDateTime(LocalDateTime.now().plusDays(5));
     }
@@ -64,23 +65,23 @@ class WaitingListServiceTest {
     }
 
     private void givenWaitingList(Inscription... inscriptions) {
-        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(event));
-        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+        when(eventRepo.findByIdForUpdate(uuid(2))).thenReturn(Optional.of(event));
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(uuid(2), InscriptionStatus.WAITING_LIST))
                 .thenReturn(List.of(inscriptions));
     }
 
     @Test
     void promoteNext_unknownEvent_throwsNotFound() {
-        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.empty());
+        when(eventRepo.findByIdForUpdate(uuid(2))).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> waitingListService.promoteNext(2L));
+        assertThrows(NotFoundException.class, () -> waitingListService.promoteNext(uuid(2)));
     }
 
     @Test
     void promoteNext_emptyList_noOpWithoutException() {
         givenWaitingList();
 
-        assertDoesNotThrow(() -> waitingListService.promoteNext(2L));
+        assertDoesNotThrow(() -> waitingListService.promoteNext(uuid(2)));
         verify(inscriptionRepo, never()).save(any());
     }
 
@@ -90,7 +91,7 @@ class WaitingListServiceTest {
         Inscription second = waitingInscription(AccountStatus.ACTIVE);
         givenWaitingList(first, second);
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         assertThat(first.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
         assertThat(second.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
@@ -103,7 +104,7 @@ class WaitingListServiceTest {
         Inscription active = waitingInscription(AccountStatus.ACTIVE);
         givenWaitingList(suspended, active);
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         assertThat(suspended.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
         assertThat(active.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
@@ -116,7 +117,7 @@ class WaitingListServiceTest {
         Inscription active = waitingInscription(AccountStatus.ACTIVE);
         givenWaitingList(anonymized, active);
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         assertThat(anonymized.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
         assertThat(active.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
@@ -126,7 +127,7 @@ class WaitingListServiceTest {
     void promoteNext_onlySuspendedOrAnonymized_promotesNobody() throws NotFoundException {
         givenWaitingList(waitingInscription(AccountStatus.SUSPENDED), waitingInscription(AccountStatus.ANONYMIZE));
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         verify(inscriptionRepo, never()).save(any());
     }
@@ -134,9 +135,9 @@ class WaitingListServiceTest {
     @Test
     void promoteNext_eventAlreadyStarted_promotesNobody() throws NotFoundException {
         event.setStartDateTime(LocalDateTime.now().minusHours(1));
-        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(event));
+        when(eventRepo.findByIdForUpdate(uuid(2))).thenReturn(Optional.of(event));
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         verify(inscriptionRepo, never()).findByEventIdAndStatusOrderByInscriptionDateAsc(any(), any());
         verify(inscriptionRepo, never()).save(any());
@@ -149,9 +150,9 @@ class WaitingListServiceTest {
         Inscription second = waitingInscription(AccountStatus.ACTIVE);
         Inscription third = waitingInscription(AccountStatus.ACTIVE);
         givenWaitingList(first, second, third);
-        when(inscriptionRepo.countByEventIdAndStatus(2L, InscriptionStatus.CONFIRMED)).thenReturn(8L);
+        when(inscriptionRepo.countByEventIdAndStatus(uuid(2), InscriptionStatus.CONFIRMED)).thenReturn(8L);
 
-        waitingListService.fillFreeSpots(2L);
+        waitingListService.fillFreeSpots(uuid(2));
 
         assertThat(first.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
         assertThat(second.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
@@ -161,10 +162,10 @@ class WaitingListServiceTest {
     @Test
     void fillFreeSpots_eventFull_promotesNobody() throws NotFoundException {
         event.setMaxCapacity(10);
-        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(event));
-        when(inscriptionRepo.countByEventIdAndStatus(2L, InscriptionStatus.CONFIRMED)).thenReturn(10L);
+        when(eventRepo.findByIdForUpdate(uuid(2))).thenReturn(Optional.of(event));
+        when(inscriptionRepo.countByEventIdAndStatus(uuid(2), InscriptionStatus.CONFIRMED)).thenReturn(10L);
 
-        waitingListService.fillFreeSpots(2L);
+        waitingListService.fillFreeSpots(uuid(2));
 
         verify(inscriptionRepo, never()).save(any());
     }
@@ -175,9 +176,9 @@ class WaitingListServiceTest {
         Inscription suspended = waitingInscription(AccountStatus.SUSPENDED);
         Inscription active = waitingInscription(AccountStatus.ACTIVE);
         givenWaitingList(suspended, active);
-        when(inscriptionRepo.countByEventIdAndStatus(2L, InscriptionStatus.CONFIRMED)).thenReturn(8L);
+        when(inscriptionRepo.countByEventIdAndStatus(uuid(2), InscriptionStatus.CONFIRMED)).thenReturn(8L);
 
-        waitingListService.fillFreeSpots(2L);
+        waitingListService.fillFreeSpots(uuid(2));
 
         assertThat(suspended.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
         assertThat(active.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
@@ -187,7 +188,7 @@ class WaitingListServiceTest {
     void promoteNext_notifiesThePromotedMember() throws NotFoundException {
         givenWaitingList(waitingInscription(AccountStatus.ACTIVE));
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         verify(eventPublisher).publishEvent(new InscriptionPromotedEvent("alice@example.com", "Marathon"));
     }
@@ -196,7 +197,7 @@ class WaitingListServiceTest {
     void promoteNext_suspendedOnly_notifiesNobody() throws NotFoundException {
         givenWaitingList(waitingInscription(AccountStatus.SUSPENDED));
 
-        waitingListService.promoteNext(2L);
+        waitingListService.promoteNext(uuid(2));
 
         verify(eventPublisher, never()).publishEvent(any(Object.class));
     }

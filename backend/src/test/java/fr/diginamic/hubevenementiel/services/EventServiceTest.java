@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.entities.Address;
@@ -75,7 +77,7 @@ class EventServiceTest {
     @BeforeEach
     void setUp() {
         organizer = new AppUser();
-        organizer.setId(8L);
+        organizer.setId(uuid(8));
 
         validEvent = new Event();
         validEvent.setTitle("Marathon de Rennes");
@@ -257,7 +259,7 @@ class EventServiceTest {
         validEvent.setStartDateTime(LocalDateTime.now().minusDays(1));
         validEvent.setEndDateTime(LocalDateTime.now().plusDays(1));
 
-        assertThrows(BadRequestException.class, () -> eventService.createEvent(validEvent, 1L));
+        assertThrows(BadRequestException.class, () -> eventService.createEvent(validEvent, uuid(1)));
 
         verify(eventRepository, never()).save(any());
     }
@@ -326,7 +328,7 @@ class EventServiceTest {
 
     @Test
     void createEvent_forcesDraftStatusRegardlessOfInput() throws HttpException {
-        Long clubId = 1L;
+        UUID clubId = uuid(1);
         Club club = new Club();
         club.setId(clubId);
         organizer.setClubs(new ArrayList<>(List.of(club)));
@@ -343,7 +345,7 @@ class EventServiceTest {
 
     @Test
     void createEvent_duplicateTitle_throwsConflict() throws HttpException {
-        Long clubId = 1L;
+        UUID clubId = uuid(1);
         Club club = new Club();
         club.setId(clubId);
         organizer.setClubs(new ArrayList<>(List.of(club)));
@@ -363,13 +365,13 @@ class EventServiceTest {
     @Test
     void createEvent_organizerNotMemberOfTheClub_throwsForbidden() throws HttpException {
         Club ownClub = new Club();
-        ownClub.setId(4L);
+        ownClub.setId(uuid(4));
         Club otherClub = new Club();
-        otherClub.setId(9L);
+        otherClub.setId(uuid(9));
         organizer.setClubs(new ArrayList<>(List.of(ownClub)));
-        when(clubService.findById(9L)).thenReturn(otherClub);
+        when(clubService.findById(uuid(9))).thenReturn(otherClub);
 
-        assertThrows(ForbiddenException.class, () -> eventService.createEvent(validEvent, 9L));
+        assertThrows(ForbiddenException.class, () -> eventService.createEvent(validEvent, uuid(9)));
 
         verify(eventRepository, never()).save(any());
     }
@@ -377,24 +379,24 @@ class EventServiceTest {
     @Test
     void createEvent_organizerWithoutAnyClub_throwsForbidden() throws HttpException {
         Club club = new Club();
-        club.setId(4L);
+        club.setId(uuid(4));
         organizer.setClubs(new ArrayList<>());
-        when(clubService.findById(4L)).thenReturn(club);
+        when(clubService.findById(uuid(4))).thenReturn(club);
 
-        assertThrows(ForbiddenException.class, () -> eventService.createEvent(validEvent, 4L));
+        assertThrows(ForbiddenException.class, () -> eventService.createEvent(validEvent, uuid(4)));
     }
 
     @Test
     void createEvent_administratorCanChooseAnyClub() throws HttpException {
         Club club = new Club();
-        club.setId(9L);
+        club.setId(uuid(9));
         organizer.setRole(Role.ADMINISTRATOR);
         organizer.setClubs(new ArrayList<>());
-        when(clubService.findById(9L)).thenReturn(club);
+        when(clubService.findById(uuid(9))).thenReturn(club);
         when(eventRepository.existsByTitle(anyString())).thenReturn(false);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Event result = eventService.createEvent(validEvent, 9L);
+        Event result = eventService.createEvent(validEvent, uuid(9));
 
         assertThat(result.getClub()).isSameAs(club);
     }
@@ -405,7 +407,7 @@ class EventServiceTest {
 
     @Test
     void findOrganizedBy_sizeAboveTwenty_throwsBadRequest() {
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
         assertThrows(BadRequestException.class, () -> eventService.findOrganizedBy(0, 21, null, principal));
 
@@ -415,7 +417,7 @@ class EventServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void findOrganizedBy_sortsByStartDateDescending() throws HttpException {
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
         when(eventRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(validEvent)));
 
@@ -436,18 +438,18 @@ class EventServiceTest {
 
     @Test
     void updateEvent_unknownId_throwsNotFound() {
-        when(eventRepository.findById(1L)).thenReturn(Optional.empty());
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.empty());
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThrows(NotFoundException.class, () -> eventService.updateEvent(1L, validEvent, principal));
+        assertThrows(NotFoundException.class, () -> eventService.updateEvent(uuid(1), validEvent, principal));
     }
 
     @Test
     void deleteEvent_unknownId_throwsNotFound() {
-        when(eventRepository.findById(1L)).thenReturn(Optional.empty());
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.empty());
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThrows(NotFoundException.class, () -> eventService.deleteEvent(1L, principal));
+        assertThrows(NotFoundException.class, () -> eventService.deleteEvent(uuid(1), principal));
     }
 
     @Test
@@ -456,11 +458,11 @@ class EventServiceTest {
         validEvent.setEndDateTime(LocalDateTime.now().plusDays(1).plusHours(1));
         Event existing = cloneFutureEvent();
         existing.setTitle(validEvent.getTitle().toUpperCase());
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        eventService.updateEvent(1L, validEvent, principal);
+        eventService.updateEvent(uuid(1), validEvent, principal);
 
         verify(eventRepository, never()).existsByTitle(anyString());
     }
@@ -472,40 +474,40 @@ class EventServiceTest {
     @Test
     void updateEvent_ownerPrincipal_isAllowed() throws HttpException {
         Event existing = cloneFutureEvent();
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertDoesNotThrow(() -> eventService.updateEvent(1L, validEvent, owner));
+        assertDoesNotThrow(() -> eventService.updateEvent(uuid(1), validEvent, owner));
     }
 
     @Test
     void updateEvent_adminPrincipal_isAllowedEvenIfNotOwner() throws HttpException {
         Event existing = cloneFutureEvent();
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        AppUserPrincipal admin = new AppUserPrincipal(99L, "emma@example.com", "ADMINISTRATOR");
+        AppUserPrincipal admin = new AppUserPrincipal(uuid(99), "emma@example.com", "ADMINISTRATOR");
 
-        assertDoesNotThrow(() -> eventService.updateEvent(1L, validEvent, admin));
+        assertDoesNotThrow(() -> eventService.updateEvent(uuid(1), validEvent, admin));
     }
 
     @Test
     void updateEvent_nonOwnerOrganizer_throwsForbidden() {
         Event existing = cloneFutureEvent();
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
-        AppUserPrincipal stranger = new AppUserPrincipal(42L, "bob@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        AppUserPrincipal stranger = new AppUserPrincipal(uuid(42), "bob@example.com", "ORGANIZER");
 
-        assertThrows(ForbiddenException.class, () -> eventService.updateEvent(1L, validEvent, stranger));
+        assertThrows(ForbiddenException.class, () -> eventService.updateEvent(uuid(1), validEvent, stranger));
         verify(eventRepository, never()).save(any());
     }
 
     @Test
     void deleteEvent_nonOwnerOrganizer_throwsForbidden() {
         Event existing = cloneFutureEvent();
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
-        AppUserPrincipal stranger = new AppUserPrincipal(42L, "bob@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        AppUserPrincipal stranger = new AppUserPrincipal(uuid(42), "bob@example.com", "ORGANIZER");
 
-        assertThrows(ForbiddenException.class, () -> eventService.deleteEvent(1L, stranger));
+        assertThrows(ForbiddenException.class, () -> eventService.deleteEvent(uuid(1), stranger));
         verify(eventRepository, never()).delete(any(Event.class));
     }
 
@@ -518,10 +520,10 @@ class EventServiceTest {
         Event existing = new Event();
         existing.setOrganizer(organizer);
         existing.setStartDateTime(LocalDateTime.now().minusDays(1));
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThrows(ConflictException.class, () -> eventService.updateEvent(1L, validEvent, owner));
+        assertThrows(ConflictException.class, () -> eventService.updateEvent(uuid(1), validEvent, owner));
         verify(eventRepository, never()).save(any());
     }
 
@@ -534,20 +536,20 @@ class EventServiceTest {
         Event existing = new Event();
         existing.setOrganizer(organizer);
         existing.setStartDateTime(LocalDateTime.now().minusDays(1));
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThrows(ConflictException.class, () -> eventService.deleteEvent(1L, owner));
+        assertThrows(ConflictException.class, () -> eventService.deleteEvent(uuid(1), owner));
         verify(eventRepository, never()).delete(any(Event.class));
     }
 
     @Test
     void deleteEvent_futureEvent_deletesSuccessfully() throws HttpException {
         Event existing = cloneFutureEvent();
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        eventService.deleteEvent(1L, owner);
+        eventService.deleteEvent(uuid(1), owner);
 
         verify(eventRepository).delete(existing);
     }
@@ -555,20 +557,20 @@ class EventServiceTest {
     @Test
     void deleteEvent_withRegistrations_notifiesEveryoneAndRemovesTheirInscriptions() throws HttpException {
         Event existing = cloneFutureEvent();
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         AppUser confirmed = new AppUser();
         confirmed.setEmail("confirme@example.com");
         AppUser waiting = new AppUser();
         waiting.setEmail("attente@example.com");
-        when(inscriptionRepo.findByEventIdAndStatusIn(1L, List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)))
+        when(inscriptionRepo.findByEventIdAndStatusIn(uuid(1), List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)))
                 .thenReturn(List.of(
                         new Inscription(confirmed, existing, BigDecimal.TEN, InscriptionStatus.CONFIRMED),
                         new Inscription(waiting, existing, BigDecimal.TEN, InscriptionStatus.WAITING_LIST)));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        eventService.deleteEvent(1L, owner);
+        eventService.deleteEvent(uuid(1), owner);
 
-        verify(inscriptionRepo).deleteByEventId(1L);
+        verify(inscriptionRepo).deleteByEventId(uuid(1));
         ArgumentCaptor<EventDeletedEvent> captor = ArgumentCaptor.forClass(EventDeletedEvent.class);
         verify(eventPublisher).publishEvent(captor.capture());
         assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
@@ -579,10 +581,10 @@ class EventServiceTest {
     void deleteEvent_pastEvent_notifiesNobody() {
         Event past = cloneFutureEvent();
         past.setStartDateTime(LocalDateTime.now().minusDays(1));
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(past));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(past));
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThrows(ConflictException.class, () -> eventService.deleteEvent(1L, owner));
+        assertThrows(ConflictException.class, () -> eventService.deleteEvent(uuid(1), owner));
 
         verify(inscriptionRepo, never()).deleteByEventId(any());
         verify(eventPublisher, never()).publishEvent(any(Object.class));
@@ -596,40 +598,40 @@ class EventServiceTest {
     void findVisibleById_draftEvent_visibleToOwner() throws HttpException {
         Event draft = cloneFutureEvent();
         draft.setStatus(EventStatus.DRAFT);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(draft));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(draft));
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThat(eventService.findVisibleById(1L, owner)).isEqualTo(draft);
+        assertThat(eventService.findVisibleById(uuid(1), owner)).isEqualTo(draft);
     }
 
     @Test
     void findVisibleById_draftEvent_visibleToAdmin() throws HttpException {
         Event draft = cloneFutureEvent();
         draft.setStatus(EventStatus.DRAFT);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(draft));
-        AppUserPrincipal admin = new AppUserPrincipal(99L, "emma@example.com", "ADMINISTRATOR");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(draft));
+        AppUserPrincipal admin = new AppUserPrincipal(uuid(99), "emma@example.com", "ADMINISTRATOR");
 
-        assertThat(eventService.findVisibleById(1L, admin)).isEqualTo(draft);
+        assertThat(eventService.findVisibleById(uuid(1), admin)).isEqualTo(draft);
     }
 
     @Test
     void findVisibleById_draftEvent_hiddenFromStranger_throwsNotFound() {
         Event draft = cloneFutureEvent();
         draft.setStatus(EventStatus.DRAFT);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(draft));
-        AppUserPrincipal stranger = new AppUserPrincipal(42L, "bob@example.com", "MEMBER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(draft));
+        AppUserPrincipal stranger = new AppUserPrincipal(uuid(42), "bob@example.com", "MEMBER");
 
-        assertThrows(NotFoundException.class, () -> eventService.findVisibleById(1L, stranger));
+        assertThrows(NotFoundException.class, () -> eventService.findVisibleById(uuid(1), stranger));
     }
 
     @Test
     void findVisibleById_publishedEvent_visibleToEveryone() throws HttpException {
         Event published = cloneFutureEvent();
         published.setStatus(EventStatus.PUBLISHED);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(published));
-        AppUserPrincipal stranger = new AppUserPrincipal(42L, "bob@example.com", "MEMBER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(published));
+        AppUserPrincipal stranger = new AppUserPrincipal(uuid(42), "bob@example.com", "MEMBER");
 
-        assertThat(eventService.findVisibleById(1L, stranger)).isEqualTo(published);
+        assertThat(eventService.findVisibleById(uuid(1), stranger)).isEqualTo(published);
     }
 
     // ---------------------------------------------------------------
@@ -638,7 +640,7 @@ class EventServiceTest {
 
     @Test
     void search_startAfterEnd_throwsBadRequest() {
-        AppUserPrincipal principal = new AppUserPrincipal(1L, "a@example.com", "MEMBER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(1), "a@example.com", "MEMBER");
         LocalDateTime start = LocalDateTime.now().plusDays(2);
         LocalDateTime end = LocalDateTime.now().plusDays(1);
 
@@ -648,7 +650,7 @@ class EventServiceTest {
 
     @Test
     void search_minPriceGreaterThanMaxPrice_throwsBadRequest() {
-        AppUserPrincipal principal = new AppUserPrincipal(1L, "a@example.com", "MEMBER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(1), "a@example.com", "MEMBER");
 
         assertThrows(BadRequestException.class,
                 () -> eventService.search(0, 20, null, null, null, 50, 10, null, principal));
@@ -660,46 +662,46 @@ class EventServiceTest {
 
     @Test
     void remainingSpots_subtractsConfirmedInscriptionsFromTheCapacity() {
-        Event busy = eventWith(1L, 10);
-        Event empty = eventWith(2L, 5);
-        when(inscriptionRepo.countByEventIdsAndStatus(List.of(1L, 2L), InscriptionStatus.CONFIRMED))
-                .thenReturn(List.of(count(1L, 3L)));
+        Event busy = eventWith(uuid(1), 10);
+        Event empty = eventWith(uuid(2), 5);
+        when(inscriptionRepo.countByEventIdsAndStatus(List.of(uuid(1), uuid(2)), InscriptionStatus.CONFIRMED))
+                .thenReturn(List.of(count(uuid(1), 3L)));
 
-        Map<Long, Integer> result = eventService.remainingSpots(List.of(busy, empty));
+        Map<UUID, Integer> result = eventService.remainingSpots(List.of(busy, empty));
 
-        assertThat(result).containsEntry(1L, 7).containsEntry(2L, 5);
+        assertThat(result).containsEntry(uuid(1), 7).containsEntry(uuid(2), 5);
     }
 
     @Test
     void remainingSpots_neverGoesBelowZero() {
-        Event overbooked = eventWith(1L, 2);
-        when(inscriptionRepo.countByEventIdsAndStatus(List.of(1L), InscriptionStatus.CONFIRMED))
-                .thenReturn(List.of(count(1L, 3L)));
+        Event overbooked = eventWith(uuid(1), 2);
+        when(inscriptionRepo.countByEventIdsAndStatus(List.of(uuid(1)), InscriptionStatus.CONFIRMED))
+                .thenReturn(List.of(count(uuid(1), 3L)));
 
-        Map<Long, Integer> result = eventService.remainingSpots(List.of(overbooked));
+        Map<UUID, Integer> result = eventService.remainingSpots(List.of(overbooked));
 
-        assertThat(result).containsEntry(1L, 0);
+        assertThat(result).containsEntry(uuid(1), 0);
     }
 
     @Test
     void remainingSpots_noEvents_returnsEmptyMapWithoutQuerying() {
-        Map<Long, Integer> result = eventService.remainingSpots(List.of());
+        Map<UUID, Integer> result = eventService.remainingSpots(List.of());
 
         assertThat(result).isEmpty();
         verify(inscriptionRepo, never()).countByEventIdsAndStatus(any(), any());
     }
 
-    private Event eventWith(Long id, int maxCapacity) {
+    private Event eventWith(UUID id, int maxCapacity) {
         Event event = new Event();
         event.setId(id);
         event.setMaxCapacity(maxCapacity);
         return event;
     }
 
-    private EventInscriptionCount count(Long eventId, Long total) {
+    private EventInscriptionCount count(UUID eventId, Long total) {
         return new EventInscriptionCount() {
             @Override
-            public Long getEventId() {
+            public UUID getEventId() {
                 return eventId;
             }
 
@@ -719,13 +721,13 @@ class EventServiceTest {
         Event existing = cloneFutureEvent();
         existing.setMaxCapacity(10);
         validEvent.setMaxCapacity(15);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        eventService.updateEvent(1L, validEvent, owner);
+        eventService.updateEvent(uuid(1), validEvent, owner);
 
-        verify(waitingListService).fillFreeSpots(1L);
+        verify(waitingListService).fillFreeSpots(uuid(1));
     }
 
     @Test
@@ -733,11 +735,11 @@ class EventServiceTest {
         Event existing = cloneFutureEvent();
         existing.setMaxCapacity(100);
         validEvent.setMaxCapacity(100);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        eventService.updateEvent(1L, validEvent, owner);
+        eventService.updateEvent(uuid(1), validEvent, owner);
 
         verify(waitingListService, never()).fillFreeSpots(any());
     }
@@ -747,11 +749,11 @@ class EventServiceTest {
         Event existing = cloneFutureEvent();
         existing.setMaxCapacity(100);
         validEvent.setMaxCapacity(50);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        eventService.updateEvent(1L, validEvent, owner);
+        eventService.updateEvent(uuid(1), validEvent, owner);
 
         verify(waitingListService, never()).fillFreeSpots(any());
     }
@@ -761,11 +763,11 @@ class EventServiceTest {
         Event existing = cloneFutureEvent();
         existing.setMaxCapacity(20);
         validEvent.setMaxCapacity(5);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(inscriptionRepo.countByEventIdAndStatus(1L, InscriptionStatus.CONFIRMED)).thenReturn(12L);
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        when(inscriptionRepo.countByEventIdAndStatus(uuid(1), InscriptionStatus.CONFIRMED)).thenReturn(12L);
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        assertThrows(ConflictException.class, () -> eventService.updateEvent(1L, validEvent, owner));
+        assertThrows(ConflictException.class, () -> eventService.updateEvent(uuid(1), validEvent, owner));
 
         verify(eventRepository, never()).save(any(Event.class));
     }
@@ -775,12 +777,12 @@ class EventServiceTest {
         Event existing = cloneFutureEvent();
         existing.setMaxCapacity(20);
         validEvent.setMaxCapacity(12);
-        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(inscriptionRepo.countByEventIdAndStatus(1L, InscriptionStatus.CONFIRMED)).thenReturn(12L);
-        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        when(inscriptionRepo.countByEventIdAndStatus(uuid(1), InscriptionStatus.CONFIRMED)).thenReturn(12L);
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
-        Event result = eventService.updateEvent(1L, validEvent, owner);
+        Event result = eventService.updateEvent(uuid(1), validEvent, owner);
 
         assertThat(result.getMaxCapacity()).isEqualTo(12);
     }

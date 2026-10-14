@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
@@ -61,7 +62,7 @@ public class AnonymizationDemandService {
      * @return object of type demande
      * @throws HttpException
      */
-    public AnonymizationDemand validate(Long id, AppUserPrincipal principal) throws HttpException {
+    public AnonymizationDemand validate(UUID id, AppUserPrincipal principal) throws HttpException {
 
         AppUser admin = appUserService.findById(principal.id());
 
@@ -94,7 +95,7 @@ public class AnonymizationDemandService {
      * @return object of type anonymizationDemand
      * @throws HttpException
      */
-    public AnonymizationDemand findById(Long demandId) throws HttpException {
+    public AnonymizationDemand findById(UUID demandId) throws HttpException {
         Optional<AnonymizationDemand> optionalDemand = anonymizationDemandRepository.findById(demandId);
 
         if (optionalDemand.isEmpty()) {
@@ -186,7 +187,7 @@ public class AnonymizationDemandService {
      * @return a list of demands
      * @throws HttpException
      */
-    public List<AnonymizationDemand> findByRequesterId(int page, int size, Long id) throws HttpException {
+    public List<AnonymizationDemand> findByRequesterId(int page, int size, UUID id) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
         if (id == null) {
@@ -254,7 +255,7 @@ public class AnonymizationDemandService {
      * @return a list of demands
      * @throws HttpException
      */
-    public List<AnonymizationDemand> findByAdminId(int page, int size, Long id) throws HttpException {
+    public List<AnonymizationDemand> findByAdminId(int page, int size, UUID id) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
 
         if (id == null) {
@@ -380,7 +381,7 @@ public class AnonymizationDemandService {
      * @throws HttpException
      */
     @Transactional
-    public AnonymizationDemand updateDemand(Long demandId, AnonymizationDemand modifiedDemand) throws HttpException {
+    public AnonymizationDemand updateDemand(UUID demandId, AnonymizationDemand modifiedDemand) throws HttpException {
 
         AnonymizationDemand existingDemand = findById(demandId);
 
@@ -400,7 +401,7 @@ public class AnonymizationDemandService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteDemand(Long demandId) throws HttpException {
+    public void deleteDemand(UUID demandId) throws HttpException {
 
         AnonymizationDemand demand = findById(demandId);
 

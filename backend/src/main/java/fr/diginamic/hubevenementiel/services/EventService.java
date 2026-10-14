@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
@@ -69,14 +70,14 @@ public class EventService {
      * @param events events of a page for which the remaining spots are needed
      * @return the remaining spots by event id (maximum capacity minus confirmed inscriptions, never below zero)
      */
-    public Map<Long, Integer> remainingSpots(List<Event> events) {
+    public Map<UUID, Integer> remainingSpots(List<Event> events) {
         if (events.isEmpty()) {
             return Map.of();
         }
 
-        List<Long> eventIds = events.stream().map(Event::getId).toList();
+        List<UUID> eventIds = events.stream().map(Event::getId).toList();
 
-        Map<Long, Long> confirmedByEvent = inscriptionRepo
+        Map<UUID, Long> confirmedByEvent = inscriptionRepo
                 .countByEventIdsAndStatus(eventIds, InscriptionStatus.CONFIRMED).stream()
                 .collect(Collectors.toMap(EventInscriptionCount::getEventId, EventInscriptionCount::getTotal));
 
@@ -91,7 +92,7 @@ public class EventService {
      * @return an object of type Event
      * @throws HttpException
      */
-    public Event findById(Long eventId) throws HttpException {
+    public Event findById(UUID eventId) throws HttpException {
         Optional<Event> optionalEvent = eventRepository.findById(eventId);
 
         if (optionalEvent.isEmpty()) {
@@ -110,7 +111,7 @@ public class EventService {
      * @return an object of type Event, only if visible to this caller
      * @throws HttpException
      */
-    public Event findVisibleById(Long eventId, AppUserPrincipal principal) throws HttpException {
+    public Event findVisibleById(UUID eventId, AppUserPrincipal principal) throws HttpException {
         Event event = findById(eventId);
 
         if(event == null){
@@ -302,7 +303,7 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event createEvent(Event event, Long clubId) throws HttpException {
+    public Event createEvent(Event event, UUID clubId) throws HttpException {
 
         event.setStatus(EventStatus.DRAFT);
         eventChecker(event);
@@ -328,7 +329,7 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event updateEvent(Long eventId, Event modifiedEvent, AppUserPrincipal principal) throws HttpException {
+    public Event updateEvent(UUID eventId, Event modifiedEvent, AppUserPrincipal principal) throws HttpException {
 
         Event eventToBeModified = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
@@ -380,7 +381,7 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteEvent(Long eventId, AppUserPrincipal principal) throws HttpException {
+    public void deleteEvent(UUID eventId, AppUserPrincipal principal) throws HttpException {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.appUser;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -25,12 +26,12 @@ public class AppUserAdminCreateRequestDto {
     @NotNull
     private Role role;
 
-    private List<Long> clubIds;
+    private List<UUID> clubIds;
 
     public AppUserAdminCreateRequestDto() {
     }
 
-    public AppUserAdminCreateRequestDto(String firstName, String lastName, String email, String phone, Role role, List<Long> clubIds) {
+    public AppUserAdminCreateRequestDto(String firstName, String lastName, String email, String phone, Role role, List<UUID> clubIds) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -79,11 +80,11 @@ public class AppUserAdminCreateRequestDto {
         this.role = role;
     }
 
-    public List<Long> getClubIds() {
+    public List<UUID> getClubIds() {
         return clubIds;
     }
 
-    public void setClubIds(List<Long> clubIds) {
+    public void setClubIds(List<UUID> clubIds) {
         this.clubIds = clubIds;
     }
 

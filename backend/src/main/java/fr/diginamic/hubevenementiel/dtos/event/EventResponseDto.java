@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.event;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.address.AddressResponseDto;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class EventResponseDto {
 
-    private Long id;
+    private UUID id;
     private String title;
     private String description;
     private AddressResponseDto location;
@@ -31,7 +32,7 @@ public class EventResponseDto {
     public EventResponseDto() {
     }
 
-    public EventResponseDto(Long id, String title, String description, AddressResponseDto location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery, EventStatus status, AppUserSummaryResponseDto organizer) {
+    public EventResponseDto(UUID id, String title, String description, AddressResponseDto location, Category category, LocalDateTime startDateTime, LocalDateTime endDateTime, BigDecimal affiliatePrice, BigDecimal nonAffiliatePrice, Integer maxCapacity, Integer remainingSpots, List<ImageSummaryResponseDto> imageGallery, EventStatus status, AppUserSummaryResponseDto organizer) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -48,11 +49,11 @@ public class EventResponseDto {
         this.organizer = organizer;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

@@ -33,23 +33,23 @@ export interface EventRequest {
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
-  idClub?: number;
+  idClub?: string;
   status?: EventStatus;
 }
 
 export interface EventSaved {
-  id: number;
+  id: string;
   status: EventStatus;
 }
 
 export interface EventImage {
-  id: number;
+  id: string;
   path: string;
   displayOrder: number;
 }
 
 export interface EventDetail {
-  id: number;
+  id: string;
   title: string;
   description: string;
   street1: string;
@@ -64,6 +64,6 @@ export interface EventDetail {
   nonAffiliatePrice: number;
   maxCapacity: number;
   status: EventStatus;
-  organizerId: number;
+  organizerId: string;
   imageGallery: EventImage[];
 }

@@ -2,9 +2,9 @@ import { InscriptionModel, toCalendarEvent } from './calendar.models';
 
 function inscription(overrides: Partial<InscriptionModel> = {}): InscriptionModel {
   return {
-    id: 4,
+    id: '4',
     event: {
-      id: 9,
+      id: '9',
       title: 'Tournoi de badminton',
       startDateTime: '2026-10-15T09:00:00',
       endDateTime: '2026-10-15T13:00:00',

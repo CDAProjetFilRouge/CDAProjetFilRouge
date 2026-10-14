@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Image;
@@ -50,12 +52,12 @@ class ImageServiceTest {
 
     private Event event;
 
-    private static final AppUserPrincipal ADMIN = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
+    private static final AppUserPrincipal ADMIN = new AppUserPrincipal(uuid(1), "admin@example.com", "ADMINISTRATOR");
 
     @BeforeEach
     void setUp(@TempDir Path tempDir) {
         event = new Event();
-        event.setId(2L);
+        event.setId(uuid(2));
         ReflectionTestUtils.setField(imageService, "uploadDir", tempDir.toString());
     }
 
@@ -69,54 +71,54 @@ class ImageServiceTest {
 
     @Test
     void imageChecker_nullFile_throwsBadRequest() {
-        assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, null));
+        assertThrows(BadRequestException.class, () -> imageService.imageChecker(uuid(2), null));
     }
 
     @Test
     void imageChecker_emptyFile_throwsBadRequest() {
         MockMultipartFile empty = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[0]);
-        assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, empty));
+        assertThrows(BadRequestException.class, () -> imageService.imageChecker(uuid(2), empty));
     }
 
     @Test
     void imageChecker_missingMimeType_throwsBadRequest() {
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", null, new byte[]{1});
-        assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, file));
+        assertThrows(BadRequestException.class, () -> imageService.imageChecker(uuid(2), file));
     }
 
     @Test
     void imageChecker_nonImageMimeType_throwsBadRequest() {
         MockMultipartFile pdf = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[]{1});
-        assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, pdf));
+        assertThrows(BadRequestException.class, () -> imageService.imageChecker(uuid(2), pdf));
     }
 
     @Test
     void imageChecker_exactly5MB_passes() throws HttpException {
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", jpegOfSize(5 * 1024 * 1024));
-        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(0L);
 
-        assertThat(imageService.imageChecker(2L, file)).isTrue();
+        assertThat(imageService.imageChecker(uuid(2), file)).isTrue();
     }
 
     @Test
     void imageChecker_5MBPlusOneByte_throwsBadRequest() {
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", jpegOfSize(5 * 1024 * 1024 + 1));
 
-        assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, file));
+        assertThrows(BadRequestException.class, () -> imageService.imageChecker(uuid(2), file));
     }
 
     @Test
     void imageChecker_alreadyAtMaxImages_throwsBadRequest() {
-        when(imageRepo.countByEventId(2L)).thenReturn(10L);
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(10L);
 
-        assertThrows(BadRequestException.class, () -> imageService.imageChecker(2L, validImage()));
+        assertThrows(BadRequestException.class, () -> imageService.imageChecker(uuid(2), validImage()));
     }
 
     @Test
     void imageChecker_belowMaxImages_passes() throws HttpException {
-        when(imageRepo.countByEventId(2L)).thenReturn(9L);
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(9L);
 
-        assertThat(imageService.imageChecker(2L, validImage())).isTrue();
+        assertThat(imageService.imageChecker(uuid(2), validImage())).isTrue();
     }
 
     // ---------------------------------------------------------------
@@ -132,9 +134,9 @@ class ImageServiceTest {
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>".getBytes();
 
         assertThrows(BadRequestException.class,
-                () -> imageService.imageChecker(2L, file("logo.svg", "image/svg+xml", svg)));
+                () -> imageService.imageChecker(uuid(2), file("logo.svg", "image/svg+xml", svg)));
         assertThrows(BadRequestException.class,
-                () -> imageService.imageChecker(2L, file("logo.png", "image/png", svg)));
+                () -> imageService.imageChecker(uuid(2), file("logo.png", "image/png", svg)));
     }
 
     @Test
@@ -142,7 +144,7 @@ class ImageServiceTest {
         byte[] html = "<html><script>alert(1)</script></html>".getBytes();
 
         assertThrows(BadRequestException.class,
-                () -> imageService.imageChecker(2L, file("photo.jpg", "image/jpeg", html)));
+                () -> imageService.imageChecker(uuid(2), file("photo.jpg", "image/jpeg", html)));
     }
 
     @Test
@@ -150,17 +152,17 @@ class ImageServiceTest {
         byte[] png = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00};
         byte[] webp = {0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50};
 
-        assertThat(imageService.imageChecker(2L, file("a.png", "image/png", png))).isTrue();
-        assertThat(imageService.imageChecker(2L, file("a.webp", "image/webp", webp))).isTrue();
+        assertThat(imageService.imageChecker(uuid(2), file("a.png", "image/png", png))).isTrue();
+        assertThat(imageService.imageChecker(uuid(2), file("a.webp", "image/webp", webp))).isTrue();
     }
 
     @Test
     void upload_storesTheDetectedExtensionAndTypeNotTheClientOnes() throws HttpException {
-        when(eventService.findById(2L)).thenReturn(event);
-        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Image result = imageService.upload(2L, file("evil.svg.html", "image/jpeg", JPEG), ADMIN);
+        Image result = imageService.upload(uuid(2), file("evil.svg.html", "image/jpeg", JPEG), ADMIN);
 
         assertThat(result.getPath()).endsWith(".jpg").doesNotContain("svg").doesNotContain("html");
         assertThat(result.getMimeType()).isEqualTo("image/jpeg");
@@ -172,11 +174,11 @@ class ImageServiceTest {
 
     @Test
     void upload_firstImage_displayOrderIsZero() throws HttpException {
-        when(eventService.findById(2L)).thenReturn(event);
-        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Image result = imageService.upload(2L, validImage(), ADMIN);
+        Image result = imageService.upload(uuid(2), validImage(), ADMIN);
 
         assertThat(result.getDisplayOrder()).isZero();
         assertThat(result.getEvent()).isEqualTo(event);
@@ -184,12 +186,12 @@ class ImageServiceTest {
 
     @Test
     void upload_fileWithoutExtension_doesNotThrow() throws HttpException {
-        when(eventService.findById(2L)).thenReturn(event);
-        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
         MockMultipartFile noExtension = new MockMultipartFile("file", "photo", "image/jpeg", JPEG);
 
-        assertDoesNotThrow(() -> imageService.upload(2L, noExtension, ADMIN));
+        assertDoesNotThrow(() -> imageService.upload(uuid(2), noExtension, ADMIN));
     }
 
     // ---------------------------------------------------------------
@@ -199,27 +201,27 @@ class ImageServiceTest {
     @Test
     void delete_fileAlreadyMissingOnDisk_doesNotThrow() throws HttpException {
         Image image = new Image();
-        image.setId(1L);
+        image.setId(uuid(1));
         image.setEvent(event);
         image.setPath("/uploads/inexistant.jpg");
-        when(eventService.findById(2L)).thenReturn(event);
-        when(imageRepo.findById(1L)).thenReturn(java.util.Optional.of(image));
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(imageRepo.findById(uuid(1))).thenReturn(java.util.Optional.of(image));
 
-        assertDoesNotThrow(() -> imageService.delete(2L, 1L, ADMIN));
+        assertDoesNotThrow(() -> imageService.delete(uuid(2), uuid(1), ADMIN));
     }
 
     @Test
     void delete_imageOfAnotherEvent_throwsNotFoundAndDeletesNothing() throws HttpException {
         Event other = new Event();
-        other.setId(3L);
+        other.setId(uuid(3));
         Image image = new Image();
-        image.setId(1L);
+        image.setId(uuid(1));
         image.setEvent(other);
         image.setPath("/uploads/autre.jpg");
-        when(eventService.findById(2L)).thenReturn(event);
-        when(imageRepo.findById(1L)).thenReturn(java.util.Optional.of(image));
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(imageRepo.findById(uuid(1))).thenReturn(java.util.Optional.of(image));
 
-        assertThrows(NotFoundException.class, () -> imageService.delete(2L, 1L, ADMIN));
+        assertThrows(NotFoundException.class, () -> imageService.delete(uuid(2), uuid(1), ADMIN));
         verify(imageRepo, never()).delete(any(Image.class));
     }
 
@@ -227,38 +229,38 @@ class ImageServiceTest {
     // propriété de l'évènement
     // ---------------------------------------------------------------
 
-    private void ownedBy(long organizerId) throws HttpException {
+    private void ownedBy(UUID organizerId) throws HttpException {
         AppUser owner = new AppUser();
         owner.setId(organizerId);
         event.setOrganizer(owner);
-        when(eventService.findById(2L)).thenReturn(event);
+        when(eventService.findById(uuid(2))).thenReturn(event);
     }
 
     @Test
     void upload_foreignOrganizer_throwsForbiddenAndStoresNothing() throws HttpException {
-        ownedBy(8L);
+        ownedBy(uuid(8));
 
         assertThrows(ForbiddenException.class,
-                () -> imageService.upload(2L, validImage(), new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+                () -> imageService.upload(uuid(2), validImage(), new AppUserPrincipal(uuid(9), "o@example.com", "ORGANIZER")));
         verify(imageRepo, never()).save(any(Image.class));
     }
 
     @Test
     void delete_foreignOrganizer_throwsForbiddenAndDeletesNothing() throws HttpException {
-        ownedBy(8L);
+        ownedBy(uuid(8));
 
         assertThrows(ForbiddenException.class,
-                () -> imageService.delete(2L, 1L, new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+                () -> imageService.delete(uuid(2), uuid(1), new AppUserPrincipal(uuid(9), "o@example.com", "ORGANIZER")));
         verify(imageRepo, never()).delete(any(Image.class));
     }
 
     @Test
     void upload_owner_isAllowed() throws HttpException {
-        ownedBy(8L);
-        when(imageRepo.countByEventId(2L)).thenReturn(0L);
+        ownedBy(uuid(8));
+        when(imageRepo.countByEventId(uuid(2))).thenReturn(0L);
         when(imageRepo.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         assertDoesNotThrow(
-                () -> imageService.upload(2L, validImage(), new AppUserPrincipal(8L, "o@example.com", "ORGANIZER")));
+                () -> imageService.upload(uuid(2), validImage(), new AppUserPrincipal(uuid(8), "o@example.com", "ORGANIZER")));
     }
 }

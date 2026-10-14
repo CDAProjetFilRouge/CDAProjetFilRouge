@@ -53,7 +53,7 @@ export class AnonymizationDemandList {
     this.load();
   }
 
-  protected async onValidate(id: number): Promise<void> {
+  protected async onValidate(id: string): Promise<void> {
     const confirmed = await this.confirmDialog.ask({
       title: 'Anonymiser cet utilisateur',
       message: 'Les données personnelles du compte seront définitivement effacées. Cette action est irréversible.',

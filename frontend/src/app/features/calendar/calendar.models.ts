@@ -3,9 +3,9 @@ import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models
 export type InscriptionStatus = 'CONFIRMED' | 'WAITING_LIST' | 'CANCELED';
 
 export interface InscriptionModel {
-  id: number;
+  id: string;
   event: {
-    id: number;
+    id: string;
     title: string;
     startDateTime: string;
     endDateTime: string;

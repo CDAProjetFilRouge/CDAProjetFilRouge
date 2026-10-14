@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
@@ -63,8 +64,8 @@ public class JwtService {
         return extractClaims(token).get(ROLE_CLAIM, String.class);
     }
 
-    public Long extractUserId(String token) {
-        return Long.parseLong(extractClaims(token).get(ID_CLAIM, String.class));
+    public UUID extractUserId(String token) {
+        return UUID.fromString(extractClaims(token).get(ID_CLAIM, String.class));
     }
 
     public boolean isTokenValid(String token) {

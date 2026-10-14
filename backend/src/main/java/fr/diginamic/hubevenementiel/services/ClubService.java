@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -52,7 +53,7 @@ public class ClubService {
      * @return object of type Club
      * @throws HttpException
      */
-    public Club findById(Long clubId) throws HttpException {
+    public Club findById(UUID clubId) throws HttpException {
         Optional<Club> optionalClub = clubRepository.findById(clubId);
 
         if (optionalClub.isEmpty()) {
@@ -139,7 +140,7 @@ public class ClubService {
      * @throws HttpException
      */
     @Transactional
-    public void associateUserToClub(Long idClub, Long idUser) throws HttpException {
+    public void associateUserToClub(UUID idClub, UUID idUser) throws HttpException {
         AppUserPrincipal appUserPrincipal = (AppUserPrincipal) Objects
                 .requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
         AppUser user = userRepo.findById(idUser)
@@ -168,7 +169,7 @@ public class ClubService {
      * @throws HttpException
      */
     @Transactional
-    public Club updateClub(Long id, Club modifiedClub) throws HttpException {
+    public Club updateClub(UUID id, Club modifiedClub) throws HttpException {
 
         Club existing = clubRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Club introuvable avec l'id " + id));
@@ -195,7 +196,7 @@ public class ClubService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteClub(Long clubId) throws HttpException {
+    public void deleteClub(UUID clubId) throws HttpException {
 
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new NotFoundException("Aucun club n'a été trouvé avec cet identifiant."));

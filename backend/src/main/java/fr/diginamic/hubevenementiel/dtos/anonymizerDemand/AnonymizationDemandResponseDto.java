@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.anonymizerDemand;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
 
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 
 public class AnonymizationDemandResponseDto {
 
-    private Long id;
+    private UUID id;
     private RequestStatus requestStatus;
     private LocalDateTime demandDate;
     private LocalDateTime approvedDate;
@@ -18,7 +19,7 @@ public class AnonymizationDemandResponseDto {
     public AnonymizationDemandResponseDto() {
     }
 
-    public AnonymizationDemandResponseDto(Long id, RequestStatus requestStatus, LocalDateTime demandDate, LocalDateTime approvedDate, AppUserSummaryResponseDto requester, AppUserSummaryResponseDto admin) {
+    public AnonymizationDemandResponseDto(UUID id, RequestStatus requestStatus, LocalDateTime demandDate, LocalDateTime approvedDate, AppUserSummaryResponseDto requester, AppUserSummaryResponseDto admin) {
         this.id = id;
         this.requestStatus = requestStatus;
         this.demandDate = demandDate;
@@ -27,11 +28,11 @@ public class AnonymizationDemandResponseDto {
         this.admin = admin;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

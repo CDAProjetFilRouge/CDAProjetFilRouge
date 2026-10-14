@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
@@ -54,7 +55,7 @@ public class InscriptionService {
      * @throws HttpException
      */
     @Transactional
-    public boolean isEventFull(Long eventId) throws HttpException {
+    public boolean isEventFull(UUID eventId) throws HttpException {
         Event event = eventRepo.findByIdForUpdate(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
 
@@ -71,7 +72,7 @@ public class InscriptionService {
      * @throws HttpException
      */
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.READ_COMMITTED)
-    public Inscription register(Long userId, Long eventId) throws HttpException {
+    public Inscription register(UUID userId, UUID eventId) throws HttpException {
         AppUser user = appUserService.findById(userId);
         Event event = eventService.findById(eventId);
 
@@ -102,7 +103,7 @@ public class InscriptionService {
      * @param userId    id of the user the action is performed for
      * @throws HttpException 403 if the caller is not that user
      */
-    public void checkSelf(AppUserPrincipal principal, Long userId) throws HttpException {
+    public void checkSelf(AppUserPrincipal principal, UUID userId) throws HttpException {
         if (principal == null || userId == null || !userId.equals(principal.id())) {
             throw new ForbiddenException("Vous ne pouvez agir que pour votre propre compte.");
         }
@@ -133,7 +134,7 @@ public class InscriptionService {
      * @return object of type inscription
      * @throws HttpException
      */
-    public Inscription getInscriptionById(Long id) throws HttpException {
+    public Inscription getInscriptionById(UUID id) throws HttpException {
         Optional<Inscription> inscription = inscriptionRepo.findById(id);
 
         if (inscription.isEmpty()) {
@@ -151,7 +152,7 @@ public class InscriptionService {
      * @return a list of inscription
      * @throws HttpException
      */
-    public List<Inscription> findByUser(Long id, int page, int size) throws HttpException {
+    public List<Inscription> findByUser(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Inscription> inscriptions = inscriptionRepo.findByUserId(id, pageable).getContent();
 
@@ -161,7 +162,7 @@ public class InscriptionService {
     /**
      * Inscriptions d'un utilisateur : réservées à l'utilisateur lui-même ou à un administrateur.
      */
-    public List<Inscription> findByUser(AppUserPrincipal principal, Long id, int page, int size)
+    public List<Inscription> findByUser(AppUserPrincipal principal, UUID id, int page, int size)
             throws HttpException {
         boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
         boolean isSelf = principal != null && id != null && id.equals(principal.id());
@@ -175,7 +176,7 @@ public class InscriptionService {
     /**
      * Inscriptions d'un évènement : réservées à son organisateur ou à un administrateur.
      */
-    public List<Inscription> findByEvent(AppUserPrincipal principal, Long eventId, int page, int size)
+    public List<Inscription> findByEvent(AppUserPrincipal principal, UUID eventId, int page, int size)
             throws HttpException {
         Event event = eventService.findById(eventId);
         checkOrganizerOrAdmin(event, principal, "Seul l'organisateur de cet évènement peut consulter ses inscriptions.");
@@ -207,7 +208,7 @@ public class InscriptionService {
      * @return a list of inscription
      * @throws HttpException
      */
-    public List<Inscription> findByEvent(Long id, int page, int size) throws HttpException {
+    public List<Inscription> findByEvent(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Inscription> inscriptions = inscriptionRepo.findByEventId(id, pageable).getContent();
 
@@ -253,7 +254,7 @@ public class InscriptionService {
         return inscriptions;
     }
 
-    public List<Inscription> getInscriptionCanceledId(Long id, int page, int size) throws HttpException {
+    public List<Inscription> getInscriptionCanceledId(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<Inscription> inscriptions = inscriptionRepo.findByCanceledById(id, pageable).getContent();
 
@@ -272,7 +273,7 @@ public class InscriptionService {
      * @throws HttpException
      */
     @Transactional
-    public Inscription cancelByMember(Long id, AppUserPrincipal principal) throws HttpException {
+    public Inscription cancelByMember(UUID id, AppUserPrincipal principal) throws HttpException {
         Inscription inscription = getInscriptionById(id);
 
         if (!inscription.getUser().getId().equals(principal.id())) {
@@ -303,7 +304,7 @@ public class InscriptionService {
      * @throws HttpException
      */
     @Transactional
-    public Inscription cancelByOrganizer(Long id, String motif, AppUserPrincipal principal) throws HttpException {
+    public Inscription cancelByOrganizer(UUID id, String motif, AppUserPrincipal principal) throws HttpException {
         if (motif == null || motif.isBlank()) {
             throw new BadRequestException(
                     "Un motif est obligatoire pour annuler une inscription en tant qu'organisateur.");
@@ -372,7 +373,7 @@ public class InscriptionService {
     // Non utilisée par le controller, remplacée par
     // cancelByMember()/cancelByOrganizer() (annulation, pas suppression).
     // @Transactional
-    // public void deleteInscription(Long id) throws HttpException {
+    // public void deleteInscription(UUID id) throws HttpException {
     // Optional<Inscription> inscription = inscriptionRepo.findById(id);
     // if (inscription.isEmpty()) {
     // throw new NotFoundException("No inscription found with id: " + id);

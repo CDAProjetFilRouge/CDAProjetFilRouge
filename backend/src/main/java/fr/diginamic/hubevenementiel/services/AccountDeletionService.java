@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -41,7 +42,7 @@ public class AccountDeletionService {
      *                       the comments are the only obstacle)
      */
     @Transactional
-    public void deleteAccount(Long id, boolean deleteComments) throws HttpException {
+    public void deleteAccount(UUID id, boolean deleteComments) throws HttpException {
         AppUser user = appUserService.findById(id);
 
         boolean hasComments = guard.check(id, deleteComments);

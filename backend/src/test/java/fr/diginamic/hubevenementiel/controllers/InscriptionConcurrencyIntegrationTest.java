@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -67,10 +68,10 @@ class InscriptionConcurrencyIntegrationTest {
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private static final String PASSWORD = "motdepasse123456";
 
-    private Long eventId;
-    private Long organizerId;
-    private Long clubId;
-    private final List<Long> memberIds = new java.util.ArrayList<>();
+    private UUID eventId;
+    private UUID organizerId;
+    private UUID clubId;
+    private final List<UUID> memberIds = new java.util.ArrayList<>();
 
     @AfterEach
     void cleanUp() {
@@ -83,7 +84,7 @@ class InscriptionConcurrencyIntegrationTest {
         if (clubId != null) {
             clubRepo.findById(clubId).ifPresent(clubRepo::delete);
         }
-        List<Long> userIds = new java.util.ArrayList<>(memberIds);
+        List<UUID> userIds = new java.util.ArrayList<>(memberIds);
         if (organizerId != null) {
             userIds.add(organizerId);
         }
@@ -148,7 +149,7 @@ class InscriptionConcurrencyIntegrationTest {
         event.setClub(club);
         event = eventRepo.save(event);
         eventId = event.getId();
-        Long finalEventId = eventId;
+        UUID finalEventId = eventId;
 
         AppUser memberA = createUser("member-a-conc", Role.MEMBER);
         AppUser memberB = createUser("member-b-conc", Role.MEMBER);
@@ -187,7 +188,7 @@ class InscriptionConcurrencyIntegrationTest {
         assertThat(waitingCount).isEqualTo(1);
     }
 
-    private Runnable registerTask(Long userId, Long eventId, String token, CountDownLatch readyLatch,
+    private Runnable registerTask(UUID userId, UUID eventId, String token, CountDownLatch readyLatch,
             CountDownLatch startLatch, AtomicInteger createdCount) {
         return () -> {
             try {

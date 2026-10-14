@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.club.ClubRequestDto;
@@ -37,7 +38,7 @@ public interface ClubApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Club introuvable")
     })
-    ClubResponseDto getById(@Parameter(description = "Identifiant du club", required = true) Long id) throws HttpException;
+    ClubResponseDto getById(@Parameter(description = "Identifiant du club", required = true) UUID id) throws HttpException;
 
     @Operation(summary = "Créer un club", description = "Réservé aux administrateurs.")
     @ApiResponses({
@@ -56,7 +57,7 @@ public interface ClubApi {
             @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
             @ApiResponse(responseCode = "404", description = "Club introuvable")
     })
-    ClubResponseDto update(@Parameter(description = "Identifiant du club", required = true) Long id, ClubRequestDto requestDto) throws HttpException;
+    ClubResponseDto update(@Parameter(description = "Identifiant du club", required = true) UUID id, ClubRequestDto requestDto) throws HttpException;
 
     @Operation(summary = "Supprimer (désaffilier) un club", description = "Réservé aux administrateurs.")
     @ApiResponses({
@@ -65,7 +66,7 @@ public interface ClubApi {
             @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
             @ApiResponse(responseCode = "404", description = "Club introuvable")
     })
-    ResponseEntity<Void> delete(@Parameter(description = "Identifiant du club", required = true) Long id) throws HttpException;
+    ResponseEntity<Void> delete(@Parameter(description = "Identifiant du club", required = true) UUID id) throws HttpException;
 
     @Operation(summary = "Assigne un AppUser à un Club vie leurs id respectif", description = "Réversé aux organizateurs et admins")
     @ApiResponses({
@@ -74,7 +75,7 @@ public interface ClubApi {
             @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER requis"),
             @ApiResponse(responseCode = "404", description = "Club ou AppUser introuvable")
     })
-    ResponseEntity<String> associateUser(@Parameter(description = "id of the Appuser we want to associate to a club", required = true) Long idUser,
-                                       @Parameter(description = "id of the Club we want to associate the AppUser with", required = true) Long idClub) throws HttpException;
+    ResponseEntity<String> associateUser(@Parameter(description = "id of the Appuser we want to associate to a club", required = true) UUID idUser,
+                                       @Parameter(description = "id of the Club we want to associate the AppUser with", required = true) UUID idClub) throws HttpException;
 
 }

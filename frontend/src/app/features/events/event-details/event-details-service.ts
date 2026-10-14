@@ -10,41 +10,41 @@ import { InscriptionModel } from './event-details-inscription-model';
 export class EventDetailsService {
   private readonly http = inject(HttpClient)
 
-  getEventDetail(id: number): Observable<EventDetailsModel>{
+  getEventDetail(id: string): Observable<EventDetailsModel>{
     return this.http.get<EventDetailsModel>(`${URL_BACKEND}/events/${id}`);
   }
 
-  getEventPdf(id: number): Observable<Blob> {
+  getEventPdf(id: string): Observable<Blob> {
     return this.http.get(`${URL_BACKEND}/PDF/event/${id}`, { responseType: 'blob' });
   }
 
-  getComments(eventId: number): Observable<CommentModel[]>{
+  getComments(eventId: string): Observable<CommentModel[]>{
     return this.http.get<CommentModel[]>(`${URL_BACKEND}/events/${eventId}/comments`)
   }
 
-  postComment(eventId: number, content: string): Observable<CommentModel> {
+  postComment(eventId: string, content: string): Observable<CommentModel> {
     return this.http.post<CommentModel>(`${URL_BACKEND}/events/${eventId}/comments`, null, {
       params: { content },
     });
   }
 
-  deleteComment(eventId: number, commentId: number): Observable<void> {
+  deleteComment(eventId: string, commentId: string): Observable<void> {
     return this.http.delete<void>(`${URL_BACKEND}/events/${eventId}/comments/${commentId}`);
   }
 
-  getUserInscriptions(userId: number): Observable<InscriptionModel[]> {
+  getUserInscriptions(userId: string): Observable<InscriptionModel[]> {
     return this.http.get<InscriptionModel[]>(`${URL_BACKEND}/inscriptions/user/${userId}`, {
       params: { size: 100 },
     });
   }
 
-  register(userId: number, eventId: number): Observable<InscriptionModel> {
+  register(userId: string, eventId: string): Observable<InscriptionModel> {
     return this.http.post<InscriptionModel>(`${URL_BACKEND}/inscriptions`, null, {
       params: { userId, eventId },
     });
   }
 
-  cancelInscription(inscriptionId: number): Observable<void> {
+  cancelInscription(inscriptionId: string): Observable<void> {
     return this.http.delete<void>(`${URL_BACKEND}/inscriptions/${inscriptionId}`);
   }
 }

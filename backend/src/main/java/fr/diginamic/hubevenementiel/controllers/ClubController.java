@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -77,7 +78,7 @@ public class ClubController implements ClubApi {
 
     @Override
     @GetMapping("/{id}")
-    public ClubResponseDto getById(@PathVariable Long id) throws HttpException {
+    public ClubResponseDto getById(@PathVariable UUID id) throws HttpException {
         return clubMapper.toDto(clubService.findById(id));
     }
 
@@ -93,7 +94,7 @@ public class ClubController implements ClubApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}")
-    public ClubResponseDto update(@PathVariable Long id, @RequestBody ClubRequestDto requestDto) throws HttpException {
+    public ClubResponseDto update(@PathVariable UUID id, @RequestBody ClubRequestDto requestDto) throws HttpException {
         Club club = clubMapper.toEntity(requestDto);
         Club updated = clubService.updateClub(id, club);
         return clubMapper.toDto(updated);
@@ -102,7 +103,7 @@ public class ClubController implements ClubApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) throws HttpException {
         clubService.deleteClub(id);
         return ResponseEntity.noContent().build();
     }
@@ -110,7 +111,7 @@ public class ClubController implements ClubApi {
     @Override
     @Secured("ROLE_ORGANIZER")
     @PostMapping("associateUser/{idUser}/club/{idClub}")
-    public ResponseEntity<String> associateUser(@PathVariable Long idUser, @PathVariable Long idClub) throws HttpException{
+    public ResponseEntity<String> associateUser(@PathVariable UUID idUser, @PathVariable UUID idClub) throws HttpException{
         clubService.associateUserToClub(idClub, idUser);
         return ResponseEntity.ok("Le member avec l'id: "+idUser+" a bien été ajouté au club avec l'id: "+idClub);
     }

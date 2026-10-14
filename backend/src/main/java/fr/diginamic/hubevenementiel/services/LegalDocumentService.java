@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.LegalDocument;
 import fr.diginamic.hubevenementiel.enums.DocumentType;
@@ -41,7 +42,7 @@ public class LegalDocumentService {
      * @return object of type LegalDocument
      * @throws HttpException
      */
-    public LegalDocument getDocumentById(Long id) throws HttpException {
+    public LegalDocument getDocumentById(UUID id) throws HttpException {
         Optional<LegalDocument> document = legalDocumentRepo.findById(id);
 
         if (document.isEmpty()) {
@@ -75,7 +76,7 @@ public class LegalDocumentService {
         return documents;
     }
 
-    public List<LegalDocument> getDocumentUserId(Long id, int page, int size) throws HttpException {
+    public List<LegalDocument> getDocumentUserId(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
         List<LegalDocument> documents = legalDocumentRepo.findByUserId(id, pageable).getContent();
 
@@ -149,7 +150,7 @@ public class LegalDocumentService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteDocument(Long id) throws HttpException {
+    public void deleteDocument(UUID id) throws HttpException {
         LegalDocument document = getDocumentById(id);
 
         legalDocumentRepo.delete(document);

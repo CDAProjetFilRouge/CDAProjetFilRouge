@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +80,7 @@ public class EventController implements EventApi {
     }
 
     private Page<EventResponseMainDto> toMainDtos(Page<Event> events) {
-        Map<Long, Integer> remainingSpots = eventService.remainingSpots(events.getContent());
+        Map<UUID, Integer> remainingSpots = eventService.remainingSpots(events.getContent());
 
         return events.map(event -> eventMainMapper.toDto(event, remainingSpots.get(event.getId())));
     }
@@ -144,14 +145,14 @@ public class EventController implements EventApi {
     /**
     @Override
     @GetMapping("/{id}")
-    public EventResponseDto getById(@PathVariable Long id) throws HttpException {
+    public EventResponseDto getById(@PathVariable UUID id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return eventMapper.toDto(eventService.findVisibleById(id, principal));
     }
     **/
     @Override
     @GetMapping("/{id}")
-    public EventDetailsReponseDto getById(@PathVariable Long id) throws HttpException {
+    public EventDetailsReponseDto getById(@PathVariable UUID id) throws HttpException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         AppUserPrincipal principal = null;
@@ -162,7 +163,7 @@ public class EventController implements EventApi {
 
         Event event = eventService.findVisibleById(id, principal);
 
-        Map <Long, Integer> remainingSpots = eventService.remainingSpots(List.of(event));
+        Map <UUID, Integer> remainingSpots = eventService.remainingSpots(List.of(event));
 
         return eventDetailsMapper.toDto(event, remainingSpots.get(event.getId()));
     }
@@ -190,7 +191,7 @@ public class EventController implements EventApi {
     @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @PutMapping("/{id}")
-    public EventResponseDto update(@PathVariable Long id, @RequestBody EventRequestDto requestDto) throws HttpException {
+    public EventResponseDto update(@PathVariable UUID id, @RequestBody EventRequestDto requestDto) throws HttpException {
         Event event = eventMapper.toEntity(requestDto);
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Event updated = eventService.updateEvent(id, event, principal);
@@ -200,7 +201,7 @@ public class EventController implements EventApi {
     @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws HttpException {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         eventService.deleteEvent(id, principal);
         return ResponseEntity.noContent().build();
