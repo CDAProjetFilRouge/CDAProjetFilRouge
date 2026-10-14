@@ -171,7 +171,10 @@ public class EventController implements EventApi {
     @Override
     @GetMapping("/search")
     public EventResponseDto getByName(@RequestParam String name) throws HttpException {
-        return eventMapper.toDto(eventService.findByTitle(name));
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Event found = eventService.findByTitle(name);
+        return eventMapper.toDto(eventService.findVisibleById(found.getId(), principal));
     }
 
     @Override

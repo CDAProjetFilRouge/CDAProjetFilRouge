@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.security;
 
 import java.util.UUID;
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -47,13 +49,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtService.isTokenValid(token)) {
                 UUID id = jwtService.extractUserId(token);
 
-                boolean accountIsActive = userRepo.findById(id)
-                        .map(user -> user.getStatus() == AccountStatus.ACTIVE)
-                        .orElse(false);
+                Optional<AppUser> activeUser = userRepo.findById(id)
+                        .filter(user -> user.getStatus() == AccountStatus.ACTIVE);
 
-                if (accountIsActive && keyBindingIsRespected(token, request)) {
-                    String email = jwtService.extractEmail(token);
-                    String role = jwtService.extractRole(token);
+                if (activeUser.isPresent() && keyBindingIsRespected(token, request)) {
+                    String email = activeUser.get().getEmail();
+                    String role = activeUser.get().getRole().name();
 
                     AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
 
