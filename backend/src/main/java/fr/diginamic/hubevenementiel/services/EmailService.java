@@ -76,6 +76,17 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendEventDeletedEmail(String toEmail, String eventTitle) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderAddress);
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Un évènement a été supprimé");
+        message.setText("L'évènement \"" + eventTitle + "\" a été supprimé par son organisateur.\n\n"
+                + "Votre inscription, ou votre place en liste d'attente, n'est donc plus valable.");
+
+        mailSender.send(message);
+    }
+
     public void sendInscriptionPromotedEmail(String toEmail, String eventTitle) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(senderAddress);

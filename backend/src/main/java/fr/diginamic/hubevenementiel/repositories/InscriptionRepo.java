@@ -106,6 +106,21 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
     List<Inscription> findByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
 
     /**
+     *
+     * @param eventId id of the event
+     * @param statuses statuses to keep
+     * @return the event's inscriptions having one of the given statuses
+     */
+    List<Inscription> findByEventIdAndStatusIn(Long eventId, Collection<InscriptionStatus> statuses);
+
+    /**
+     * Removes every inscription of an event, whatever its status.
+     *
+     * @param eventId id of the event
+     */
+    void deleteByEventId(Long eventId);
+
+    /**
      * Nombre d'inscriptions de même statut arrivées avant celle donnée (date, puis identifiant pour départager).
      * Sert à calculer le rang dans la liste d'attente, dans l'ordre de promotion.
      */

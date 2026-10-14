@@ -11,6 +11,9 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
+import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
+import fr.diginamic.hubevenementiel.entities.Inscription;
+import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.EmailService;
 import org.junit.jupiter.api.Test;
@@ -48,6 +51,8 @@ class InscriptionControllerIntegrationTest {
     private EventRepo eventRepo;
     @Autowired
     private ClubRepo clubRepo;
+    @Autowired
+    private InscriptionRepo inscriptionRepo;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @MockitoBean
@@ -468,5 +473,24 @@ class InscriptionControllerIntegrationTest {
                 .andExpect(status().isNoContent());
 
         verify(emailService).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void deleteEvent_withConfirmedAndWaitingInscriptions_removesThemWithTheEvent() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser confirmed = createUser("confirmed", Role.MEMBER);
+        AppUser waiting = createUser("waiting", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+        inscriptionRepo.save(new Inscription(confirmed, event, BigDecimal.TEN, InscriptionStatus.CONFIRMED));
+        inscriptionRepo.save(new Inscription(waiting, event, BigDecimal.TEN, InscriptionStatus.WAITING_LIST));
+
+        mockMvc.perform(delete("/events/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(organizer.getEmail())))
+                .andExpect(status().isNoContent());
+
+        org.junit.jupiter.api.Assertions.assertFalse(eventRepo.existsById(event.getId()));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                inscriptionRepo.findByEventIdAndStatusIn(event.getId(),
+                        java.util.List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)).isEmpty());
     }
 }
