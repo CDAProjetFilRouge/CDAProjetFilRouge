@@ -5,6 +5,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.services.ImageFormat;
 import fr.diginamic.hubevenementiel.services.ImageService;
 import fr.diginamic.hubevenementiel.services.RemoteImageStorage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +57,10 @@ public class ImageStorageController {
         }
         if (content.length > ImageService.MAX_FILE_SIZE_BYTES) {
             throw new BadRequestException("L'image ne peut pas dépasser 5 Mo.");
+        }
+
+        if (ImageFormat.detect(content).isEmpty()) {
+            throw new BadRequestException("Format d'image non accepté : JPEG, PNG ou WebP uniquement.");
         }
 
         Path targetDir = Path.of(uploadDir);

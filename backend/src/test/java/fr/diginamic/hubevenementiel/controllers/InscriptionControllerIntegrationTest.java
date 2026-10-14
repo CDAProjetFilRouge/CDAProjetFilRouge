@@ -11,6 +11,9 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
+import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
+import fr.diginamic.hubevenementiel.entities.Inscription;
+import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.EmailService;
 import org.junit.jupiter.api.Test;
@@ -48,6 +51,8 @@ class InscriptionControllerIntegrationTest {
     private EventRepo eventRepo;
     @Autowired
     private ClubRepo clubRepo;
+    @Autowired
+    private InscriptionRepo inscriptionRepo;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @MockitoBean
@@ -165,6 +170,25 @@ class InscriptionControllerIntegrationTest {
         mockMvc.perform(get("/inscriptions/user/" + member.getId())
                         .header("Authorization", "Bearer " + loginAndGetToken(other.getEmail())))
                 .andExpect(status().isForbidden());
+    }
+
+    // Le calendrier affiche le club de l'évènement dans la bulle : il doit figurer dans les inscriptions de l'utilisateur.
+    @Test
+    void userInscriptions_carryTheClubNameOfTheEvent() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser member = createUser("member", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+        String token = loginAndGetToken(member.getEmail());
+        mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + token)
+                        .param("userId", String.valueOf(member.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/inscriptions/user/" + member.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].event.clubName").value(event.getClub().getName()));
     }
 
     @Test
@@ -400,6 +424,31 @@ class InscriptionControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void cancelByOrganizer_foreignOrganizer_returns403AndSendsNoEmail() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser stranger = createUser("stranger", Role.ORGANIZER);
+        AppUser member = createUser("member", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        String memberToken = loginAndGetToken(member.getEmail());
+        String response = mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .param("userId", String.valueOf(member.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long inscriptionId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+
+        String strangerToken = loginAndGetToken(stranger.getEmail());
+        mockMvc.perform(delete("/inscriptions/" + inscriptionId + "/organizer")
+                        .header("Authorization", "Bearer " + strangerToken)
+                        .param("motif", "Tentative"))
+                .andExpect(status().isForbidden());
+
+        verify(emailService, org.mockito.Mockito.never()).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+    }
+
     // canceledById reste null meme apres une annulation organisateur : bug connu
     // documente au niveau unitaire (InscriptionServiceTest), confirme ici au niveau HTTP.
     @Test
@@ -424,5 +473,24 @@ class InscriptionControllerIntegrationTest {
                 .andExpect(status().isNoContent());
 
         verify(emailService).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void deleteEvent_withConfirmedAndWaitingInscriptions_removesThemWithTheEvent() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser confirmed = createUser("confirmed", Role.MEMBER);
+        AppUser waiting = createUser("waiting", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+        inscriptionRepo.save(new Inscription(confirmed, event, BigDecimal.TEN, InscriptionStatus.CONFIRMED));
+        inscriptionRepo.save(new Inscription(waiting, event, BigDecimal.TEN, InscriptionStatus.WAITING_LIST));
+
+        mockMvc.perform(delete("/events/" + event.getId())
+                        .header("Authorization", "Bearer " + loginAndGetToken(organizer.getEmail())))
+                .andExpect(status().isNoContent());
+
+        org.junit.jupiter.api.Assertions.assertFalse(eventRepo.existsById(event.getId()));
+        org.junit.jupiter.api.Assertions.assertTrue(
+                inscriptionRepo.findByEventIdAndStatusIn(event.getId(),
+                        java.util.List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)).isEmpty());
     }
 }

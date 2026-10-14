@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -56,6 +57,8 @@ class InscriptionServiceTest {
 
     private AppUser user;
     private Event publishedFutureEvent;
+
+    private static final AppUserPrincipal ADMIN = new AppUserPrincipal(1L, "admin@example.com", "ADMINISTRATOR");
 
     @BeforeEach
     void setUp() {
@@ -408,14 +411,48 @@ class InscriptionServiceTest {
     }
 
     @Test
+    void cancelByOrganizer_foreignOrganizer_throwsForbiddenAndSendsNoEmail() throws HttpException {
+        AppUser owner = new AppUser();
+        owner.setId(8L);
+        publishedFutureEvent.setOrganizer(owner);
+        Inscription inscription = confirmedInscription();
+        when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
+
+        assertThrows(ForbiddenException.class, () -> inscriptionService.cancelByOrganizer(1L, "Motif",
+                new AppUserPrincipal(9L, "o@example.com", "ORGANIZER")));
+
+        assertThat(inscription.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        verify(inscriptionRepo, never()).save(any(Inscription.class));
+        verify(emailService, never()).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void cancelByOrganizer_ownerIsAllowed() throws HttpException {
+        AppUser owner = new AppUser();
+        owner.setId(8L);
+        publishedFutureEvent.setOrganizer(owner);
+        Inscription inscription = confirmedInscription();
+        when(inscriptionRepo.findById(1L)).thenReturn(Optional.of(inscription));
+        when(inscriptionRepo.save(any(Inscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(eventRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(publishedFutureEvent));
+        when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of());
+
+        Inscription result = inscriptionService.cancelByOrganizer(1L, "Motif",
+                new AppUserPrincipal(8L, "o@example.com", "ORGANIZER"));
+
+        assertThat(result.getStatus()).isEqualTo(InscriptionStatus.CANCELED);
+    }
+
+    @Test
     void cancelByOrganizer_blankMotif_throwsBadRequest() throws HttpException {
-        assertThrows(BadRequestException.class, () -> inscriptionService.cancelByOrganizer(1L, " "));
+        assertThrows(BadRequestException.class, () -> inscriptionService.cancelByOrganizer(1L, " ", ADMIN));
         verify(inscriptionRepo, never()).findById(anyLong());
     }
 
     @Test
     void cancelByOrganizer_nullMotif_throwsBadRequest() {
-        assertThrows(BadRequestException.class, () -> inscriptionService.cancelByOrganizer(1L, null));
+        assertThrows(BadRequestException.class, () -> inscriptionService.cancelByOrganizer(1L, null, ADMIN));
     }
 
     @Test
@@ -427,7 +464,7 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
                 .thenReturn(List.of());
 
-        Inscription result = inscriptionService.cancelByOrganizer(1L, "Évènement annulé faute de participants");
+        Inscription result = inscriptionService.cancelByOrganizer(1L, "Évènement annulé faute de participants", ADMIN);
 
         assertThat(result.getCancelObject()).isEqualTo("Évènement annulé faute de participants");
     }
@@ -441,7 +478,7 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
                 .thenReturn(List.of());
 
-        inscriptionService.cancelByOrganizer(1L, "Motif");
+        inscriptionService.cancelByOrganizer(1L, "Motif", ADMIN);
 
         verify(emailService).sendInscriptionCancellationEmail(eq(user.getEmail()),
                 eq(publishedFutureEvent.getTitle()), eq("Motif"));
@@ -458,7 +495,7 @@ class InscriptionServiceTest {
         when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(2L, InscriptionStatus.WAITING_LIST))
                 .thenReturn(List.of());
 
-        Inscription result = inscriptionService.cancelByOrganizer(1L, "Motif");
+        Inscription result = inscriptionService.cancelByOrganizer(1L, "Motif", ADMIN);
 
         assertThat(result.getCanceledById()).isNull();
     }

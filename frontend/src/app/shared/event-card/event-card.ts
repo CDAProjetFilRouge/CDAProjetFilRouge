@@ -21,7 +21,8 @@ export type SpotsLevel = 'full' | 'low' | 'medium' | 'high';
 // Étapes de l'inscription directe depuis la souche du billet :
 // idle -> tearing (la souche se détache) -> pending (attente du serveur) -> confirm (message)
 // -> returning (la souche revient en fondu) -> idle.
-export type StubPhase = 'idle' | 'tearing' | 'pending' | 'confirm' | 'returning';
+// Après une désinscription, la souche se recolle : idle -> reattaching (l'arrachement à l'envers) -> idle.
+export type StubPhase = 'idle' | 'tearing' | 'pending' | 'confirm' | 'returning' | 'reattaching';
 
 const CATEGORY_LABELS: Record<string, string> = {
   CULTURE: 'Culture',
@@ -35,6 +36,7 @@ const MEDIUM_RATIO = 0.4;
 const TEAR_MS = 680;
 const CONFIRM_MS = 2600;
 const RETURN_MS = 600;
+const REATTACH_MS = 800;
 const NO_ANSWER_MS = 8000;
 
 // Inclinaison maximale du billet qui suit le curseur, en degrés.
@@ -71,12 +73,29 @@ export class EventCard {
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   private tornAt = 0;
   private settling = false;
+  private previousRegistration: CardRegistration = null;
 
   protected readonly phase = signal<StubPhase>('idle');
   protected readonly resultKind = signal<'ok' | 'error' | null>(null);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.clearTimers());
+
+    // Désinscription : le reçu disparaît et la souche, qui avait été arrachée, se recolle avec l'animation
+    // d'arrachement à l'envers, au lieu de réapparaître d'un coup.
+    effect(() => {
+      const registration = this.registration();
+      const previous = this.previousRegistration;
+      this.previousRegistration = registration;
+      if (previous === 'CONFIRMED' && registration === null && untracked(this.phase) === 'idle') {
+        this.phase.set('reattaching');
+        this.later(REATTACH_MS, () => {
+          if (this.phase() === 'reattaching') {
+            this.phase.set('idle');
+          }
+        });
+      }
+    });
 
     // Le résultat arrive de la page : l'inscription apparaît (succès) ou une erreur est signalée.
     effect(() => {
