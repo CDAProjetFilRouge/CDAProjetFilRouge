@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EventModel } from '../event/event-model';
 import { EventService } from '../event/event-service';
 import { scrollToTop } from '../../../shared/scroll-to-top';
@@ -21,6 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 })
 export class MyEvents {
   private readonly eventService = inject(EventService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly events = signal<EventModel[]>([]);
   protected readonly totalElements = signal(0);
@@ -35,6 +36,11 @@ export class MyEvents {
   protected readonly statusLabels = STATUS_LABELS;
 
   constructor() {
+    // Un lien /my-events?status=DRAFT (tableau de bord) ouvre directement l'onglet des brouillons.
+    const status = this.route.snapshot.queryParamMap.get('status');
+    if (status && status in STATUS_LABELS) {
+      this.statusFilter.set(status);
+    }
     this.load();
   }
 

@@ -3,9 +3,11 @@ package fr.diginamic.hubevenementiel.services;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
+import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.ImageRepo;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -82,11 +84,23 @@ public class ImageService {
             throw new BadRequestException("L'image ne peut pas dépasser 5 Mo.");
         }
 
+        detectFormat(file);
+
         if (imageRepo.countByEventId(eventId) >= MAX_IMAGES_PER_EVENT) {
             throw new BadRequestException("Un évènement ne peut pas avoir plus de 10 images.");
         }
 
         return true;
+    }
+
+    // Le format est reconnu à son contenu : le type annoncé par le client et le nom du fichier ne comptent pas.
+    private ImageFormat detectFormat(MultipartFile file) throws HttpException {
+        try {
+            return ImageFormat.detect(file.getBytes()).orElseThrow(
+                    () -> new BadRequestException("Format d'image non accepté : JPEG, PNG ou WebP uniquement."));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Impossible de lire le fichier.", e);
+        }
     }
 
     /**
@@ -97,22 +111,20 @@ public class ImageService {
      * @throws HttpException
      */
     @Transactional
-    public Image upload(Long eventId, MultipartFile file) throws HttpException {
+    public Image upload(Long eventId, MultipartFile file, AppUserPrincipal principal) throws HttpException {
         Event event = eventService.findById(eventId);
+        checkOwnership(event, principal);
 
         imageChecker(eventId, file);
 
         String originalName = file.getOriginalFilename();
-        String extension = "";
-        if (originalName != null && originalName.contains(".")) {
-            extension = originalName.substring(originalName.lastIndexOf('.'));
-        }
-        String storedName = UUID.randomUUID() + extension;
+        ImageFormat format = detectFormat(file);
+        String storedName = UUID.randomUUID() + format.extension();
 
         try {
             RemoteImageStorage remote = remoteStorage();
             if (remote != null) {
-                remote.put(storedName, file.getBytes(), file.getContentType());
+                remote.put(storedName, file.getBytes(), format.mimeType());
             } else {
                 Path targetDir = Path.of(uploadDir);
                 Files.createDirectories(targetDir);
@@ -127,7 +139,7 @@ public class ImageService {
         Image image = new Image();
         image.setFileName(originalName);
         image.setPath("/uploads/" + storedName);
-        image.setMimeType(file.getContentType());
+        image.setMimeType(format.mimeType());
         image.setSizeByte(file.getSize());
         image.setUploadDate(LocalDateTime.now());
         image.setDisplayOrder((int) displayOrder);
@@ -138,12 +150,20 @@ public class ImageService {
 
     /**
      *
+     * @param eventId id of the event the image belongs to (taken from the URL)
      * @param id id of the image to delete
+     * @param principal the authenticated caller, must own the event or be an administrator
      * @throws HttpException
      */
     @Transactional
-    public void delete(Long id) throws HttpException {
+    public void delete(Long eventId, Long id, AppUserPrincipal principal) throws HttpException {
+        Event event = eventService.findById(eventId);
+        checkOwnership(event, principal);
+
         Image image = getImageById(id);
+        if (image.getEvent() == null || !eventId.equals(image.getEvent().getId())) {
+            throw new NotFoundException("No image found with id " + id + " for event " + eventId);
+        }
 
         String storedName = image.getPath().replace("/uploads/", "");
         try {
@@ -158,6 +178,16 @@ public class ImageService {
         }
 
         imageRepo.delete(image);
+    }
+
+    // Seul le propriétaire de l'évènement ou un administrateur peut y ajouter ou en retirer des images.
+    private void checkOwnership(Event event, AppUserPrincipal principal) throws HttpException {
+        boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = principal != null && event.getOrganizer() != null
+                && event.getOrganizer().getId().equals(principal.id());
+        if (!isAdmin && !isOwner) {
+            throw new ForbiddenException("Seul l'organisateur de cet évènement peut gérer ses images.");
+        }
     }
 
     private RemoteImageStorage remoteStorage() {

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ import fr.diginamic.hubevenementiel.entities.Image;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.mappers.ImageGaleryMapper;
 import fr.diginamic.hubevenementiel.openapi.ImageApi;
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import fr.diginamic.hubevenementiel.services.ImageService;
 
 @RestController
@@ -46,7 +48,8 @@ public class ImageController implements ImageApi {
     @PostMapping
     public ResponseEntity<ImageSummaryResponseDto> upload(@PathVariable Long eventId, @RequestParam MultipartFile file)
             throws HttpException {
-        Image created = imageService.upload(eventId, file);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Image created = imageService.upload(eventId, file, principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(imageGaleryMapper.toDto(created));
     }
 
@@ -54,7 +57,8 @@ public class ImageController implements ImageApi {
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long eventId, @PathVariable Long id) throws HttpException {
-        imageService.delete(id);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        imageService.delete(eventId, id, principal);
         return ResponseEntity.noContent().build();
     }
 }

@@ -419,6 +419,31 @@ class InscriptionControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void cancelByOrganizer_foreignOrganizer_returns403AndSendsNoEmail() throws Exception {
+        AppUser organizer = createUser("organizer", Role.ORGANIZER);
+        AppUser stranger = createUser("stranger", Role.ORGANIZER);
+        AppUser member = createUser("member", Role.MEMBER);
+        Event event = createEvent(organizer, 10, LocalDateTime.now().plusDays(5), EventStatus.PUBLISHED);
+
+        String memberToken = loginAndGetToken(member.getEmail());
+        String response = mockMvc.perform(post("/inscriptions")
+                        .header("Authorization", "Bearer " + memberToken)
+                        .param("userId", String.valueOf(member.getId()))
+                        .param("eventId", String.valueOf(event.getId())))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long inscriptionId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+
+        String strangerToken = loginAndGetToken(stranger.getEmail());
+        mockMvc.perform(delete("/inscriptions/" + inscriptionId + "/organizer")
+                        .header("Authorization", "Bearer " + strangerToken)
+                        .param("motif", "Tentative"))
+                .andExpect(status().isForbidden());
+
+        verify(emailService, org.mockito.Mockito.never()).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+    }
+
     // canceledById reste null meme apres une annulation organisateur : bug connu
     // documente au niveau unitaire (InscriptionServiceTest), confirme ici au niveau HTTP.
     @Test
