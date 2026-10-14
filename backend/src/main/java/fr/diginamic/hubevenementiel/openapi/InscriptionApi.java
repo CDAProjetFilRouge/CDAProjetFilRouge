@@ -44,7 +44,7 @@ public interface InscriptionApi {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Inscription annulée"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis"),
+            @ApiResponse(responseCode = "403", description = "Ni organisateur de l'évènement ni administrateur"),
             @ApiResponse(responseCode = "404", description = "Inscription introuvable")
     })
     ResponseEntity<Void> cancelByOrganizer(@Parameter(description = "Identifiant de l'inscription", required = true) Long id,
