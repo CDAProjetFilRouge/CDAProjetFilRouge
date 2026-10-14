@@ -12,22 +12,22 @@ import { Component } from '@angular/core';
       <g transform="translate(20 20)">
         <path
           d="M22 43h96a20 20 0 0 1 20 20v10a14 14 0 0 0 0 28v10a20 20 0 0 1-20 20H22a20 20 0 0 1-20-20v-10a14 14 0 0 0 0-28V63a20 20 0 0 1 20-20Z"
-          fill="#e2536b"
+          fill="#2a46c9"
         />
         <path
           d="M70 52c-16 0-28 12-28 27 0 22 28 43 28 43s28-21 28-43c0-15-12-27-28-27Z"
-          fill="#1f2430"
+          fill="#e2622b"
         />
-        <circle cx="70" cy="79" r="9" fill="#fbd3d9" />
+        <circle cx="70" cy="79" r="9" fill="#17182b" />
         <path
           d="M30 57h14M96 57h14M30 123h14M96 123h14"
-          stroke="#fbd3d9"
+          stroke="#ffd8a6"
           stroke-linecap="round"
           stroke-width="6"
         />
       </g>
-      <text x="190" y="127" fill="#1f2430" font-size="54" font-weight="700" letter-spacing="-1.5">
-        MyHub<tspan fill="#e2536b">Event</tspan>
+      <text x="190" y="127" style="fill: var(--logo-ink, #17182b)" font-size="54" font-weight="700" letter-spacing="-1.5">
+        MyHub<tspan style="fill: var(--logo-accent, #2a46c9)">Event</tspan>
       </text>
     </svg>
   `,

@@ -30,8 +30,8 @@
   gap: 16px 12px;
   padding: 19px;
   margin-bottom: 28px;
-  background: #fff1e6;
-  border: 1px solid #f1dccf;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 }
 
@@ -50,7 +50,7 @@
   p {
     font-size: 12px;
     font-weight: 500;
-    color: #6f5a55;
+    color: var(--color-muted);
   }
 
   input,

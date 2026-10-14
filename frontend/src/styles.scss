@@ -1,22 +1,28 @@
 @use "./styles/auth";
 
 :root {
-  --color-text: #2b2023;
-  --color-muted: #6f5a55;
-  --color-border: #e9d8cd;
-  --color-field-border: #a99084;
-  --color-surface: #fbefe5;
-  --color-placeholder: #f3e4d9;
-  --color-primary: #c93752;
-  --color-primary-hover: #ae2f49;
-  --color-primary-soft: #fbd3d9;
-  --color-success-bg: #eaf3de;
-  --color-success: #27500a;
-  --color-danger-bg: #fdecec;
-  --color-danger: #b3261e;
-  --color-page-bg: #fffaf4;
-  --color-header-bg: #fffdfa;
-  --color-footer-bg: #fde6dc;
+  // Palette « pavillon » : crème, cobalt, pin, orange brûlé, encre.
+  --color-ink: #17182b;
+  --color-text: #17182b;
+  --color-muted: #4a4a63;
+  --color-border: #d8d1bd;
+  --color-field-border: #8b8672;
+  --color-surface: #ece5d2;
+  --color-placeholder: #e9e2cf;
+  --color-primary: #2a46c9;
+  --color-primary-hover: #1f37a8;
+  --color-primary-soft: #dfe5ff;
+  --color-pine: #1d5a45;
+  --color-pine-soft: #d6ebe2;
+  --color-orange: #e2622b;
+  --color-sun: #ffd8a6;
+  --color-success-bg: #d6ebe2;
+  --color-success: #14513c;
+  --color-danger-bg: #fde3da;
+  --color-danger: #b3361a;
+  --color-page-bg: #f4efe3;
+  --color-header-bg: #f4efe3;
+  --color-footer-bg: #1d5a45;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -43,6 +49,49 @@ body {
 
 h1, h2, h3, p {
   margin: 0;
+}
+
+// Grandes formes posées sur la page, qui défilent avec elle : un disque orange en haut à droite, un demi-disque
+// pin sur le bord gauche. Elles passent derrière le contenu.
+body {
+  position: relative;
+  overflow-x: clip;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  top: -90px;
+  right: -80px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: var(--color-orange);
+}
+
+body::after {
+  top: 62%;
+  left: -70px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--color-pine);
+  box-shadow: 220px 120px 0 -30px var(--color-sun);
+}
+
+@media (max-width: 720px) {
+  body::before {
+    top: -70px;
+    right: -70px;
+    width: 170px;
+    height: 170px;
+  }
 }
 
 button, input, select {
