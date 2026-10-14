@@ -6,7 +6,7 @@
   --fc-classic-button-border: var(--color-primary);
   --fc-classic-button-strong: var(--color-primary-hover);
   --fc-classic-button-strong-border: var(--color-primary-hover);
-  --fc-classic-today: #fbd3d959;
+  --fc-classic-today: #dfe5ff99;
   --fc-classic-foreground: var(--color-text);
   --fc-classic-muted-foreground: var(--color-muted);
   --fc-classic-border: var(--color-border);
@@ -20,7 +20,7 @@
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 6px 20px rgba(60, 30, 25, 0.12);
+  box-shadow: 0 6px 20px rgba(23, 24, 43, 0.12);
   pointer-events: none;
 
   p {
@@ -80,7 +80,7 @@
 }
 
 :host(.large) {
-  --fc-classic-border: #f0e0d5;
+  --fc-classic-border: var(--color-border);
   --fc-classic-today: transparent;
 
   full-calendar {
@@ -107,12 +107,12 @@
     transition: background-color .15s;
 
     &.is-weekend {
-      background: #fff7f0;
+      background: var(--color-surface);
     }
 
     &.is-other {
-      color: #947f77;
-      background: #fffaf6;
+      color: var(--color-muted);
+      background: var(--color-page-bg);
     }
 
     &.is-today {
@@ -146,7 +146,7 @@
     overflow: visible;
     cursor: pointer;
     border-radius: 6px;
-    box-shadow: 0 1px 2px rgba(60, 30, 25, .12);
+    box-shadow: 0 1px 2px rgba(23, 24, 43, .12);
   }
 
   .agenda-event.is-highlighted {
