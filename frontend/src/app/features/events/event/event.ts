@@ -217,9 +217,10 @@ export class Event {
   }
 
   ngOnInit(): void {
-    // Pré-filtre possible depuis le tableau de bord : /?status=DRAFT
+    // Pré-filtre possible par lien : /?status=CANCELLED. Les brouillons n'ont pas leur place dans le catalogue :
+    // ils se trouvent dans « Mes évènements ».
     const status = this.route.snapshot.queryParamMap.get('status');
-    if (status && ['PUBLISHED', 'CANCELLED', 'DRAFT'].includes(status)) {
+    if (status && ['PUBLISHED', 'CANCELLED'].includes(status)) {
       this.filters.patchValue({ status });
     }
     this.loadEvents();
