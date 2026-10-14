@@ -284,6 +284,49 @@ describe('EventCard', () => {
     });
   });
 
+  describe('désinscription', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    const phase = (element: HTMLElement) => element.querySelector('.card')?.getAttribute('data-phase');
+    const stub = (element: HTMLElement) => element.querySelector('.stub') as HTMLElement;
+
+    it('la souche se recolle avec l’animation d’arrachement à l’envers quand l’inscription disparaît', () => {
+      const { fixture, element } = render(makeEvent(), { registration: 'CONFIRMED', quick: true });
+      expect(phase(element)).toBe('idle');
+
+      fixture.componentRef.setInput('registration', null);
+      fixture.detectChanges();
+      vi.advanceTimersByTime(10);
+      fixture.detectChanges();
+
+      expect(phase(element)).toBe('reattaching');
+      expect(element.querySelector('.stub')).not.toBeNull();
+
+      vi.advanceTimersByTime(900);
+      fixture.detectChanges();
+      expect(phase(element)).toBe('idle');
+      expect(stub(element).classList).toContain('interactive');
+    });
+
+    it('ne rejoue pas l’animation pour un billet qui n’était pas confirmé', () => {
+      const { fixture, element } = render(makeEvent(), { registration: 'WAITING_LIST', position: 2 });
+
+      fixture.componentRef.setInput('registration', null);
+      fixture.detectChanges();
+      vi.advanceTimersByTime(10);
+      fixture.detectChanges();
+
+      expect(phase(element)).toBe('idle');
+    });
+
+    it('n’anime rien au premier affichage d’un billet sans inscription', () => {
+      const { element } = render(makeEvent());
+
+      expect(phase(element)).toBe('idle');
+    });
+  });
+
   describe('inscription directe depuis la souche', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());

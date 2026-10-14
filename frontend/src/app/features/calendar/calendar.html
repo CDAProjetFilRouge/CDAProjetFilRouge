@@ -38,6 +38,12 @@
           <dt>Fin</dt>
           <dd>{{ ins.event.endDateTime | date: 'dd/MM/yyyy à HH:mm' }}</dd>
         </div>
+        @if (ins.event.clubName) {
+          <div>
+            <dt>Club</dt>
+            <dd>{{ ins.event.clubName }}</dd>
+          </div>
+        }
         <div>
           <dt>Tarif</dt>
           <dd>{{ ins.price > 0 ? ins.price + ' €' : 'Gratuit' }}</dd>

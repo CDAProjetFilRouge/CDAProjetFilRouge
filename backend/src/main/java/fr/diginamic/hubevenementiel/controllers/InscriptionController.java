@@ -58,7 +58,8 @@ public class InscriptionController implements InscriptionApi {
     @DeleteMapping("/{id}/organizer")
     public ResponseEntity<Void> cancelByOrganizer(@PathVariable Long id, @RequestParam String motif)
             throws HttpException {
-        inscriptionService.cancelByOrganizer(id, motif);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        inscriptionService.cancelByOrganizer(id, motif, principal);
         return ResponseEntity.noContent().build();
     }
 

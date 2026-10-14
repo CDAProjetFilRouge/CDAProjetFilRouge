@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 import fr.diginamic.hubevenementiel.entities.AppUser;
+import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -60,6 +62,9 @@ class EventServiceTest {
 
     @Mock
     private ClubService clubService;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private EventService eventService;
@@ -545,6 +550,42 @@ class EventServiceTest {
         eventService.deleteEvent(1L, owner);
 
         verify(eventRepository).delete(existing);
+    }
+
+    @Test
+    void deleteEvent_withRegistrations_notifiesEveryoneAndRemovesTheirInscriptions() throws HttpException {
+        Event existing = cloneFutureEvent();
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(existing));
+        AppUser confirmed = new AppUser();
+        confirmed.setEmail("confirme@example.com");
+        AppUser waiting = new AppUser();
+        waiting.setEmail("attente@example.com");
+        when(inscriptionRepo.findByEventIdAndStatusIn(1L, List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)))
+                .thenReturn(List.of(
+                        new Inscription(confirmed, existing, BigDecimal.TEN, InscriptionStatus.CONFIRMED),
+                        new Inscription(waiting, existing, BigDecimal.TEN, InscriptionStatus.WAITING_LIST)));
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        eventService.deleteEvent(1L, owner);
+
+        verify(inscriptionRepo).deleteByEventId(1L);
+        ArgumentCaptor<EventDeletedEvent> captor = ArgumentCaptor.forClass(EventDeletedEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
+        assertThat(captor.getValue().eventTitle()).isEqualTo(existing.getTitle());
+    }
+
+    @Test
+    void deleteEvent_pastEvent_notifiesNobody() {
+        Event past = cloneFutureEvent();
+        past.setStartDateTime(LocalDateTime.now().minusDays(1));
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(past));
+        AppUserPrincipal owner = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+
+        assertThrows(ConflictException.class, () -> eventService.deleteEvent(1L, owner));
+
+        verify(inscriptionRepo, never()).deleteByEventId(any());
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
     }
 
     // ---------------------------------------------------------------
