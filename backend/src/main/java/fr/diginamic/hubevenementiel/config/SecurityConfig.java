@@ -20,10 +20,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import fr.diginamic.hubevenementiel.security.JwtAuthenticationFilter;
+import fr.diginamic.hubevenementiel.security.RateLimitFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -34,8 +36,8 @@ public class SecurityConfig {
     private String frontendUrl;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
-            throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitFilter rateLimitFilter) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
@@ -67,6 +69,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/events/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/events/{eventId}/comments").permitAll()
                         .anyRequest().authenticated())
+                .addFilterAfter(rateLimitFilter, CorsFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -88,7 +91,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(frontendUrl));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization", "DPoP"));
-        config.setExposedHeaders(List.of("X-Error-Code"));
+        config.setExposedHeaders(List.of("X-Error-Code", "Retry-After"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
