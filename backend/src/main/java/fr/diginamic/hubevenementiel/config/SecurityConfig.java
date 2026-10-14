@@ -30,6 +30,12 @@ import fr.diginamic.hubevenementiel.security.JwtAuthenticationFilter;
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
+    private static final int ARGON2_SALT_LENGTH = 16;
+    private static final int ARGON2_HASH_LENGTH = 32;
+    private static final int ARGON2_PARALLELISM = 1;
+    private static final int ARGON2_MEMORY_KIB = 19456;
+    private static final int ARGON2_ITERATIONS = 2;
+
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
@@ -74,7 +80,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+        return new Argon2PasswordEncoder(ARGON2_SALT_LENGTH, ARGON2_HASH_LENGTH, ARGON2_PARALLELISM,
+                ARGON2_MEMORY_KIB, ARGON2_ITERATIONS);
     }
 
     @Bean
