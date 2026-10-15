@@ -76,9 +76,18 @@ jobs:
         run: npm ci
         working-directory: frontend
 
-      - name: Unit tests
-        run: npx ng test --no-watch
+      - name: Unit tests with coverage
+        run: npx ng test --no-watch --coverage
         working-directory: frontend
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Build (staging)
         run: npx ng build --configuration staging
