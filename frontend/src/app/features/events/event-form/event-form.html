@@ -18,11 +18,15 @@
     @if (isEdit) {
       <section class="status-bar">
         <p class="status-title">Statut de l'évènement</p>
-        <ol class="steps">
-          @for (step of statusSteps; track step.status) {
-            <li [class.current]="step.status === status()">{{ step.label }}</li>
+        <div class="steps" role="group" aria-label="Changer le status de l'évènement">
+          @for (step of statusSteps; track step.status){
+            <button type="button" class="status-button" [class.current]="step.status === status()" [class.changing]="isChangingStatus()"
+            [disabled]="!canChangeStatus() || isChangingStatus() || step.status === status()"
+            [attr.aria-pressed]="step.status === status()" (click)="changeStatus(step.status)">
+          {{ step.label}}
+          </button>
           }
-        </ol>
+        </div>
       </section>
     }
 

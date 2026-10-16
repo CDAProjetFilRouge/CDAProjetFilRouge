@@ -157,6 +157,9 @@ export class EventForm implements OnDestroy {
     }
   }
 
+  protected readonly isChangingStatus = signal(false);
+  protected readonly canChangeStatus = computed(() => this.isEdit && this.canEditFields() && this.isOwner());
+
   protected imageUrl(path: string): string {
     return `${URL_IMAGES}${path}`;
   }
@@ -434,4 +437,26 @@ export class EventForm implements OnDestroy {
     }
     return request;
   }
+
+  protected changeStatus(nextStatus: EventStatus): void{
+    if (this.eventId === null || !this.canChangeStatus() || this.isChangingStatus() || nextStatus === this.status()){
+      return;
+    }
+
+    this.isChangingStatus.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('')
+
+    this.eventFormService.update(this.eventId, {...this.toRequest(), status: nextStatus}).subscribe({
+      next: (saved) => {
+        this.detail.update((current) => current ? {...current, status: saved.status ?? nextStatus }: current);
+        this.isChangingStatus.set(false);
+        this.successMessage.set("Statut de l'évènement mis à jour.");
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isChangingStatus.set(false);
+        this.errorMessage.set(this.reasonOf(error, "Impossible de mofidifer le statut."));
+      }
+    });
+  };
 }
