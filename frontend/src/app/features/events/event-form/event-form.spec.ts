@@ -65,7 +65,6 @@ function validValues() {
     maxCapacity: 30,
     affiliatePrice: 10,
     nonAffiliatePrice: 20,
-    status: 'PUBLISHED' as const
   };
 }
 
