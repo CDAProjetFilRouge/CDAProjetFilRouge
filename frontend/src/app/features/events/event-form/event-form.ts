@@ -135,7 +135,6 @@ export class EventForm implements OnDestroy {
         null as number | null,
         [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
       ],
-      status: ['', [Validators.required]],
     },
     { validators: endAfterStart },
   );
@@ -173,6 +172,7 @@ export class EventForm implements OnDestroy {
   }
 
   protected publish(): void {
+
     this.submit(true);
   }
 
@@ -288,6 +288,7 @@ export class EventForm implements OnDestroy {
     this.eventFormService.getById(this.eventId).subscribe({
       next: (event) => {
         this.detail.set(event);
+        this.selectedStatus.set(event.status)
         this.form.patchValue({
           title: event.title,
           description: event.description,
@@ -304,7 +305,6 @@ export class EventForm implements OnDestroy {
           maxCapacity: event.maxCapacity,
           affiliatePrice: event.affiliatePrice,
           nonAffiliatePrice: event.nonAffiliatePrice,
-          status: event.status
         });
         if (!this.canEditFields()) {
           this.form.disable();
@@ -344,7 +344,7 @@ export class EventForm implements OnDestroy {
       );
     } else {
       call = this.eventFormService
-        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : request.status})
+        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : this.selectedStatus() as EventStatus})
         .pipe(map((saved) => ({ saved, failedImages: 0 })));
     }
 
@@ -431,7 +431,6 @@ export class EventForm implements OnDestroy {
       affiliatePrice: value.affiliatePrice as number,
       nonAffiliatePrice: value.nonAffiliatePrice as number,
       maxCapacity: value.maxCapacity as number,
-      status: value.status as EventStatus,
     };
     if (!this.isEdit) {
       request.idClub = value.clubId as string;
@@ -440,6 +439,7 @@ export class EventForm implements OnDestroy {
   }
 
   private changeStatus(newStatus: string): void{
-    this.form.patchValue({status: newStatus});
+
+    this.selectedStatus.set(newStatus);
   }
 }
