@@ -234,8 +234,9 @@ public class AppUserService {
 
         AppUser savedUser = userRepo.save(appUser);
 
+        String rawToken = UUID.randomUUID().toString();
         Token token = new Token();
-        token.setValue(UUID.randomUUID().toString());
+        token.setValue(TokenHasher.sha256Hex(rawToken));
         token.setTokenType(TokenType.ENABLE_ACCOUNT);
         token.setUser(savedUser);
         token.setCreationDateTime(LocalDateTime.now());
@@ -243,7 +244,7 @@ public class AppUserService {
         token.setPendingData("");
         tokenRepo.save(token);
 
-        emailService.sendVerificationEmail(savedUser.getEmail(), token.getValue());
+        emailService.sendVerificationEmail(savedUser.getEmail(), rawToken);
 
         return savedUser;
     }
@@ -428,8 +429,9 @@ public class AppUserService {
     }
 
     private void createAccountActivationToken(AppUser user, String temporaryPassword) {
+        String rawToken = UUID.randomUUID().toString();
         Token token = new Token();
-        token.setValue(UUID.randomUUID().toString());
+        token.setValue(TokenHasher.sha256Hex(rawToken));
         token.setTokenType(TokenType.ACCOUNT_ACTIVATION);
         token.setUser(user);
         token.setCreationDateTime(LocalDateTime.now());
@@ -437,7 +439,7 @@ public class AppUserService {
         token.setPendingData("");
         tokenRepo.save(token);
 
-        emailService.sendAccountActivationEmail(user.getEmail(), token.getValue(), temporaryPassword);
+        emailService.sendAccountActivationEmail(user.getEmail(), rawToken, temporaryPassword);
     }
 
     private String generateTemporaryPassword() {
