@@ -83,9 +83,9 @@ public class PasswordService {
                 newPassword != null ? passwordEncoder.encode(newPassword) : "");
 
         if (newPassword != null) {
-            emailService.sendPasswordChangeConfirmationEmail(user.getEmail(), token.getValue());
+            emailService.sendPasswordChangeConfirmationEmail(user.getEmail(), token.getRawValue());
         } else {
-            emailService.sendPasswordResetEmail(user.getEmail(), token.getValue());
+            emailService.sendPasswordResetEmail(user.getEmail(), token.getRawValue());
         }
     }
 
