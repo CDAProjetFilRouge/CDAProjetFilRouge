@@ -29,6 +29,11 @@
     opacity: 0.6;
   }
 
+  // Le contrôle porte les classes Angular sur l'hôte, pas sur le bouton.
+  :host(.ng-invalid.ng-touched) &:not(:focus-visible):not([aria-expanded='true']) {
+    border-color: var(--color-error);
+  }
+
   svg {
     flex-shrink: 0;
     color: var(--color-muted);
