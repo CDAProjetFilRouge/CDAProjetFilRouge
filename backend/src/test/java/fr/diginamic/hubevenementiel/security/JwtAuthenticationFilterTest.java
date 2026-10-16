@@ -75,7 +75,6 @@ class JwtAuthenticationFilterTest {
         when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
         when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
         when(jwtService.extractEmail("token-valide")).thenReturn("alice.martin@example.com");
-        when(jwtService.extractRole("token-valide")).thenReturn("ORGANIZER");
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -117,6 +116,7 @@ class JwtAuthenticationFilterTest {
     private AppUser userWithStatus(AccountStatus status) {
         AppUser user = new AppUser();
         user.setStatus(status);
+        user.setRole(fr.diginamic.hubevenementiel.enums.Role.ORGANIZER);
         return user;
     }
 }

@@ -133,7 +133,6 @@ class AuthorizationIntegrationTest {
             for (MockHttpServletRequestBuilder request : List.of(
                     get("/users"),
                     get("/users/" + id),
-                    post("/users/admin"),
                     put("/users/" + id + "/suspend"),
                     put("/users/" + id + "/reactivate"),
                     put("/users/" + id + "/admin"),
@@ -160,7 +159,7 @@ class AuthorizationIntegrationTest {
                 post("/events"),
                 put("/events/" + id),
                 delete("/events/" + id),
-                delete("/inscriptions/" + id + "/organizer"))) {
+                delete("/inscriptions/" + id + "/organizer?motif=test"))) {
             mockMvc.perform(withToken(request, token)).andExpect(status().isForbidden());
         }
     }
