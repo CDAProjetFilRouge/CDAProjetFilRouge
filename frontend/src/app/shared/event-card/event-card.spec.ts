@@ -309,10 +309,27 @@ describe('EventCard', () => {
       expect(stub(element).classList).toContain('interactive');
     });
 
-    it('ne rejoue pas l’animation pour un billet qui n’était pas confirmé', () => {
+    it('la souche retombe en place quand on sort de la liste d’attente', () => {
       const { fixture, element } = render(makeEvent(), { registration: 'WAITING_LIST', position: 2 });
+      expect(phase(element)).toBe('idle');
 
       fixture.componentRef.setInput('registration', null);
+      fixture.detectChanges();
+      vi.advanceTimersByTime(10);
+      fixture.detectChanges();
+
+      expect(phase(element)).toBe('rejoining');
+      expect(element.querySelector('.stub')).not.toBeNull();
+
+      vi.advanceTimersByTime(600);
+      fixture.detectChanges();
+      expect(phase(element)).toBe('idle');
+    });
+
+    it('ne joue pas l’animation de sortie quand la place en liste d’attente devient confirmée', () => {
+      const { fixture, element } = render(makeEvent(), { registration: 'WAITING_LIST', position: 1 });
+
+      fixture.componentRef.setInput('registration', 'CONFIRMED');
       fixture.detectChanges();
       vi.advanceTimersByTime(10);
       fixture.detectChanges();
