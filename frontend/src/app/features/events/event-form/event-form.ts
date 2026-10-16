@@ -344,7 +344,7 @@ export class EventForm implements OnDestroy {
       );
     } else {
       call = this.eventFormService
-        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : this.status() })
+        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : request.status})
         .pipe(map((saved) => ({ saved, failedImages: 0 })));
     }
 
@@ -431,6 +431,7 @@ export class EventForm implements OnDestroy {
       affiliatePrice: value.affiliatePrice as number,
       nonAffiliatePrice: value.nonAffiliatePrice as number,
       maxCapacity: value.maxCapacity as number,
+      status: value.status as EventStatus,
     };
     if (!this.isEdit) {
       request.idClub = value.clubId as string;
