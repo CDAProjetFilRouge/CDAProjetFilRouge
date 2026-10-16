@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -146,4 +147,17 @@ public interface EventRepo extends JpaRepository<Event, UUID>, JpaSpecificationE
             + "AND e.status = :status AND e.startDateTime >= :from")
     long sumCapacityByOrganizer(@Param("organizerId") UUID organizerId, @Param("status") EventStatus status,
             @Param("from") LocalDateTime from);
+
+    /**
+     * Moves to a new status every event that has the given status and whose end date is before the given date.
+     *
+     * @param from status the events must currently have
+     * @param to status to give them
+     * @param date events ending strictly before this date are updated
+     * @return the number of events updated
+     */
+    @Modifying
+    @Query("UPDATE Event e SET e.status = :to WHERE e.status = :from AND e.endDateTime < :date")
+    int updateStatusOfEndedEvents(@Param("from") EventStatus from, @Param("to") EventStatus to,
+            @Param("date") LocalDateTime date);
 }
