@@ -20,7 +20,7 @@
         <p class="status-title">Statut de l'évènement</p>
         <div class="steps">
           @for (step of statusSteps; track step.status) {
-            <button type="button" class="statusButton" [value]="step.status" (click)="changeStatus(step.status)" [class.selected]="selectedStatus() === step.status">
+            <button type="button" class="statusButton" [value]="step.status" (click)="changeStatus(step.status)" [class.selected]="status() === step.status">
               {{ step.status }}
             </button>
           }

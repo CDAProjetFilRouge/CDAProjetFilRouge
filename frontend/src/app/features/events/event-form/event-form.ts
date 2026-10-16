@@ -172,7 +172,6 @@ export class EventForm implements OnDestroy {
   }
 
   protected publish(): void {
-
     this.submit(true);
   }
 
@@ -288,7 +287,6 @@ export class EventForm implements OnDestroy {
     this.eventFormService.getById(this.eventId).subscribe({
       next: (event) => {
         this.detail.set(event);
-        this.selectedStatus.set(event.status)
         this.form.patchValue({
           title: event.title,
           description: event.description,
@@ -344,7 +342,7 @@ export class EventForm implements OnDestroy {
       );
     } else {
       call = this.eventFormService
-        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : this.selectedStatus() as EventStatus})
+        .update(this.eventId, { ...request, status: publish ? 'PUBLISHED' : this.status() })
         .pipe(map((saved) => ({ saved, failedImages: 0 })));
     }
 
@@ -439,7 +437,14 @@ export class EventForm implements OnDestroy {
   }
 
   private changeStatus(newStatus: string): void{
+    this.detail.update(detail => {
+      if (detail === null) {
+        return null;
+      }
 
-    this.selectedStatus.set(newStatus);
+      return {
+        ...detail, status: newStatus as EventStatus
+      }
+    })
   }
 }
