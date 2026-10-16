@@ -26,7 +26,7 @@ public class LoginAttemptService {
     private final long baseLockMillis;
     private final long maxLockMillis;
     private final long resetMillis;
-    private final Map<String, AccountState> accounts = new ConcurrentHashMap<>();
+    private final Map<String, AccountLockState> accounts = new ConcurrentHashMap<>();
     private final Map<String, Deque<Long>> ipFailures = new ConcurrentHashMap<>();
 
     @Autowired
@@ -78,9 +78,9 @@ public class LoginAttemptService {
 
     private void recordAccountFailure(String key, long now) {
         accounts.compute(key, (k, existing) -> {
-            AccountState state = existing;
+            AccountLockState state = existing;
             if (state == null || isExpired(state, now)) {
-                state = new AccountState();
+                state = new AccountLockState();
             }
             if (state.lockedUntil > now) {
                 return state;
@@ -108,7 +108,7 @@ public class LoginAttemptService {
         return result[0];
     }
 
-    private boolean isExpired(AccountState state, long now) {
+    private boolean isExpired(AccountLockState state, long now) {
         return now >= Math.max(state.lastFailureAt, state.lockedUntil) + resetMillis;
     }
 
@@ -166,7 +166,7 @@ public class LoginAttemptService {
         return ip == null ? "" : ip;
     }
 
-    private static final class AccountState {
+    private static final class AccountLockState {
         private int failures;
         private long lastFailureAt;
         private long lockedUntil;
