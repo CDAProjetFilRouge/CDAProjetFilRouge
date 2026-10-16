@@ -19,6 +19,8 @@ public class Token {
     private UUID id;
     @Column(name = "value", nullable = false, length = 64)
     private String value;
+    @Transient
+    private String rawValue;
     @Column(name = "creation_date_time", nullable = false)
     private LocalDateTime creationDateTime;
 
@@ -76,6 +78,14 @@ public class Token {
 
     public String getValue() {
         return value;
+    }
+
+    public String getRawValue() {
+        return rawValue;
+    }
+
+    public void setRawValue(String rawValue) {
+        this.rawValue = rawValue;
     }
 
     public void setValue(String value) {

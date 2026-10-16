@@ -132,7 +132,7 @@ class AccountAuthIntegrationTest {
         private Token createToken(AppUser user, TokenType type, String value, LocalDateTime expiration,
                         LocalDateTime useDate) {
                 Token token = new Token();
-                token.setValue(value);
+                token.setValue(fr.diginamic.hubevenementiel.services.TokenHasher.sha256Hex(value));
                 token.setTokenType(type);
                 token.setUser(user);
                 token.setCreationDateTime(LocalDateTime.now());

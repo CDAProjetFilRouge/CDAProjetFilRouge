@@ -6,12 +6,14 @@ import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class AppUserDetailsService implements UserDetailsService {
+public class AppUserDetailsService implements UserDetailsService, UserDetailsPasswordService {
 
     private final UserRepo userRepo;
 
@@ -32,6 +34,16 @@ public class AppUserDetailsService implements UserDetailsService {
             userRepo.save(appUser);
         }
 
+        return new AppUserDetails(appUser);
+    }
+
+    @Override
+    @Transactional
+    public UserDetails updatePassword(UserDetails user, String newPassword) {
+        AppUser appUser = userRepo.findByEmail(user.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur inconnu."));
+        appUser.setHashedPassword(newPassword);
+        userRepo.save(appUser);
         return new AppUserDetails(appUser);
     }
 }

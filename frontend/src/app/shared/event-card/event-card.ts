@@ -22,7 +22,8 @@ export type SpotsLevel = 'full' | 'low' | 'medium' | 'high';
 // idle -> tearing (la souche se détache) -> pending (attente du serveur) -> confirm (message)
 // -> returning (la souche revient en fondu) -> idle.
 // Après une désinscription, la souche se recolle : idle -> reattaching (l'arrachement à l'envers) -> idle.
-export type StubPhase = 'idle' | 'tearing' | 'pending' | 'confirm' | 'returning' | 'reattaching';
+// En sortant de la liste d'attente, elle n'avait pas été arrachée : elle retombe simplement en place (rejoining).
+export type StubPhase = 'idle' | 'tearing' | 'pending' | 'confirm' | 'returning' | 'reattaching' | 'rejoining';
 
 const CATEGORY_LABELS: Record<string, string> = {
   CULTURE: 'Culture',
@@ -37,6 +38,7 @@ const TEAR_MS = 680;
 const CONFIRM_MS = 2600;
 const RETURN_MS = 600;
 const REATTACH_MS = 800;
+const REJOIN_MS = 500;
 const NO_ANSWER_MS = 8000;
 
 // Inclinaison maximale du billet qui suit le curseur, en degrés.
@@ -87,10 +89,20 @@ export class EventCard {
       const registration = this.registration();
       const previous = this.previousRegistration;
       this.previousRegistration = registration;
-      if (previous === 'CONFIRMED' && registration === null && untracked(this.phase) === 'idle') {
+      if (registration !== null || untracked(this.phase) !== 'idle') {
+        return;
+      }
+      if (previous === 'CONFIRMED') {
         this.phase.set('reattaching');
         this.later(REATTACH_MS, () => {
           if (this.phase() === 'reattaching') {
+            this.phase.set('idle');
+          }
+        });
+      } else if (previous === 'WAITING_LIST') {
+        this.phase.set('rejoining');
+        this.later(REJOIN_MS, () => {
+          if (this.phase() === 'rejoining') {
             this.phase.set('idle');
           }
         });
