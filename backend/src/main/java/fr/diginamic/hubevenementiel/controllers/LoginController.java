@@ -82,6 +82,9 @@ public class LoginController implements LoginApi {
 
         AppUser user = ((AppUserDetails) authentication.getPrincipal()).getAppUser();
         String keyThumbprint = currentThumbprint();
+        if (keyThumbprint == null && dpopProofVerifier.isRequired()) {
+            throw new UnauthorizedException("Preuve DPoP requise.");
+        }
         String token = jwtService.generateToken(user, keyThumbprint);
         String refreshToken = refreshTokenService.issueForLogin(user, keyThumbprint);
 
@@ -116,9 +119,6 @@ public class LoginController implements LoginApi {
     private String currentThumbprint() throws HttpException {
         String proof = httpRequest.getHeader("DPoP");
         if (proof == null) {
-            if (dpopProofVerifier.isRequired()) {
-                throw new UnauthorizedException("Preuve DPoP requise.");
-            }
             return null;
         }
         return dpopProofVerifier.verify(proof, httpRequest.getMethod(), httpRequest.getRequestURL().toString())
