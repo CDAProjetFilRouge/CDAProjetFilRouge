@@ -75,7 +75,6 @@ class JwtAuthenticationFilterTest {
         when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
         when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
         when(jwtService.extractEmail("token-valide")).thenReturn("alice.martin@example.com");
-        when(jwtService.extractRole("token-valide")).thenReturn("ORGANIZER");
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -85,6 +84,21 @@ class JwtAuthenticationFilterTest {
         assertThat(principal.id()).isEqualTo(uuid(6));
         assertThat(principal.email()).isEqualTo("alice.martin@example.com");
         assertThat(principal.role()).isEqualTo("ORGANIZER");
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_tokenWithoutBoundKey_whenDpopRequired_continuesUnauthenticated() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
+        when(jwtService.extractKeyThumbprint("token-valide")).thenReturn(null);
+        when(dpopProofVerifier.isRequired()).thenReturn(true);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
     }
 
@@ -117,6 +131,7 @@ class JwtAuthenticationFilterTest {
     private AppUser userWithStatus(AccountStatus status) {
         AppUser user = new AppUser();
         user.setStatus(status);
+        user.setRole(fr.diginamic.hubevenementiel.enums.Role.ORGANIZER);
         return user;
     }
 }

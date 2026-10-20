@@ -103,8 +103,9 @@
 
 .field-error {
   margin: 0;
-  font-size: 12px;
-  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-error);
 }
 
 .location {
