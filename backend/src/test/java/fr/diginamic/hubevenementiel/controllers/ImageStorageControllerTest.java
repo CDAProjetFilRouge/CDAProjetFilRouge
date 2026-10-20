@@ -31,6 +31,8 @@ class ImageStorageControllerTest {
         ReflectionTestUtils.setField(controller, "storageKey", KEY);
     }
 
+    private static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x01};
+
     private MockHttpServletRequest image(byte[] content) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setContentType("image/jpeg");
@@ -40,39 +42,47 @@ class ImageStorageControllerTest {
 
     @Test
     void store_validRequest_writesTheFile() throws Exception {
-        var response = controller.store(NAME, KEY, image(new byte[]{1, 2, 3}));
+        var response = controller.store(NAME, KEY, image(JPEG));
 
         assertThat(response.getStatusCode().value()).isEqualTo(204);
-        assertThat(Files.readAllBytes(dir.resolve(NAME))).containsExactly(1, 2, 3);
+        assertThat(Files.readAllBytes(dir.resolve(NAME))).containsExactly(JPEG);
+    }
+
+    @Test
+    void store_svgContent_isRefused() {
+        byte[] svg = "<svg><script>alert(1)</script></svg>".getBytes();
+
+        assertThrows(BadRequestException.class, () -> controller.store(NAME, KEY, image(svg)));
+        assertThat(Files.exists(dir.resolve(NAME))).isFalse();
     }
 
     @Test
     void store_keyNotConfigured_isNotFound() {
         ReflectionTestUtils.setField(controller, "storageKey", "");
 
-        assertThrows(NotFoundException.class, () -> controller.store(NAME, KEY, image(new byte[]{1})));
+        assertThrows(NotFoundException.class, () -> controller.store(NAME, KEY, image(JPEG)));
     }
 
     @Test
     void store_missingKey_isForbidden() {
-        assertThrows(ForbiddenException.class, () -> controller.store(NAME, null, image(new byte[]{1})));
+        assertThrows(ForbiddenException.class, () -> controller.store(NAME, null, image(JPEG)));
     }
 
     @Test
     void store_wrongKey_isForbidden() {
-        assertThrows(ForbiddenException.class, () -> controller.store(NAME, "other", image(new byte[]{1})));
+        assertThrows(ForbiddenException.class, () -> controller.store(NAME, "other", image(JPEG)));
         assertThat(dir.resolve(NAME)).doesNotExist();
     }
 
     @Test
     void store_pathTraversalName_isRejected() {
-        assertThrows(BadRequestException.class, () -> controller.store("../evil.jpg", KEY, image(new byte[]{1})));
-        assertThrows(BadRequestException.class, () -> controller.store("photo.jpg", KEY, image(new byte[]{1})));
+        assertThrows(BadRequestException.class, () -> controller.store("../evil.jpg", KEY, image(JPEG)));
+        assertThrows(BadRequestException.class, () -> controller.store("photo.jpg", KEY, image(JPEG)));
     }
 
     @Test
     void store_nonImageContentType_isRejected() {
-        MockHttpServletRequest request = image(new byte[]{1});
+        MockHttpServletRequest request = image(JPEG);
         request.setContentType("application/pdf");
 
         assertThrows(BadRequestException.class, () -> controller.store(NAME, KEY, request));
@@ -95,7 +105,7 @@ class ImageStorageControllerTest {
     void store_existingFile_isConflictAndNotOverwritten() throws Exception {
         Files.write(dir.resolve(NAME), new byte[]{9});
 
-        assertThrows(ConflictException.class, () -> controller.store(NAME, KEY, image(new byte[]{1})));
+        assertThrows(ConflictException.class, () -> controller.store(NAME, KEY, image(JPEG)));
         assertThat(Files.readAllBytes(dir.resolve(NAME))).containsExactly(9);
     }
 

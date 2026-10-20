@@ -16,8 +16,13 @@ import {
 } from '../event-details/inscription-dialog/inscription-dialog';
 import { scrollToTop } from '../../../shared/scroll-to-top';
 
+const QUICK_ERROR_MS = 4000;
+
+// Statut par défaut du catalogue : les évènements annulés restent visibles, avec leur indicateur.
+const CATALOGUE_STATUSES = 'PUBLISHED,CANCELLED';
+
 interface MyRegistration {
-  id: number;
+  id: string;
   status: Exclude<CardRegistration, null>;
   position: number | null;
 }
@@ -36,8 +41,11 @@ export class Event {
   private readonly eventDetailsService = inject(EventDetailsService);
 
   private readonly user = this.authService.currentUser;
-  private readonly registrations = signal<Map<number, MyRegistration>>(new Map());
+  private readonly registrations = signal<Map<string, MyRegistration>>(new Map());
   protected readonly affiliated = computed(() => (this.user()?.clubs.length ?? 0) > 0);
+
+  protected readonly signedIn = computed(() => this.user() !== null);
+  private readonly quickErrors = signal<Map<string, string>>(new Map());
 
   protected readonly dialogEvent = signal<EventModel | null>(null);
   protected readonly dialogBusy = signal(false);
@@ -68,12 +76,48 @@ export class Event {
     });
   }
 
-  protected registrationOf(eventId: number): CardRegistration {
+  protected registrationOf(eventId: string): CardRegistration {
     return this.registrations().get(eventId)?.status ?? null;
   }
 
-  protected positionOf(eventId: number): number | null {
+  protected positionOf(eventId: string): number | null {
     return this.registrations().get(eventId)?.position ?? null;
+  }
+
+  protected quickErrorOf(eventId: string): string | null {
+    return this.quickErrors().get(eventId) ?? null;
+  }
+
+  // Inscription directe depuis la souche du billet : pas de fenêtre, le billet montre lui-même le résultat.
+  protected quickRegister(event: EventModel): void {
+    const user = this.user();
+    if (!user) {
+      return;
+    }
+    this.eventDetailsService.register(user.id, event.id).subscribe({
+      next: () => {
+        this.loadRegistrations();
+        this.loadEvents();
+      },
+      error: (err: HttpErrorResponse) =>
+        this.showQuickError(
+          event.id,
+          typeof err.error === 'string' && err.error ? err.error : 'Réessayez dans un instant.',
+        ),
+    });
+  }
+
+  private showQuickError(eventId: string, message: string): void {
+    this.quickErrors.update((map) => new Map(map).set(eventId, message));
+    setTimeout(
+      () =>
+        this.quickErrors.update((map) => {
+          const next = new Map(map);
+          next.delete(eventId);
+          return next;
+        }),
+      QUICK_ERROR_MS,
+    );
   }
 
   protected openRegistration(event: EventModel): void {
@@ -133,7 +177,7 @@ export class Event {
     }
     this.calendarService.getByUser(user.id).subscribe({
       next: (list) => {
-        const map = new Map<number, MyRegistration>();
+        const map = new Map<string, MyRegistration>();
         for (const inscription of list) {
           if (inscription.status !== 'CANCELED') {
             map.set(inscription.event.id, {
@@ -165,7 +209,7 @@ export class Event {
     city: new FormControl('', {nonNullable: true}),
     startDate: new FormControl('', {nonNullable: true}),
     endDate: new FormControl('', {nonNullable: true}),
-    status: new FormControl('PUBLISHED', {nonNullable: true})
+    status: new FormControl(CATALOGUE_STATUSES, {nonNullable: true})
   })
 
   private handleError(err: HttpErrorResponse): void {
@@ -173,16 +217,17 @@ export class Event {
   }
 
   ngOnInit(): void {
-    // Pré-filtre possible depuis le tableau de bord : /?status=DRAFT
+    // Pré-filtre possible par lien : /?status=CANCELLED. Les brouillons n'ont pas leur place dans le catalogue :
+    // ils se trouvent dans « Mes évènements ».
     const status = this.route.snapshot.queryParamMap.get('status');
-    if (status && ['PUBLISHED', 'CANCELLED', 'DRAFT'].includes(status)) {
+    if (status && ['PUBLISHED', 'CANCELLED'].includes(status)) {
       this.filters.patchValue({ status });
     }
     this.loadEvents();
   }
 
   loadEvents(): void {
-    const filters: EventFilter = { ...this.filters.getRawValue(), sort: this.sortOrder() };
+    const filters: EventFilter = { ...this.filters.getRawValue(), hideFinished: true, sort: this.sortOrder() };
 
     this.eventService.search(this.currentPage - 1, this.eventsPerPage, filters).subscribe({
       next: (page) => {
@@ -207,7 +252,7 @@ export class Event {
       city: '',
       startDate: '',
       endDate: '',
-      status: 'PUBLISHED'
+      status: CATALOGUE_STATUSES
     });
 
     this.search();

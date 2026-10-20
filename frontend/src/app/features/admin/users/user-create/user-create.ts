@@ -22,7 +22,7 @@ export class UserCreate {
   protected readonly roles = Object.keys(ROLE_LABELS) as Role[];
   private readonly clubService = inject(ClubService);
   protected readonly clubs = signal<Club[]>([]);
-  protected readonly selectedClubIds = signal<number[]>([]);
+  protected readonly selectedClubIds = signal<string[]>([]);
 
   readonly form = this.formBuilder.group({
     firstName: ['', Validators.required],
@@ -73,7 +73,7 @@ export class UserCreate {
     });
   }
 
-  protected toggleClub(id: number, checked: boolean): void {
+  protected toggleClub(id: string, checked: boolean): void {
     this.selectedClubIds.update((ids) => checked ? [...ids, id] : ids.filter((i) => i !== id));
   }
 }

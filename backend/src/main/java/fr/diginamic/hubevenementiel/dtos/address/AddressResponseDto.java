@@ -1,8 +1,10 @@
 package fr.diginamic.hubevenementiel.dtos.address;
 
+import java.util.UUID;
+
 public class AddressResponseDto {
 
-    private Long id;
+    private UUID id;
     private String street1;
     private String street2;
     private String postalCode;
@@ -12,7 +14,7 @@ public class AddressResponseDto {
     public AddressResponseDto() {
     }
 
-    public AddressResponseDto(Long id, String street1, String street2, String postalCode, String city, String country) {
+    public AddressResponseDto(UUID id, String street1, String street2, String postalCode, String city, String country) {
         this.id = id;
         this.street1 = street1;
         this.street2 = street2;
@@ -21,11 +23,11 @@ public class AddressResponseDto {
         this.country = country;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

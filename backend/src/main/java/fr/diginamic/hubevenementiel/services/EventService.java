@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
@@ -7,6 +8,7 @@ import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
@@ -50,14 +52,17 @@ public class EventService {
     private final InscriptionRepo inscriptionRepo;
     private final ClubService clubService;
     private final WaitingListService waitingListService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     public EventService(EventRepo eventRepository, InscriptionRepo inscriptionRepo,
-            WaitingListService waitingListService, ClubService clubService) {
+            WaitingListService waitingListService, ClubService clubService,
+            ApplicationEventPublisher eventPublisher) {
         this.eventRepository = eventRepository;
         this.inscriptionRepo = inscriptionRepo;
         this.waitingListService = waitingListService;
         this.clubService = clubService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -65,14 +70,14 @@ public class EventService {
      * @param events events of a page for which the remaining spots are needed
      * @return the remaining spots by event id (maximum capacity minus confirmed inscriptions, never below zero)
      */
-    public Map<Long, Integer> remainingSpots(List<Event> events) {
+    public Map<UUID, Integer> remainingSpots(List<Event> events) {
         if (events.isEmpty()) {
             return Map.of();
         }
 
-        List<Long> eventIds = events.stream().map(Event::getId).toList();
+        List<UUID> eventIds = events.stream().map(Event::getId).toList();
 
-        Map<Long, Long> confirmedByEvent = inscriptionRepo
+        Map<UUID, Long> confirmedByEvent = inscriptionRepo
                 .countByEventIdsAndStatus(eventIds, InscriptionStatus.CONFIRMED).stream()
                 .collect(Collectors.toMap(EventInscriptionCount::getEventId, EventInscriptionCount::getTotal));
 
@@ -87,7 +92,7 @@ public class EventService {
      * @return an object of type Event
      * @throws HttpException
      */
-    public Event findById(Long eventId) throws HttpException {
+    public Event findById(UUID eventId) throws HttpException {
         Optional<Event> optionalEvent = eventRepository.findById(eventId);
 
         if (optionalEvent.isEmpty()) {
@@ -106,7 +111,7 @@ public class EventService {
      * @return an object of type Event, only if visible to this caller
      * @throws HttpException
      */
-    public Event findVisibleById(Long eventId, AppUserPrincipal principal) throws HttpException {
+    public Event findVisibleById(UUID eventId, AppUserPrincipal principal) throws HttpException {
         Event event = findById(eventId);
 
         if(event == null){
@@ -260,8 +265,8 @@ public class EventService {
     }
 
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
-            LocalDateTime startDate, LocalDateTime endDate, EventStatus status, Sort.Direction direction,
-            AppUserPrincipal principal) throws HttpException {
+            LocalDateTime startDate, LocalDateTime endDate, List<EventStatus> status, boolean hideFinished,
+            Sort.Direction direction, AppUserPrincipal principal) throws HttpException {
 
         if(size > 20){
             throw new BadRequestException("Taille maximale d'éléments à afficher dépassée");
@@ -279,7 +284,8 @@ public class EventService {
                 EventSpecifications.hasCity(city),
                 EventSpecifications.startsOnOrAfter(startDate),
                 EventSpecifications.endsOnOrBefore(endDate),
-                EventSpecifications.hasStatus(status))) {
+                EventSpecifications.hasAnyStatus(status),
+                hideFinished ? EventSpecifications.notFinishedAt(LocalDateTime.now()) : null)) {
             if (filter != null) {
                 spec = spec.and(filter);
             }
@@ -297,7 +303,7 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event createEvent(Event event, Long clubId) throws HttpException {
+    public Event createEvent(Event event, UUID clubId) throws HttpException {
 
         event.setStatus(EventStatus.DRAFT);
         eventChecker(event);
@@ -323,7 +329,7 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public Event updateEvent(Long eventId, Event modifiedEvent, AppUserPrincipal principal) throws HttpException {
+    public Event updateEvent(UUID eventId, Event modifiedEvent, AppUserPrincipal principal) throws HttpException {
 
         Event eventToBeModified = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
@@ -375,7 +381,7 @@ public class EventService {
      * @throws HttpException
      */
     @Transactional
-    public void deleteEvent(Long eventId, AppUserPrincipal principal) throws HttpException {
+    public void deleteEvent(UUID eventId, AppUserPrincipal principal) throws HttpException {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
@@ -386,7 +392,15 @@ public class EventService {
             throw new ConflictException("Seul un évènement futur peut être supprimé.");
         }
 
+        List<String> emails = inscriptionRepo
+                .findByEventIdAndStatusIn(eventId, List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST))
+                .stream()
+                .map(inscription -> inscription.getUser().getEmail())
+                .toList();
+
+        inscriptionRepo.deleteByEventId(eventId);
         eventRepository.delete(event);
+        eventPublisher.publishEvent(new EventDeletedEvent(emails, event.getTitle()));
     }
 
     /**

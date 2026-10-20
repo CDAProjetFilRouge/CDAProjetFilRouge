@@ -25,7 +25,7 @@ const KPI_LINKS: Record<string, KpiTarget> = {
   PENDING_ANONYMIZATIONS: { link: '/admin/anonymization-demands' },
   ACTIVE_CLUBS: { link: '/admin/clubs' },
   UPCOMING_EVENTS: { link: '/admin/events' },
-  ORGANIZED_DRAFTS: { link: '/', queryParams: { status: 'DRAFT' } },
+  ORGANIZED_DRAFTS: { link: '/my-events', queryParams: { status: 'DRAFT' } },
 };
 
 function toKpiView(kpi: Kpi): KpiView {
@@ -99,7 +99,7 @@ export class Dashboard {
   protected readonly draftsTotal = signal(0);
   protected readonly draftsLoading = signal(false);
   protected readonly draftsError = signal<string | null>(null);
-  protected readonly publishingId = signal<number | null>(null);
+  protected readonly publishingId = signal<string | null>(null);
 
   constructor() {
     effect(() => {

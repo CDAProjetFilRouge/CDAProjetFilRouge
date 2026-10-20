@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class InscriptionController implements InscriptionApi {
 
     @Override
     @PostMapping
-    public ResponseEntity<InscriptionResponseDto> register(@RequestParam Long userId, @RequestParam Long eventId)
+    public ResponseEntity<InscriptionResponseDto> register(@RequestParam UUID userId, @RequestParam UUID eventId)
             throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         inscriptionService.checkSelf(principal, userId);
@@ -47,7 +48,7 @@ public class InscriptionController implements InscriptionApi {
 
     @Override
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelByMember(@PathVariable Long id) throws HttpException {
+    public ResponseEntity<Void> cancelByMember(@PathVariable UUID id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         inscriptionService.cancelByMember(id, principal);
         return ResponseEntity.noContent().build();
@@ -56,16 +57,17 @@ public class InscriptionController implements InscriptionApi {
     @Override
     @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
     @DeleteMapping("/{id}/organizer")
-    public ResponseEntity<Void> cancelByOrganizer(@PathVariable Long id, @RequestParam String motif)
+    public ResponseEntity<Void> cancelByOrganizer(@PathVariable UUID id, @RequestParam String motif)
             throws HttpException {
-        inscriptionService.cancelByOrganizer(id, motif);
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        inscriptionService.cancelByOrganizer(id, motif, principal);
         return ResponseEntity.noContent().build();
     }
 
     @Override
     @GetMapping("/event/{eventId}")
     public List<InscriptionEventResponseDto> getByEvent(
-            @PathVariable Long eventId,
+            @PathVariable UUID eventId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -77,7 +79,7 @@ public class InscriptionController implements InscriptionApi {
     @Override
     @GetMapping("/user/{userId}")
     public List<InscriptionResponseDto> getByUser(
-            @PathVariable Long userId,
+            @PathVariable UUID userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

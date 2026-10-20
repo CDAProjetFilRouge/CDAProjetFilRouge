@@ -186,7 +186,7 @@
               }
             </ul>
             @if (pendingImages().length < maxImages) {
-              <input #pendingFile class="file" type="file" accept="image/*"
+              <input #pendingFile class="file" type="file" accept="image/jpeg,image/png,image/webp"
                 aria-label="Ajouter une image" (change)="onPendingFileSelected(pendingFile)" />
               <button class="btn" type="button" (click)="pendingFile.click()">
                 + Ajouter une image
@@ -207,7 +207,7 @@
               }
             </ul>
             @if (canAddImage()) {
-              <input #file class="file" type="file" accept="image/*"
+              <input #file class="file" type="file" accept="image/jpeg,image/png,image/webp"
                 aria-label="Ajouter une image" (change)="onFileSelected(file)" />
               <button class="btn" type="button" (click)="file.click()">+ Ajouter une image</button>
             }

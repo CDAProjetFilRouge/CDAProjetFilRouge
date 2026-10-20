@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.appUser;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
 import fr.diginamic.hubevenementiel.enums.Role;
 
@@ -13,13 +14,13 @@ public class AppUserAdminUpdateRequestDto {
     private String phone;
     private AddressRequestDto address;
     private Role role;
-    private List<Long> clubIds;
+    private List<UUID> clubIds;
 
     public AppUserAdminUpdateRequestDto() {
     }
 
     public AppUserAdminUpdateRequestDto(String firstName, String lastName, String email, String phone,
-            AddressRequestDto address, Role role, List<Long> clubIds) {
+            AddressRequestDto address, Role role, List<UUID> clubIds) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -77,11 +78,11 @@ public class AppUserAdminUpdateRequestDto {
         this.role = role;
     }
 
-    public List<Long> getClubIds() {
+    public List<UUID> getClubIds() {
         return clubIds;
     }
 
-    public void setClubIds(List<Long> clubIds) {
+    public void setClubIds(List<UUID> clubIds) {
         this.clubIds = clubIds;
     }
 }

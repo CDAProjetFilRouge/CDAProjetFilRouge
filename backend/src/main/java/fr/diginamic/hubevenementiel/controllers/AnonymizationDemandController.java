@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -71,7 +72,7 @@ public class AnonymizationDemandController implements AnonymizationDemandApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/validate")
-    public AnonymizationDemandResponseDto validate(@PathVariable Long id) throws HttpException {
+    public AnonymizationDemandResponseDto validate(@PathVariable UUID id) throws HttpException {
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         AnonymizationDemand validated = anonymizationDemandService.validate(id, principal);
         return anonymizationDemandMapper.toDto(validated);

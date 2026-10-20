@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -9,8 +12,10 @@ import java.time.LocalDateTime;
 public class Image {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
     @Column(name = "file_name", nullable = false)
     private String fileName;
     @Column(name = "path", nullable = false, length = 500)
@@ -31,7 +36,7 @@ public class Image {
     public Image() {
     }
 
-    public Image(Long id, String fileName, String path, String mimeType, long sizeByte, LocalDateTime uploadDate,
+    public Image(UUID id, String fileName, String path, String mimeType, long sizeByte, LocalDateTime uploadDate,
             int displayOrder) {
         this.id = id;
         this.fileName = fileName;
@@ -42,11 +47,11 @@ public class Image {
         this.displayOrder = displayOrder;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

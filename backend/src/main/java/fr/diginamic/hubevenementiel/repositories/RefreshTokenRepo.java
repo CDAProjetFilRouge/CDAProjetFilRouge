@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -11,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.RefreshToken;
 
-public interface RefreshTokenRepo extends JpaRepository<RefreshToken, Long> {
+public interface RefreshTokenRepo extends JpaRepository<RefreshToken, UUID> {
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
     void deleteByUser(AppUser user);

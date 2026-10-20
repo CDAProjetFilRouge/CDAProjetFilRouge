@@ -1,13 +1,14 @@
 package fr.diginamic.hubevenementiel.dtos.comment;
 
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserSummaryResponseDto;
 
 import java.time.LocalDateTime;
 
 public class CommentResponseDto {
 
-    private Long id;
+    private UUID id;
     private AppUserSummaryResponseDto author;
     private String content;
     private LocalDateTime creationDate;
@@ -15,18 +16,18 @@ public class CommentResponseDto {
     public CommentResponseDto() {
     }
 
-    public CommentResponseDto(Long id, AppUserSummaryResponseDto author, String content, LocalDateTime creationDate) {
+    public CommentResponseDto(UUID id, AppUserSummaryResponseDto author, String content, LocalDateTime creationDate) {
         this.id = id;
         this.author = author;
         this.content = content;
         this.creationDate = creationDate;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

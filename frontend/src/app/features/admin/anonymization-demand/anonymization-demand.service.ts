@@ -20,7 +20,7 @@ export class AnonymizationDemandService {
     return this.http.get<AnonymizationDemand[]>(`${URL_BACKEND}/anonymization-demands`, { params });
   }
 
-  validateDemand(id: number): Observable<AnonymizationDemand> {
+  validateDemand(id: string): Observable<AnonymizationDemand> {
     return this.http.put<AnonymizationDemand>(`${URL_BACKEND}/anonymization-demands/${id}/validate`, {});
   }
 

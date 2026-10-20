@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,8 @@ import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
+import fr.diginamic.hubevenementiel.services.JwtService;
+import fr.diginamic.hubevenementiel.services.RefreshTokenService;
 import fr.diginamic.hubevenementiel.services.AccountDeletionService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Jwks;
@@ -39,6 +42,7 @@ import jakarta.persistence.EntityManager;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
+@TestPropertySource(properties = "app.security.dpop.required=true")
 class RefreshTokenIntegrationTest {
 
     private static final String PASSWORD = "motdepasse123456";
@@ -55,13 +59,19 @@ class RefreshTokenIntegrationTest {
     private EntityManager entityManager;
     @Autowired
     private AccountDeletionService accountDeletionService;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+    @Autowired
+    private JwtService jwtService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private AppUser user;
+    private KeyPair sessionKey;
 
     @BeforeEach
     void setUp() {
+        sessionKey = newKey();
         user = new AppUser();
         user.setFirstName("Test");
         user.setLastName("User");
@@ -75,7 +85,8 @@ class RefreshTokenIntegrationTest {
 
     private Map<?, ?> login() throws Exception {
         String body = objectMapper.writeValueAsString(Map.of("email", user.getEmail(), "password", PASSWORD));
-        String response = mockMvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON).content(body))
+        String response = mockMvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON).content(body)
+                .header("DPoP", dpopProof(sessionKey, "/login")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         syncWithDatabase();
@@ -84,7 +95,8 @@ class RefreshTokenIntegrationTest {
 
     private int refresh(String refreshToken) throws Exception {
         int httpStatus = mockMvc.perform(post("/auth/refresh").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken)))
+                .header("DPoP", dpopProof(sessionKey, "/auth/refresh")))
                 .andReturn().getResponse().getStatus();
         syncWithDatabase();
         return httpStatus;
@@ -92,7 +104,8 @@ class RefreshTokenIntegrationTest {
 
     private Map<?, ?> refreshOk(String refreshToken) throws Exception {
         String response = mockMvc.perform(post("/auth/refresh").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken)))
+                .header("DPoP", dpopProof(sessionKey, "/auth/refresh")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         syncWithDatabase();
@@ -335,10 +348,10 @@ class RefreshTokenIntegrationTest {
     }
 
     @Test
-    void login_withoutProof_leavesTheSessionUnbound() throws Exception {
-        login();
+    void login_withoutProof_returns401AndOpensNoSession() throws Exception {
+        assertThat(loginStatus(null)).isEqualTo(401);
 
-        assertThat(tokensOfUser().get(0).getKeyThumbprint()).isNull();
+        assertThat(tokensOfUser()).isEmpty();
     }
 
     @Test
@@ -378,13 +391,13 @@ class RefreshTokenIntegrationTest {
     }
 
     @Test
-    void refresh_unboundSessionWithAProof_isAcceptedButStaysUnbound() throws Exception {
-        String first = (String) login().get("refreshToken");
+    void refresh_unboundSessionWithAProof_returns401AndRevokesTheFamily() throws Exception {
+        String unbound = refreshTokenService.issueForLogin(user, null);
+        syncWithDatabase();
 
-        assertThat(refreshStatus(first, newKey())).isEqualTo(200);
+        assertThat(refreshStatus(unbound, newKey())).isEqualTo(401);
 
-        assertThat(tokensOfUser()).hasSize(2);
-        assertThat(tokensOfUser()).allMatch(token -> token.getKeyThumbprint() == null);
+        assertThat(tokensOfUser()).allMatch(token -> token.getRevokedAt() != null);
     }
 
     @Test
@@ -436,10 +449,12 @@ class RefreshTokenIntegrationTest {
     }
 
     @Test
-    void accessToken_ofAnUnboundSession_worksWithoutProof() throws Exception {
-        String accessToken = (String) login().get("token");
+    void accessToken_ofAnUnboundSession_returns401EvenWithAProof() throws Exception {
+        String accessToken = jwtService.generateToken(user, null);
+        KeyPair key = newKey();
 
-        assertThat(getMe(accessToken, null)).isEqualTo(200);
+        assertThat(getMe(accessToken, null)).isEqualTo(401);
+        assertThat(getMe(accessToken, resourceProof(key, "/users/me", accessToken))).isEqualTo(401);
     }
 
     @Test

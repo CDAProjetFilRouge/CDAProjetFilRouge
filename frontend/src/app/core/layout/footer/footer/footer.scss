@@ -9,7 +9,6 @@
   min-height: 240px;
   padding: 40px 78px 24px;
   background: var(--color-footer-bg);
-  border-top: 1px solid #efe9e4;
 }
 
 .logo {
@@ -22,19 +21,22 @@
     max-width: 130px;
     font-size: 12px;
     line-height: 1.35;
-    color: #5f5e5a;
+    color: #cfe5dc;
   }
 }
 
 .hub-link {
-  padding: 8px 19px;
-  font-size: 13px;
-  font-weight: 700;
+  --logo-height: 36px;
+  --logo-ink: #fff;
+  --logo-accent: var(--color-sun);
+  display: inline-flex;
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  color: var(--color-text);
-  background: var(--color-primary-soft);
-  border: 0;
-  border-radius: 999px;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 4px;
+  }
 }
 
 .cards {
@@ -51,14 +53,18 @@
   font-style: normal; // <address> est en italique par défaut
 
   a {
-    font-size: 12px;
-    color: #5f5e5a;
-    text-decoration: none;
-    transition: color .15s;
+    padding: 2px 0;
+    font-size: 13px;
+    color: #e3f1ea;
+    text-decoration: underline 2px transparent;
+    text-underline-offset: 5px;
+    transition: color .15s, text-decoration-color .15s;
 
+    // Survol : le lien fonce (et ne prend pas la couleur des titres) et se souligne.
     &:hover,
     &:focus-visible {
-      color: var(--color-primary);
+      color: #fff;
+      text-decoration-color: var(--color-sun);
     }
   }
 }
@@ -67,7 +73,7 @@
   margin-bottom: 4px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-sun);
 }
 
 .copyright {
@@ -75,10 +81,10 @@
   grid-column: 1 / -1;
   justify-content: space-between;
   padding-top: 20px;
-  border-top: 1px solid #e8e2dc;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
 
   p {
-    font-size: 11px;
-    color: #b4b2a9;
+    font-size: 12px;
+    color: #b7d4c8;
   }
 }

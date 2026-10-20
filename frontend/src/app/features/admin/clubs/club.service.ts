@@ -19,11 +19,11 @@ export class ClubService {
     return this.http.get<Page<Club>>(`${URL_BACKEND}/clubs/admin`, { params });
   }
 
-  getClubById(id: number): Observable<Club> {
+  getClubById(id: string): Observable<Club> {
     return this.http.get<Club>(`${URL_BACKEND}/clubs/${id}`);
   }
 
-  deleteClub(id: number): Observable<void> {
+  deleteClub(id: string): Observable<void> {
     return this.http.delete<void>(`${URL_BACKEND}/clubs/${id}`);
   }
 
@@ -31,7 +31,7 @@ export class ClubService {
     return this.http.post<Club>(`${URL_BACKEND}/clubs`, club);
   }
 
-  updateClub(id: number, club: ClubRequest): Observable<Club> {
+  updateClub(id: string, club: ClubRequest): Observable<Club> {
     return this.http.put<Club>(`${URL_BACKEND}/clubs/${id}`, club);
   }
 }

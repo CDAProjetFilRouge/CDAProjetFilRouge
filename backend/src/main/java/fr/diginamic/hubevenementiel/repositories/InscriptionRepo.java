@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import java.util.Collection;
 import java.util.List;
 import fr.diginamic.hubevenementiel.entities.Inscription;
@@ -7,6 +8,7 @@ import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,7 +16,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
+public interface InscriptionRepo extends JpaRepository<Inscription, UUID> {
 
     /**
      *
@@ -22,7 +24,9 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of inscription with pagination info
      */
-    Page<Inscription> findByUserId(Long id, Pageable pageable);
+    // L'évènement et son club sont chargés avec la page : le calendrier affiche le club de chaque inscription.
+    @EntityGraph(attributePaths = {"event", "event.club"})
+    Page<Inscription> findByUserId(UUID id, Pageable pageable);
 
     /**
      *
@@ -30,7 +34,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of inscription with pagination info
      */
-    Page<Inscription> findByEventId(Long id, Pageable pageable);
+    Page<Inscription> findByEventId(UUID id, Pageable pageable);
 
     /**
      *
@@ -64,7 +68,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()
      * @return a list of inscription with pagination info
      */
-    Page<Inscription> findByCanceledById(Long id, Pageable pageable);
+    Page<Inscription> findByCanceledById(UUID id, Pageable pageable);
 
     /**
      *
@@ -72,7 +76,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param status status you want to find inscription associated with
      * @return the number of inscriptions with parameters
      */
-    long countByEventIdAndStatus(Long eventId, InscriptionStatus status);
+    long countByEventIdAndStatus(UUID eventId, InscriptionStatus status);
 
     /**
      *
@@ -82,7 +86,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      */
     @Query("select i.event.id as eventId, count(i) as total from Inscription i "
             + "where i.event.id in :eventIds and i.status = :status group by i.event.id")
-    List<EventInscriptionCount> countByEventIdsAndStatus(@Param("eventIds") Collection<Long> eventIds,
+    List<EventInscriptionCount> countByEventIdsAndStatus(@Param("eventIds") Collection<UUID> eventIds,
             @Param("status") InscriptionStatus status);
 
     /**
@@ -92,7 +96,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param status status of the inscription you want to find
      * @return true if an inscription exists with there paramters and false if not
      */
-    boolean existsByUserIdAndEventIdAndStatusNot(Long userId, Long eventId, InscriptionStatus status);
+    boolean existsByUserIdAndEventIdAndStatusNot(UUID userId, UUID eventId, InscriptionStatus status);
 
     /**
      *
@@ -100,7 +104,22 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param status status of the inscription you want to find
      * @return an optional of type inscription
      */
-    List<Inscription> findByEventIdAndStatusOrderByInscriptionDateAsc(Long eventId, InscriptionStatus status);
+    List<Inscription> findByEventIdAndStatusOrderByInscriptionDateAsc(UUID eventId, InscriptionStatus status);
+
+    /**
+     *
+     * @param eventId id of the event
+     * @param statuses statuses to keep
+     * @return the event's inscriptions having one of the given statuses
+     */
+    List<Inscription> findByEventIdAndStatusIn(UUID eventId, Collection<InscriptionStatus> statuses);
+
+    /**
+     * Removes every inscription of an event, whatever its status.
+     *
+     * @param eventId id of the event
+     */
+    void deleteByEventId(UUID eventId);
 
     /**
      * Nombre d'inscriptions de même statut arrivées avant celle donnée (date, puis identifiant pour départager).
@@ -108,15 +127,15 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      */
     @Query("select count(i) from Inscription i where i.event.id = :eventId and i.status = :status "
             + "and (i.inscriptionDate < :date or (i.inscriptionDate = :date and i.id < :id))")
-    long countAheadInQueue(@Param("eventId") Long eventId, @Param("status") InscriptionStatus status,
-            @Param("date") LocalDateTime date, @Param("id") Long id);
+    long countAheadInQueue(@Param("eventId") UUID eventId, @Param("status") InscriptionStatus status,
+            @Param("date") LocalDateTime date, @Param("id") UUID id);
 
     /**
      *
      * @param userId id of the user you want to find every inscription for
      * @return all the inscriptions of the user, whatever their status
      */
-    List<Inscription> findAllByUserId(Long userId);
+    List<Inscription> findAllByUserId(UUID userId);
 
     /**
      *
@@ -125,7 +144,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param from lower bound (inclusive) of the event start date
      * @return the number of inscriptions of the user for events starting from this date
      */
-    long countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(Long userId, InscriptionStatus status,
+    long countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(UUID userId, InscriptionStatus status,
             LocalDateTime from);
 
     /**
@@ -135,7 +154,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      * @param to upper bound (exclusive) of the event start date
      * @return the number of inscriptions of the user for events started before this date
      */
-    long countByUserIdAndStatusAndEventStartDateTimeLessThan(Long userId, InscriptionStatus status,
+    long countByUserIdAndStatusAndEventStartDateTimeLessThan(UUID userId, InscriptionStatus status,
             LocalDateTime to);
 
     /**
@@ -148,7 +167,7 @@ public interface InscriptionRepo extends JpaRepository<Inscription, Long> {
      */
     @Query("SELECT COUNT(i) FROM Inscription i WHERE i.event.organizer.id = :organizerId "
             + "AND i.event.status = :eventStatus AND i.status = :status AND i.event.startDateTime >= :from")
-    long countForOrganizerEvents(@Param("organizerId") Long organizerId,
+    long countForOrganizerEvents(@Param("organizerId") UUID organizerId,
             @Param("eventStatus") EventStatus eventStatus,
             @Param("status") InscriptionStatus status, @Param("from") LocalDateTime from);
 }

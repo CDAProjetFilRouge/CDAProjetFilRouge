@@ -6,7 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
 import { EventCalendar } from '../../shared/event-calendar/event-calendar';
 import { CalendarService } from './calendar-service';
-import { INSCRIPTION_STATUS_LABELS, InscriptionModel } from './calendar.models';
+import { INSCRIPTION_STATUS_LABELS, InscriptionModel, toCalendarEvent } from './calendar.models';
 
 @Component({
   imports: [EventCalendar, DatePipe, RouterLink],
@@ -32,14 +32,7 @@ export class Calendar {
   protected readonly calendarEvents = computed<CalendarEvent[]>(() =>
     this.inscriptions()
       .filter((i) => i.status !== 'CANCELED')
-      .map((i) => ({
-        id: String(i.id),
-        title: i.event.title,
-        start: i.event.startDateTime,
-        end: i.event.endDateTime,
-        muted: i.status === 'WAITING_LIST',
-        badge: i.status === 'WAITING_LIST' ? "Liste d'attente" : undefined,
-      })),
+      .map((i) => toCalendarEvent(i, { id: String(i.id) })),
   );
 
   protected readonly canCancel = computed(() => {
@@ -47,7 +40,7 @@ export class Calendar {
     return ins !== null && new Date(ins.event.startDateTime) > new Date();
   });
 
-  private load(userId: number): void {
+  private load(userId: string): void {
     this.calendarService.getByUser(userId).subscribe({
       next: (list) => this.inscriptions.set(list),
       error: (err: HttpErrorResponse) => this.handleError(err),
@@ -81,7 +74,7 @@ export class Calendar {
 
   protected select(eventId: string): void {
     this.confirming.set(false);
-    this.selected.set(this.inscriptions().find((i) => i.id === Number(eventId)) ?? null);
+    this.selected.set(this.inscriptions().find((i) => i.id === eventId) ?? null);
   }
 
   // Appelé par l'évènement natif « close » (touche Échap, bouton de fermeture).

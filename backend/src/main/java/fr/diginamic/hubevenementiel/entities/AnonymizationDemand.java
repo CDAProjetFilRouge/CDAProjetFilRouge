@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
 import jakarta.persistence.*;
 
@@ -10,8 +13,10 @@ import java.time.LocalDateTime;
 public class AnonymizationDemand {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @Column(name = "request_status")
     @Enumerated(EnumType.STRING)
@@ -33,7 +38,7 @@ public class AnonymizationDemand {
 
     public AnonymizationDemand(){};
 
-    public AnonymizationDemand(AppUser admin, AppUser requester, LocalDateTime approvedDate, LocalDateTime demandDate, RequestStatus requestStatus, Long id) {
+    public AnonymizationDemand(AppUser admin, AppUser requester, LocalDateTime approvedDate, LocalDateTime demandDate, RequestStatus requestStatus, UUID id) {
         this.admin = admin;
         this.requester = requester;
         this.approvedDate = approvedDate;
@@ -42,11 +47,11 @@ public class AnonymizationDemand {
         this.id = id;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

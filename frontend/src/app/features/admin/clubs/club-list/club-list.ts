@@ -61,7 +61,7 @@ export class ClubList {
     this.loadClubs();
   }
 
-  private deleteClub(id: number): void {
+  private deleteClub(id: string): void {
     this.clubService.deleteClub(id).subscribe({
       next: () => {
         this.errorMessage.set(null);
@@ -71,7 +71,7 @@ export class ClubList {
     });
   }
 
-  protected async onDelete(id: number): Promise<void> {
+  protected async onDelete(id: string): Promise<void> {
     const confirmed = await this.confirmDialog.ask({
       title: 'Désaffilier ce club',
       message: 'Le club ne sera plus affilié à la fédération.',

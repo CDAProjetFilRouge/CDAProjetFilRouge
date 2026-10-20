@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.security;
 
+import java.util.UUID;
+import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
@@ -44,15 +46,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = header.substring(BEARER_PREFIX.length());
 
             if (jwtService.isTokenValid(token)) {
-                Long id = jwtService.extractUserId(token);
+                UUID id = jwtService.extractUserId(token);
 
-                boolean accountIsActive = userRepo.findById(id)
-                        .map(user -> user.getStatus() == AccountStatus.ACTIVE)
-                        .orElse(false);
+                // Status and role come from the database, not from the token, so that a suspension
+                // or a role change takes effect immediately instead of when the token expires.
+                AppUser account = userRepo.findById(id)
+                        .filter(user -> user.getStatus() == AccountStatus.ACTIVE)
+                        .orElse(null);
 
-                if (accountIsActive && keyBindingIsRespected(token, request)) {
+                if (account != null && keyBindingIsRespected(token, request)) {
                     String email = jwtService.extractEmail(token);
-                    String role = jwtService.extractRole(token);
+                    String role = account.getRole().name();
 
                     AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
 
@@ -70,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean keyBindingIsRespected(String accessToken, HttpServletRequest request) {
         String boundKey = jwtService.extractKeyThumbprint(accessToken);
         if (boundKey == null) {
-            return true;
+            return !dpopProofVerifier.isRequired();
         }
 
         String proof = request.getHeader(DPOP_HEADER);

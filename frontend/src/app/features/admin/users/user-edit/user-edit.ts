@@ -19,7 +19,7 @@ export class UserEdit {
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly id = Number(this.route.snapshot.paramMap.get('id'));
+  private readonly id = this.route.snapshot.paramMap.get('id') ?? '';
   protected readonly ROLE_LABELS = ROLE_LABELS;
   protected readonly roles = Object.keys(ROLE_LABELS) as Role[];
   private readonly clubService = inject(ClubService);
@@ -28,7 +28,7 @@ export class UserEdit {
     const memberIds = this.user()?.clubs.map((c) => c.id) ?? [];
     return this.clubs().filter((c) => !c.endValidityDate || memberIds.includes(c.id));
   })
-  protected readonly selectedClubIds= signal<number[]>([]);
+  protected readonly selectedClubIds= signal<string[]>([]);
 
   protected readonly user = signal<AppUser | null>(null);
 
@@ -125,7 +125,7 @@ export class UserEdit {
     });
   }
 
-  protected toggleClub(id: number, checked: boolean): void {
+  protected toggleClub(id: string, checked: boolean): void {
     this.selectedClubIds.update((ids) => checked ? [...ids, id] : ids.filter((i) => i !== id));
   }
 }

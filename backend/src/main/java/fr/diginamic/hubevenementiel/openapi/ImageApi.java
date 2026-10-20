@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.image.ImageSummaryResponseDto;
@@ -23,7 +24,7 @@ public interface ImageApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
-    List<ImageSummaryResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId) throws HttpException;
+    List<ImageSummaryResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId) throws HttpException;
 
     @Operation(summary = "Ajouter une image à la galerie d'un évènement",
             description = "Réservé à l'organisateur de l'évènement et aux administrateurs. Requête multipart/form-data.")
@@ -31,10 +32,10 @@ public interface ImageApi {
             @ApiResponse(responseCode = "201", description = "Image ajoutée"),
             @ApiResponse(responseCode = "400", description = "Fichier invalide ou absent"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis, ou évènement dont l'appelant n'est pas propriétaire"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
-    ResponseEntity<ImageSummaryResponseDto> upload(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
+    ResponseEntity<ImageSummaryResponseDto> upload(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
             @Parameter(description = "Fichier image à uploader", required = true) MultipartFile file) throws HttpException;
 
     @Operation(summary = "Supprimer une image de la galerie",
@@ -42,9 +43,9 @@ public interface ImageApi {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Image supprimée"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis, ou évènement dont l'appelant n'est pas propriétaire"),
             @ApiResponse(responseCode = "404", description = "Image ou évènement introuvable")
     })
-    ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
-            @Parameter(description = "Identifiant de l'image", required = true) Long id) throws HttpException;
+    ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
+            @Parameter(description = "Identifiant de l'image", required = true) UUID id) throws HttpException;
 }

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -90,7 +91,7 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @GetMapping("/{id}")
-    public AppUserResponseDto getById(@PathVariable Long id) throws HttpException {
+    public AppUserResponseDto getById(@PathVariable UUID id) throws HttpException {
         return appUserMapper.toDto(appUserService.findById(id));
     }
 
@@ -115,7 +116,7 @@ public class AppUserController implements AppUserApi {
     
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/suspend")
-    public AppUserResponseDto suspendAccount(@PathVariable Long id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
+    public AppUserResponseDto suspendAccount(@PathVariable UUID id, @RequestBody(required = false) AppUserSuspensionRequestDto requestDto) throws HttpException {
         LocalDateTime suspenstionEndDate = null;
         if (requestDto != null) {
             suspenstionEndDate = requestDto.getSuspensionEndDate();            
@@ -129,7 +130,7 @@ public class AppUserController implements AppUserApi {
 
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/reactivate")
-    public AppUserResponseDto reactivateAccount(@PathVariable Long id) throws HttpException {
+    public AppUserResponseDto reactivateAccount(@PathVariable UUID id) throws HttpException {
         accountStatusService.reactivate(id);
         AppUser reactivatedAppUser = appUserService.findById(id);
         return appUserMapper.toDto(reactivatedAppUser);
@@ -137,7 +138,7 @@ public class AppUserController implements AppUserApi {
 
     @Override
     @PutMapping("/{id}")
-    public AppUserResponseDto updateOwnAccount(@PathVariable Long id, @RequestBody AppUserUpdateRequestDto requestDto)
+    public AppUserResponseDto updateOwnAccount(@PathVariable UUID id, @RequestBody AppUserUpdateRequestDto requestDto)
             throws HttpException {
         AppUser modifiedUser = new AppUser();
         appUserMapper.updateEntityFromDto(requestDto, modifiedUser);
@@ -150,7 +151,7 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @PutMapping("/{id}/admin")
-    public AppUserResponseDto updateByAdmin(@PathVariable Long id, @RequestBody AppUserAdminUpdateRequestDto requestDto)
+    public AppUserResponseDto updateByAdmin(@PathVariable UUID id, @RequestBody AppUserAdminUpdateRequestDto requestDto)
             throws HttpException {
         AppUser modifiedUser = appUserMapper.toEntityForAdminUpdate(requestDto);
         AppUser updated = appUserService.updateAccountByAdmin(id, modifiedUser, requestDto.getClubIds());
@@ -160,7 +161,7 @@ public class AppUserController implements AppUserApi {
     @Override
     @Secured("ROLE_ADMINISTRATOR")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable UUID id,
             @RequestParam(defaultValue = "false") boolean deleteComments) throws HttpException {
         accountDeletionService.deleteAccount(id, deleteComments);
         return ResponseEntity.noContent().build();

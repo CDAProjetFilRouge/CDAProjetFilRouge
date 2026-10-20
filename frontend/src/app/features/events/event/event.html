@@ -37,9 +37,9 @@
       <div class="filter">
         <p>Statut</p>
         <select formControlName="status">
+          <option value="PUBLISHED,CANCELLED">Publiés et annulés</option>
           <option value="PUBLISHED">Publié</option>
           <option value="CANCELLED">Annulé</option>
-          <option value="DRAFT">Brouillon</option>
         </select>
       </div>
       <div class="filter-actions">
@@ -70,7 +70,10 @@
           [registration]="registrationOf(event.id)"
           [waitingPosition]="positionOf(event.id)"
           [affiliated]="affiliated()"
+          [quickRegisterEnabled]="signedIn()"
+          [registerError]="quickErrorOf(event.id)"
           (registrationClick)="openRegistration(event)"
+          (quickRegister)="quickRegister(event)"
         />
       }
     </div>

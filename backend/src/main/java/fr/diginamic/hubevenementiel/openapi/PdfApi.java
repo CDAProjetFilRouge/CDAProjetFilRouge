@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.io.IOException;
 
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
@@ -21,7 +22,7 @@ public interface PdfApi {
                     content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
-    ResponseEntity<byte[]> eventPDF(@Parameter(description = "Identifiant de l'évènement", required = true) Long idEvent) throws IOException, NotFoundException;
+    ResponseEntity<byte[]> eventPDF(@Parameter(description = "Identifiant de l'évènement", required = true) UUID idEvent) throws IOException, NotFoundException;
 
     @Operation(summary = "Télécharger la fiche PDF d'un document légal")
     @ApiResponses({
@@ -29,5 +30,5 @@ public interface PdfApi {
                     content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
             @ApiResponse(responseCode = "404", description = "Document introuvable")
     })
-    ResponseEntity<byte[]> legalDocumentPDF(@Parameter(description = "Identifiant du document légal", required = true) Long idDocument) throws IOException, NotFoundException;
+    ResponseEntity<byte[]> legalDocumentPDF(@Parameter(description = "Identifiant du document légal", required = true) UUID idDocument) throws IOException, NotFoundException;
 }

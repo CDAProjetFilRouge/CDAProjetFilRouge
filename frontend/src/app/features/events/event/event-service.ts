@@ -14,6 +14,7 @@ export interface EventFilter {
   startDate: string;
   endDate: string;
   status: string;
+  hideFinished?: boolean;
   sort?: 'asc' | 'desc';
 }
 
@@ -69,6 +70,10 @@ export class EventService {
 
     if(filters?.status) {
       params = params.set('status', filters.status);
+    }
+
+    if(filters?.hideFinished) {
+      params = params.set('hideFinished', true);
     }
 
     if(filters?.sort) {

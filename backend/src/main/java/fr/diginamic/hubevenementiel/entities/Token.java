@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.enums.TokenType;
 import jakarta.persistence.*;
 
@@ -10,10 +13,14 @@ import java.time.LocalDateTime;
 public class Token {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
     @Column(name = "value", nullable = false, length = 64)
     private String value;
+    @Transient
+    private String rawValue;
     @Column(name = "creation_date_time", nullable = false)
     private LocalDateTime creationDateTime;
 
@@ -52,7 +59,7 @@ public class Token {
     }
 
 
-    public Token(Long id, String value, LocalDateTime creationDateTime, LocalDateTime expirationDateTime, LocalDateTime useDate, String pendingData) {
+    public Token(UUID id, String value, LocalDateTime creationDateTime, LocalDateTime expirationDateTime, LocalDateTime useDate, String pendingData) {
         this.id = id;
         this.value = value;
         this.creationDateTime = creationDateTime;
@@ -61,16 +68,24 @@ public class Token {
         this.pendingData = pendingData;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
     public String getValue() {
         return value;
+    }
+
+    public String getRawValue() {
+        return rawValue;
+    }
+
+    public void setRawValue(String rawValue) {
+        this.rawValue = rawValue;
     }
 
     public void setValue(String value) {

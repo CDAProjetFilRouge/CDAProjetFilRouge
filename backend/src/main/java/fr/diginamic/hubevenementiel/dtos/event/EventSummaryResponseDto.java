@@ -1,30 +1,40 @@
 package fr.diginamic.hubevenementiel.dtos.event;
 
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 public class EventSummaryResponseDto {
 
-    private Long id;
+    private UUID id;
     private String title;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
+    private String clubName;
 
     public EventSummaryResponseDto() {
     }
 
-    public EventSummaryResponseDto(Long id, String title, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    public EventSummaryResponseDto(UUID id, String title, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         this.id = id;
         this.title = title;
         this.startDateTime = startDateTime;
         this.endDateTime = endDateTime;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getClubName() {
+        return clubName;
+    }
+
+    public void setClubName(String clubName) {
+        this.clubName = clubName;
     }
 
     public String getTitle() {

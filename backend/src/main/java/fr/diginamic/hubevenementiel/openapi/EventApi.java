@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -64,7 +65,8 @@ public interface EventApi {
             @Parameter(description = "Nom de la ville sur laquelle effectuer la recherche") String city,
             @Parameter(description = "Jour à partir duquel les évènements commencent (format AAAA-MM-JJ)") LocalDate startDate,
             @Parameter(description = "Jour jusqu'auquel les évènements se terminent, inclus (format AAAA-MM-JJ)") LocalDate endDate,
-            @Parameter(description = "Status de l'évènement sur lequel effectuer une recherche") EventStatus status,
+            @Parameter(description = "Un ou plusieurs statuts (séparés par des virgules, ex. PUBLISHED,CANCELLED) sur lesquels effectuer une recherche") List<EventStatus> status,
+            @Parameter(description = "true pour masquer les évènements dont la date de fin est passée (false par défaut)") boolean hideFinished,
             @Parameter(description = "Sens du tri sur la date de début, appliqué à l'ensemble des résultats (ASC ou DESC, ASC par défaut)") Sort.Direction sort
             ) throws HttpException;
 
@@ -92,7 +94,7 @@ public interface EventApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable ou non visible pour l'appelant")
     })
-    EventDetailsReponseDto getById(@Parameter(description = "Identifiant de l'évènement", required = true) Long id) throws HttpException;
+    EventDetailsReponseDto getById(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id) throws HttpException;
 
     @Operation(summary = "Rechercher un évènement par titre exact")
     @ApiResponses({
@@ -121,7 +123,7 @@ public interface EventApi {
             @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
-    EventResponseDto update(@Parameter(description = "Identifiant de l'évènement", required = true) Long id, EventRequestDto requestDto) throws HttpException;
+    EventResponseDto update(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id, EventRequestDto requestDto) throws HttpException;
 
     @Operation(summary = "Supprimer un évènement",
             description = "Réservé au propriétaire d'un évènement futur et aux administrateurs. Un email est envoyé aux inscrits et à la liste d'attente.")
@@ -131,5 +133,5 @@ public interface EventApi {
             @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
-    ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) Long id) throws HttpException;
+    ResponseEntity<Void> delete(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id) throws HttpException;
 }

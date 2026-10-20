@@ -1,9 +1,9 @@
 export interface EventModel{
-  id: number;
+  id: string;
   title: string;
   description: string;
   location: {
-    id: number;
+    id: string;
     street1: string;
     street2: string;
     postalCode: string;
@@ -18,7 +18,7 @@ export interface EventModel{
   maxCapacity: number;
   remainingSpots: number;
   imageGallery: {
-      id: number;
+      id: string;
       path: string;
       displayOrder: number
 

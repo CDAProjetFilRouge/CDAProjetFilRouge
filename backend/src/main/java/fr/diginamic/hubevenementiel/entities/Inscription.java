@@ -1,5 +1,8 @@
 package fr.diginamic.hubevenementiel.entities;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -20,8 +23,10 @@ import jakarta.persistence.ManyToOne;
 public class Inscription {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -45,7 +50,9 @@ public class Inscription {
 
     private String cancelObject;
 
-    private Long canceledById;
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "canceled_by_id", columnDefinition = "BINARY(16)")
+    private UUID canceledById;
 
     public Inscription() {
     }
@@ -70,7 +77,7 @@ public class Inscription {
         cancel(motif, null);
     }
 
-    private void cancel(String motif, Long canceledById) {
+    private void cancel(String motif, UUID canceledById) {
         this.status = InscriptionStatus.CANCELED;
         this.cancellationDate = LocalDateTime.now();
         this.cancelObject = motif;
@@ -85,11 +92,11 @@ public class Inscription {
         return this.status == InscriptionStatus.CONFIRMED || this.status == InscriptionStatus.WAITING_LIST;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -149,11 +156,11 @@ public class Inscription {
         this.cancelObject = cancelObject;
     }
 
-    public Long getCanceledById() {
+    public UUID getCanceledById() {
         return canceledById;
     }
 
-    public void setCanceledById(Long canceledById) {
+    public void setCanceledById(UUID canceledById) {
         this.canceledById = canceledById;
     }
 

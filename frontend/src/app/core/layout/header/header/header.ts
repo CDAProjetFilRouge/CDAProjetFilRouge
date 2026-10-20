@@ -2,9 +2,10 @@ import { Component, ElementRef, HostListener, computed, inject, signal } from '@
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../auth/auth.service';
 import { ROLE_LABELS } from '../../../models/user.models';
+import { Logo } from '../../../../shared/logo/logo';
 
 @Component({
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, Logo],
   selector: 'app-header',
   styleUrl: './header.scss',
   templateUrl: './header.html',

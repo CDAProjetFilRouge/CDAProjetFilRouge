@@ -46,7 +46,7 @@ class AccountActivationServiceTest {
         token.setTokenType(TokenType.ENABLE_ACCOUNT);
         token.setExpirationDateTime(LocalDateTime.now().plusHours(1));
         token.setUser(user);
-        when(tokenRepo.findByValue("abc")).thenReturn(Optional.of(token));
+        when(tokenRepo.findByValue(TokenHasher.sha256Hex("abc"))).thenReturn(Optional.of(token));
 
         accountActivationService.confirmAccountVerification("abc");
 

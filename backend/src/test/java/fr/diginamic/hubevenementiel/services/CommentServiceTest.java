@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Comment;
 import fr.diginamic.hubevenementiel.entities.Event;
@@ -47,13 +48,13 @@ class CommentServiceTest {
     @BeforeEach
     void setUp() {
         author = new AppUser();
-        author.setId(6L);
+        author.setId(uuid(6));
 
         organizer = new AppUser();
-        organizer.setId(8L);
+        organizer.setId(uuid(8));
 
         event = new Event();
-        event.setId(2L);
+        event.setId(uuid(2));
         event.setOrganizer(organizer);
     }
 
@@ -63,26 +64,26 @@ class CommentServiceTest {
 
     @Test
     void createComment_blankContent_throwsBadRequest() throws HttpException {
-        when(eventService.findById(2L)).thenReturn(event);
-        when(appUserService.findById(6L)).thenReturn(author);
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(appUserService.findById(uuid(6))).thenReturn(author);
 
-        assertThrows(BadRequestException.class, () -> commentService.createComment(2L, 6L, " "));
+        assertThrows(BadRequestException.class, () -> commentService.createComment(uuid(2), uuid(6), " "));
     }
 
     @Test
     void createComment_unknownEvent_throwsNotFound() throws HttpException {
-        when(eventService.findById(999L)).thenThrow(new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
+        when(eventService.findById(uuid(999))).thenThrow(new NotFoundException("Aucun évènement trouvé avec cet identifiant."));
 
-        assertThrows(NotFoundException.class, () -> commentService.createComment(999L, 6L, "Super"));
+        assertThrows(NotFoundException.class, () -> commentService.createComment(uuid(999), uuid(6), "Super"));
     }
 
     @Test
     void createComment_authorDerivedFromGivenId() throws HttpException {
-        when(eventService.findById(2L)).thenReturn(event);
-        when(appUserService.findById(6L)).thenReturn(author);
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(appUserService.findById(uuid(6))).thenReturn(author);
         when(commentRepo.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Comment result = commentService.createComment(2L, 6L, "Super évènement");
+        Comment result = commentService.createComment(uuid(2), uuid(6), "Super évènement");
 
         assertThat(result.getAuthor()).isEqualTo(author);
     }
@@ -93,7 +94,7 @@ class CommentServiceTest {
 
     private Comment commentBy(AppUser commentAuthor) {
         Comment comment = new Comment();
-        comment.setId(1L);
+        comment.setId(uuid(1));
         comment.setAuthor(commentAuthor);
         comment.setEvent(event);
         comment.setContent("Contenu original");
@@ -103,7 +104,7 @@ class CommentServiceTest {
     @Test
     void checkModificationRights_author_isAllowed() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
 
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> commentService.checkModificationRights(comment, principal));
     }
@@ -111,7 +112,7 @@ class CommentServiceTest {
     @Test
     void checkModificationRights_organizer_isForbidden() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
         assertThrows(ForbiddenException.class, () -> commentService.checkModificationRights(comment, principal));
     }
@@ -119,7 +120,7 @@ class CommentServiceTest {
     @Test
     void checkModificationRights_admin_isForbidden() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(99L, "emma@example.com", "ADMINISTRATOR");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(99), "emma@example.com", "ADMINISTRATOR");
 
         assertThrows(ForbiddenException.class, () -> commentService.checkModificationRights(comment, principal));
     }
@@ -127,10 +128,10 @@ class CommentServiceTest {
     @Test
     void updateComment_wrongEventId_throwsNotFound() {
         Comment comment = commentBy(author);
-        when(commentRepo.findById(1L)).thenReturn(Optional.of(comment));
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        when(commentRepo.findById(uuid(1))).thenReturn(Optional.of(comment));
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
 
-        assertThrows(NotFoundException.class, () -> commentService.updateComment(999L, 1L, "Nouveau", principal));
+        assertThrows(NotFoundException.class, () -> commentService.updateComment(uuid(999), uuid(1), "Nouveau", principal));
     }
 
     // ---------------------------------------------------------------
@@ -140,7 +141,7 @@ class CommentServiceTest {
     @Test
     void checkDeleteRights_author_isAllowed() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
 
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> commentService.checkDeleteRights(comment, principal));
     }
@@ -148,7 +149,7 @@ class CommentServiceTest {
     @Test
     void checkDeleteRights_eventOrganizer_isAllowed() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(8L, "david@example.com", "ORGANIZER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
 
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> commentService.checkDeleteRights(comment, principal));
     }
@@ -156,7 +157,7 @@ class CommentServiceTest {
     @Test
     void checkDeleteRights_admin_isAllowed() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(99L, "emma@example.com", "ADMINISTRATOR");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(99), "emma@example.com", "ADMINISTRATOR");
 
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> commentService.checkDeleteRights(comment, principal));
     }
@@ -164,7 +165,7 @@ class CommentServiceTest {
     @Test
     void checkDeleteRights_stranger_isForbidden() {
         Comment comment = commentBy(author);
-        AppUserPrincipal principal = new AppUserPrincipal(42L, "bob@example.com", "MEMBER");
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(42), "bob@example.com", "MEMBER");
 
         assertThrows(ForbiddenException.class, () -> commentService.checkDeleteRights(comment, principal));
     }
@@ -172,20 +173,20 @@ class CommentServiceTest {
     @Test
     void deleteComment_wrongEventId_throwsNotFound() {
         Comment comment = commentBy(author);
-        when(commentRepo.findById(1L)).thenReturn(Optional.of(comment));
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        when(commentRepo.findById(uuid(1))).thenReturn(Optional.of(comment));
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
 
-        assertThrows(NotFoundException.class, () -> commentService.deleteComment(999L, 1L, principal));
+        assertThrows(NotFoundException.class, () -> commentService.deleteComment(uuid(999), uuid(1), principal));
         verify(commentRepo, never()).delete(any());
     }
 
     @Test
     void deleteComment_authorizedCaller_deletesSuccessfully() throws HttpException {
         Comment comment = commentBy(author);
-        when(commentRepo.findById(1L)).thenReturn(Optional.of(comment));
-        AppUserPrincipal principal = new AppUserPrincipal(6L, "alice@example.com", "MEMBER");
+        when(commentRepo.findById(uuid(1))).thenReturn(Optional.of(comment));
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
 
-        commentService.deleteComment(2L, 1L, principal);
+        commentService.deleteComment(uuid(2), uuid(1), principal);
 
         verify(commentRepo).delete(comment);
     }
@@ -196,16 +197,16 @@ class CommentServiceTest {
 
     @Test
     void findByAuthorId_noResults_throwsNotFound() {
-        when(commentRepo.findByAuthorId(eq(6L), any())).thenReturn(emptyPage());
+        when(commentRepo.findByAuthorId(eq(uuid(6)), any())).thenReturn(emptyPage());
 
-        assertThrows(NotFoundException.class, () -> commentService.findByAuthorId(6L, 0, 20));
+        assertThrows(NotFoundException.class, () -> commentService.findByAuthorId(uuid(6), 0, 20));
     }
 
     @Test
     void findByEventId_noResults_throwsNotFound() {
-        when(commentRepo.findByEventId(eq(2L), any())).thenReturn(emptyPage());
+        when(commentRepo.findByEventId(eq(uuid(2)), any())).thenReturn(emptyPage());
 
-        assertThrows(NotFoundException.class, () -> commentService.findByEventId(2L, 0, 20));
+        assertThrows(NotFoundException.class, () -> commentService.findByEventId(uuid(2), 0, 20));
     }
 
     @Test

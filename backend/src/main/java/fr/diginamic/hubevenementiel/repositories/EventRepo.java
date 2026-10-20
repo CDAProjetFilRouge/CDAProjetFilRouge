@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,7 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationExecutor<Event> {
+public interface EventRepo extends JpaRepository<Event, UUID>, JpaSpecificationExecutor<Event> {
 
     /**
      *
@@ -39,7 +41,7 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
     @EntityGraph(attributePaths = {"location", "organizer"})
     Page<Event> findAll(Specification<Event> spec, Pageable pageable);
 
-    Page<Event> findByLocationId(Long id, Pageable pageable);
+    Page<Event> findByLocationId(UUID id, Pageable pageable);
 
     Page<Event> findByLocationPostalCode(String code, Pageable pageable);
 
@@ -99,14 +101,14 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Event e WHERE e.id = :id")
-    Optional<Event> findByIdForUpdate(@Param("id") Long id);
+    Optional<Event> findByIdForUpdate(@Param("id") UUID id);
 
     /**
      *
      * @param organizerId id of the organizer
      * @return true if the user organizes at least one event
      */
-    boolean existsByOrganizerId(Long organizerId);
+    boolean existsByOrganizerId(UUID organizerId);
 
     /**
      *
@@ -115,7 +117,7 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
      * @param from lower bound (inclusive) of the start date
      * @return the number of events of the organizer starting from this date
      */
-    long countByOrganizerIdAndStatusAndStartDateTimeGreaterThanEqual(Long organizerId, EventStatus status,
+    long countByOrganizerIdAndStatusAndStartDateTimeGreaterThanEqual(UUID organizerId, EventStatus status,
             LocalDateTime from);
 
     /**
@@ -124,7 +126,7 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
      * @param status status of the events to count
      * @return the number of events of the organizer with this status
      */
-    long countByOrganizerIdAndStatus(Long organizerId, EventStatus status);
+    long countByOrganizerIdAndStatus(UUID organizerId, EventStatus status);
 
     /**
      *
@@ -143,6 +145,19 @@ public interface EventRepo extends JpaRepository<Event, Long>, JpaSpecificationE
      */
     @Query("SELECT COALESCE(SUM(e.maxCapacity), 0L) FROM Event e WHERE e.organizer.id = :organizerId "
             + "AND e.status = :status AND e.startDateTime >= :from")
-    long sumCapacityByOrganizer(@Param("organizerId") Long organizerId, @Param("status") EventStatus status,
+    long sumCapacityByOrganizer(@Param("organizerId") UUID organizerId, @Param("status") EventStatus status,
             @Param("from") LocalDateTime from);
+
+    /**
+     * Moves to a new status every event that has the given status and whose end date is before the given date.
+     *
+     * @param from status the events must currently have
+     * @param to status to give them
+     * @param date events ending strictly before this date are updated
+     * @return the number of events updated
+     */
+    @Modifying
+    @Query("UPDATE Event e SET e.status = :to WHERE e.status = :from AND e.endDateTime < :date")
+    int updateStatusOfEndedEvents(@Param("from") EventStatus from, @Param("to") EventStatus to,
+            @Param("date") LocalDateTime date);
 }

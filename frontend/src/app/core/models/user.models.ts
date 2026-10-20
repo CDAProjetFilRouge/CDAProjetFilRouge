@@ -1,7 +1,7 @@
 import { ProfileUpdate } from "../../features/account/account.models";
 
 export interface AppUserSummary {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -28,7 +28,7 @@ export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
 }
 
 export interface Address {
-  id: number;
+  id: string;
   street1: string;
   street2: string | null;
   postalCode: string;
@@ -37,13 +37,13 @@ export interface Address {
 }
 
 export interface ClubSummary {
-  id: number;
+  id: string;
   name: string;
   category: Category;
 }
 
 export interface AppUser {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -58,7 +58,7 @@ export interface AppUser {
 
 export interface AdminUserUpdate extends ProfileUpdate {
   role: Role;
-  clubIds: number[];
+  clubIds: string[];
 }
 
 export interface AdminUserCreate {
@@ -67,6 +67,6 @@ export interface AdminUserCreate {
   email: string;
   phone: string;
   role: Role;
-  clubIds?: number[];
+  clubIds?: string[];
 }
 

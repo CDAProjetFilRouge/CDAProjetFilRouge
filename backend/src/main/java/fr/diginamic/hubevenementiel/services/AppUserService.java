@@ -68,7 +68,7 @@ public class AppUserService {
      * @return a object of type AppUser
      * @throws NotFoundException
      */
-    public AppUser findById(Long id) throws NotFoundException {
+    public AppUser findById(UUID id) throws NotFoundException {
         AppUser user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found with id: " + id));
 
         return user;
@@ -234,8 +234,9 @@ public class AppUserService {
 
         AppUser savedUser = userRepo.save(appUser);
 
+        String rawToken = UUID.randomUUID().toString();
         Token token = new Token();
-        token.setValue(UUID.randomUUID().toString());
+        token.setValue(TokenHasher.sha256Hex(rawToken));
         token.setTokenType(TokenType.ENABLE_ACCOUNT);
         token.setUser(savedUser);
         token.setCreationDateTime(LocalDateTime.now());
@@ -243,7 +244,7 @@ public class AppUserService {
         token.setPendingData("");
         tokenRepo.save(token);
 
-        emailService.sendVerificationEmail(savedUser.getEmail(), token.getValue());
+        emailService.sendVerificationEmail(savedUser.getEmail(), rawToken);
 
         return savedUser;
     }
@@ -259,7 +260,7 @@ public class AppUserService {
     // TODO securite : aucune verification que l'appelant est bien administrateur
     // (pas d'auth branchee sur le projet pour l'instant, cf. #97)
     @Transactional
-    public AppUser createAccountByAdmin(AppUser appUser, Role role, List<Long> clubIds) throws HttpException {
+    public AppUser createAccountByAdmin(AppUser appUser, Role role, List<UUID> clubIds) throws HttpException {
 
         String temporaryPassword = generateTemporaryPassword();
         appUser.setHashedPassword(temporaryPassword);
@@ -366,7 +367,7 @@ public class AppUserService {
      * @throws HttpException
      */
     @Transactional
-    public AppUser updateOwnAccount(Long id, AppUser modifiedUser, AppUserPrincipal principal) throws HttpException {
+    public AppUser updateOwnAccount(UUID id, AppUser modifiedUser, AppUserPrincipal principal) throws HttpException {
         if (!id.equals(principal.id())) {
             throw new ForbiddenException("Vous ne pouvez modifier que votre propre compte.");
         }
@@ -402,7 +403,7 @@ public class AppUserService {
      * @throws HttpException
      */
     @Transactional
-    public AppUser updateAccountByAdmin(Long id, AppUser modifiedUser, List<Long> clubIds) throws HttpException {
+    public AppUser updateAccountByAdmin(UUID id, AppUser modifiedUser, List<UUID> clubIds) throws HttpException {
         AppUser existing = findById(id);
 
         appUserChecker(modifiedUser, false, false);
@@ -428,8 +429,9 @@ public class AppUserService {
     }
 
     private void createAccountActivationToken(AppUser user, String temporaryPassword) {
+        String rawToken = UUID.randomUUID().toString();
         Token token = new Token();
-        token.setValue(UUID.randomUUID().toString());
+        token.setValue(TokenHasher.sha256Hex(rawToken));
         token.setTokenType(TokenType.ACCOUNT_ACTIVATION);
         token.setUser(user);
         token.setCreationDateTime(LocalDateTime.now());
@@ -437,7 +439,7 @@ public class AppUserService {
         token.setPendingData("");
         tokenRepo.save(token);
 
-        emailService.sendAccountActivationEmail(user.getEmail(), token.getValue(), temporaryPassword);
+        emailService.sendAccountActivationEmail(user.getEmail(), rawToken, temporaryPassword);
     }
 
     private String generateTemporaryPassword() {

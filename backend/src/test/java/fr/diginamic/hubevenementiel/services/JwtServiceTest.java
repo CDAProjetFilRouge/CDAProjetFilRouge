@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,7 @@ class JwtServiceTest {
         jwtService = new JwtService(SECRET, 60_000L);
 
         user = new AppUser();
-        user.setId(6L);
+        user.setId(uuid(6));
         user.setEmail("alice.martin@example.com");
         user.setRole(Role.ORGANIZER);
     }
@@ -42,7 +43,7 @@ class JwtServiceTest {
     void generateAndExtractUserId_roundTrip_matchesOriginal() {
         String token = jwtService.generateToken(user);
 
-        assertThat(jwtService.extractUserId(token)).isEqualTo(6L);
+        assertThat(jwtService.extractUserId(token)).isEqualTo(uuid(6));
     }
 
     @Test

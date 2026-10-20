@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -13,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.Optional;
 
-public interface ClubRepo extends JpaRepository<Club, Long>, JpaSpecificationExecutor<Club> {
+public interface ClubRepo extends JpaRepository<Club, UUID>, JpaSpecificationExecutor<Club> {
 
     /**
      *
@@ -62,7 +63,7 @@ public interface ClubRepo extends JpaRepository<Club, Long>, JpaSpecificationExe
      * @param ownerId id of the owner
      * @return true if the user owns at least one club
      */
-    boolean existsByOwnerId(Long ownerId);
+    boolean existsByOwnerId(UUID ownerId);
 
     /**
      *
@@ -76,5 +77,5 @@ public interface ClubRepo extends JpaRepository<Club, Long>, JpaSpecificationExe
      * @return the number of non disaffiliated clubs the user belongs to
      */
     @Query("SELECT COUNT(c) FROM AppUser u JOIN u.clubs c WHERE u.id = :userId AND c.endValidityDate IS NULL")
-    long countActiveByMemberId(@Param("userId") Long userId);
+    long countActiveByMemberId(@Param("userId") UUID userId);
 }

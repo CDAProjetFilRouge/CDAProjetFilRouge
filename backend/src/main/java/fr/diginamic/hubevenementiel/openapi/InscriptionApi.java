@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import java.util.List;
 
 import fr.diginamic.hubevenementiel.dtos.inscription.InscriptionEventResponseDto;
@@ -27,8 +28,8 @@ public interface InscriptionApi {
             @ApiResponse(responseCode = "409", description = "Utilisateur déjà inscrit à cet évènement")
     })
     ResponseEntity<InscriptionResponseDto> register(
-            @Parameter(description = "Identifiant de l'utilisateur", required = true) Long userId,
-            @Parameter(description = "Identifiant de l'évènement", required = true) Long eventId) throws HttpException;
+            @Parameter(description = "Identifiant de l'utilisateur", required = true) UUID userId,
+            @Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId) throws HttpException;
 
     @Operation(summary = "Se désinscrire d'un évènement",
             description = "Annulation par le membre lui-même. Libère une place pour le premier de la liste d'attente le cas échéant.")
@@ -37,17 +38,17 @@ public interface InscriptionApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "404", description = "Inscription introuvable")
     })
-    ResponseEntity<Void> cancelByMember(@Parameter(description = "Identifiant de l'inscription", required = true) Long id) throws HttpException;
+    ResponseEntity<Void> cancelByMember(@Parameter(description = "Identifiant de l'inscription", required = true) UUID id) throws HttpException;
 
     @Operation(summary = "Annuler l'inscription d'un membre en tant qu'organisateur",
             description = "Réservé à l'organisateur de l'évènement et aux administrateurs. Un email est envoyé au membre avec le motif fourni.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Inscription annulée"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis"),
+            @ApiResponse(responseCode = "403", description = "Ni organisateur de l'évènement ni administrateur"),
             @ApiResponse(responseCode = "404", description = "Inscription introuvable")
     })
-    ResponseEntity<Void> cancelByOrganizer(@Parameter(description = "Identifiant de l'inscription", required = true) Long id,
+    ResponseEntity<Void> cancelByOrganizer(@Parameter(description = "Identifiant de l'inscription", required = true) UUID id,
             @Parameter(description = "Motif de l'annulation, communiqué au membre par email", required = true) String motif) throws HttpException;
 
     @Operation(summary = "Lister les inscriptions d'un évènement", description = "Réservé à l'organisateur de l'évènement et aux administrateurs.")
@@ -57,7 +58,7 @@ public interface InscriptionApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "403", description = "Ni organisateur de l'évènement ni administrateur")
     })
-    List<InscriptionEventResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) Long eventId,
+    List<InscriptionEventResponseDto> getByEvent(@Parameter(description = "Identifiant de l'évènement", required = true) UUID eventId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size) throws HttpException;
 
@@ -68,7 +69,7 @@ public interface InscriptionApi {
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
             @ApiResponse(responseCode = "403", description = "Ni l'utilisateur concerné ni administrateur")
     })
-    List<InscriptionResponseDto> getByUser(@Parameter(description = "Identifiant de l'utilisateur", required = true) Long userId,
+    List<InscriptionResponseDto> getByUser(@Parameter(description = "Identifiant de l'utilisateur", required = true) UUID userId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size) throws HttpException;
 }

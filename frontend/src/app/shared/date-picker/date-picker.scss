@@ -14,7 +14,7 @@
   padding: 0 11px;
   text-align: left;
   background: #fff;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-field-border);
   border-radius: var(--radius-md);
 
   &:focus-visible,
@@ -27,6 +27,11 @@
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
+  }
+
+  // Le contrôle porte les classes Angular sur l'hôte, pas sur le bouton.
+  :host(.ng-invalid.ng-touched) &:not(:focus-visible):not([aria-expanded='true']) {
+    border-color: var(--color-error);
   }
 
   svg {
@@ -48,7 +53,7 @@
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 32px rgba(31, 36, 48, 0.18);
+  box-shadow: 0 12px 32px rgba(23, 24, 43, 0.18);
 }
 
 .header {
@@ -155,7 +160,7 @@
     height: 32px;
     padding: 0 6px;
     background: #fff;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-field-border);
     border-radius: var(--radius-md);
 
     &:focus-visible {

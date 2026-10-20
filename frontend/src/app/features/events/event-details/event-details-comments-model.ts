@@ -1,12 +1,12 @@
 export interface CommentAuthorModel {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
 }
 
 export interface CommentModel {
-  id: number;
+  id: string;
   author: CommentAuthorModel;
   content: string;
   creationDate: string;

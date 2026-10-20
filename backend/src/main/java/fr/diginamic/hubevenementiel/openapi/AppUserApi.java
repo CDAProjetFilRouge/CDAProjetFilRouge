@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.openapi;
 
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
 import fr.diginamic.hubevenementiel.dtos.appUser.AppUserAdminCreateRequestDto;
@@ -42,7 +43,7 @@ public interface AppUserApi {
                         @ApiResponse(responseCode = "401", description = "Non authentifié"),
                         @ApiResponse(responseCode = "404", description = "Utilisateur introuvable")
         })
-        AppUserResponseDto getById(@Parameter(description = "Identifiant du compte", required = true) Long id)
+        AppUserResponseDto getById(@Parameter(description = "Identifiant du compte", required = true) UUID id)
                         throws HttpException;
 
         @Operation(summary = "Créer son compte (auto-inscription)", description = "Création d'un compte non affilié par un utilisateur non connecté. Le statut initial est INACTIF jusqu'à validation par email. Accessible sans authentification.")
@@ -79,7 +80,7 @@ public interface AppUserApi {
                         @ApiResponse(responseCode = "401", description = "Non authentifié"),
                         @ApiResponse(responseCode = "404", description = "Utilisateur introuvable")
         })
-        AppUserResponseDto updateOwnAccount(@Parameter(description = "Identifiant du compte", required = true) Long id,
+        AppUserResponseDto updateOwnAccount(@Parameter(description = "Identifiant du compte", required = true) UUID id,
                         AppUserUpdateRequestDto requestDto) throws HttpException;
 
         @Operation(summary = "Modifier un compte en tant qu'administrateur", description = "Réservé aux administrateurs. Permet notamment de modifier le rôle, le statut et les clubs affiliés du compte.")
@@ -90,7 +91,7 @@ public interface AppUserApi {
                         @ApiResponse(responseCode = "403", description = "Rôle ADMINISTRATOR requis"),
                         @ApiResponse(responseCode = "404", description = "Utilisateur ou club introuvable")
         })
-        AppUserResponseDto updateByAdmin(@Parameter(description = "Identifiant du compte", required = true) Long id,
+        AppUserResponseDto updateByAdmin(@Parameter(description = "Identifiant du compte", required = true) UUID id,
                         AppUserAdminUpdateRequestDto requestDto) throws HttpException;
 
         @Operation(summary = "Supprimer un compte", description = "Réservé aux administrateurs. Les inscriptions du compte sont supprimées. Le compte est refusé s'il organise des évènements, possède un club, a publié des documents légaux ou traité des demandes d'anonymisation. S'il a posté des commentaires, la suppression est refusée (409, en-tête X-Error-Code: ACCOUNT_HAS_COMMENTS) sauf avec deleteComments=true.")
@@ -101,7 +102,7 @@ public interface AppUserApi {
                         @ApiResponse(responseCode = "404", description = "Utilisateur introuvable"),
                         @ApiResponse(responseCode = "409", description = "Le compte a une activité qui empêche sa suppression")
         })
-        ResponseEntity<Void> delete(@Parameter(description = "Identifiant du compte", required = true) Long id,
+        ResponseEntity<Void> delete(@Parameter(description = "Identifiant du compte", required = true) UUID id,
                         @Parameter(description = "Supprimer aussi les commentaires du compte") boolean deleteComments)
                         throws HttpException;
 }

@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.diginamic.hubevenementiel.dtos.address.AddressRequestDto;
@@ -135,7 +136,7 @@ class EventControllerIntegrationTest {
                         .content(validEventPayload("Marathon IT-" + System.nanoTime())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("DRAFT"))
-                .andExpect(jsonPath("$.organizer.id").value(organizer.getId()));
+                .andExpect(jsonPath("$.organizer.id").value(organizer.getId().toString()));
     }
 
     @Test
@@ -166,7 +167,7 @@ class EventControllerIntegrationTest {
     @Test
     void publishEvent_setsStatusPublishedInDatabase() throws Exception {
         String token = loginAndGetToken(organizer.getEmail());
-        Long eventId = createDraftEventAndReturnId(token, "Event a publier-" + System.nanoTime());
+        UUID eventId = createDraftEventAndReturnId(token, "Event a publier-" + System.nanoTime());
 
         AddressRequestDto address = new AddressRequestDto();
         address.setStreet1("12 rue de la Paix");
@@ -236,7 +237,7 @@ class EventControllerIntegrationTest {
     @Test
     void updateEvent_byNonOwner_returns403() throws Exception {
         String ownerToken = loginAndGetToken(organizer.getEmail());
-        Long eventId = createDraftEventAndReturnId(ownerToken, "Event proprietaire-" + System.nanoTime());
+        UUID eventId = createDraftEventAndReturnId(ownerToken, "Event proprietaire-" + System.nanoTime());
 
         String otherToken = loginAndGetToken(otherOrganizer.getEmail());
 
@@ -250,7 +251,7 @@ class EventControllerIntegrationTest {
     @Test
     void deleteEvent_byNonOwner_returns403() throws Exception {
         String ownerToken = loginAndGetToken(organizer.getEmail());
-        Long eventId = createDraftEventAndReturnId(ownerToken, "Event a supprimer-" + System.nanoTime());
+        UUID eventId = createDraftEventAndReturnId(ownerToken, "Event a supprimer-" + System.nanoTime());
 
         String otherToken = loginAndGetToken(otherOrganizer.getEmail());
 
@@ -293,6 +294,71 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].title").value(inCity));
+    }
+
+    @Test
+    void filterEvents_hideFinished_excludesEventsWhoseEndIsPast() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String past = "Termine-" + System.nanoTime();
+        String ongoing = "En cours-" + System.nanoTime();
+        String upcoming = "A venir-" + System.nanoTime();
+        createPublishedEvent(token, past, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, ongoing, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, upcoming, city, start, start.plusHours(2), 50);
+        LocalDateTime now = LocalDateTime.now();
+        setDates(past, now.minusDays(2), now.minusDays(1));
+        setDates(ongoing, now.minusHours(1), now.plusHours(1));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED")
+                        .param("hideFinished", "true")
+                        .param("sort", "ASC")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[0].title").value(ongoing))
+                .andExpect(jsonPath("$.content[1].title").value(upcoming));
+    }
+
+    @Test
+    void filterEvents_severalStatuses_returnsPublishedAndCancelledButNotFinished() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String city = "Ville-" + System.nanoTime();
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String published = "Publie-" + System.nanoTime();
+        String cancelled = "Annule-" + System.nanoTime();
+        createPublishedEvent(token, published, city, start, start.plusHours(2), 50);
+        createPublishedEvent(token, cancelled, city, start, start.plusHours(2), 50);
+        entityManager.createQuery("update Event e set e.status = :status where e.title = :title")
+                .setParameter("status", fr.diginamic.hubevenementiel.enums.EventStatus.CANCELLED)
+                .setParameter("title", cancelled)
+                .executeUpdate();
+        entityManager.clear();
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "PUBLISHED,CANCELLED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2));
+
+        mockMvc.perform(get("/events/filter")
+                        .param("city", city)
+                        .param("status", "CANCELLED")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].title").value(cancelled));
     }
 
     @Test
@@ -510,6 +576,15 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    private void setDates(String title, LocalDateTime start, LocalDateTime end) {
+        entityManager.createQuery("update Event e set e.startDateTime = :start, e.endDateTime = :end where e.title = :title")
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .setParameter("title", title)
+                .executeUpdate();
+        entityManager.clear();
+    }
+
     private void createPublishedEvent(String token, String title, String city, LocalDateTime start,
             LocalDateTime end, int capacity) throws Exception {
         AddressRequestDto address = new AddressRequestDto();
@@ -536,7 +611,7 @@ class EventControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Long eventId = ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        UUID eventId = UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
 
         Map<String, Object> published = new java.util.HashMap<>(body);
         published.put("status", "PUBLISHED");
@@ -547,7 +622,7 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    private Long createDraftEventAndReturnId(String token, String title) throws Exception {
+    private UUID createDraftEventAndReturnId(String token, String title) throws Exception {
         String response = mockMvc.perform(post("/events")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -555,7 +630,7 @@ class EventControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        return ((Number) objectMapper.readValue(response, Map.class).get("id")).longValue();
+        return UUID.fromString((String) objectMapper.readValue(response, Map.class).get("id"));
     }
 
 }

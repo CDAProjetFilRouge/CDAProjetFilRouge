@@ -39,7 +39,11 @@ export class LoginComponent {
       error: (error: HttpErrorResponse) => {
         this.isSubmitting.set(false);
 
-        if (error.status === 403 && typeof error.error === 'string' && error.error !== '') {
+        if (
+          (error.status === 403 || error.status === 429) &&
+          typeof error.error === 'string' &&
+          error.error !== ''
+        ) {
           this.errorMessage.set(error.error);
         } else if (error.status === 401 || error.status === 403) {
           this.errorMessage.set('Email ou mot de passe incorrect.');

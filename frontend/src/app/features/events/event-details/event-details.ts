@@ -1,3 +1,4 @@
+import { isUuid } from '../../../core/validator/is-uuid';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -7,7 +8,7 @@ import { CommentModel } from './event-details-comments-model';
 import { InscriptionModel } from './event-details-inscription-model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago-pipe';
 import { CalendarService } from '../../calendar/calendar-service';
-import { InscriptionModel as AgendaInscription } from '../../calendar/calendar.models';
+import { InscriptionModel as AgendaInscription, toCalendarEvent } from '../../calendar/calendar.models';
 import { CalendarEvent } from '../../../shared/event-calendar/event-calendar.models';
 import { EventCalendar } from '../../../shared/event-calendar/event-calendar';
 import { InscriptionDialog } from './inscription-dialog/inscription-dialog';
@@ -76,17 +77,10 @@ export class EventDetails implements OnInit {
     }
     const others = this.agenda()
       .filter((i) => i.status !== 'CANCELED' && i.event.id !== event.id)
-      .map((i) => ({
-        id: String(i.event.id),
-        title: i.event.title,
-        start: i.event.startDateTime,
-        end: i.event.endDateTime,
-        muted: true,
-        badge: i.status === 'WAITING_LIST' ? 'Liste d’attente' : 'Inscrit·e',
-      }));
+      .map((i) => toCalendarEvent(i, { id: String(i.event.id), muted: true, confirmedBadge: true }));
     return [
       ...others,
-      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate },
+      { id: String(event.id), title: event.title, start: event.startDate, end: event.endDate, club: event.clubName },
     ];
   });
 
@@ -222,12 +216,12 @@ export class EventDetails implements OnInit {
   }
 
   private load(idParam: string | null): void {
-    const id = idParam === null ? NaN : parseInt(idParam, 10);
-
-    if (Number.isNaN(id)) {
+    if (!isUuid(idParam)) {
       this.router.navigate(['/']);
       return;
     }
+
+    const id = idParam;
 
     this.loading.set(true);
     this.loadError.set(null);
@@ -380,7 +374,7 @@ export class EventDetails implements OnInit {
     });
   }
 
-  private loadMyInscription(eventId: number): void {
+  private loadMyInscription(eventId: string): void {
     const user = this.user();
     if (!user) {
       return;
@@ -396,7 +390,7 @@ export class EventDetails implements OnInit {
     });
   }
 
-  private refreshEvent(eventId: number): void {
+  private refreshEvent(eventId: string): void {
     this.eventDetailsService.getEventDetail(eventId).subscribe({
       next: (event) => this.eventDetail.set(event),
     });

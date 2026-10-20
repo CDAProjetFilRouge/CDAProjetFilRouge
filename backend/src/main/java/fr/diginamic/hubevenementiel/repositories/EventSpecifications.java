@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
@@ -13,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 // Specification<Event> = condition WHERE construite en Java, combinable avec .and(...).
 public class EventSpecifications {
@@ -77,8 +79,21 @@ public class EventSpecifications {
     }
 
     // Évènements dont l'utilisateur est l'organisateur, quel que soit leur statut.
-    public static Specification<Event> organizedBy(Long organizerId) {
+    public static Specification<Event> organizedBy(UUID organizerId) {
         return (root, query, cb) -> cb.equal(root.get("organizer").get("id"), organizerId);
+    }
+
+    // Plusieurs statuts à la fois (ex. publiés et annulés) ; null ou vide = filtre non demandé.
+    public static Specification<Event> hasAnyStatus(List<EventStatus> statuses) {
+        if (statuses == null || statuses.isEmpty()) {
+            return null;
+        }
+        return (root, query, cb) -> root.get("status").in(statuses);
+    }
+
+    // Un évènement est terminé quand sa date de fin est passée.
+    public static Specification<Event> notFinishedAt(LocalDateTime now) {
+        return (root, query, cb) -> cb.greaterThan(root.get("endDateTime"), now);
     }
 
     public static Specification<Event> hasStatus(EventStatus status) {

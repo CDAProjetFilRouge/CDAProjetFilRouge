@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.dtos.appUser;
 
+import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.address.AddressResponseDto;
 import fr.diginamic.hubevenementiel.dtos.club.ClubSummaryResponseDto;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
@@ -12,7 +13,7 @@ import java.util.List;
 
 public class AppUserResponseDto {
 
-    private Long id;
+    private UUID id;
     private String lastName;
     private String firstName;
     private String email;
@@ -27,7 +28,7 @@ public class AppUserResponseDto {
     public AppUserResponseDto() {
     }
 
-    public AppUserResponseDto(Long id, String lastName, String firstName, String email, String phone, Role role, AccountStatus status, LocalDateTime suspensionEndDate, LocalDate creationDate, AddressResponseDto address, List<ClubSummaryResponseDto> clubs) {
+    public AppUserResponseDto(UUID id, String lastName, String firstName, String email, String phone, Role role, AccountStatus status, LocalDateTime suspensionEndDate, LocalDate creationDate, AddressResponseDto address, List<ClubSummaryResponseDto> clubs) {
         this.id = id;
         this.lastName = lastName;
         this.firstName = firstName;
@@ -41,11 +42,11 @@ public class AppUserResponseDto {
         this.clubs = clubs;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

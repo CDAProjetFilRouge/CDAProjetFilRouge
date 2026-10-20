@@ -1,8 +1,10 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.util.UUID;
+
 public interface EventInscriptionCount {
 
-    Long getEventId();
+    UUID getEventId();
 
     Long getTotal();
 }

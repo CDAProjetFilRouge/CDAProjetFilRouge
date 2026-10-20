@@ -8,7 +8,7 @@ import { InscriptionModel } from './calendar.models';
 export class CalendarService {
   private readonly http = inject(HttpClient);
 
-  getByUser(userId: number): Observable<InscriptionModel[]> {
+  getByUser(userId: string): Observable<InscriptionModel[]> {
     const params = new HttpParams().set('page', 0).set('size', 200);
 
     return this.http.get<InscriptionModel[]>(`${URL_BACKEND}/inscriptions/user/${userId}`, {
@@ -16,7 +16,7 @@ export class CalendarService {
     });
   }
 
-  cancel(inscriptionId: number): Observable<void> {
+  cancel(inscriptionId: string): Observable<void> {
     return this.http.delete<void>(`${URL_BACKEND}/inscriptions/${inscriptionId}`);
   }
 }
