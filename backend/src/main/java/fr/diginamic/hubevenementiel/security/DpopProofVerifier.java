@@ -9,6 +9,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
@@ -29,6 +30,13 @@ public class DpopProofVerifier {
     private static final long MEMORY_SECONDS = 120;
 
     private final Map<String, Instant> seenIds = new ConcurrentHashMap<>();
+
+    @Value("${app.security.dpop.required:true}")
+    private boolean required = true;
+
+    public boolean isRequired() {
+        return required;
+    }
 
     public record Proof(String thumbprint, String accessTokenHash) {
     }

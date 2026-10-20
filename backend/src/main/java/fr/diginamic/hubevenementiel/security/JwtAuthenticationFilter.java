@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean keyBindingIsRespected(String accessToken, HttpServletRequest request) {
         String boundKey = jwtService.extractKeyThumbprint(accessToken);
         if (boundKey == null) {
-            return true;
+            return !dpopProofVerifier.isRequired();
         }
 
         String proof = request.getHeader(DPOP_HEADER);
