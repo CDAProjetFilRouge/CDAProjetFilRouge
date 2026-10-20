@@ -18,6 +18,7 @@ import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.UnauthorizedException;
 import fr.diginamic.hubevenementiel.repositories.RefreshTokenRepo;
+import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
 
 @Service
 public class RefreshTokenService {
@@ -30,10 +31,12 @@ public class RefreshTokenService {
     }
 
     private final RefreshTokenRepo refreshTokenRepo;
+    private final DpopProofVerifier dpopProofVerifier;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public RefreshTokenService(RefreshTokenRepo refreshTokenRepo) {
+    public RefreshTokenService(RefreshTokenRepo refreshTokenRepo, DpopProofVerifier dpopProofVerifier) {
         this.refreshTokenRepo = refreshTokenRepo;
+        this.dpopProofVerifier = dpopProofVerifier;
     }
 
     private String generateRawToken() {
@@ -63,7 +66,10 @@ public class RefreshTokenService {
             throw new UnauthorizedException("Session invalide.");
         }
 
-        if (current.getKeyThumbprint() != null && !current.getKeyThumbprint().equals(keyThumbprint)) {
+        boolean unboundButRequired = current.getKeyThumbprint() == null && dpopProofVerifier.isRequired();
+        boolean boundToAnotherKey = current.getKeyThumbprint() != null
+                && !current.getKeyThumbprint().equals(keyThumbprint);
+        if (unboundButRequired || boundToAnotherKey) {
             refreshTokenRepo.revokeFamily(current.getFamilyId(), now);
             throw new UnauthorizedException("Session invalide.");
         }
