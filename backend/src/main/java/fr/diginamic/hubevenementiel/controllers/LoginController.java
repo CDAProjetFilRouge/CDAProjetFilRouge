@@ -18,6 +18,7 @@ import fr.diginamic.hubevenementiel.dtos.auth.RefreshRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
+import fr.diginamic.hubevenementiel.exceptions.UnauthorizedException;
 import fr.diginamic.hubevenementiel.openapi.LoginApi;
 import fr.diginamic.hubevenementiel.security.AppUserDetails;
 import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
@@ -81,6 +82,9 @@ public class LoginController implements LoginApi {
 
         AppUser user = ((AppUserDetails) authentication.getPrincipal()).getAppUser();
         String keyThumbprint = currentThumbprint();
+        if (keyThumbprint == null && dpopProofVerifier.isRequired()) {
+            throw new UnauthorizedException("Preuve DPoP requise.");
+        }
         String token = jwtService.generateToken(user, keyThumbprint);
         String refreshToken = refreshTokenService.issueForLogin(user, keyThumbprint);
 
