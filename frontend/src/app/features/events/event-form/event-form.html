@@ -18,11 +18,13 @@
     @if (isEdit) {
       <section class="status-bar">
         <p class="status-title">Statut de l'évènement</p>
-        <ol class="steps">
+        <div class="steps">
           @for (step of statusSteps; track step.status) {
-            <li [class.current]="step.status === status()">{{ step.label }}</li>
+            <button type="button" class="statusButton" [value]="step.status" (click)="changeStatus(step.status)" [class.selected]="status() === step.status">
+              {{ step.status }}
+            </button>
           }
-        </ol>
+        </div>
       </section>
     }
 
@@ -195,7 +197,7 @@
                 <li>
                   <img [src]="imageUrl(image.path)" alt="Photo de la galerie" />
                   @if (isOwner()) {
-                    <button class="btn remove" type="button" (click)="removeImage(image.id)">
+                    <button class="btn remove" type="button" (click)="removeImage(image.id.toString())">
                       Retirer
                     </button>
                   }

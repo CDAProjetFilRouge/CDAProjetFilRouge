@@ -80,6 +80,7 @@ export class EventForm implements OnDestroy {
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly isSubmitting = signal(false);
+  protected readonly selectedStatus = signal('');
 
   protected readonly clubs = computed(() => this.authService.currentUser()?.clubs ?? []);
   protected readonly status = computed<EventStatus>(() => this.detail()?.status ?? 'DRAFT');
@@ -433,5 +434,17 @@ export class EventForm implements OnDestroy {
       request.idClub = value.clubId as string;
     }
     return request;
+  }
+
+  private changeStatus(newStatus: string): void{
+    this.detail.update(detail => {
+      if (detail === null) {
+        return null;
+      }
+
+      return {
+        ...detail, status: newStatus as EventStatus
+      }
+    })
   }
 }
