@@ -89,6 +89,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Build (staging)
-        run: npx ng build --configuration staging
+      - name: Build
+        run: npx ng build
         working-directory: frontend

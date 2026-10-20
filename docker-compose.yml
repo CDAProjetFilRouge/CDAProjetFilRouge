@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: hub_evenementiel
+      MARIADB_USER: hub
+      MARIADB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD est obligatoire}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD est obligatoire}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/hub_evenementiel
+      SPRING_DATASOURCE_USERNAME: hub
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET est obligatoire}
+      BREVO_SMTP_LOGIN: ${BREVO_SMTP_LOGIN:-}
+      BREVO_SMTP_KEY: ${BREVO_SMTP_KEY:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    environment:
+      API_URL: ${API_URL:-http://localhost:8080}
+    ports:
+      - "8081:80"
+
+volumes:
+  db-data:
+  uploads:
