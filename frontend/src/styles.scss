@@ -20,6 +20,7 @@
   --color-success: #14513c;
   --color-danger-bg: #fde3da;
   --color-danger: #b3361a;
+  --color-error: #c8200e;
   --color-page-bg: #f4efe3;
   --color-header-bg: #f4efe3;
   --color-footer-bg: #1d5a45;
@@ -156,6 +157,14 @@ app-root .main > router-outlet + * {
   > :only-child {
     flex: 1;
   }
+}
+
+// Champ en erreur (touché et invalide) : contour rouge, en plus du message. Le focus garde son contour bleu.
+// !important : les feuilles de chaque formulaire fixent leur propre border-color avec une spécificité variable.
+input.ng-invalid.ng-touched:not([type='checkbox']):not(:focus),
+select.ng-invalid.ng-touched:not(:focus),
+textarea.ng-invalid.ng-touched:not(:focus) {
+  border-color: var(--color-error) !important;
 }
 
 // Repère de focus clavier par défaut, que les composants peuvent surcharger
