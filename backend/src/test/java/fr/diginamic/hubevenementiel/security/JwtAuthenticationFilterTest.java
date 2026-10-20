@@ -89,6 +89,21 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void doFilterInternal_tokenWithoutBoundKey_whenDpopRequired_continuesUnauthenticated() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
+        when(jwtService.extractKeyThumbprint("token-valide")).thenReturn(null);
+        when(dpopProofVerifier.isRequired()).thenReturn(true);
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
     void doFilterInternal_validTokenOfSuspendedUser_continuesUnauthenticated() throws Exception {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
         when(jwtService.isTokenValid("token-valide")).thenReturn(true);
