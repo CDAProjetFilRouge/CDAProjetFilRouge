@@ -301,12 +301,13 @@ class InscriptionServiceTest {
         AppUserPrincipal other = new AppUserPrincipal(uuid(7), "b@example.com", "MEMBER");
 
         assertThrows(ForbiddenException.class, () -> inscriptionService.findByUser(other, uuid(6), 0, 20));
-        verify(inscriptionRepo, never()).findByUserId(any(UUID.class), any());
+        verify(inscriptionRepo, never()).findByUserIdAndEventStatusNot(any(UUID.class), any(), any());
     }
 
     @Test
     void findByUser_selfAndAdministrator_areAllowed() throws HttpException {
-        when(inscriptionRepo.findByUserId(eq(uuid(6)), any())).thenReturn(org.springframework.data.domain.Page.empty());
+        when(inscriptionRepo.findByUserIdAndEventStatusNot(eq(uuid(6)), eq(EventStatus.CANCELLED), any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
 
         assertDoesNotThrow(() -> inscriptionService.findByUser(new AppUserPrincipal(uuid(6), "a@example.com", "MEMBER"), uuid(6), 0, 20));
         assertDoesNotThrow(() -> inscriptionService.findByUser(new AppUserPrincipal(uuid(1), "admin@example.com", "ADMINISTRATOR"), uuid(6), 0, 20));

@@ -5,6 +5,7 @@ import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
+import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
@@ -370,9 +371,11 @@ public class EventService {
         eventToBeModified.setAffiliatePrice(modifiedEvent.getAffiliatePrice());
         eventToBeModified.setNonAffiliatePrice(modifiedEvent.getNonAffiliatePrice());
         eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
+        EventStatus previousStatus = eventToBeModified.getStatus();
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 
         Event saved = eventRepository.save(eventToBeModified);
+        notifyIfCancelled(saved, previousStatus);
 
         if (previousCapacity != null && saved.getMaxCapacity() != null && saved.getMaxCapacity() > previousCapacity) {
             waitingListService.fillFreeSpots(eventId);
@@ -404,8 +407,28 @@ public class EventService {
             throw new ConflictException("Un évènement passé ne peut pas être publié.");
         }
 
+        EventStatus previousStatus = event.getStatus();
         event.setStatus(newStatus);
-        return eventRepository.save(event);
+        Event saved = eventRepository.save(event);
+        notifyIfCancelled(saved, previousStatus);
+        return saved;
+    }
+
+    private void notifyIfCancelled(Event event, EventStatus previousStatus) {
+        if (event.getStatus() != EventStatus.CANCELLED || previousStatus == EventStatus.CANCELLED) {
+            return;
+        }
+        List<Inscription> inscriptions = inscriptionRepo
+                .findByEventIdAndStatusIn(event.getId(), List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST));
+        List<String> emails = inscriptions.stream()
+                .map(inscription -> inscription.getUser().getEmail())
+                .toList();
+        List<Inscription> waitingList = inscriptions.stream()
+                .filter(inscription -> inscription.getStatus() == InscriptionStatus.WAITING_LIST)
+                .toList();
+        waitingList.forEach(inscription -> inscription.cancelPerOrganizer("Évènement annulé par son organisateur"));
+        inscriptionRepo.saveAll(waitingList);
+        eventPublisher.publishEvent(new EventCancelledEvent(emails, event.getTitle()));
     }
 
     private void checkStatusTransition(EventStatus from, EventStatus to) throws HttpException {
