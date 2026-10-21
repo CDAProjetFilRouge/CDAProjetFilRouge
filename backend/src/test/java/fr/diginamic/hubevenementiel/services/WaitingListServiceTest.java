@@ -5,6 +5,7 @@ import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -157,6 +159,22 @@ class WaitingListServiceTest {
         assertThat(first.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
         assertThat(second.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
         assertThat(third.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
+    }
+
+    @Test
+    void fillFreeSpots_cancelledEvent_promotesNobody() throws NotFoundException {
+        event.setMaxCapacity(10);
+        event.setStatus(EventStatus.CANCELLED);
+        Inscription waiting = waitingInscription(AccountStatus.ACTIVE);
+        lenient().when(eventRepo.findByIdForUpdate(uuid(2))).thenReturn(Optional.of(event));
+        lenient().when(inscriptionRepo.findByEventIdAndStatusOrderByInscriptionDateAsc(uuid(2), InscriptionStatus.WAITING_LIST))
+                .thenReturn(List.of(waiting));
+        lenient().when(inscriptionRepo.countByEventIdAndStatus(uuid(2), InscriptionStatus.CONFIRMED)).thenReturn(8L);
+
+        waitingListService.fillFreeSpots(uuid(2));
+
+        assertThat(waiting.getStatus()).isEqualTo(InscriptionStatus.WAITING_LIST);
+        verify(inscriptionRepo, never()).save(any());
     }
 
     @Test

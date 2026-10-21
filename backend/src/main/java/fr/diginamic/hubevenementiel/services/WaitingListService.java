@@ -4,6 +4,7 @@ import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
@@ -88,7 +89,7 @@ public class WaitingListService {
     @Transactional
     public void fillFreeSpots(UUID eventId) throws NotFoundException {
         Event event = lockEvent(eventId);
-        if (hasStarted(event) || event.getMaxCapacity() == null) {
+        if (hasStarted(event) || event.getStatus() == EventStatus.CANCELLED || event.getMaxCapacity() == null) {
             return;
         }
 

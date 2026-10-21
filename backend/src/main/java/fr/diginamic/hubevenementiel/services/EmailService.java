@@ -67,6 +67,17 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendEventCancelledEmail(String toEmail, String eventTitle) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(senderAddress);
+        message.setTo(toEmail);
+        message.setSubject("MyHubEvent - Un évènement a été annulé");
+        message.setText("L'évènement \"" + eventTitle + "\" a été annulé par son organisateur.\n\n"
+                + "Votre inscription, ou votre place en liste d'attente, n'est donc plus valable.");
+
+        mailSender.send(message);
+    }
+
     public void sendInscriptionPromotedEmail(String toEmail, String eventTitle) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(senderAddress);

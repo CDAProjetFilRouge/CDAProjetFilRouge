@@ -210,6 +210,52 @@ class EventControllerIntegrationTest {
     }
 
     @Test
+    void changeStatus_toCancelled_keepsConfirmedRegistrationsAndHidesThemFromTheMember() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        UUID eventId = createDraftEventAndReturnId(token, "Event annule avec inscrits-" + System.nanoTime());
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isOk());
+        fr.diginamic.hubevenementiel.entities.Event event =
+                entityManager.find(fr.diginamic.hubevenementiel.entities.Event.class, eventId);
+        AppUser confirmed = createActiveUser("confirme-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        AppUser waiting = createActiveUser("attente-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        entityManager.persist(new fr.diginamic.hubevenementiel.entities.Inscription(
+                confirmed, event, java.math.BigDecimal.TEN, fr.diginamic.hubevenementiel.enums.InscriptionStatus.CONFIRMED));
+        entityManager.persist(new fr.diginamic.hubevenementiel.entities.Inscription(
+                waiting, event, java.math.BigDecimal.TEN, fr.diginamic.hubevenementiel.enums.InscriptionStatus.WAITING_LIST));
+        entityManager.flush();
+        String memberToken = loginAndGetToken(confirmed.getEmail());
+        mockMvc.perform(get("/inscriptions/user/" + confirmed.getId()).header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"CANCELLED\"}"))
+                .andExpect(status().isOk());
+        entityManager.flush();
+        entityManager.clear();
+
+        java.util.List<fr.diginamic.hubevenementiel.entities.Inscription> stored = entityManager
+                .createQuery("select i from Inscription i where i.event.id = :id order by i.status",
+                        fr.diginamic.hubevenementiel.entities.Inscription.class)
+                .setParameter("id", eventId)
+                .getResultList();
+        org.assertj.core.api.Assertions.assertThat(stored)
+                .extracting(inscription -> inscription.getUser().getId() + ":" + inscription.getStatus())
+                .containsExactlyInAnyOrder(
+                        confirmed.getId() + ":CONFIRMED",
+                        waiting.getId() + ":CANCELED");
+        mockMvc.perform(get("/inscriptions/user/" + confirmed.getId()).header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void changeStatus_forbiddenTransition_returns409AndKeepsTheStatus() throws Exception {
         String token = loginAndGetToken(organizer.getEmail());
         UUID eventId = createDraftEventAndReturnId(token, "Event qui ne recule pas-" + System.nanoTime());
