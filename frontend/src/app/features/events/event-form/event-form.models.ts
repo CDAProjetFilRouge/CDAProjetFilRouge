@@ -9,6 +9,13 @@ export const EVENT_STATUS_STEPS: { status: EventStatus; label: string }[] = [
   { status: 'FINISHED', label: 'Terminé' },
 ];
 
+export const EVENT_STATUS_NEXT: Record<EventStatus, EventStatus[]> = {
+  DRAFT: ['PUBLISHED'],
+  PUBLISHED: ['CANCELLED', 'FINISHED'],
+  CANCELLED: [],
+  FINISHED: [],
+};
+
 export const EVENT_CATEGORY_LABELS: Record<Category, string> = {
   CULTURE: 'Culture',
   SPORT: 'Sport',

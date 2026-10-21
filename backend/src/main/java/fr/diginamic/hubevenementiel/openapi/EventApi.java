@@ -125,6 +125,18 @@ public interface EventApi {
     })
     EventResponseDto update(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id, EventRequestDto requestDto) throws HttpException;
 
+    @Operation(summary = "Changer le statut d'un évènement",
+            description = "Réservé au propriétaire de l'évènement et aux administrateurs. Transitions autorisées : BROUILLON vers PUBLIÉ, PUBLIÉ vers ANNULÉ ou TERMINÉ. ANNULÉ et TERMINÉ sont des états finaux. Un évènement passé ne peut pas être publié.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Statut modifié"),
+            @ApiResponse(responseCode = "400", description = "Statut absent ou inconnu"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
+            @ApiResponse(responseCode = "404", description = "Évènement introuvable"),
+            @ApiResponse(responseCode = "409", description = "Transition de statut interdite")
+    })
+    EventResponseDto changeStatus(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id, EventStatusRequestDto requestDto) throws HttpException;
+
     @Operation(summary = "Supprimer un évènement",
             description = "Réservé au propriétaire d'un évènement futur et aux administrateurs. Un email est envoyé aux inscrits et à la liste d'attente.")
     @ApiResponses({

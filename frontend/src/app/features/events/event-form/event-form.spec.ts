@@ -6,6 +6,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { URL_BACKEND } from '../../../core/api/api.config';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmService } from '../../../core/ui/confirm.service';
 import { AppUser } from '../../../core/models/user.models';
 import { EventForm } from './event-form';
 import { EventDetail } from './event-form.models';
@@ -382,6 +383,133 @@ describe('EventForm', () => {
 
       const gallery = (component as unknown as { detail(): EventDetail }).detail().imageGallery;
       expect(gallery.map((image) => image.id)).toEqual(['2']);
+    });
+    describe('boutons de statut', () => {
+      const changeStatus = (status: string) =>
+        (component as unknown as { changeStatus(next: string): Promise<void> }).changeStatus(status);
+      const status = () => (component as unknown as { status(): string }).status();
+      const buttons = () =>
+        Array.from(fixture.nativeElement.querySelectorAll('.statusButton')) as HTMLButtonElement[];
+      const enabledLabels = () =>
+        buttons()
+          .filter((button) => !button.disabled)
+          .map((button) => button.textContent?.trim());
+
+      it('affiche les statuts en français et marque le statut courant', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        fixture.detectChanges();
+
+        expect(buttons().map((button) => button.textContent?.trim())).toEqual([
+          'Brouillon',
+          'Publié',
+          'Annulé',
+          'Terminé',
+        ]);
+        expect(buttons().map((button) => button.getAttribute('aria-pressed'))).toEqual([
+          'false',
+          'true',
+          'false',
+          'false',
+        ]);
+      });
+
+      it('n’active que les transitions permises depuis le statut courant', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'DRAFT' }));
+        fixture.detectChanges();
+        expect(enabledLabels()).toEqual(['Publié']);
+
+        await setup('6');
+        http.expectOne(`${URL_BACKEND}/events/6`).flush(makeDetail({ status: 'PUBLISHED' }));
+        fixture.detectChanges();
+        expect(enabledLabels()).toEqual(['Annulé', 'Terminé']);
+
+        await setup('7');
+        http.expectOne(`${URL_BACKEND}/events/7`).flush(makeDetail({ status: 'CANCELLED' }));
+        fixture.detectChanges();
+        expect(enabledLabels()).toEqual([]);
+      });
+
+      it('publie un brouillon sans confirmation', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail());
+        const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
+
+        await changeStatus('PUBLISHED');
+
+        const update = http.expectOne(`${URL_BACKEND}/events/5`);
+        expect(update.request.method).toBe('PUT');
+        expect(update.request.body.status).toBe('PUBLISHED');
+        update.flush({ id: '5', status: 'PUBLISHED' });
+        expect(ask).not.toHaveBeenCalled();
+      });
+
+      it('demande confirmation avant d’annuler et ne contacte pas le serveur si on refuse', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
+
+        await changeStatus('CANCELLED');
+
+        expect(ask).toHaveBeenCalledTimes(1);
+        expect(status()).toBe('PUBLISHED');
+      });
+
+      it('annule l’évènement par la route de statut quand on confirme', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+        await changeStatus('CANCELLED');
+
+        const patch = http.expectOne(`${URL_BACKEND}/events/5/status`);
+        expect(patch.request.method).toBe('PATCH');
+        expect(patch.request.body).toEqual({ status: 'CANCELLED' });
+        patch.flush({ id: '5', status: 'CANCELLED' });
+        expect(status()).toBe('CANCELLED');
+      });
+
+      it('permet de terminer à la main un évènement déjà commencé', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(
+          makeDetail({ startDate: '2020-01-01T10:00', endDate: '2099-01-01T12:00', status: 'PUBLISHED' }),
+        );
+        fixture.detectChanges();
+        vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+        expect(enabledLabels()).toEqual(['Annulé', 'Terminé']);
+        await changeStatus('FINISHED');
+
+        const patch = http.expectOne(`${URL_BACKEND}/events/5/status`);
+        expect(patch.request.body).toEqual({ status: 'FINISHED' });
+        patch.flush({ id: '5', status: 'FINISHED' });
+        expect(status()).toBe('FINISHED');
+      });
+
+      it('affiche la raison du serveur quand la transition est refusée', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+        await changeStatus('FINISHED');
+        http
+          .expectOne(`${URL_BACKEND}/events/5/status`)
+          .flush('Le statut ne peut pas changer.', { status: 409, statusText: 'Conflict' });
+
+        expect(status()).toBe('PUBLISHED');
+        expect((component as unknown as { errorMessage(): string }).errorMessage()).not.toBe('');
+      });
+
+      it('désactive tous les boutons pour un autre organisateur', async () => {
+        await setup('5', makeUser({ id: 'autre', role: 'ORGANIZER' }));
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        fixture.detectChanges();
+
+        expect(enabledLabels()).toEqual([]);
+        await changeStatus('CANCELLED');
+        expect(status()).toBe('PUBLISHED');
+      });
     });
   });
 });
