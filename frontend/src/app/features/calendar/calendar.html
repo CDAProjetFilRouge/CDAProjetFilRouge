@@ -1,13 +1,9 @@
-<div class="calendar-page" [class.compact]="compact()">
-  @if (!compact()) {
-    <h1>Mon calendrier</h1>
-  }
-
+<div class="calendar-page">
   @if (errorMessage()) {
     <p class="error" role="alert">{{ errorMessage() }}</p>
   }
 
-  <app-event-calendar [events]="calendarEvents()" [compact]="compact()" (eventSelected)="select($event)" />
+  <app-event-calendar [events]="calendarEvents()" [compact]="true" (eventSelected)="select($event)" />
 
   <dialog #detailDialog class="detail" aria-labelledby="detail-title" (close)="onDialogClosed()">
     @if (selected(); as ins) {

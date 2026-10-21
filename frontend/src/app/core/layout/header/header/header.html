@@ -9,10 +9,6 @@
       <a class="page-select" [routerLink]="user() ? '/' : '/catalogue'" routerLinkActive="active"
         ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">Catalogue</a>
 
-      @if (user()?.role !== 'ADMINISTRATOR') {
-        <a class="page-select" routerLink="/calendar" routerLinkActive="active" ariaCurrentWhenActive="page">Mon calendrier</a>
-      }
-
       @if (user()?.role === 'ORGANIZER') {
         <a class="page-select" routerLink="/my-events" routerLinkActive="active" ariaCurrentWhenActive="page">Mes évènements</a>
       }

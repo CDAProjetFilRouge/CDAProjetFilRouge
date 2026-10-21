@@ -101,8 +101,7 @@ export const routes: Routes = [
   },
   {
     path: 'calendar',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/calendar/calendar').then((m) => m.Calendar),
+    redirectTo: 'dashboard',
   },
   {
     path: 'my-events',

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { CalendarEvent } from '../../shared/event-calendar/event-calendar.models';
@@ -17,9 +17,6 @@ import { INSCRIPTION_STATUS_LABELS, InscriptionModel, toCalendarEvent } from './
 export class Calendar {
   private readonly auth = inject(AuthService);
   private readonly calendarService = inject(CalendarService);
-
-  // Intégré au tableau de bord : pas de titre, grille plus basse.
-  readonly compact = input(false);
 
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('detailDialog');
 
