@@ -6,8 +6,11 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.diginamic.hubevenementiel.entities.AppUser;
+import fr.diginamic.hubevenementiel.entities.Club;
+import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.repositories.ClubRepo;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.EmailService;
 import org.junit.jupiter.api.Test;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,7 +26,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,6 +49,8 @@ class AuthorizationIntegrationTest {
     @Autowired
     private UserRepo userRepo;
     @Autowired
+    private ClubRepo clubRepo;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @MockitoBean
     private EmailService emailService;
@@ -60,6 +68,16 @@ class AuthorizationIntegrationTest {
         user.setStatus(AccountStatus.ACTIVE);
         user.setClubs(List.of());
         return userRepo.save(user);
+    }
+
+    private Club createClub(AppUser owner) {
+        Club club = new Club();
+        club.setName("Club-" + System.nanoTime());
+        club.setCategory(Category.SPORT);
+        club.setEmail("club@example.com");
+        club.setPhone("0600000000");
+        club.setOwner(owner);
+        return clubRepo.save(club);
     }
 
     private String tokenOf(AppUser user) throws Exception {
@@ -162,6 +180,57 @@ class AuthorizationIntegrationTest {
                 delete("/inscriptions/" + id + "/organizer?motif=test"))) {
             mockMvc.perform(withToken(request, token)).andExpect(status().isForbidden());
         }
+    }
+
+    @Test
+    void imageRoutes_refuseMember() throws Exception {
+        UUID id = UUID.randomUUID();
+        String token = tokenOf(createUser("member", Role.MEMBER));
+        MockMultipartFile file = new MockMultipartFile("file", "photo.png", "image/png", new byte[] { 1 });
+
+        mockMvc.perform(multipart("/events/" + id + "/images").file(file).header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/events/" + id + "/images/" + UUID.randomUUID())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void legalDocumentCreation_refusesMemberAndOrganizer_acceptsAdministrator() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                Map.of("documentType", "TERM_OF_USE", "content", "<p>Nouvelle version des conditions.</p>"));
+
+        for (Role role : new Role[] { Role.MEMBER, Role.ORGANIZER }) {
+            String token = tokenOf(createUser("caller", role));
+            mockMvc.perform(post("/legal-documents").header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON).content(body))
+                    .andExpect(status().isForbidden());
+        }
+
+        String adminToken = tokenOf(createUser("admin", Role.ADMINISTRATOR));
+        mockMvc.perform(post("/legal-documents").header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void associateUser_refusesMember_andOrganizerWhoDoesNotOwnTheClub_acceptsTheOwner() throws Exception {
+        AppUser owner = createUser("owner", Role.ORGANIZER);
+        AppUser otherOrganizer = createUser("other", Role.ORGANIZER);
+        AppUser target = createUser("target", Role.MEMBER);
+        Club club = createClub(owner);
+        String route = "/clubs/associateUser/" + target.getId() + "/club/" + club.getId();
+
+        mockMvc.perform(post(route).header("Authorization", "Bearer " + tokenOf(createUser("member", Role.MEMBER))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post(route).header("Authorization", "Bearer " + tokenOf(otherOrganizer)))
+                .andExpect(status().isForbidden());
+        assertThat(clubRepo.findById(club.getId()).orElseThrow().getAppUsers()).isEmpty();
+
+        mockMvc.perform(post(route).header("Authorization", "Bearer " + tokenOf(owner)))
+                .andExpect(status().isOk());
+        assertThat(clubRepo.findById(club.getId()).orElseThrow().getAppUsers())
+                .extracting(AppUser::getId).containsExactly(target.getId());
     }
 
     // ---------------------------------------------------------------
