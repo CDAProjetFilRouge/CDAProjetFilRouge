@@ -6,6 +6,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { URL_BACKEND } from '../../../core/api/api.config';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ConfirmService } from '../../../core/ui/confirm.service';
 import { AppUser } from '../../../core/models/user.models';
 import { EventForm } from './event-form';
 import { EventDetail } from './event-form.models';
@@ -382,6 +383,88 @@ describe('EventForm', () => {
 
       const gallery = (component as unknown as { detail(): EventDetail }).detail().imageGallery;
       expect(gallery.map((image) => image.id)).toEqual(['2']);
+    });
+    describe('boutons de statut', () => {
+      const changeStatus = (status: string) =>
+        (component as unknown as { changeStatus(next: string): Promise<void> }).changeStatus(status);
+      const status = () => (component as unknown as { status(): string }).status();
+      const buttons = () =>
+        Array.from(fixture.nativeElement.querySelectorAll('.statusButton')) as HTMLButtonElement[];
+
+      it('affiche les statuts en français et marque le statut courant', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        fixture.detectChanges();
+
+        expect(buttons().map((button) => button.textContent?.trim())).toEqual([
+          'Brouillon',
+          'Publié',
+          'Annulé',
+          'Terminé',
+        ]);
+        expect(buttons().map((button) => button.getAttribute('aria-pressed'))).toEqual([
+          'false',
+          'true',
+          'false',
+          'false',
+        ]);
+      });
+
+      it('envoie le statut choisi à l’enregistrement', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail());
+
+        await changeStatus('PUBLISHED');
+        (component as unknown as { saveDraft(): void }).saveDraft();
+
+        const update = http.expectOne(`${URL_BACKEND}/events/5`);
+        expect(update.request.body.status).toBe('PUBLISHED');
+        update.flush({ id: '5', status: 'PUBLISHED' });
+      });
+
+      it('demande confirmation avant d’annuler et garde le statut si on refuse', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
+
+        await changeStatus('CANCELLED');
+
+        expect(ask).toHaveBeenCalledTimes(1);
+        expect(status()).toBe('PUBLISHED');
+      });
+
+      it('passe à annulé quand on confirme', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+        await changeStatus('CANCELLED');
+
+        expect(status()).toBe('CANCELLED');
+      });
+
+      it('ne demande pas de confirmation pour publier', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail());
+        const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
+
+        await changeStatus('PUBLISHED');
+
+        expect(ask).not.toHaveBeenCalled();
+        expect(status()).toBe('PUBLISHED');
+      });
+
+      it('désactive les boutons pour un évènement déjà passé et refuse le changement', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(
+          makeDetail({ startDate: '2020-01-01T10:00', endDate: '2020-01-01T12:00', status: 'PUBLISHED' }),
+        );
+        fixture.detectChanges();
+
+        expect(buttons().every((button) => button.disabled)).toBe(true);
+        await changeStatus('DRAFT');
+        expect(status()).toBe('PUBLISHED');
+      });
     });
   });
 });
