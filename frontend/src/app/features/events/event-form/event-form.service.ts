@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
 import { URL_BACKEND } from '../../../core/api/api.config';
-import { EventDetail, EventImage, EventRequest, EventSaved } from './event-form.models';
+import { EventDetail, EventImage, EventRequest, EventSaved, EventStatus } from './event-form.models';
 
 @Service()
 export class EventFormService {
@@ -18,6 +18,10 @@ export class EventFormService {
 
   update(id: string, request: EventRequest): Observable<EventSaved> {
     return this.http.put<EventSaved>(`${URL_BACKEND}/events/${id}`, request);
+  }
+
+  changeStatus(id: string, status: EventStatus): Observable<EventSaved> {
+    return this.http.patch<EventSaved>(`${URL_BACKEND}/events/${id}/status`, { status });
   }
 
   delete(id: string): Observable<void> {

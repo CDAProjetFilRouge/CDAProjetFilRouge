@@ -16,6 +16,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { Category } from '../../../core/models/user.models';
 import {
   EVENT_CATEGORY_LABELS,
+  EVENT_STATUS_NEXT,
   EVENT_STATUS_STEPS,
   EventDetail,
   EventRequest,
@@ -435,22 +436,44 @@ export class EventForm implements OnDestroy {
     return request;
   }
 
+  protected canMoveTo(next: EventStatus): boolean {
+    return this.isEdit && this.isOwner() && EVENT_STATUS_NEXT[this.status()].includes(next);
+  }
+
   protected async changeStatus(next: EventStatus): Promise<void> {
-    if (next === this.status() || !this.canEditFields()) {
+    if (this.eventId === null || !this.canMoveTo(next)) {
       return;
     }
-    if (next === 'CANCELLED' || next === 'FINISHED') {
-      const confirmed = await this.confirmDialog.ask({
-        title: next === 'CANCELLED' ? "Annuler l'évènement" : "Marquer l'évènement comme terminé",
-        message: 'Le nouveau statut sera appliqué quand vous enregistrerez les modifications.',
-        confirmLabel: next === 'CANCELLED' ? "Annuler l'évènement" : 'Marquer comme terminé',
-        cancelLabel: 'Retour',
-        tone: 'danger',
-      });
-      if (!confirmed) {
-        return;
-      }
+    if (next === 'PUBLISHED') {
+      this.publish();
+      return;
     }
-    this.detail.update((detail) => (detail ? { ...detail, status: next } : detail));
+    const cancelling = next === 'CANCELLED';
+    const confirmed = await this.confirmDialog.ask({
+      title: cancelling ? "Annuler l'évènement" : "Marquer l'évènement comme terminé",
+      message: cancelling
+        ? "L'évènement sera annulé tout de suite et ne pourra plus changer de statut."
+        : "L'évènement sera marqué comme terminé tout de suite. Sans cette action, il le devient tout seul à son heure de fin.",
+      confirmLabel: cancelling ? "Annuler l'évènement" : 'Marquer comme terminé',
+      cancelLabel: 'Retour',
+      tone: 'danger',
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.eventFormService.changeStatus(this.eventId, next).subscribe({
+      next: (saved) => {
+        this.detail.update((detail) => (detail ? { ...detail, status: saved.status ?? next } : detail));
+        this.isSubmitting.set(false);
+        this.successMessage.set('Statut mis à jour.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isSubmitting.set(false);
+        this.errorMessage.set(this.reasonOf(error, 'Impossible de changer le statut.'));
+      },
+    });
   }
 }

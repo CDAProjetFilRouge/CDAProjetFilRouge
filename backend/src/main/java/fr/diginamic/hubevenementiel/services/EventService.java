@@ -39,6 +39,12 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
 
+    private static final Map<EventStatus, List<EventStatus>> ALLOWED_TRANSITIONS = Map.of(
+            EventStatus.DRAFT, List.of(EventStatus.PUBLISHED),
+            EventStatus.PUBLISHED, List.of(EventStatus.CANCELLED, EventStatus.FINISHED),
+            EventStatus.CANCELLED, List.of(),
+            EventStatus.FINISHED, List.of());
+
     /** Plus grand tarif accepté : la colonne est un decimal(10,2). */
     static final BigDecimal MAX_PRICE = new BigDecimal("99999999.99");
 
@@ -341,6 +347,7 @@ public class EventService {
         }
 
         eventChecker(modifiedEvent);
+        checkStatusTransition(eventToBeModified.getStatus(), modifiedEvent.getStatus());
 
         if (!eventToBeModified.getTitle().equalsIgnoreCase(modifiedEvent.getTitle())
                 && eventRepository.existsByTitle(modifiedEvent.getTitle())) {
@@ -380,6 +387,46 @@ public class EventService {
      * @param principal the authenticated caller, must be the event's organizer or an admin
      * @throws HttpException
      */
+    @Transactional
+    public Event changeStatus(UUID eventId, EventStatus newStatus, AppUserPrincipal principal) throws HttpException {
+        if (newStatus == null) {
+            throw new BadRequestException("Le statut est obligatoire.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
+
+        checkOwnership(event, principal);
+        checkStatusTransition(event.getStatus(), newStatus);
+
+        if (newStatus == EventStatus.PUBLISHED && event.getStatus() != EventStatus.PUBLISHED
+                && event.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new ConflictException("Un évènement passé ne peut pas être publié.");
+        }
+
+        event.setStatus(newStatus);
+        return eventRepository.save(event);
+    }
+
+    private void checkStatusTransition(EventStatus from, EventStatus to) throws HttpException {
+        if (from == null || to == null || from == to) {
+            return;
+        }
+        if (!ALLOWED_TRANSITIONS.get(from).contains(to)) {
+            throw new ConflictException(
+                    "Le statut d'un évènement " + statusLabel(from) + " ne peut pas passer à " + statusLabel(to) + ".");
+        }
+    }
+
+    private String statusLabel(EventStatus status) {
+        return switch (status) {
+            case DRAFT -> "en brouillon";
+            case PUBLISHED -> "publié";
+            case CANCELLED -> "annulé";
+            case FINISHED -> "terminé";
+        };
+    }
+
     @Transactional
     public void deleteEvent(UUID eventId, AppUserPrincipal principal) throws HttpException {
 
