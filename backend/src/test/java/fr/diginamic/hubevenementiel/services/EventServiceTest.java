@@ -787,13 +787,138 @@ class EventServiceTest {
         assertThat(result.getMaxCapacity()).isEqualTo(12);
     }
 
+    // ---------------------------------------------------------------
+    // RG12 : transitions de statut (changeStatus et updateEvent)
+    // ---------------------------------------------------------------
+
+    private Event eventWithStatus(EventStatus status) {
+        Event event = cloneFutureEvent();
+        event.setStatus(status);
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(event));
+        return event;
+    }
+
+    private AppUserPrincipal ownerPrincipal() {
+        return new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
+    }
+
+    @Test
+    void changeStatus_allowedTransitions_applyTheNewStatus() throws HttpException {
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        List<EventStatus[]> allowed = List.of(
+                new EventStatus[] { EventStatus.DRAFT, EventStatus.PUBLISHED },
+                new EventStatus[] { EventStatus.PUBLISHED, EventStatus.CANCELLED },
+                new EventStatus[] { EventStatus.PUBLISHED, EventStatus.FINISHED });
+
+        for (EventStatus[] transition : allowed) {
+            eventWithStatus(transition[0]);
+
+            Event result = eventService.changeStatus(uuid(1), transition[1], ownerPrincipal());
+
+            assertThat(result.getStatus()).isEqualTo(transition[1]);
+        }
+    }
+
+    @Test
+    void changeStatus_forbiddenTransitions_throwConflictAndSaveNothing() {
+        List<EventStatus[]> forbidden = List.of(
+                new EventStatus[] { EventStatus.PUBLISHED, EventStatus.DRAFT },
+                new EventStatus[] { EventStatus.DRAFT, EventStatus.CANCELLED },
+                new EventStatus[] { EventStatus.DRAFT, EventStatus.FINISHED },
+                new EventStatus[] { EventStatus.CANCELLED, EventStatus.PUBLISHED },
+                new EventStatus[] { EventStatus.CANCELLED, EventStatus.DRAFT },
+                new EventStatus[] { EventStatus.CANCELLED, EventStatus.FINISHED },
+                new EventStatus[] { EventStatus.FINISHED, EventStatus.PUBLISHED },
+                new EventStatus[] { EventStatus.FINISHED, EventStatus.CANCELLED });
+
+        for (EventStatus[] transition : forbidden) {
+            Event event = eventWithStatus(transition[0]);
+
+            assertThrows(ConflictException.class,
+                    () -> eventService.changeStatus(uuid(1), transition[1], ownerPrincipal()));
+
+            assertThat(event.getStatus()).isEqualTo(transition[0]);
+        }
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void changeStatus_sameStatus_isAccepted() throws HttpException {
+        eventWithStatus(EventStatus.PUBLISHED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Event result = eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal());
+
+        assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+    }
+
+    @Test
+    void changeStatus_publishingAnEventAlreadyStarted_throwsConflict() {
+        Event event = eventWithStatus(EventStatus.DRAFT);
+        event.setStartDateTime(LocalDateTime.now().minusDays(1));
+
+        assertThrows(ConflictException.class,
+                () -> eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal()));
+
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void changeStatus_missingStatus_throwsBadRequest() {
+        assertThrows(BadRequestException.class, () -> eventService.changeStatus(uuid(1), null, ownerPrincipal()));
+    }
+
+    @Test
+    void changeStatus_unknownEvent_throwsNotFound() {
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal()));
+    }
+
+    @Test
+    void changeStatus_foreignOrganizer_throwsForbidden_butAdministratorIsAllowed() throws HttpException {
+        eventWithStatus(EventStatus.DRAFT);
+        AppUserPrincipal stranger = new AppUserPrincipal(uuid(99), "autre@example.com", "ORGANIZER");
+        AppUserPrincipal admin = new AppUserPrincipal(uuid(98), "admin@example.com", "ADMINISTRATOR");
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThrows(ForbiddenException.class,
+                () -> eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, stranger));
+        Event result = eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, admin);
+
+        assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+    }
+
+    @Test
+    void updateEvent_forbiddenStatusTransition_throwsConflictAndSavesNothing() {
+        Event existing = eventWithStatus(EventStatus.PUBLISHED);
+        validEvent.setStatus(EventStatus.DRAFT);
+
+        assertThrows(ConflictException.class, () -> eventService.updateEvent(uuid(1), validEvent, ownerPrincipal()));
+
+        assertThat(existing.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void updateEvent_publishingADraft_isAccepted() throws HttpException {
+        eventWithStatus(EventStatus.DRAFT);
+        validEvent.setStatus(EventStatus.PUBLISHED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Event result = eventService.updateEvent(uuid(1), validEvent, ownerPrincipal());
+
+        assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+    }
+
     private Event cloneFutureEvent() {
         Event event = new Event();
         event.setOrganizer(organizer);
         event.setTitle(validEvent.getTitle());
         event.setStartDateTime(LocalDateTime.now().plusDays(5));
         event.setEndDateTime(LocalDateTime.now().plusDays(5).plusHours(2));
-        event.setStatus(EventStatus.PUBLISHED);
+        event.setStatus(validEvent.getStatus());
         return event;
     }
 }

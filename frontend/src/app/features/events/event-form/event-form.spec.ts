@@ -390,6 +390,10 @@ describe('EventForm', () => {
       const status = () => (component as unknown as { status(): string }).status();
       const buttons = () =>
         Array.from(fixture.nativeElement.querySelectorAll('.statusButton')) as HTMLButtonElement[];
+      const enabledLabels = () =>
+        buttons()
+          .filter((button) => !button.disabled)
+          .map((button) => button.textContent?.trim());
 
       it('affiche les statuts en français et marque le statut courant', async () => {
         await setup('5');
@@ -410,19 +414,38 @@ describe('EventForm', () => {
         ]);
       });
 
-      it('envoie le statut choisi à l’enregistrement', async () => {
+      it('n’active que les transitions permises depuis le statut courant', async () => {
         await setup('5');
-        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail());
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'DRAFT' }));
+        fixture.detectChanges();
+        expect(enabledLabels()).toEqual(['Publié']);
 
-        await changeStatus('PUBLISHED');
-        (component as unknown as { saveDraft(): void }).saveDraft();
+        await setup('6');
+        http.expectOne(`${URL_BACKEND}/events/6`).flush(makeDetail({ status: 'PUBLISHED' }));
+        fixture.detectChanges();
+        expect(enabledLabels()).toEqual(['Annulé', 'Terminé']);
 
-        const update = http.expectOne(`${URL_BACKEND}/events/5`);
-        expect(update.request.body.status).toBe('PUBLISHED');
-        update.flush({ id: '5', status: 'PUBLISHED' });
+        await setup('7');
+        http.expectOne(`${URL_BACKEND}/events/7`).flush(makeDetail({ status: 'CANCELLED' }));
+        fixture.detectChanges();
+        expect(enabledLabels()).toEqual([]);
       });
 
-      it('demande confirmation avant d’annuler et garde le statut si on refuse', async () => {
+      it('publie un brouillon sans confirmation', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail());
+        const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
+
+        await changeStatus('PUBLISHED');
+
+        const update = http.expectOne(`${URL_BACKEND}/events/5`);
+        expect(update.request.method).toBe('PUT');
+        expect(update.request.body.status).toBe('PUBLISHED');
+        update.flush({ id: '5', status: 'PUBLISHED' });
+        expect(ask).not.toHaveBeenCalled();
+      });
+
+      it('demande confirmation avant d’annuler et ne contacte pas le serveur si on refuse', async () => {
         await setup('5');
         http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
         const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(false);
@@ -433,36 +456,58 @@ describe('EventForm', () => {
         expect(status()).toBe('PUBLISHED');
       });
 
-      it('passe à annulé quand on confirme', async () => {
+      it('annule l’évènement par la route de statut quand on confirme', async () => {
         await setup('5');
         http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
         vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
 
         await changeStatus('CANCELLED');
 
+        const patch = http.expectOne(`${URL_BACKEND}/events/5/status`);
+        expect(patch.request.method).toBe('PATCH');
+        expect(patch.request.body).toEqual({ status: 'CANCELLED' });
+        patch.flush({ id: '5', status: 'CANCELLED' });
         expect(status()).toBe('CANCELLED');
       });
 
-      it('ne demande pas de confirmation pour publier', async () => {
-        await setup('5');
-        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail());
-        const ask = vi.spyOn(TestBed.inject(ConfirmService), 'ask');
-
-        await changeStatus('PUBLISHED');
-
-        expect(ask).not.toHaveBeenCalled();
-        expect(status()).toBe('PUBLISHED');
-      });
-
-      it('désactive les boutons pour un évènement déjà passé et refuse le changement', async () => {
+      it('permet de terminer à la main un évènement déjà commencé', async () => {
         await setup('5');
         http.expectOne(`${URL_BACKEND}/events/5`).flush(
-          makeDetail({ startDate: '2020-01-01T10:00', endDate: '2020-01-01T12:00', status: 'PUBLISHED' }),
+          makeDetail({ startDate: '2020-01-01T10:00', endDate: '2099-01-01T12:00', status: 'PUBLISHED' }),
         );
         fixture.detectChanges();
+        vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
 
-        expect(buttons().every((button) => button.disabled)).toBe(true);
-        await changeStatus('DRAFT');
+        expect(enabledLabels()).toEqual(['Annulé', 'Terminé']);
+        await changeStatus('FINISHED');
+
+        const patch = http.expectOne(`${URL_BACKEND}/events/5/status`);
+        expect(patch.request.body).toEqual({ status: 'FINISHED' });
+        patch.flush({ id: '5', status: 'FINISHED' });
+        expect(status()).toBe('FINISHED');
+      });
+
+      it('affiche la raison du serveur quand la transition est refusée', async () => {
+        await setup('5');
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        vi.spyOn(TestBed.inject(ConfirmService), 'ask').mockResolvedValue(true);
+
+        await changeStatus('FINISHED');
+        http
+          .expectOne(`${URL_BACKEND}/events/5/status`)
+          .flush('Le statut ne peut pas changer.', { status: 409, statusText: 'Conflict' });
+
+        expect(status()).toBe('PUBLISHED');
+        expect((component as unknown as { errorMessage(): string }).errorMessage()).not.toBe('');
+      });
+
+      it('désactive tous les boutons pour un autre organisateur', async () => {
+        await setup('5', makeUser({ id: 'autre', role: 'ORGANIZER' }));
+        http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ status: 'PUBLISHED' }));
+        fixture.detectChanges();
+
+        expect(enabledLabels()).toEqual([]);
+        await changeStatus('CANCELLED');
         expect(status()).toBe('PUBLISHED');
       });
     });

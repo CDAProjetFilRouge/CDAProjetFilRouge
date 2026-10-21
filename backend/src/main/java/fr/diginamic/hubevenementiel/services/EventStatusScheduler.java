@@ -25,10 +25,10 @@ public class EventStatusScheduler {
     }
 
     /**
-     * Every hour, and once at startup, marks as finished the published events whose end date has passed.
+     * Every five minutes, and once at startup, marks as finished the published events whose end date has passed.
      */
     @EventListener(ApplicationReadyEvent.class)
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     @Transactional
     public void finishEndedEvents() {
         int count = eventRepo.updateStatusOfEndedEvents(EventStatus.PUBLISHED, EventStatus.FINISHED,

@@ -25,7 +25,7 @@
               class="statusButton"
               [class.selected]="status() === step.status"
               [attr.aria-pressed]="status() === step.status"
-              [disabled]="!canEditFields()"
+              [disabled]="!canMoveTo(step.status) || isSubmitting()"
               (click)="changeStatus(step.status)"
             >
               {{ step.label }}

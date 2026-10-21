@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -193,6 +194,99 @@ class EventControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(updatePayload)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
+    }
+
+    @Test
+    void changeStatus_publishesADraft() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        UUID eventId = createDraftEventAndReturnId(token, "Event a publier par PATCH-" + System.nanoTime());
+
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+    }
+
+    @Test
+    void changeStatus_forbiddenTransition_returns409AndKeepsTheStatus() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        UUID eventId = createDraftEventAndReturnId(token, "Event qui ne recule pas-" + System.nanoTime());
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DRAFT\"}"))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/events/" + eventId).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+    }
+
+    @Test
+    void changeStatus_byNonOwner_returns403() throws Exception {
+        String ownerToken = loginAndGetToken(organizer.getEmail());
+        UUID eventId = createDraftEventAndReturnId(ownerToken, "Event d un autre-" + System.nanoTime());
+        String otherToken = loginAndGetToken(otherOrganizer.getEmail());
+
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + otherToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void changeStatus_asMember_returns403() throws Exception {
+        AppUser member = createActiveUser("member-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        String token = loginAndGetToken(member.getEmail());
+
+        mockMvc.perform(patch("/events/" + UUID.randomUUID() + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void changeStatus_withoutStatus_returns400() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        UUID eventId = createDraftEventAndReturnId(token, "Event sans statut-" + System.nanoTime());
+
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateEvent_withForbiddenStatusTransition_returns409() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        UUID eventId = createDraftEventAndReturnId(token, "Event publie puis remis en brouillon-" + System.nanoTime());
+        mockMvc.perform(patch("/events/" + eventId + "/status")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLISHED\"}"))
+                .andExpect(status().isOk());
+
+        Map<String, Object> payload = new java.util.HashMap<>(objectMapper.readValue(
+                validEventPayload("Event publie puis remis en brouillon-" + System.nanoTime()), Map.class));
+        payload.remove("idClub");
+        payload.put("status", "DRAFT");
+
+        mockMvc.perform(put("/events/" + eventId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isConflict());
     }
 
     // ---------------------------------------------------------------
