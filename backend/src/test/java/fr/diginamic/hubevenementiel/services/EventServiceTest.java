@@ -912,6 +912,81 @@ class EventServiceTest {
         assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
     }
 
+    private List<Inscription> givenRegistrations(Event event) {
+        AppUser confirmed = new AppUser();
+        confirmed.setEmail("confirme@example.com");
+        AppUser waiting = new AppUser();
+        waiting.setEmail("attente@example.com");
+        List<Inscription> inscriptions = List.of(
+                new Inscription(confirmed, event, BigDecimal.TEN, InscriptionStatus.CONFIRMED),
+                new Inscription(waiting, event, BigDecimal.TEN, InscriptionStatus.WAITING_LIST));
+        when(inscriptionRepo.findByEventIdAndStatusIn(uuid(1), List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)))
+                .thenReturn(inscriptions);
+        return inscriptions;
+    }
+
+    @Test
+    void changeStatus_toCancelled_keepsConfirmedInscriptions_cancelsTheWaitingListAndNotifiesEveryone() throws HttpException {
+        Event event = eventWithStatus(EventStatus.PUBLISHED);
+        event.setId(uuid(1));
+        List<Inscription> inscriptions = givenRegistrations(event);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eventService.changeStatus(uuid(1), EventStatus.CANCELLED, ownerPrincipal());
+
+        ArgumentCaptor<EventCancelledEvent> captor = ArgumentCaptor.forClass(EventCancelledEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
+        assertThat(captor.getValue().eventTitle()).isEqualTo(event.getTitle());
+        Inscription confirmed = inscriptions.get(0);
+        Inscription waiting = inscriptions.get(1);
+        assertThat(confirmed.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        assertThat(waiting.getStatus()).isEqualTo(InscriptionStatus.CANCELED);
+        assertThat(waiting.getCancelObject()).isNotBlank();
+        verify(inscriptionRepo).saveAll(List.of(waiting));
+    }
+
+    @Test
+    void changeStatus_toFinishedOrPublished_notifiesNobody() throws HttpException {
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        eventWithStatus(EventStatus.PUBLISHED);
+        eventService.changeStatus(uuid(1), EventStatus.FINISHED, ownerPrincipal());
+        eventWithStatus(EventStatus.DRAFT);
+        eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal());
+
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+        verify(inscriptionRepo, never()).saveAll(any());
+    }
+
+    @Test
+    void updateEvent_toCancelled_keepsConfirmedInscriptions_cancelsTheWaitingListAndNotifiesEveryone() throws HttpException {
+        Event event = eventWithStatus(EventStatus.PUBLISHED);
+        event.setId(uuid(1));
+        List<Inscription> inscriptions = givenRegistrations(event);
+        validEvent.setStatus(EventStatus.CANCELLED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eventService.updateEvent(uuid(1), validEvent, ownerPrincipal());
+
+        ArgumentCaptor<EventCancelledEvent> captor = ArgumentCaptor.forClass(EventCancelledEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
+        assertThat(inscriptions.get(0).getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        assertThat(inscriptions.get(1).getStatus()).isEqualTo(InscriptionStatus.CANCELED);
+    }
+
+    @Test
+    void updateEvent_alreadyCancelled_doesNotNotifyAgain() throws HttpException {
+        eventWithStatus(EventStatus.CANCELLED);
+        validEvent.setStatus(EventStatus.CANCELLED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eventService.updateEvent(uuid(1), validEvent, ownerPrincipal());
+
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+        verify(inscriptionRepo, never()).saveAll(any());
+    }
+
     private Event cloneFutureEvent() {
         Event event = new Event();
         event.setOrganizer(organizer);

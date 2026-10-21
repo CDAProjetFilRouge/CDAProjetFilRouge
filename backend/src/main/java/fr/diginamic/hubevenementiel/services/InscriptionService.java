@@ -154,7 +154,8 @@ public class InscriptionService {
      */
     public List<Inscription> findByUser(UUID id, int page, int size) throws HttpException {
         Pageable pageable = PageRequest.of(page, size);
-        List<Inscription> inscriptions = inscriptionRepo.findByUserId(id, pageable).getContent();
+        List<Inscription> inscriptions = inscriptionRepo
+                .findByUserIdAndEventStatusNot(id, EventStatus.CANCELLED, pageable).getContent();
 
         return inscriptions;
     }

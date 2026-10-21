@@ -51,12 +51,15 @@ class DashboardServiceTest {
     @Test
     void getKpis_member_returnsInscriptionAndClubCounters() {
         AppUserPrincipal principal = new AppUserPrincipal(uuid(4), "m@example.com", "MEMBER");
-        when(inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
-                eq(uuid(4)), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(3L);
-        when(inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
-                eq(uuid(4)), eq(InscriptionStatus.WAITING_LIST), any(LocalDateTime.class))).thenReturn(1L);
-        when(inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeLessThan(
-                eq(uuid(4)), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class))).thenReturn(7L);
+        when(inscriptionRepo.countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeGreaterThanEqual(
+                eq(uuid(4)), eq(InscriptionStatus.CONFIRMED), eq(EventStatus.CANCELLED), any(LocalDateTime.class)))
+                .thenReturn(3L);
+        when(inscriptionRepo.countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeGreaterThanEqual(
+                eq(uuid(4)), eq(InscriptionStatus.WAITING_LIST), eq(EventStatus.CANCELLED), any(LocalDateTime.class)))
+                .thenReturn(1L);
+        when(inscriptionRepo.countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeLessThan(
+                eq(uuid(4)), eq(InscriptionStatus.CONFIRMED), eq(EventStatus.CANCELLED), any(LocalDateTime.class)))
+                .thenReturn(7L);
         when(clubRepo.countActiveByMemberId(uuid(4))).thenReturn(2L);
 
         List<KpiResponseDto> kpis = dashboardService.getKpis(principal);

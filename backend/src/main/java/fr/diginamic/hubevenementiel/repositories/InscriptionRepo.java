@@ -28,6 +28,8 @@ public interface InscriptionRepo extends JpaRepository<Inscription, UUID> {
     @EntityGraph(attributePaths = {"event", "event.club"})
     Page<Inscription> findByUserId(UUID id, Pageable pageable);
 
+    Page<Inscription> findByUserIdAndEventStatusNot(UUID id, EventStatus eventStatus, Pageable pageable);
+
     /**
      *
      * @param id id of the events you want to find inscriptions associated with
@@ -156,6 +158,12 @@ public interface InscriptionRepo extends JpaRepository<Inscription, UUID> {
      */
     long countByUserIdAndStatusAndEventStartDateTimeLessThan(UUID userId, InscriptionStatus status,
             LocalDateTime to);
+
+    long countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeGreaterThanEqual(UUID userId,
+            InscriptionStatus status, EventStatus eventStatus, LocalDateTime from);
+
+    long countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeLessThan(UUID userId,
+            InscriptionStatus status, EventStatus eventStatus, LocalDateTime to);
 
     /**
      *
