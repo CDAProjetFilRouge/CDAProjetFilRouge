@@ -16,6 +16,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.dtos.event.EventCalendarResponseDto;
 import fr.diginamic.hubevenementiel.repositories.EventInscriptionCount;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
@@ -48,6 +49,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -430,6 +432,74 @@ class EventServiceTest {
         assertThat(pageable.getValue().getSort().getOrderFor("startDateTime").getDirection())
                 .isEqualTo(Sort.Direction.DESC);
         assertThat(result.getContent()).containsExactly(validEvent);
+    }
+
+    // ---------------------------------------------------------------
+    // findOrganizedBetween : calendrier de l'organisateur
+    // ---------------------------------------------------------------
+
+    @Test
+    void findOrganizedBetween_invertedRange_throwsBadRequest() {
+        LocalDateTime from = LocalDateTime.of(2030, 5, 1, 0, 0);
+
+        assertThrows(BadRequestException.class,
+                () -> eventService.findOrganizedBetween(from, from.minusDays(1), ownerPrincipal()));
+        assertThrows(BadRequestException.class,
+                () -> eventService.findOrganizedBetween(from, from, ownerPrincipal()));
+
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void findOrganizedBetween_rangeAboveOneYear_throwsBadRequest() {
+        LocalDateTime from = LocalDateTime.of(2030, 1, 1, 0, 0);
+
+        assertThrows(BadRequestException.class,
+                () -> eventService.findOrganizedBetween(from, from.plusDays(367), ownerPrincipal()));
+
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void findOrganizedBetween_returnsEveryStatusWithConfirmedCounts() throws HttpException {
+        LocalDateTime from = LocalDateTime.of(2030, 5, 1, 0, 0);
+        LocalDateTime to = from.plusMonths(1);
+        Event published = new Event();
+        published.setId(uuid(1));
+        published.setTitle("Publié");
+        published.setStatus(EventStatus.PUBLISHED);
+        published.setMaxCapacity(20);
+        Event cancelled = new Event();
+        cancelled.setId(uuid(2));
+        cancelled.setTitle("Annulé");
+        cancelled.setStatus(EventStatus.CANCELLED);
+        cancelled.setMaxCapacity(10);
+        when(eventRepository
+                .findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+                        uuid(8), to, from))
+                .thenReturn(List.of(published, cancelled));
+        when(inscriptionRepo.countByEventIdsAndStatus(List.of(uuid(1), uuid(2)), InscriptionStatus.CONFIRMED))
+                .thenReturn(List.of(count(uuid(1), 4L)));
+
+        List<EventCalendarResponseDto> result = eventService.findOrganizedBetween(from, to, ownerPrincipal());
+
+        assertThat(result).extracting(EventCalendarResponseDto::getStatus)
+                .containsExactly(EventStatus.PUBLISHED, EventStatus.CANCELLED);
+        assertThat(result).extracting(EventCalendarResponseDto::getConfirmedCount).containsExactly(4L, 0L);
+        assertThat(result.get(1).getMaxCapacity()).isEqualTo(10);
+    }
+
+    @Test
+    void findOrganizedBetween_noEvent_doesNotCountInscriptions() throws HttpException {
+        LocalDateTime from = LocalDateTime.of(2030, 5, 1, 0, 0);
+        when(eventRepository
+                .findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+                        any(), any(), any()))
+                .thenReturn(List.of());
+
+        assertThat(eventService.findOrganizedBetween(from, from.plusMonths(1), ownerPrincipal())).isEmpty();
+
+        verifyNoInteractions(inscriptionRepo);
     }
 
     // ---------------------------------------------------------------

@@ -52,3 +52,49 @@ export function toCalendarEvent(inscription: InscriptionModel, options: Inscript
     club: inscription.event.clubName,
   };
 }
+
+export type OrganizedEventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'FINISHED';
+
+// Réponse de GET /events/mine/calendar.
+export interface OrganizedEventModel {
+  id: string;
+  title: string;
+  startDateTime: string;
+  endDateTime: string;
+  status: OrganizedEventStatus;
+  maxCapacity: number | null;
+  confirmedCount: number;
+  clubName?: string | null;
+}
+
+export const ORGANIZED_STATUS_LABELS: Record<OrganizedEventStatus, string> = {
+  DRAFT: 'Brouillon',
+  PUBLISHED: 'Publié',
+  CANCELLED: 'Annulé',
+  FINISHED: 'Terminé',
+};
+
+export const ORGANIZED_ID_PREFIX = 'org:';
+
+export function fillLabel(event: OrganizedEventModel): string {
+  return event.maxCapacity ? `${event.confirmedCount}/${event.maxCapacity}` : `${event.confirmedCount}`;
+}
+
+// Un évènement organisé vu comme un évènement du calendrier. Si l'organisateur est aussi inscrit à son propre
+// évènement, `inscription` ajoute son badge : l'évènement n'apparaît qu'une fois, avec les deux informations.
+export function toOrganizedCalendarEvent(event: OrganizedEventModel, inscription?: InscriptionModel): CalendarEvent {
+  const badges = [`${ORGANIZED_STATUS_LABELS[event.status]} · ${fillLabel(event)}`];
+  if (inscription) {
+    badges.push(inscription.status === 'WAITING_LIST' ? 'Liste d’attente' : 'Inscrit·e');
+  }
+  return {
+    id: `${ORGANIZED_ID_PREFIX}${event.id}`,
+    title: event.title,
+    start: event.startDateTime,
+    end: event.endDateTime,
+    badge: badges.join(' · '),
+    club: event.clubName,
+    organized: true,
+    status: event.status,
+  };
+}

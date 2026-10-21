@@ -6,7 +6,13 @@ import listPlugin from '@fullcalendar/angular/list';
 import localesAll from '@fullcalendar/angular/locales-all';
 import classicTheme from '@fullcalendar/angular/themes/classic';
 import timeGridPlugin from '@fullcalendar/angular/timegrid';
-import { CalendarEvent } from './event-calendar.models';
+import { CalendarEvent, CalendarRange } from './event-calendar.models';
+
+// Date locale sans fuseau (AAAA-MM-JJTHH:MM:SS), le format attendu par le back pour un LocalDateTime.
+function toLocalIso(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
 
 @Component({
   imports: [FullCalendarModule, DatePipe],
@@ -24,6 +30,8 @@ export class EventCalendar {
   readonly highlightedId = input<string | undefined>(undefined);
   readonly highlightedMark = input<'plus' | 'check' | 'none'>('none');
   readonly eventSelected = output<string>();
+  // Plage réellement affichée (jours des mois voisins compris), à chaque changement de mois ou de vue.
+  readonly rangeChanged = output<CalendarRange>();
 
   private readonly calendar = viewChild(FullCalendarComponent);
   protected readonly title = signal('');
@@ -75,16 +83,27 @@ export class EventCalendar {
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,listMonth',
         },
-    datesSet: (info) => this.title.set(info.view.title),
+    datesSet: (info) => {
+      this.title.set(info.view.title);
+      this.rangeChanged.emit({ from: toLocalIso(info.view.activeStart), to: toLocalIso(info.view.activeEnd) });
+    },
     events: this.events().map((e) => ({
       id: e.id,
       title: e.title,
       start: e.start,
       end: e.end,
       // Couleurs explicites : fond plein + texte blanc, y compris dans la vue semaine.
-      color: e.muted ? 'var(--color-muted)' : 'var(--color-primary)',
-      contrastColor: '#fff',
+      color: e.organized ? 'var(--color-pine-soft)' : e.muted ? 'var(--color-muted)' : 'var(--color-primary)',
+      contrastColor: e.organized ? 'var(--color-pine)' : '#fff',
     })),
+    ...(this.large()
+      ? {}
+      : {
+          eventClass: (info: { event: { id: string } }) => {
+            const event = this.events().find((e) => e.id === info.event.id);
+            return event?.organized ? `organized-event status-${event.status?.toLowerCase()}` : '';
+          },
+        }),
     eventClick: (info) => this.eventSelected.emit(info.event.id),
     eventMouseEnter: (info) => {
       const event = this.events().find((e) => e.id === info.event.id);
