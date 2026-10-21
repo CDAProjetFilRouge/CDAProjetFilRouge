@@ -51,7 +51,6 @@ const QUICK_ACTIONS: Record<Role, QuickAction[]> = {
   ORGANIZER: [
     { label: 'Créer un événement', link: '/events/new' },
     { label: 'Parcourir les événements', link: '/' },
-    { label: 'Mon calendrier', link: '/calendar' },
     { label: 'Mon compte', link: '/account' },
   ],
   ADMINISTRATOR: [

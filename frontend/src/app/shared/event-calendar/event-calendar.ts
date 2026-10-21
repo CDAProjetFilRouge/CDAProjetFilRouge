@@ -10,14 +10,14 @@ import { CalendarEvent } from './event-calendar.models';
 
 @Component({
   imports: [FullCalendarModule, DatePipe],
-  host: { '[class.large]': 'large()' },
+  host: { '[class.large]': 'large()', '[class.compact]': 'compact()' },
   selector: 'app-event-calendar',
   styleUrl: './event-calendar.scss',
   templateUrl: './event-calendar.html',
 })
 export class EventCalendar {
   readonly events = input.required<CalendarEvent[]>();
-  // Intégré au tableau de bord : grille plus basse.
+  // Intégré au tableau de bord : la grille remplit la hauteur de son conteneur.
   readonly compact = input(false);
   readonly large = input(false);
   readonly initialDate = input<string | undefined>(undefined);
@@ -40,7 +40,7 @@ export class EventCalendar {
     locale: 'fr',
     firstDay: 1,
     initialView: 'dayGridMonth',
-    ...(this.compact() ? { height: 400, dayMaxEvents: true } : {}),
+    ...(this.compact() ? { height: '100%', dayMaxEvents: true } : {}),
     ...(this.large()
       ? {
           height: 'auto',

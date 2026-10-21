@@ -150,9 +150,9 @@ describe('EventCalendar', () => {
     expect(options().initialDate).toBe('2031-04-15');
   });
 
-  it('abaisse la grille en mode compact', async () => {
+  it('remplit la hauteur du conteneur en mode compact', async () => {
     await render(EVENTS, { compact: true });
 
-    expect(options().height).toBe(400);
+    expect(options().height).toBe('100%');
   });
 });

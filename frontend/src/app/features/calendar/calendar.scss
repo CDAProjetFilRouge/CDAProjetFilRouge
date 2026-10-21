@@ -1,19 +1,15 @@
-.calendar-page {
-  padding: 36px var(--page-padding) 48px;
+:host {
+  display: block;
+  height: 100%;
 }
 
-.calendar-page h1 {
-  margin-bottom: 16px;
+.calendar-page {
+  height: 100%;
+  font-size: 13px;
 }
 
 .error {
   color: var(--color-danger);
-}
-
-// Mode compact (tableau de bord) : le calendrier perd ses marges de page.
-.calendar-page.compact {
-  padding: 0;
-  font-size: 12px;
 }
 
 // Boîte de dialogue du détail d'un évènement.
