@@ -80,7 +80,6 @@ export class EventForm implements OnDestroy {
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
   protected readonly isSubmitting = signal(false);
-  protected readonly selectedStatus = signal('');
 
   protected readonly clubs = computed(() => this.authService.currentUser()?.clubs ?? []);
   protected readonly status = computed<EventStatus>(() => this.detail()?.status ?? 'DRAFT');
@@ -436,15 +435,22 @@ export class EventForm implements OnDestroy {
     return request;
   }
 
-  private changeStatus(newStatus: string): void{
-    this.detail.update(detail => {
-      if (detail === null) {
-        return null;
+  protected async changeStatus(next: EventStatus): Promise<void> {
+    if (next === this.status() || !this.canEditFields()) {
+      return;
+    }
+    if (next === 'CANCELLED' || next === 'FINISHED') {
+      const confirmed = await this.confirmDialog.ask({
+        title: next === 'CANCELLED' ? "Annuler l'évènement" : "Marquer l'évènement comme terminé",
+        message: 'Le nouveau statut sera appliqué quand vous enregistrerez les modifications.',
+        confirmLabel: next === 'CANCELLED' ? "Annuler l'évènement" : 'Marquer comme terminé',
+        cancelLabel: 'Retour',
+        tone: 'danger',
+      });
+      if (!confirmed) {
+        return;
       }
-
-      return {
-        ...detail, status: newStatus as EventStatus
-      }
-    })
+    }
+    this.detail.update((detail) => (detail ? { ...detail, status: next } : detail));
   }
 }

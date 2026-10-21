@@ -18,10 +18,17 @@
     @if (isEdit) {
       <section class="status-bar">
         <p class="status-title">Statut de l'évènement</p>
-        <div class="steps">
+        <div class="steps" role="group" aria-label="Statut de l'évènement">
           @for (step of statusSteps; track step.status) {
-            <button type="button" class="statusButton" [value]="step.status" (click)="changeStatus(step.status)" [class.selected]="status() === step.status">
-              {{ step.status }}
+            <button
+              type="button"
+              class="statusButton"
+              [class.selected]="status() === step.status"
+              [attr.aria-pressed]="status() === step.status"
+              [disabled]="!canEditFields()"
+              (click)="changeStatus(step.status)"
+            >
+              {{ step.label }}
             </button>
           }
         </div>
@@ -197,7 +204,7 @@
                 <li>
                   <img [src]="imageUrl(image.path)" alt="Photo de la galerie" />
                   @if (isOwner()) {
-                    <button class="btn remove" type="button" (click)="removeImage(image.id.toString())">
+                    <button class="btn remove" type="button" (click)="removeImage(image.id)">
                       Retirer
                     </button>
                   }
