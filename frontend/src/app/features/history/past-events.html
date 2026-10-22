@@ -1,0 +1,31 @@
+<div class="past-events">
+  <header class="head">
+    <h1>Mes évènements passés</h1>
+    <p class="subtitle">Les évènements auxquels vous étiez inscrit·e, terminés ou annulés.</p>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  <ul class="list" [attr.aria-busy]="loading()">
+    @for (ins of inscriptions(); track ins.id) {
+      <li>
+        <a class="row" [routerLink]="['/event-details', ins.event.id]">
+          <span class="date">{{ ins.event.startDateTime | date: 'dd/MM/yyyy' }}</span>
+          <span class="title">{{ ins.event.title }}</span>
+          @if (ins.event.clubName) {
+            <span class="club">{{ ins.event.clubName }}</span>
+          }
+          @if (ins.event.status === 'CANCELLED') {
+            <span class="badge cancelled">Annulé</span>
+          }
+        </a>
+      </li>
+    } @empty {
+      @if (!loading() && !errorMessage()) {
+        <li class="empty">Aucun évènement passé pour le moment.</li>
+      }
+    }
+  </ul>
+</div>

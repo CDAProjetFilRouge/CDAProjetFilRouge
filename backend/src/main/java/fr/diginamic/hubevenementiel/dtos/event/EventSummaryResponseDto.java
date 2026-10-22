@@ -3,6 +3,8 @@ package fr.diginamic.hubevenementiel.dtos.event;
 import java.util.UUID;
 import java.time.LocalDateTime;
 
+import fr.diginamic.hubevenementiel.enums.EventStatus;
+
 public class EventSummaryResponseDto {
 
     private UUID id;
@@ -10,6 +12,7 @@ public class EventSummaryResponseDto {
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private String clubName;
+    private EventStatus status;
 
     public EventSummaryResponseDto() {
     }
@@ -35,6 +38,14 @@ public class EventSummaryResponseDto {
 
     public void setClubName(String clubName) {
         this.clubName = clubName;
+    }
+
+    public EventStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EventStatus status) {
+        this.status = status;
     }
 
     public String getTitle() {

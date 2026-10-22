@@ -191,6 +191,12 @@ export class EventDetails implements OnInit {
       return { kind: 'login' };
     }
     const mine = this.myInscription();
+    if (mine && event.status === 'CANCELLED') {
+      return { kind: 'blocked', reason: 'Cet évènement a été annulé.' };
+    }
+    if (mine && (event.status === 'FINISHED' || this.isEnded())) {
+      return { kind: 'blocked', reason: 'Cet évènement est terminé : vous y étiez inscrit·e.' };
+    }
     if (mine) {
       return {
         kind: 'registered',

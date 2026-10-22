@@ -10,6 +10,7 @@ export interface InscriptionModel {
     startDateTime: string;
     endDateTime: string;
     clubName?: string | null;
+    status?: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'FINISHED';
   };
   inscriptionDate: string;
   status: InscriptionStatus;

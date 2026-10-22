@@ -17,6 +17,7 @@ public class EventSummaryMapper {
         dto.setTitle(event.getTitle());
         dto.setStartDateTime(event.getStartDateTime());
         dto.setEndDateTime(event.getEndDateTime());
+        dto.setStatus(event.getStatus());
         dto.setClubName(event.getClub() != null ? event.getClub().getName() : null);
 
         return dto;

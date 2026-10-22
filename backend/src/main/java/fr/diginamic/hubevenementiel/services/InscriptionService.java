@@ -175,6 +175,21 @@ public class InscriptionService {
     }
 
     /**
+     * Historique d'un utilisateur : réservé à l'utilisateur lui-même ou à un administrateur.
+     */
+    public List<Inscription> findPastByUser(AppUserPrincipal principal, UUID id, int page, int size)
+            throws HttpException {
+        boolean isAdmin = principal != null && "ADMINISTRATOR".equals(principal.role());
+        boolean isSelf = principal != null && id != null && id.equals(principal.id());
+        if (!isAdmin && !isSelf) {
+            throw new ForbiddenException("Vous ne pouvez consulter que votre propre historique.");
+        }
+        checkPaging(page, size);
+        return inscriptionRepo.findHistory(id, InscriptionStatus.CONFIRMED, LocalDateTime.now(), EventStatus.CANCELLED,
+                PageRequest.of(page, size)).getContent();
+    }
+
+    /**
      * Inscriptions d'un évènement : réservées à son organisateur ou à un administrateur.
      */
     public List<Inscription> findByEvent(AppUserPrincipal principal, UUID eventId, int page, int size)
@@ -283,6 +298,12 @@ public class InscriptionService {
 
         if (inscription.getStatus() == InscriptionStatus.CANCELED) {
             throw new ConflictException("Cette inscription est déjà annulée.");
+        }
+
+        Event event = inscription.getEvent();
+        if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.FINISHED
+                || event.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new ConflictException("Cet évènement est terminé ou annulé : l'inscription ne peut plus être annulée.");
         }
 
         boolean freesASpot = inscription.getStatus() == InscriptionStatus.CONFIRMED;

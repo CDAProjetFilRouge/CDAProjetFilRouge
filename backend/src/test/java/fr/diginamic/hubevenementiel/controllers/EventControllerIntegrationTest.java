@@ -254,6 +254,53 @@ class EventControllerIntegrationTest {
         mockMvc.perform(get("/inscriptions/user/" + confirmed.getId()).header("Authorization", "Bearer " + memberToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+        mockMvc.perform(get("/inscriptions/user/" + confirmed.getId() + "/past").header("Authorization", "Bearer " + memberToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].event.id").value(eventId.toString()))
+                .andExpect(jsonPath("$[0].event.status").value("CANCELLED"));
+        mockMvc.perform(get("/inscriptions/user/" + waiting.getId() + "/past").header("Authorization", "Bearer " + loginAndGetToken(waiting.getEmail())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void memberHistory_listsConfirmedInscriptionsToEndedEventsOnly_mostRecentFirst() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String older = "Histo ancien-" + System.nanoTime();
+        String recent = "Histo recent-" + System.nanoTime();
+        String upcoming = "Histo a venir-" + System.nanoTime();
+        String notAttended = "Histo attente-" + System.nanoTime();
+        for (String title : new String[] { older, recent, upcoming, notAttended }) {
+            createPublishedEvent(token, title, "Paris", start, start.plusHours(2), 50);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        setDates(older, now.minusDays(9), now.minusDays(8));
+        setDates(recent, now.minusDays(3), now.minusDays(2));
+        setDates(notAttended, now.minusDays(5), now.minusDays(4));
+        AppUser member = createActiveUser("histo-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        for (String title : new String[] { older, recent, upcoming }) {
+            entityManager.persist(new fr.diginamic.hubevenementiel.entities.Inscription(member, eventByTitle(title),
+                    java.math.BigDecimal.TEN, fr.diginamic.hubevenementiel.enums.InscriptionStatus.CONFIRMED));
+        }
+        entityManager.persist(new fr.diginamic.hubevenementiel.entities.Inscription(member, eventByTitle(notAttended),
+                java.math.BigDecimal.TEN, fr.diginamic.hubevenementiel.enums.InscriptionStatus.WAITING_LIST));
+        entityManager.flush();
+
+        mockMvc.perform(get("/inscriptions/user/" + member.getId() + "/past")
+                        .header("Authorization", "Bearer " + loginAndGetToken(member.getEmail())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].event.title").value(recent))
+                .andExpect(jsonPath("$[1].event.title").value(older));
+    }
+
+    private fr.diginamic.hubevenementiel.entities.Event eventByTitle(String title) {
+        return entityManager.createQuery("select e from Event e where e.title = :title",
+                        fr.diginamic.hubevenementiel.entities.Event.class)
+                .setParameter("title", title)
+                .getSingleResult();
     }
 
     @Test
