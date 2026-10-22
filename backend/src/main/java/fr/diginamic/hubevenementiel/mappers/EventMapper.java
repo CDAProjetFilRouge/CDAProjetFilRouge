@@ -54,6 +54,7 @@ public class EventMapper {
         entity.setAffiliatePrice(dto.getAffiliatePrice());
         entity.setNonAffiliatePrice(dto.getNonAffiliatePrice());
         entity.setMaxCapacity(dto.getMaxCapacity());
+        entity.setCommentsClosedAfterEnd(Boolean.TRUE.equals(dto.getCommentsClosedAfterEnd()));
         entity.setStatus(dto.getStatus());
         entity.setClub(null);
 

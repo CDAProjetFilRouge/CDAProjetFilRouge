@@ -15,6 +15,7 @@ export interface EventDetailsModel{
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
+  commentsClosedAfterEnd?: boolean;
   remainingSpots: number;
   imageGallery: {
       id: string;

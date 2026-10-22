@@ -8,13 +8,20 @@ import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
+import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.exceptions.ConflictException;
+import fr.diginamic.hubevenementiel.exceptions.TooManyRequestsException;
 import fr.diginamic.hubevenementiel.repositories.CommentRepo;
+import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
 import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -37,6 +44,12 @@ class CommentServiceTest {
     private AppUserService appUserService;
     @Mock
     private EventService eventService;
+    @Mock
+    private InscriptionRepo inscriptionRepo;
+    @Mock
+    private RequestRateLimiter rateLimiter;
+    @Spy
+    private CommentContentFilter contentFilter = new CommentContentFilter();
 
     @InjectMocks
     private CommentService commentService;
@@ -86,6 +99,119 @@ class CommentServiceTest {
         Comment result = commentService.createComment(uuid(2), uuid(6), "Super évènement");
 
         assertThat(result.getAuthor()).isEqualTo(author);
+    }
+
+    // ---------------------------------------------------------------
+    // createComment : qui peut commenter, anti-spam, filtre
+    // ---------------------------------------------------------------
+
+    private void givenEventAndAuthor() throws HttpException {
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(appUserService.findById(uuid(6))).thenReturn(author);
+    }
+
+    private void givenEnded(boolean commentsClosed) {
+        event.setStatus(EventStatus.FINISHED);
+        event.setEndDateTime(LocalDateTime.now().minusDays(1));
+        event.setCommentsClosedAfterEnd(commentsClosed);
+    }
+
+    @Test
+    void createComment_cancelledEvent_isReservedToItsOrganizer() throws HttpException {
+        event.setStatus(EventStatus.CANCELLED);
+        givenEventAndAuthor();
+
+        assertThrows(ForbiddenException.class, () -> commentService.createComment(uuid(2), uuid(6), "Dommage"));
+        verify(commentRepo, never()).save(any(Comment.class));
+
+        when(appUserService.findById(uuid(8))).thenReturn(organizer);
+        when(commentRepo.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        assertThat(commentService.createComment(uuid(2), uuid(8), "Évènement reporté, merci de votre compréhension")
+                .getAuthor()).isEqualTo(organizer);
+    }
+
+    @Test
+    void createComment_endedEvent_isReservedToParticipantsAndOrganizer() throws HttpException {
+        givenEnded(false);
+        givenEventAndAuthor();
+        when(inscriptionRepo.existsByUserIdAndEventIdAndStatus(uuid(6), uuid(2), InscriptionStatus.CONFIRMED))
+                .thenReturn(false);
+
+        assertThrows(ForbiddenException.class, () -> commentService.createComment(uuid(2), uuid(6), "Belle soirée"));
+
+        when(inscriptionRepo.existsByUserIdAndEventIdAndStatus(uuid(6), uuid(2), InscriptionStatus.CONFIRMED))
+                .thenReturn(true);
+        when(commentRepo.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        assertThat(commentService.createComment(uuid(2), uuid(6), "Belle soirée").getContent())
+                .isEqualTo("Belle soirée");
+    }
+
+    @Test
+    void createComment_endedEventWithCommentsClosed_refusesEveryone() throws HttpException {
+        givenEnded(true);
+        givenEventAndAuthor();
+        when(appUserService.findById(uuid(8))).thenReturn(organizer);
+
+        assertThrows(ForbiddenException.class, () -> commentService.createComment(uuid(2), uuid(6), "Belle soirée"));
+        assertThrows(ForbiddenException.class, () -> commentService.createComment(uuid(2), uuid(8), "Merci à tous"));
+        verify(commentRepo, never()).save(any(Comment.class));
+    }
+
+    @Test
+    void createComment_notEndedEventWithCommentsClosedOption_staysOpen() throws HttpException {
+        event.setStatus(EventStatus.PUBLISHED);
+        event.setEndDateTime(LocalDateTime.now().plusDays(3));
+        event.setCommentsClosedAfterEnd(true);
+        givenEventAndAuthor();
+        when(commentRepo.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThat(commentService.createComment(uuid(2), uuid(6), "Hâte d'y être").getContent())
+                .isEqualTo("Hâte d'y être");
+    }
+
+    @Test
+    void createComment_administratorIsAllowedOnAnEndedEvent() throws HttpException {
+        givenEnded(false);
+        AppUser admin = new AppUser();
+        admin.setId(uuid(99));
+        admin.setRole(Role.ADMINISTRATOR);
+        when(eventService.findById(uuid(2))).thenReturn(event);
+        when(appUserService.findById(uuid(99))).thenReturn(admin);
+        when(commentRepo.save(any(Comment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThat(commentService.createComment(uuid(2), uuid(99), "Rappel : photos à venir").getAuthor())
+                .isEqualTo(admin);
+    }
+
+    @Test
+    void createComment_duplicateOrTooMany_isRefused() throws HttpException {
+        givenEventAndAuthor();
+        when(commentRepo.existsByEventIdAndAuthorIdAndContentIgnoreCase(uuid(2), uuid(6), "Super")).thenReturn(true);
+        assertThrows(ConflictException.class, () -> commentService.createComment(uuid(2), uuid(6), "  Super "));
+
+        when(commentRepo.countByEventIdAndAuthorId(uuid(2), uuid(6))).thenReturn(20L);
+        assertThrows(ConflictException.class, () -> commentService.createComment(uuid(2), uuid(6), "Un autre"));
+        verify(commentRepo, never()).save(any(Comment.class));
+    }
+
+    @Test
+    void createComment_tooFast_throwsTooManyRequests() throws HttpException {
+        givenEventAndAuthor();
+        when(rateLimiter.tryConsume(org.mockito.ArgumentMatchers.eq("comment:" + uuid(6)),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(12_000L);
+
+        assertThrows(TooManyRequestsException.class, () -> commentService.createComment(uuid(2), uuid(6), "Encore un"));
+        verify(commentRepo, never()).save(any(Comment.class));
+    }
+
+    @Test
+    void createComment_linkOrInsult_isRefusedBeforeAnyOtherCheck() throws HttpException {
+        givenEventAndAuthor();
+
+        assertThrows(BadRequestException.class, () -> commentService.createComment(uuid(2), uuid(6), "Voir www.promo.fr"));
+        assertThrows(BadRequestException.class, () -> commentService.createComment(uuid(2), uuid(6), "Quel connard"));
+        verify(commentRepo, never()).save(any(Comment.class));
+        verify(rateLimiter, never()).tryConsume(any(), org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyLong());
     }
 
     // ---------------------------------------------------------------

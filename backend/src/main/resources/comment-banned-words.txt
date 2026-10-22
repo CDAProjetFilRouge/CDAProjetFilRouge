@@ -1,0 +1,62 @@
+# Mots et expressions refusés dans les commentaires, un par ligne (les lignes vides et celles qui commencent par # sont ignorées).
+# La casse, les accents, les chiffres à la place des lettres (c0nnard) et les lettres répétées (connaaard) sont ignorés.
+# Une expression de plusieurs mots est refusée telle quelle ; un mot seul n'est refusé que s'il est entier
+# (« concert » ne contient pas « con »).
+#
+# Base : liste française de LDNOOBW (List of Dirty, Naughty, Obscene, and Otherwise Bad Words),
+# https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words, licence CC BY 4.0, © Shutterstock, Inc.
+# Les termes ambigus ou anodins de cette liste ont été retirés (chatte, cul, bite, baiser, merde, putain, pédale...),
+# des insultes courantes ont été ajoutées. Ajouter ou retirer un mot ici suffit, sans toucher au code.
+
+# Insultes
+con
+conne
+connard
+connasse
+salaud
+salope
+pute
+fille de pute
+fils de pute
+enculé
+enculée
+enculeur
+enculeurs
+enfoiré
+enfoirée
+merdeux
+merdeuse
+pouffiasse
+grogniasse
+batard
+abruti
+cretin
+debile
+fdp
+ntm
+malpt
+nique ta mère
+nique ta race
+
+# Termes vulgaires
+couilles
+cramouille
+étron
+sac à foutre
+sac à merde
+trou du cul
+tringler
+branlette
+branleur
+branleuse
+clito
+
+# Termes discriminatoires
+nègre
+negro
+bougnoule
+youpin
+pédé
+pd
+tapette
+gouine

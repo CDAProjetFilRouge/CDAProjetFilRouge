@@ -40,6 +40,7 @@ export interface EventRequest {
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
+  commentsClosedAfterEnd: boolean;
   idClub?: string;
   status?: EventStatus;
 }
@@ -70,6 +71,7 @@ export interface EventDetail {
   affiliatePrice: number;
   nonAffiliatePrice: number;
   maxCapacity: number;
+  commentsClosedAfterEnd?: boolean;
   status: EventStatus;
   organizerId: string;
   imageGallery: EventImage[];

@@ -304,6 +304,52 @@ class EventControllerIntegrationTest {
     }
 
     @Test
+    void comments_onAnEndedEvent_onlyParticipantsCanPost_andTheClosedOptionStopsEveryone() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String title = "Commentaires fin-" + System.nanoTime();
+        createPublishedEvent(token, title, "Paris", start, start.plusHours(2), 50);
+        LocalDateTime now = LocalDateTime.now();
+        setDates(title, now.minusDays(2), now.minusDays(1));
+        AppUser participant = createActiveUser("participant-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        AppUser stranger = createActiveUser("inconnu-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        entityManager.persist(new fr.diginamic.hubevenementiel.entities.Inscription(participant, eventByTitle(title),
+                java.math.BigDecimal.TEN, fr.diginamic.hubevenementiel.enums.InscriptionStatus.CONFIRMED));
+        entityManager.flush();
+        UUID eventId = eventByTitle(title).getId();
+        String participantToken = loginAndGetToken(participant.getEmail());
+        String strangerToken = loginAndGetToken(stranger.getEmail());
+
+        mockMvc.perform(post("/events/" + eventId + "/comments").param("content", "Quelle belle journée")
+                        .header("Authorization", "Bearer " + strangerToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/events/" + eventId + "/comments").param("content", "Quelle belle journée")
+                        .header("Authorization", "Bearer " + participantToken))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/events/" + eventId + "/comments").param("content", "quelle belle journée")
+                        .header("Authorization", "Bearer " + participantToken))
+                .andExpect(status().isConflict());
+        mockMvc.perform(post("/events/" + eventId + "/comments").param("content", "Voir www.promo.fr")
+                        .header("Authorization", "Bearer " + participantToken))
+                .andExpect(status().isBadRequest());
+
+        entityManager.createQuery("update Event e set e.commentsClosedAfterEnd = true where e.id = :id")
+                .setParameter("id", eventId)
+                .executeUpdate();
+        entityManager.clear();
+
+        mockMvc.perform(post("/events/" + eventId + "/comments").param("content", "Merci encore")
+                        .header("Authorization", "Bearer " + participantToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/events/" + eventId + "/comments").param("content", "Merci à tous")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/events/" + eventId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.commentsClosedAfterEnd").value(true));
+    }
+
+    @Test
     void changeStatus_forbiddenTransition_returns409AndKeepsTheStatus() throws Exception {
         String token = loginAndGetToken(organizer.getEmail());
         UUID eventId = createDraftEventAndReturnId(token, "Event qui ne recule pas-" + System.nanoTime());

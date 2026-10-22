@@ -275,6 +275,56 @@ describe('EventDetails', () => {
     });
   });
 
+  describe('commentaires : qui peut publier', () => {
+    const mine = (status: string) => [
+      { id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status },
+    ];
+    const ended = { startDate: '2020-01-01T10:00:00', endDate: '2020-01-01T12:00:00' };
+    const policy = () => val<{ allowed: boolean; reason: string | null }>('commentPolicy');
+
+    it('laisse commenter un évènement à venir', async () => {
+      await setup(makeUser());
+
+      expect(policy().allowed).toBe(true);
+    });
+
+    it('réserve un évènement terminé aux participants confirmés', async () => {
+      await setup(makeUser(), { event: makeEvent({ status: 'FINISHED', ...ended }) });
+      expect(policy()).toEqual({ allowed: false, reason: 'Seuls les participants peuvent commenter un évènement terminé.' });
+
+      await setup(makeUser(), { event: makeEvent({ status: 'FINISHED', ...ended }), inscriptions: mine('WAITING_LIST') });
+      expect(policy().allowed).toBe(false);
+
+      await setup(makeUser(), { event: makeEvent({ status: 'FINISHED', ...ended }), inscriptions: mine('CONFIRMED') });
+      expect(policy().allowed).toBe(true);
+    });
+
+    it('ferme les commentaires d’un évènement terminé quand l’organisateur l’a demandé, même pour un participant', async () => {
+      await setup(makeUser(), {
+        event: makeEvent({ status: 'FINISHED', commentsClosedAfterEnd: true, ...ended }),
+        inscriptions: mine('CONFIRMED'),
+      });
+
+      expect(policy()).toEqual({ allowed: false, reason: 'Les commentaires sont fermés pour cet évènement terminé.' });
+    });
+
+    it('réserve un évènement annulé à son organisateur', async () => {
+      await setup(makeUser(), { event: makeEvent({ status: 'CANCELLED' }) });
+      expect(policy().allowed).toBe(false);
+
+      await setup(makeUser({ id: makeEvent().organizerId, role: 'ORGANIZER' }), { event: makeEvent({ status: 'CANCELLED' }) });
+      expect(policy().allowed).toBe(true);
+    });
+
+    it('remplace le champ de saisie par la raison quand on ne peut pas commenter', async () => {
+      await setup(makeUser(), { event: makeEvent({ status: 'FINISHED', ...ended }) });
+
+      const root = fixture.nativeElement as HTMLElement;
+      expect(root.querySelector('#comment-input')).toBeNull();
+      expect(root.textContent).toContain('Seuls les participants peuvent commenter');
+    });
+  });
+
   describe('inscription', () => {
     it('inscrit l’utilisateur puis recharge l’évènement et l’agenda', async () => {
       await setup(makeUser());

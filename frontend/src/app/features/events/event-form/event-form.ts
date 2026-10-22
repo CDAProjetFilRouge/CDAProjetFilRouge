@@ -127,6 +127,7 @@ export class EventForm implements OnDestroy {
         null as number | null,
         [Validators.required, Validators.min(1), Validators.max(MAX_CAPACITY)],
       ],
+      commentsClosedAfterEnd: [false],
       affiliatePrice: [
         null as number | null,
         [Validators.required, Validators.min(0), Validators.max(MAX_PRICE)],
@@ -301,6 +302,7 @@ export class EventForm implements OnDestroy {
           startDateTime: event.startDate.slice(0, 16),
           endDateTime: event.endDate.slice(0, 16),
           maxCapacity: event.maxCapacity,
+          commentsClosedAfterEnd: event.commentsClosedAfterEnd ?? false,
           affiliatePrice: event.affiliatePrice,
           nonAffiliatePrice: event.nonAffiliatePrice,
         });
@@ -429,6 +431,7 @@ export class EventForm implements OnDestroy {
       affiliatePrice: value.affiliatePrice as number,
       nonAffiliatePrice: value.nonAffiliatePrice as number,
       maxCapacity: value.maxCapacity as number,
+      commentsClosedAfterEnd: value.commentsClosedAfterEnd,
     };
     if (!this.isEdit) {
       request.idClub = value.clubId as string;

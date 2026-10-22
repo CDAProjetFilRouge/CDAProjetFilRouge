@@ -52,6 +52,9 @@ public class Event {
     @Column(name = "max_capacity", nullable = false, length = 10)
     private Integer maxCapacity;
 
+    @Column(name = "comments_closed_after_end", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean commentsClosedAfterEnd;
+
     @OneToMany(mappedBy = "event")
     @BatchSize(size = 20)
     private List<Image> imageGallery = new ArrayList<>();
@@ -159,6 +162,14 @@ public class Event {
 
     public void setNonAffiliatePrice(BigDecimal nonAffiliatePrice) {
         this.nonAffiliatePrice = nonAffiliatePrice;
+    }
+
+    public boolean isCommentsClosedAfterEnd() {
+        return commentsClosedAfterEnd;
+    }
+
+    public void setCommentsClosedAfterEnd(boolean commentsClosedAfterEnd) {
+        this.commentsClosedAfterEnd = commentsClosedAfterEnd;
     }
 
     public Integer getMaxCapacity() {

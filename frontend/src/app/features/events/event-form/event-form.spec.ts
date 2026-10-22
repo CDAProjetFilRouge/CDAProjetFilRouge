@@ -384,6 +384,19 @@ describe('EventForm', () => {
       const gallery = (component as unknown as { detail(): EventDetail }).detail().imageGallery;
       expect(gallery.map((image) => image.id)).toEqual(['2']);
     });
+    it('relit et renvoie l’option « fermer les commentaires à la fin de l’évènement »', async () => {
+      await setup('5');
+      http.expectOne(`${URL_BACKEND}/events/5`).flush(makeDetail({ commentsClosedAfterEnd: true }));
+      const form = (component as unknown as { form: FormGroup }).form;
+      expect(form.get('commentsClosedAfterEnd')?.value).toBe(true);
+
+      await (component as unknown as { changeStatus(next: string): Promise<void> }).changeStatus('PUBLISHED');
+
+      const update = http.expectOne(`${URL_BACKEND}/events/5`);
+      expect(update.request.body.commentsClosedAfterEnd).toBe(true);
+      update.flush({ id: '5', status: 'PUBLISHED' });
+    });
+
     describe('boutons de statut', () => {
       const changeStatus = (status: string) =>
         (component as unknown as { changeStatus(next: string): Promise<void> }).changeStatus(status);

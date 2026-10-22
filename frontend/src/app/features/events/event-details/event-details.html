@@ -148,7 +148,7 @@
             Commentaires <span class="count">{{ comments().length }}</span>
           </h2>
 
-          @if (user()) {
+          @if (user() && commentPolicy().allowed) {
             <form class="composer" (submit)="$event.preventDefault(); publishComment()">
               <label class="sr-only" for="comment-input">Votre commentaire</label>
               <textarea
@@ -171,6 +171,8 @@
                 </button>
               </div>
             </form>
+          } @else if (user()) {
+            <p class="login-hint">{{ commentPolicy().reason }}</p>
           } @else {
             <p class="login-hint">
               <a routerLink="/login">Connectez-vous</a> pour publier un commentaire.
