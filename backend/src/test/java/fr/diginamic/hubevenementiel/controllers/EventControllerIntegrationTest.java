@@ -8,6 +8,7 @@ import fr.diginamic.hubevenementiel.dtos.auth.LoginRequestDto;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.enums.Category;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.Role;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import org.junit.jupiter.api.BeforeEach;
@@ -714,6 +715,113 @@ class EventControllerIntegrationTest {
         mockMvc.perform(get("/events/mine")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------------------------------------------------------------
+    // GET /events/mine/calendar : calendrier de l'organisateur
+    // ---------------------------------------------------------------
+
+    private void setStatus(String title, String status) {
+        entityManager.createQuery("update Event e set e.status = :status where e.title = :title")
+                .setParameter("status", EventStatus.valueOf(status))
+                .setParameter("title", title)
+                .executeUpdate();
+        entityManager.clear();
+    }
+
+    @Test
+    void myCalendar_returnsOwnEventsOfEveryStatusInTheRange() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        String otherToken = loginAndGetToken(otherOrganizer.getEmail());
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String published = "Publie-" + System.nanoTime();
+        String cancelled = "Annule-" + System.nanoTime();
+        String draft = "Brouillon-" + System.nanoTime();
+        String outside = "Hors plage-" + System.nanoTime();
+        String foreign = "Autre organisateur-" + System.nanoTime();
+        createPublishedEvent(token, published, "Paris", start, start.plusHours(2), 50);
+        createPublishedEvent(token, cancelled, "Paris", start.plusDays(1), start.plusDays(1).plusHours(2), 50);
+        setStatus(cancelled, "CANCELLED");
+        createDraftEventAndReturnId(token, draft);
+        setDates(draft, start.plusDays(2), start.plusDays(2).plusHours(2));
+        createPublishedEvent(token, outside, "Paris", start.plusDays(60), start.plusDays(60).plusHours(2), 50);
+        createPublishedEvent(otherToken, foreign, "Paris", start.plusDays(1), start.plusDays(1).plusHours(2), 50);
+
+        mockMvc.perform(get("/events/mine/calendar")
+                        .param("from", start.minusDays(1).toString())
+                        .param("to", start.plusDays(30).toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].title").value(published))
+                .andExpect(jsonPath("$[0].status").value("PUBLISHED"))
+                .andExpect(jsonPath("$[0].maxCapacity").value(50))
+                .andExpect(jsonPath("$[0].confirmedCount").value(0))
+                .andExpect(jsonPath("$[1].title").value(cancelled))
+                .andExpect(jsonPath("$[1].status").value("CANCELLED"))
+                .andExpect(jsonPath("$[2].title").value(draft))
+                .andExpect(jsonPath("$[2].status").value("DRAFT"));
+    }
+
+    @Test
+    void myCalendar_includesAnEventThatStartedBeforeTheRange() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        LocalDateTime start = LocalDateTime.now().plusDays(10).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        String title = "Long-" + System.nanoTime();
+        createPublishedEvent(token, title, "Paris", start, start.plusDays(3), 50);
+
+        mockMvc.perform(get("/events/mine/calendar")
+                        .param("from", start.plusDays(2).toString())
+                        .param("to", start.plusDays(9).toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value(title));
+    }
+
+    @Test
+    void myCalendar_rangeAboveOneYear_returns400() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+        LocalDateTime from = LocalDateTime.of(2030, 1, 1, 0, 0);
+
+        mockMvc.perform(get("/events/mine/calendar")
+                        .param("from", from.toString())
+                        .param("to", from.plusDays(400).toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void myCalendar_missingBound_returns400() throws Exception {
+        String token = loginAndGetToken(organizer.getEmail());
+
+        mockMvc.perform(get("/events/mine/calendar")
+                        .param("from", LocalDateTime.of(2030, 1, 1, 0, 0).toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void myCalendar_asMember_returns403() throws Exception {
+        AppUser member = createActiveUser("member-" + System.nanoTime() + "@example.com", Role.MEMBER);
+        String token = loginAndGetToken(member.getEmail());
+        LocalDateTime from = LocalDateTime.of(2030, 1, 1, 0, 0);
+
+        mockMvc.perform(get("/events/mine/calendar")
+                        .param("from", from.toString())
+                        .param("to", from.plusDays(30).toString())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void myCalendar_anonymous_isRefused() throws Exception {
+        LocalDateTime from = LocalDateTime.of(2030, 1, 1, 0, 0);
+
+        mockMvc.perform(get("/events/mine/calendar")
+                        .param("from", from.toString())
+                        .param("to", from.plusDays(30).toString()))
+                .andExpect(status().is4xxClientError());
     }
 
     private void setDates(String title, LocalDateTime start, LocalDateTime end) {

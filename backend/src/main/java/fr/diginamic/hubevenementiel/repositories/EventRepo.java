@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.repositories;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.Event;
 import fr.diginamic.hubevenementiel.enums.Category;
@@ -109,6 +111,16 @@ public interface EventRepo extends JpaRepository<Event, UUID>, JpaSpecificationE
      * @return true if the user organizes at least one event
      */
     boolean existsByOrganizerId(UUID organizerId);
+
+    /**
+     *
+     * @param organizerId id of the organizer
+     * @param to upper bound (exclusive) of the start date
+     * @param from lower bound (inclusive) of the end date
+     * @return every event of the organizer, whatever its status, that overlaps [from, to[
+     */
+    List<Event> findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+            UUID organizerId, LocalDateTime to, LocalDateTime from);
 
     /**
      *

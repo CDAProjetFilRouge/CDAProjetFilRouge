@@ -115,6 +115,16 @@ public class EventController implements EventApi {
     }
 
     @Override
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
+    @GetMapping("/mine/calendar")
+    public List<EventCalendarResponseDto> getMyCalendar(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return eventService.findOrganizedBetween(from, to, principal);
+    }
+
+    @Override
     @GetMapping("/filter")
     public Page<EventResponseMainDto> getEventSearch(
             @RequestParam(defaultValue = "0") int page,

@@ -45,6 +45,25 @@
 }
 
 :host ::ng-deep {
+  // Évènements que l'utilisateur organise : contour au lieu du fond plein, pour ne pas dépendre de la couleur seule.
+  .organized-event {
+    border: 2px solid var(--color-pine);
+    font-weight: 600;
+
+    &.status-draft {
+      border-style: dashed;
+    }
+
+    &.status-cancelled {
+      text-decoration: line-through;
+      opacity: 0.75;
+    }
+
+    &.status-finished {
+      opacity: 0.7;
+    }
+  }
+
   .is-highlighted {
     position: relative;
     box-shadow: 0 0 0 2px var(--color-primary-hover);

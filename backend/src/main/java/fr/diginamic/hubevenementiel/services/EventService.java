@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 import java.util.UUID;
+import fr.diginamic.hubevenementiel.dtos.event.EventCalendarResponseDto;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +41,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventService {
+
+    private static final Duration MAX_CALENDAR_RANGE = Duration.ofDays(366);
 
     private static final Map<EventStatus, List<EventStatus>> ALLOWED_TRANSITIONS = Map.of(
             EventStatus.DRAFT, List.of(EventStatus.PUBLISHED),
@@ -269,6 +273,31 @@ public class EventService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDateTime"));
         return eventRepository.findAll(spec, pageable);
+    }
+
+    public List<EventCalendarResponseDto> findOrganizedBetween(LocalDateTime from, LocalDateTime to,
+            AppUserPrincipal principal) throws HttpException {
+        if (!from.isBefore(to)) {
+            throw new BadRequestException("La date de début doit précéder la date de fin.");
+        }
+        if (Duration.between(from, to).compareTo(MAX_CALENDAR_RANGE) > 0) {
+            throw new BadRequestException("La plage demandée ne peut pas dépasser un an.");
+        }
+
+        List<Event> events = eventRepository
+                .findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+                        principal.id(), to, from);
+        Map<UUID, Long> confirmed = events.isEmpty() ? Map.of()
+                : inscriptionRepo.countByEventIdsAndStatus(
+                        events.stream().map(Event::getId).toList(), InscriptionStatus.CONFIRMED).stream()
+                        .collect(Collectors.toMap(EventInscriptionCount::getEventId, EventInscriptionCount::getTotal));
+
+        return events.stream()
+                .map(event -> new EventCalendarResponseDto(event.getId(), event.getTitle(), event.getStartDateTime(),
+                        event.getEndDateTime(), event.getStatus(), event.getMaxCapacity(),
+                        confirmed.getOrDefault(event.getId(), 0L),
+                        event.getClub() == null ? null : event.getClub().getName()))
+                .toList();
     }
 
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
