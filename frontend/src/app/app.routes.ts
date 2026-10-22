@@ -129,4 +129,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/events/event-form/event-form').then((m) => m.EventForm),
   },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/errors/not-found/not-found').then((m) => m.NotFound),
+  },
 ];
