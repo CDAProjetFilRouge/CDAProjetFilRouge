@@ -55,14 +55,14 @@ public class DashboardService {
     private List<KpiResponseDto> memberKpis(UUID userId, LocalDateTime now) {
         return List.of(
                 new KpiResponseDto("MY_UPCOMING_EVENTS", "Événements à venir",
-                        inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
-                                userId, InscriptionStatus.CONFIRMED, now)),
+                        inscriptionRepo.countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeGreaterThanEqual(
+                                userId, InscriptionStatus.CONFIRMED, EventStatus.CANCELLED, now)),
                 new KpiResponseDto("MY_WAITING_LIST", "En liste d'attente",
-                        inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeGreaterThanEqual(
-                                userId, InscriptionStatus.WAITING_LIST, now)),
+                        inscriptionRepo.countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeGreaterThanEqual(
+                                userId, InscriptionStatus.WAITING_LIST, EventStatus.CANCELLED, now)),
                 new KpiResponseDto("MY_PAST_EVENTS", "Événements passés",
-                        inscriptionRepo.countByUserIdAndStatusAndEventStartDateTimeLessThan(
-                                userId, InscriptionStatus.CONFIRMED, now)),
+                        inscriptionRepo.countByUserIdAndStatusAndEventStatusNotAndEventStartDateTimeLessThan(
+                                userId, InscriptionStatus.CONFIRMED, EventStatus.CANCELLED, now)),
                 new KpiResponseDto("MY_CLUBS", "Mes clubs", clubRepo.countActiveByMemberId(userId)));
     }
 

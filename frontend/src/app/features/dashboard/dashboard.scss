@@ -155,24 +155,44 @@
   }
 }
 
+// Le premier écran (en-tête, indicateurs, calendrier) occupe la hauteur de la fenêtre sous le header ;
+// le reste (brouillons) se trouve en dessous.
+.screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 24px;
+  min-height: max(640px, calc(100dvh - var(--header-height, 88px) - 64px));
+}
+
 .body {
   display: grid;
   gap: 24px;
   align-items: start;
+  flex: 1;
 
-  // Avec le calendrier : indicateurs en colonne à gauche, calendrier à droite,
-  // pour que tout tienne dans l'écran sans défiler.
+  // Avec le calendrier : indicateurs en colonne à gauche, calendrier à droite qui prend toute la hauteur.
   &.with-calendar {
     grid-template-columns: 240px minmax(0, 1fr);
+    align-items: stretch;
 
     .kpis {
       grid-template-columns: minmax(0, 1fr);
+      align-self: start;
     }
   }
 }
 
 .calendar-block {
+  position: relative;
   min-width: 0;
+  min-height: 520px;
+
+  app-calendar {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
 }
 
 @media (max-width: 900px) {

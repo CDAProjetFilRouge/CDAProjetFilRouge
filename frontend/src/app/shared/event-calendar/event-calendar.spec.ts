@@ -150,9 +150,42 @@ describe('EventCalendar', () => {
     expect(options().initialDate).toBe('2031-04-15');
   });
 
-  it('abaisse la grille en mode compact', async () => {
+  it('signale la plage affichée à chaque changement de mois ou de vue', async () => {
+    await render();
+    const ranges: { from: string; to: string }[] = [];
+    component.rangeChanged.subscribe((range) => ranges.push(range));
+
+    options().datesSet?.({
+      view: { title: 'octobre 2026', activeStart: new Date(2026, 8, 28), activeEnd: new Date(2026, 10, 9) },
+    } as unknown as Parameters<NonNullable<CalendarOptions['datesSet']>>[0]);
+
+    expect(ranges).toEqual([{ from: '2026-09-28T00:00:00', to: '2026-11-09T00:00:00' }]);
+  });
+
+  it('donne aux évènements organisés un fond clair et un contour, sans toucher aux inscriptions', async () => {
+    const organized: CalendarEvent = {
+      id: 'org:7',
+      title: 'Mon tournoi',
+      start: iso(START),
+      end: iso(END),
+      organized: true,
+      status: 'DRAFT',
+    };
+    await render([EVENTS[0], organized], { compact: true });
+
+    const events = options().events as { id: string; color: string; contrastColor: string }[];
+    expect(events.map((e) => [e.id, e.color, e.contrastColor])).toEqual([
+      ['1', 'var(--color-primary)', '#fff'],
+      ['org:7', 'var(--color-pine-soft)', 'var(--color-pine)'],
+    ]);
+    const eventClass = options().eventClass as (info: unknown) => string;
+    expect(eventClass({ event: { id: 'org:7' } })).toBe('organized-event status-draft');
+    expect(eventClass({ event: { id: '1' } })).toBe('');
+  });
+
+  it('remplit la hauteur du conteneur en mode compact', async () => {
     await render(EVENTS, { compact: true });
 
-    expect(options().height).toBe(400);
+    expect(options().height).toBe('100%');
   });
 });

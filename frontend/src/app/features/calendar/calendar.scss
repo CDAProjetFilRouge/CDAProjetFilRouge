@@ -1,19 +1,59 @@
-.calendar-page {
-  padding: 36px var(--page-padding) 48px;
+:host {
+  display: block;
+  height: 100%;
 }
 
-.calendar-page h1 {
-  margin-bottom: 16px;
+.calendar-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  font-size: 13px;
+}
+
+// Cases à cocher des calques (organisateur) : le swatch reprend le style de l'évènement, fond plein ou contour.
+.layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.layer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+}
+
+.layer-inscriptions .swatch {
+  background: var(--color-primary);
+}
+
+.layer-organized .swatch {
+  background: var(--color-pine-soft);
+  border: 2px solid var(--color-pine);
+}
+
+// La grille remplit la place restante sous les cases à cocher.
+.calendar-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+
+  app-event-calendar {
+    position: absolute;
+    inset: 0;
+  }
 }
 
 .error {
   color: var(--color-danger);
-}
-
-// Mode compact (tableau de bord) : le calendrier perd ses marges de page.
-.calendar-page.compact {
-  padding: 0;
-  font-size: 12px;
 }
 
 // Boîte de dialogue du détail d'un évènement.
@@ -70,6 +110,22 @@
     color: var(--color-muted);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
+  }
+
+  &.organized {
+    color: var(--color-pine);
+    background: var(--color-pine-soft);
+    border: 2px solid var(--color-pine);
+
+    &[data-status='DRAFT'] {
+      border-style: dashed;
+    }
+
+    &[data-status='CANCELLED'] {
+      color: var(--color-danger);
+      background: var(--color-danger-bg);
+      border-color: var(--color-danger);
+    }
   }
 }
 

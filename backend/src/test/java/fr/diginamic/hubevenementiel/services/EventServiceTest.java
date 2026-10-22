@@ -16,6 +16,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.dtos.event.EventCalendarResponseDto;
 import fr.diginamic.hubevenementiel.repositories.EventInscriptionCount;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
 import fr.diginamic.hubevenementiel.repositories.InscriptionRepo;
@@ -48,6 +49,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -433,6 +435,74 @@ class EventServiceTest {
     }
 
     // ---------------------------------------------------------------
+    // findOrganizedBetween : calendrier de l'organisateur
+    // ---------------------------------------------------------------
+
+    @Test
+    void findOrganizedBetween_invertedRange_throwsBadRequest() {
+        LocalDateTime from = LocalDateTime.of(2030, 5, 1, 0, 0);
+
+        assertThrows(BadRequestException.class,
+                () -> eventService.findOrganizedBetween(from, from.minusDays(1), ownerPrincipal()));
+        assertThrows(BadRequestException.class,
+                () -> eventService.findOrganizedBetween(from, from, ownerPrincipal()));
+
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void findOrganizedBetween_rangeAboveOneYear_throwsBadRequest() {
+        LocalDateTime from = LocalDateTime.of(2030, 1, 1, 0, 0);
+
+        assertThrows(BadRequestException.class,
+                () -> eventService.findOrganizedBetween(from, from.plusDays(367), ownerPrincipal()));
+
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void findOrganizedBetween_returnsEveryStatusWithConfirmedCounts() throws HttpException {
+        LocalDateTime from = LocalDateTime.of(2030, 5, 1, 0, 0);
+        LocalDateTime to = from.plusMonths(1);
+        Event published = new Event();
+        published.setId(uuid(1));
+        published.setTitle("Publié");
+        published.setStatus(EventStatus.PUBLISHED);
+        published.setMaxCapacity(20);
+        Event cancelled = new Event();
+        cancelled.setId(uuid(2));
+        cancelled.setTitle("Annulé");
+        cancelled.setStatus(EventStatus.CANCELLED);
+        cancelled.setMaxCapacity(10);
+        when(eventRepository
+                .findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+                        uuid(8), to, from))
+                .thenReturn(List.of(published, cancelled));
+        when(inscriptionRepo.countByEventIdsAndStatus(List.of(uuid(1), uuid(2)), InscriptionStatus.CONFIRMED))
+                .thenReturn(List.of(count(uuid(1), 4L)));
+
+        List<EventCalendarResponseDto> result = eventService.findOrganizedBetween(from, to, ownerPrincipal());
+
+        assertThat(result).extracting(EventCalendarResponseDto::getStatus)
+                .containsExactly(EventStatus.PUBLISHED, EventStatus.CANCELLED);
+        assertThat(result).extracting(EventCalendarResponseDto::getConfirmedCount).containsExactly(4L, 0L);
+        assertThat(result.get(1).getMaxCapacity()).isEqualTo(10);
+    }
+
+    @Test
+    void findOrganizedBetween_noEvent_doesNotCountInscriptions() throws HttpException {
+        LocalDateTime from = LocalDateTime.of(2030, 5, 1, 0, 0);
+        when(eventRepository
+                .findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+                        any(), any(), any()))
+                .thenReturn(List.of());
+
+        assertThat(eventService.findOrganizedBetween(from, from.plusMonths(1), ownerPrincipal())).isEmpty();
+
+        verifyNoInteractions(inscriptionRepo);
+    }
+
+    // ---------------------------------------------------------------
     // updateEvent / deleteEvent : id inconnu
     // ---------------------------------------------------------------
 
@@ -787,13 +857,213 @@ class EventServiceTest {
         assertThat(result.getMaxCapacity()).isEqualTo(12);
     }
 
+    // ---------------------------------------------------------------
+    // RG12 : transitions de statut (changeStatus et updateEvent)
+    // ---------------------------------------------------------------
+
+    private Event eventWithStatus(EventStatus status) {
+        Event event = cloneFutureEvent();
+        event.setStatus(status);
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(event));
+        return event;
+    }
+
+    private AppUserPrincipal ownerPrincipal() {
+        return new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
+    }
+
+    @Test
+    void changeStatus_allowedTransitions_applyTheNewStatus() throws HttpException {
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        List<EventStatus[]> allowed = List.of(
+                new EventStatus[] { EventStatus.DRAFT, EventStatus.PUBLISHED },
+                new EventStatus[] { EventStatus.PUBLISHED, EventStatus.CANCELLED },
+                new EventStatus[] { EventStatus.PUBLISHED, EventStatus.FINISHED });
+
+        for (EventStatus[] transition : allowed) {
+            eventWithStatus(transition[0]);
+
+            Event result = eventService.changeStatus(uuid(1), transition[1], ownerPrincipal());
+
+            assertThat(result.getStatus()).isEqualTo(transition[1]);
+        }
+    }
+
+    @Test
+    void changeStatus_forbiddenTransitions_throwConflictAndSaveNothing() {
+        List<EventStatus[]> forbidden = List.of(
+                new EventStatus[] { EventStatus.PUBLISHED, EventStatus.DRAFT },
+                new EventStatus[] { EventStatus.DRAFT, EventStatus.CANCELLED },
+                new EventStatus[] { EventStatus.DRAFT, EventStatus.FINISHED },
+                new EventStatus[] { EventStatus.CANCELLED, EventStatus.PUBLISHED },
+                new EventStatus[] { EventStatus.CANCELLED, EventStatus.DRAFT },
+                new EventStatus[] { EventStatus.CANCELLED, EventStatus.FINISHED },
+                new EventStatus[] { EventStatus.FINISHED, EventStatus.PUBLISHED },
+                new EventStatus[] { EventStatus.FINISHED, EventStatus.CANCELLED });
+
+        for (EventStatus[] transition : forbidden) {
+            Event event = eventWithStatus(transition[0]);
+
+            assertThrows(ConflictException.class,
+                    () -> eventService.changeStatus(uuid(1), transition[1], ownerPrincipal()));
+
+            assertThat(event.getStatus()).isEqualTo(transition[0]);
+        }
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void changeStatus_sameStatus_isAccepted() throws HttpException {
+        eventWithStatus(EventStatus.PUBLISHED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Event result = eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal());
+
+        assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+    }
+
+    @Test
+    void changeStatus_publishingAnEventAlreadyStarted_throwsConflict() {
+        Event event = eventWithStatus(EventStatus.DRAFT);
+        event.setStartDateTime(LocalDateTime.now().minusDays(1));
+
+        assertThrows(ConflictException.class,
+                () -> eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal()));
+
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void changeStatus_missingStatus_throwsBadRequest() {
+        assertThrows(BadRequestException.class, () -> eventService.changeStatus(uuid(1), null, ownerPrincipal()));
+    }
+
+    @Test
+    void changeStatus_unknownEvent_throwsNotFound() {
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal()));
+    }
+
+    @Test
+    void changeStatus_foreignOrganizer_throwsForbidden_butAdministratorIsAllowed() throws HttpException {
+        eventWithStatus(EventStatus.DRAFT);
+        AppUserPrincipal stranger = new AppUserPrincipal(uuid(99), "autre@example.com", "ORGANIZER");
+        AppUserPrincipal admin = new AppUserPrincipal(uuid(98), "admin@example.com", "ADMINISTRATOR");
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThrows(ForbiddenException.class,
+                () -> eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, stranger));
+        Event result = eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, admin);
+
+        assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+    }
+
+    @Test
+    void updateEvent_forbiddenStatusTransition_throwsConflictAndSavesNothing() {
+        Event existing = eventWithStatus(EventStatus.PUBLISHED);
+        validEvent.setStatus(EventStatus.DRAFT);
+
+        assertThrows(ConflictException.class, () -> eventService.updateEvent(uuid(1), validEvent, ownerPrincipal()));
+
+        assertThat(existing.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void updateEvent_publishingADraft_isAccepted() throws HttpException {
+        eventWithStatus(EventStatus.DRAFT);
+        validEvent.setStatus(EventStatus.PUBLISHED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Event result = eventService.updateEvent(uuid(1), validEvent, ownerPrincipal());
+
+        assertThat(result.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+    }
+
+    private List<Inscription> givenRegistrations(Event event) {
+        AppUser confirmed = new AppUser();
+        confirmed.setEmail("confirme@example.com");
+        AppUser waiting = new AppUser();
+        waiting.setEmail("attente@example.com");
+        List<Inscription> inscriptions = List.of(
+                new Inscription(confirmed, event, BigDecimal.TEN, InscriptionStatus.CONFIRMED),
+                new Inscription(waiting, event, BigDecimal.TEN, InscriptionStatus.WAITING_LIST));
+        when(inscriptionRepo.findByEventIdAndStatusIn(uuid(1), List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST)))
+                .thenReturn(inscriptions);
+        return inscriptions;
+    }
+
+    @Test
+    void changeStatus_toCancelled_keepsConfirmedInscriptions_cancelsTheWaitingListAndNotifiesEveryone() throws HttpException {
+        Event event = eventWithStatus(EventStatus.PUBLISHED);
+        event.setId(uuid(1));
+        List<Inscription> inscriptions = givenRegistrations(event);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eventService.changeStatus(uuid(1), EventStatus.CANCELLED, ownerPrincipal());
+
+        ArgumentCaptor<EventCancelledEvent> captor = ArgumentCaptor.forClass(EventCancelledEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
+        assertThat(captor.getValue().eventTitle()).isEqualTo(event.getTitle());
+        Inscription confirmed = inscriptions.get(0);
+        Inscription waiting = inscriptions.get(1);
+        assertThat(confirmed.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        assertThat(waiting.getStatus()).isEqualTo(InscriptionStatus.CANCELED);
+        assertThat(waiting.getCancelObject()).isNotBlank();
+        verify(inscriptionRepo).saveAll(List.of(waiting));
+    }
+
+    @Test
+    void changeStatus_toFinishedOrPublished_notifiesNobody() throws HttpException {
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        eventWithStatus(EventStatus.PUBLISHED);
+        eventService.changeStatus(uuid(1), EventStatus.FINISHED, ownerPrincipal());
+        eventWithStatus(EventStatus.DRAFT);
+        eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal());
+
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+        verify(inscriptionRepo, never()).saveAll(any());
+    }
+
+    @Test
+    void updateEvent_toCancelled_keepsConfirmedInscriptions_cancelsTheWaitingListAndNotifiesEveryone() throws HttpException {
+        Event event = eventWithStatus(EventStatus.PUBLISHED);
+        event.setId(uuid(1));
+        List<Inscription> inscriptions = givenRegistrations(event);
+        validEvent.setStatus(EventStatus.CANCELLED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eventService.updateEvent(uuid(1), validEvent, ownerPrincipal());
+
+        ArgumentCaptor<EventCancelledEvent> captor = ArgumentCaptor.forClass(EventCancelledEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
+        assertThat(inscriptions.get(0).getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        assertThat(inscriptions.get(1).getStatus()).isEqualTo(InscriptionStatus.CANCELED);
+    }
+
+    @Test
+    void updateEvent_alreadyCancelled_doesNotNotifyAgain() throws HttpException {
+        eventWithStatus(EventStatus.CANCELLED);
+        validEvent.setStatus(EventStatus.CANCELLED);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eventService.updateEvent(uuid(1), validEvent, ownerPrincipal());
+
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+        verify(inscriptionRepo, never()).saveAll(any());
+    }
+
     private Event cloneFutureEvent() {
         Event event = new Event();
         event.setOrganizer(organizer);
         event.setTitle(validEvent.getTitle());
         event.setStartDateTime(LocalDateTime.now().plusDays(5));
         event.setEndDateTime(LocalDateTime.now().plusDays(5).plusHours(2));
-        event.setStatus(EventStatus.PUBLISHED);
+        event.setStatus(validEvent.getStatus());
         return event;
     }
 }

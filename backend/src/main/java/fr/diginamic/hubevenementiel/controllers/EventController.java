@@ -15,6 +15,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -114,6 +115,16 @@ public class EventController implements EventApi {
     }
 
     @Override
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
+    @GetMapping("/mine/calendar")
+    public List<EventCalendarResponseDto> getMyCalendar(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return eventService.findOrganizedBetween(from, to, principal);
+    }
+
+    @Override
     @GetMapping("/filter")
     public Page<EventResponseMainDto> getEventSearch(
             @RequestParam(defaultValue = "0") int page,
@@ -195,6 +206,15 @@ public class EventController implements EventApi {
         Event event = eventMapper.toEntity(requestDto);
         AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Event updated = eventService.updateEvent(id, event, principal);
+        return eventMapper.toDto(updated);
+    }
+
+    @Override
+    @Secured({"ROLE_ORGANIZER", "ROLE_ADMINISTRATOR"})
+    @PatchMapping("/{id}/status")
+    public EventResponseDto changeStatus(@PathVariable UUID id, @RequestBody EventStatusRequestDto requestDto) throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Event updated = eventService.changeStatus(id, requestDto.getStatus(), principal);
         return eventMapper.toDto(updated);
     }
 

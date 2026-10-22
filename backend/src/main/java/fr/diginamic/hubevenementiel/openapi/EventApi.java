@@ -49,6 +49,19 @@ public interface EventApi {
             @Parameter(description = "Filtre facultatif sur le statut") EventStatus status
             ) throws HttpException;
 
+    @Operation(summary = "Liste mes évènements organisés entre deux dates, pour le calendrier",
+            description = "Tous statuts confondus (brouillons, annulés et terminés compris) qui chevauchent la plage demandée. "
+                    + "Plage de 366 jours au maximum. Réservé aux organisateurs et aux administrateurs.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Mes évènements de la plage, du plus proche au plus lointain"),
+            @ApiResponse(responseCode = "400", description = "Plage inversée ou supérieure à 366 jours"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER ou ADMINISTRATOR requis")
+    })
+    List<EventCalendarResponseDto> getMyCalendar(
+            @Parameter(description = "Début de la plage (AAAA-MM-JJTHH:MM)") LocalDateTime from,
+            @Parameter(description = "Fin de la plage, exclue (AAAA-MM-JJTHH:MM)") LocalDateTime to
+            ) throws HttpException;
+
     @Operation(summary = "Récupère tous les évènements en applicant des filtres",
             description = "Récupère tous les évènements en fonction de mots présent dans son titre/description, de sa catégorie, de du nom de famille de son organisateur," +
                     "de sa ville, de ses dates de début/fin et de son status. Les évènement marqués DRAFT sont invisible pour les utilisateurs non admin/organisateur")
@@ -124,6 +137,18 @@ public interface EventApi {
             @ApiResponse(responseCode = "404", description = "Évènement introuvable")
     })
     EventResponseDto update(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id, EventRequestDto requestDto) throws HttpException;
+
+    @Operation(summary = "Changer le statut d'un évènement",
+            description = "Réservé au propriétaire de l'évènement et aux administrateurs. Transitions autorisées : BROUILLON vers PUBLIÉ, PUBLIÉ vers ANNULÉ ou TERMINÉ. ANNULÉ et TERMINÉ sont des états finaux. Un évènement passé ne peut pas être publié.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Statut modifié"),
+            @ApiResponse(responseCode = "400", description = "Statut absent ou inconnu"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "Rôle ORGANIZER/ADMINISTRATOR requis ou évènement dont l'appelant n'est pas propriétaire"),
+            @ApiResponse(responseCode = "404", description = "Évènement introuvable"),
+            @ApiResponse(responseCode = "409", description = "Transition de statut interdite")
+    })
+    EventResponseDto changeStatus(@Parameter(description = "Identifiant de l'évènement", required = true) UUID id, EventStatusRequestDto requestDto) throws HttpException;
 
     @Operation(summary = "Supprimer un évènement",
             description = "Réservé au propriétaire d'un évènement futur et aux administrateurs. Un email est envoyé aux inscrits et à la liste d'attente.")

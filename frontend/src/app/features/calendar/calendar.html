@@ -1,16 +1,89 @@
-<div class="calendar-page" [class.compact]="compact()">
-  @if (!compact()) {
-    <h1>Mon calendrier</h1>
-  }
-
+<div class="calendar-page">
   @if (errorMessage()) {
     <p class="error" role="alert">{{ errorMessage() }}</p>
   }
 
-  <app-event-calendar [events]="calendarEvents()" [compact]="compact()" (eventSelected)="select($event)" />
+  @if (isOrganizer()) {
+    <div class="layers" role="group" aria-label="Évènements affichés">
+      <label class="layer layer-inscriptions">
+        <input type="checkbox" [checked]="showInscriptions()" (change)="showInscriptions.set(!showInscriptions())" />
+        <span class="swatch" aria-hidden="true"></span>
+        Mes inscriptions
+      </label>
+      <label class="layer layer-organized">
+        <input type="checkbox" [checked]="showOrganized()" (change)="showOrganized.set(!showOrganized())" />
+        <span class="swatch" aria-hidden="true"></span>
+        Mes évènements
+      </label>
+    </div>
+  }
+
+  <div class="calendar-area">
+    <app-event-calendar
+      [events]="calendarEvents()"
+      [compact]="true"
+      (eventSelected)="select($event)"
+      (rangeChanged)="setRange($event)"
+    />
+  </div>
 
   <dialog #detailDialog class="detail" aria-labelledby="detail-title" (close)="onDialogClosed()">
-    @if (selected(); as ins) {
+    @if (selectedOrganized(); as ev) {
+      <header class="detail-head">
+        <div>
+          <span class="status organized" [attr.data-status]="ev.status">
+            {{ organizedStatusLabels[ev.status] }}
+          </span>
+          <h2 id="detail-title">{{ ev.title }}</h2>
+        </div>
+        <button type="button" class="close" aria-label="Fermer" (click)="close()">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+      </header>
+
+      <dl class="facts">
+        <div>
+          <dt>Début</dt>
+          <dd>{{ ev.startDateTime | date: 'dd/MM/yyyy à HH:mm' }}</dd>
+        </div>
+        <div>
+          <dt>Fin</dt>
+          <dd>{{ ev.endDateTime | date: 'dd/MM/yyyy à HH:mm' }}</dd>
+        </div>
+        @if (ev.clubName) {
+          <div>
+            <dt>Club</dt>
+            <dd>{{ ev.clubName }}</dd>
+          </div>
+        }
+        <div>
+          <dt>Inscrits</dt>
+          <dd>{{ fillLabel(ev) }}</dd>
+        </div>
+        @if (ownInscription(); as own) {
+          <div>
+            <dt>Votre inscription</dt>
+            <dd>
+              {{ statusLabels[own.status] }}
+              @if (own.waitingListPosition) {
+                · n°{{ own.waitingListPosition }}
+              }
+            </dd>
+          </div>
+        }
+      </dl>
+
+      <footer class="detail-foot">
+        <a class="btn" [routerLink]="['/event-details', ev.id]" (click)="close()">Voir l'évènement</a>
+        <a class="btn" [routerLink]="['/events', ev.id, 'registrations']" (click)="close()">Voir les inscrits</a>
+        <a class="btn btn-primary" [routerLink]="['/events', ev.id, 'edit']" (click)="close()">
+          Gérer l'évènement
+        </a>
+      </footer>
+    } @else if (selected(); as ins) {
       <header class="detail-head">
         <div>
           <span class="status" [class.waiting]="ins.status === 'WAITING_LIST'">

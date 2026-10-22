@@ -1,10 +1,12 @@
 package fr.diginamic.hubevenementiel.services;
 
 import java.util.UUID;
+import fr.diginamic.hubevenementiel.dtos.event.EventCalendarResponseDto;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Club;
 import fr.diginamic.hubevenementiel.entities.Event;
+import fr.diginamic.hubevenementiel.entities.Inscription;
 import fr.diginamic.hubevenementiel.enums.Category;
 import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.enums.InscriptionStatus;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +41,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventService {
+
+    private static final Duration MAX_CALENDAR_RANGE = Duration.ofDays(366);
+
+    private static final Map<EventStatus, List<EventStatus>> ALLOWED_TRANSITIONS = Map.of(
+            EventStatus.DRAFT, List.of(EventStatus.PUBLISHED),
+            EventStatus.PUBLISHED, List.of(EventStatus.CANCELLED, EventStatus.FINISHED),
+            EventStatus.CANCELLED, List.of(),
+            EventStatus.FINISHED, List.of());
 
     /** Plus grand tarif accepté : la colonne est un decimal(10,2). */
     static final BigDecimal MAX_PRICE = new BigDecimal("99999999.99");
@@ -264,6 +275,31 @@ public class EventService {
         return eventRepository.findAll(spec, pageable);
     }
 
+    public List<EventCalendarResponseDto> findOrganizedBetween(LocalDateTime from, LocalDateTime to,
+            AppUserPrincipal principal) throws HttpException {
+        if (!from.isBefore(to)) {
+            throw new BadRequestException("La date de début doit précéder la date de fin.");
+        }
+        if (Duration.between(from, to).compareTo(MAX_CALENDAR_RANGE) > 0) {
+            throw new BadRequestException("La plage demandée ne peut pas dépasser un an.");
+        }
+
+        List<Event> events = eventRepository
+                .findByOrganizerIdAndStartDateTimeLessThanAndEndDateTimeGreaterThanEqualOrderByStartDateTime(
+                        principal.id(), to, from);
+        Map<UUID, Long> confirmed = events.isEmpty() ? Map.of()
+                : inscriptionRepo.countByEventIdsAndStatus(
+                        events.stream().map(Event::getId).toList(), InscriptionStatus.CONFIRMED).stream()
+                        .collect(Collectors.toMap(EventInscriptionCount::getEventId, EventInscriptionCount::getTotal));
+
+        return events.stream()
+                .map(event -> new EventCalendarResponseDto(event.getId(), event.getTitle(), event.getStartDateTime(),
+                        event.getEndDateTime(), event.getStatus(), event.getMaxCapacity(),
+                        confirmed.getOrDefault(event.getId(), 0L),
+                        event.getClub() == null ? null : event.getClub().getName()))
+                .toList();
+    }
+
     public Page<Event> searchFilter(int page, int size, String keyword, Category category, String clubName, String city,
             LocalDateTime startDate, LocalDateTime endDate, List<EventStatus> status, boolean hideFinished,
             Sort.Direction direction, AppUserPrincipal principal) throws HttpException {
@@ -341,6 +377,7 @@ public class EventService {
         }
 
         eventChecker(modifiedEvent);
+        checkStatusTransition(eventToBeModified.getStatus(), modifiedEvent.getStatus());
 
         if (!eventToBeModified.getTitle().equalsIgnoreCase(modifiedEvent.getTitle())
                 && eventRepository.existsByTitle(modifiedEvent.getTitle())) {
@@ -363,9 +400,11 @@ public class EventService {
         eventToBeModified.setAffiliatePrice(modifiedEvent.getAffiliatePrice());
         eventToBeModified.setNonAffiliatePrice(modifiedEvent.getNonAffiliatePrice());
         eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
+        EventStatus previousStatus = eventToBeModified.getStatus();
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 
         Event saved = eventRepository.save(eventToBeModified);
+        notifyIfCancelled(saved, previousStatus);
 
         if (previousCapacity != null && saved.getMaxCapacity() != null && saved.getMaxCapacity() > previousCapacity) {
             waitingListService.fillFreeSpots(eventId);
@@ -380,6 +419,66 @@ public class EventService {
      * @param principal the authenticated caller, must be the event's organizer or an admin
      * @throws HttpException
      */
+    @Transactional
+    public Event changeStatus(UUID eventId, EventStatus newStatus, AppUserPrincipal principal) throws HttpException {
+        if (newStatus == null) {
+            throw new BadRequestException("Le statut est obligatoire.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Aucun évènement n'a été trouvé avec cet identifiant."));
+
+        checkOwnership(event, principal);
+        checkStatusTransition(event.getStatus(), newStatus);
+
+        if (newStatus == EventStatus.PUBLISHED && event.getStatus() != EventStatus.PUBLISHED
+                && event.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new ConflictException("Un évènement passé ne peut pas être publié.");
+        }
+
+        EventStatus previousStatus = event.getStatus();
+        event.setStatus(newStatus);
+        Event saved = eventRepository.save(event);
+        notifyIfCancelled(saved, previousStatus);
+        return saved;
+    }
+
+    private void notifyIfCancelled(Event event, EventStatus previousStatus) {
+        if (event.getStatus() != EventStatus.CANCELLED || previousStatus == EventStatus.CANCELLED) {
+            return;
+        }
+        List<Inscription> inscriptions = inscriptionRepo
+                .findByEventIdAndStatusIn(event.getId(), List.of(InscriptionStatus.CONFIRMED, InscriptionStatus.WAITING_LIST));
+        List<String> emails = inscriptions.stream()
+                .map(inscription -> inscription.getUser().getEmail())
+                .toList();
+        List<Inscription> waitingList = inscriptions.stream()
+                .filter(inscription -> inscription.getStatus() == InscriptionStatus.WAITING_LIST)
+                .toList();
+        waitingList.forEach(inscription -> inscription.cancelPerOrganizer("Évènement annulé par son organisateur"));
+        inscriptionRepo.saveAll(waitingList);
+        eventPublisher.publishEvent(new EventCancelledEvent(emails, event.getTitle()));
+    }
+
+    private void checkStatusTransition(EventStatus from, EventStatus to) throws HttpException {
+        if (from == null || to == null || from == to) {
+            return;
+        }
+        if (!ALLOWED_TRANSITIONS.get(from).contains(to)) {
+            throw new ConflictException(
+                    "Le statut d'un évènement " + statusLabel(from) + " ne peut pas passer à " + statusLabel(to) + ".");
+        }
+    }
+
+    private String statusLabel(EventStatus status) {
+        return switch (status) {
+            case DRAFT -> "en brouillon";
+            case PUBLISHED -> "publié";
+            case CANCELLED -> "annulé";
+            case FINISHED -> "terminé";
+        };
+    }
+
     @Transactional
     public void deleteEvent(UUID eventId, AppUserPrincipal principal) throws HttpException {
 
