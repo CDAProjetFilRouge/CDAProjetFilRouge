@@ -106,6 +106,11 @@ export const routes: Routes = [
     redirectTo: 'dashboard',
   },
   {
+    path: 'my-past-events',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/history/past-events').then((m) => m.PastEvents),
+  },
+  {
     path: 'my-events',
     canActivate: [authGuard, organizerGuard],
     loadComponent: () =>

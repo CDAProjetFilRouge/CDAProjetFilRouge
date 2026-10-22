@@ -255,6 +255,18 @@ describe('EventDetails', () => {
       expect(val('registration')).toEqual({ kind: 'blocked', reason });
     });
 
+    it.each([
+      ['CANCELLED', 'Cet évènement a été annulé.'],
+      ['FINISHED', 'Cet évènement est terminé : vous y étiez inscrit·e.'],
+    ] as const)('ne propose plus de se désinscrire d’un évènement %s', async (status, reason) => {
+      await setup(makeUser(), {
+        event: makeEvent({ status }),
+        inscriptions: [{ id: '3', event: { id: EVENT_ID, title: 'x', startDateTime: '', endDateTime: '' }, status: 'CONFIRMED' }],
+      });
+
+      expect(val('registration')).toEqual({ kind: 'blocked', reason });
+    });
+
     it('bloque l’inscription à un évènement dont la fin est passée', async () => {
       const past = new Date(Date.now() - 2 * DAY).toISOString();
       await setup(makeUser(), { event: makeEvent({ startDate: past, endDate: past }) });

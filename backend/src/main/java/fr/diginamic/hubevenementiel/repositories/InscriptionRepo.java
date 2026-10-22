@@ -31,6 +31,16 @@ public interface InscriptionRepo extends JpaRepository<Inscription, UUID> {
     Page<Inscription> findByUserIdAndEventStatusNot(UUID id, EventStatus eventStatus, Pageable pageable);
 
     /**
+     * Historique d'un utilisateur : ses inscriptions confirmées à des évènements dont la date de fin est atteinte,
+     * ou qui ont été annulés, du plus récent au plus ancien.
+     */
+    @EntityGraph(attributePaths = {"event", "event.club"})
+    @Query("select i from Inscription i where i.user.id = :userId and i.status = :status "
+            + "and (i.event.endDateTime <= :now or i.event.status = :cancelled) order by i.event.startDateTime desc")
+    Page<Inscription> findHistory(@Param("userId") UUID userId, @Param("status") InscriptionStatus status,
+            @Param("now") LocalDateTime now, @Param("cancelled") EventStatus cancelled, Pageable pageable);
+
+    /**
      *
      * @param id id of the events you want to find inscriptions associated with
      * @param pageable settings for the pagination, create a peagble object using PageRequest.of()

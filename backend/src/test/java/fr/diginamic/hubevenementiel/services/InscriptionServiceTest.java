@@ -314,6 +314,25 @@ class InscriptionServiceTest {
     }
 
     @Test
+    void findPastByUser_otherMember_throwsForbidden() {
+        AppUserPrincipal other = new AppUserPrincipal(uuid(7), "b@example.com", "MEMBER");
+
+        assertThrows(ForbiddenException.class, () -> inscriptionService.findPastByUser(other, uuid(6), 0, 20));
+        verify(inscriptionRepo, never()).findHistory(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void findPastByUser_self_asksForConfirmedInscriptionsOfEndedOrCancelledEvents() throws HttpException {
+        when(inscriptionRepo.findHistory(eq(uuid(6)), eq(InscriptionStatus.CONFIRMED), any(LocalDateTime.class),
+                eq(EventStatus.CANCELLED), any())).thenReturn(org.springframework.data.domain.Page.empty());
+
+        assertDoesNotThrow(() -> inscriptionService.findPastByUser(
+                new AppUserPrincipal(uuid(6), "a@example.com", "MEMBER"), uuid(6), 0, 20));
+        assertThrows(BadRequestException.class, () -> inscriptionService.findPastByUser(
+                new AppUserPrincipal(uuid(6), "a@example.com", "MEMBER"), uuid(6), 0, 0));
+    }
+
+    @Test
     void findByUser_invalidPaging_throwsBadRequest() {
         AppUserPrincipal self = new AppUserPrincipal(uuid(6), "a@example.com", "MEMBER");
 
@@ -383,6 +402,26 @@ class InscriptionServiceTest {
         AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
 
         assertThrows(ConflictException.class, () -> inscriptionService.cancelByMember(uuid(1), principal));
+    }
+
+    @Test
+    void cancelByMember_cancelledFinishedOrStartedEvent_throwsConflictAndKeepsTheInscription() {
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
+        Inscription inscription = confirmedInscription();
+        when(inscriptionRepo.findById(uuid(1))).thenReturn(Optional.of(inscription));
+
+        publishedFutureEvent.setStatus(EventStatus.CANCELLED);
+        assertThrows(ConflictException.class, () -> inscriptionService.cancelByMember(uuid(1), principal));
+
+        publishedFutureEvent.setStatus(EventStatus.FINISHED);
+        assertThrows(ConflictException.class, () -> inscriptionService.cancelByMember(uuid(1), principal));
+
+        publishedFutureEvent.setStatus(EventStatus.PUBLISHED);
+        publishedFutureEvent.setStartDateTime(LocalDateTime.now().minusHours(1));
+        assertThrows(ConflictException.class, () -> inscriptionService.cancelByMember(uuid(1), principal));
+
+        assertThat(inscription.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
+        verify(inscriptionRepo, never()).save(any(Inscription.class));
     }
 
     @Test

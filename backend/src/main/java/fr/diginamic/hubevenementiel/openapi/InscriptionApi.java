@@ -72,4 +72,15 @@ public interface InscriptionApi {
     List<InscriptionResponseDto> getByUser(@Parameter(description = "Identifiant de l'utilisateur", required = true) UUID userId,
             @Parameter(description = "Numéro de page (0-indexé)") int page,
             @Parameter(description = "Taille de page") int size) throws HttpException;
+
+    @Operation(summary = "Historique d'un utilisateur", description = "Inscriptions confirmées à des évènements terminés ou annulés, du plus récent au plus ancien. Réservé à l'utilisateur concerné et aux administrateurs.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Liste paginée de l'historique (vide si aucun)"),
+            @ApiResponse(responseCode = "400", description = "Pagination invalide"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "Ni l'utilisateur concerné ni administrateur")
+    })
+    List<InscriptionResponseDto> getPastByUser(@Parameter(description = "Identifiant de l'utilisateur", required = true) UUID userId,
+            @Parameter(description = "Numéro de page (0-indexé)") int page,
+            @Parameter(description = "Taille de page") int size) throws HttpException;
 }

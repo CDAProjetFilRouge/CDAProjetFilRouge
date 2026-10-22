@@ -32,6 +32,9 @@
         @if (menuOpen()) {
           <div class="account-menu">
             <a class="menu-item" routerLink="/account" (click)="closeMenu()">Mon compte</a>
+            @if (u.role !== 'ADMINISTRATOR') {
+              <a class="menu-item" routerLink="/my-past-events" (click)="closeMenu()">Mes évènements passés</a>
+            }
             <button type="button" class="menu-item" (click)="logout()">Déconnexion</button>
           </div>
         }

@@ -1,0 +1,88 @@
+.past-events {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 40px) var(--page-padding);
+}
+
+.head {
+  margin-bottom: 20px;
+
+  h1 {
+    margin-bottom: 4px;
+  }
+}
+
+.subtitle {
+  color: var(--color-muted);
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 14px 16px;
+  color: var(--color-text);
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color .15s, background-color .15s;
+
+  &:hover {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.date {
+  flex: none;
+  min-width: 90px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  flex: 1;
+  min-width: 160px;
+  font-weight: 600;
+}
+
+.club {
+  color: var(--color-muted);
+}
+
+.badge {
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+
+  &.cancelled {
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+  }
+}
+
+.empty {
+  padding: 24px 0;
+  color: var(--color-muted);
+}

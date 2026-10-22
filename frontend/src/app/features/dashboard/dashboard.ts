@@ -26,6 +26,7 @@ const KPI_LINKS: Record<string, KpiTarget> = {
   ACTIVE_CLUBS: { link: '/admin/clubs' },
   UPCOMING_EVENTS: { link: '/admin/events' },
   ORGANIZED_DRAFTS: { link: '/my-events', queryParams: { status: 'DRAFT' } },
+  MY_PAST_EVENTS: { link: '/my-past-events' },
 };
 
 function toKpiView(kpi: Kpi): KpiView {

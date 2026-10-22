@@ -88,6 +88,18 @@ public class InscriptionController implements InscriptionApi {
                 .toList();
     }
 
+    @Override
+    @GetMapping("/user/{userId}/past")
+    public List<InscriptionResponseDto> getPastByUser(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) throws HttpException {
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return inscriptionService.findPastByUser(principal, userId, page, size).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
     private InscriptionResponseDto toDto(Inscription inscription) {
         InscriptionResponseDto dto = inscriptionMapper.toDto(inscription);
         dto.setWaitingListPosition(inscriptionService.waitingListPosition(inscription));
