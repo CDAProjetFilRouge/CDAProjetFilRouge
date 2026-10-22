@@ -6,10 +6,12 @@ import { organizerGuard } from './core/auth/organizer-guard';
 import { LoginComponent } from './features/auth/login/login/login.component';
 import { EventDetails } from './features/events/event-details/event-details';
 import { Event } from './features/events/event/event';
+import { guestGuard } from './core/auth/guest-guard';
 
 export const routes: Routes = [
   {
     path: 'login',
+    canActivate: [guestGuard],
     component: LoginComponent,
   },
   {
