@@ -32,6 +32,7 @@ public class EventDetailsMapper {
         dto.setAffiliatePrice(event.getAffiliatePrice());
         dto.setNonAffiliatePrice(event.getNonAffiliatePrice());
         dto.setMaxCapacity(event.getMaxCapacity());
+        dto.setCommentsClosedAfterEnd(event.isCommentsClosedAfterEnd());
         dto.setRemainingSpots(remainingSpots);
         dto.setImageGallery(event.getImageGallery().stream().map(imageGaleryMapper::toDto).collect(Collectors.toList()));
         dto.setStatus(event.getStatus());

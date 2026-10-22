@@ -108,6 +108,8 @@ public interface InscriptionRepo extends JpaRepository<Inscription, UUID> {
      * @param status status of the inscription you want to find
      * @return true if an inscription exists with there paramters and false if not
      */
+    boolean existsByUserIdAndEventIdAndStatus(UUID userId, UUID eventId, InscriptionStatus status);
+
     boolean existsByUserIdAndEventIdAndStatusNot(UUID userId, UUID eventId, InscriptionStatus status);
 
     /**

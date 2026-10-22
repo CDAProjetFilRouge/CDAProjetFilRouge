@@ -19,6 +19,7 @@ public class EventRequestDto {
     private BigDecimal affiliatePrice;
     private BigDecimal nonAffiliatePrice;
     private Integer maxCapacity;
+    private Boolean commentsClosedAfterEnd;
     private EventStatus status;
     private UUID idClub;
 
@@ -103,6 +104,14 @@ public class EventRequestDto {
 
     public void setNonAffiliatePrice(BigDecimal nonAffiliatePrice) {
         this.nonAffiliatePrice = nonAffiliatePrice;
+    }
+
+    public Boolean getCommentsClosedAfterEnd() {
+        return commentsClosedAfterEnd;
+    }
+
+    public void setCommentsClosedAfterEnd(Boolean commentsClosedAfterEnd) {
+        this.commentsClosedAfterEnd = commentsClosedAfterEnd;
     }
 
     public Integer getMaxCapacity() {

@@ -166,6 +166,7 @@ export class Dashboard {
             affiliatePrice: detail.affiliatePrice,
             nonAffiliatePrice: detail.nonAffiliatePrice,
             maxCapacity: detail.maxCapacity,
+            commentsClosedAfterEnd: detail.commentsClosedAfterEnd ?? false,
             status: 'PUBLISHED',
           };
           return this.eventFormService.update(draft.id, request);

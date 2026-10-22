@@ -400,6 +400,7 @@ public class EventService {
         eventToBeModified.setAffiliatePrice(modifiedEvent.getAffiliatePrice());
         eventToBeModified.setNonAffiliatePrice(modifiedEvent.getNonAffiliatePrice());
         eventToBeModified.setMaxCapacity(modifiedEvent.getMaxCapacity());
+        eventToBeModified.setCommentsClosedAfterEnd(modifiedEvent.isCommentsClosedAfterEnd());
         EventStatus previousStatus = eventToBeModified.getStatus();
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 

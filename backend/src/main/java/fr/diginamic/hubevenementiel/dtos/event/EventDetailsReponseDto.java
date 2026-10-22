@@ -27,6 +27,7 @@ public class EventDetailsReponseDto {
     private BigDecimal affiliatePrice;
     private BigDecimal nonAffiliatePrice;
     private Integer maxCapacity;
+    private boolean commentsClosedAfterEnd;
     private Integer remainingSpots;
     private List<ImageSummaryResponseDto> imageGallery = new ArrayList<>();
     private EventStatus status;
@@ -171,6 +172,14 @@ public class EventDetailsReponseDto {
 
     public void setNonAffiliatePrice(BigDecimal nonAffiliatePrice) {
         this.nonAffiliatePrice = nonAffiliatePrice;
+    }
+
+    public boolean isCommentsClosedAfterEnd() {
+        return commentsClosedAfterEnd;
+    }
+
+    public void setCommentsClosedAfterEnd(boolean commentsClosedAfterEnd) {
+        this.commentsClosedAfterEnd = commentsClosedAfterEnd;
     }
 
     public Integer getMaxCapacity() {

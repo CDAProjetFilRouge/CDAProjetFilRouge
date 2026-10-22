@@ -26,6 +26,10 @@ public interface CommentRepo extends JpaRepository<Comment, UUID> {
      */
     Page<Comment> findByEventId(UUID id, Pageable pageable);
 
+    long countByEventIdAndAuthorId(UUID eventId, UUID authorId);
+
+    boolean existsByEventIdAndAuthorIdAndContentIgnoreCase(UUID eventId, UUID authorId, String content);
+
     /**
      *
      * @param dateMin starting date of the comment you want to do the search on

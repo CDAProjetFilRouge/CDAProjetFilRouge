@@ -142,6 +142,30 @@ export class EventDetails implements OnInit {
     return event !== null && new Date(event.endDate).getTime() < Date.now();
   });
 
+  // Qui peut commenter : même règle que le back (qui reste l'autorité), pour expliquer plutôt que laisser échouer.
+  protected readonly commentPolicy = computed<{ allowed: boolean; reason: string | null }>(() => {
+    const event = this.eventDetail();
+    const user = this.user();
+    if (!event || !user) {
+      return { allowed: false, reason: null };
+    }
+    const privileged = user.role === 'ADMINISTRATOR' || user.id === event.organizerId;
+    if (event.status === 'CANCELLED') {
+      return privileged
+        ? { allowed: true, reason: null }
+        : { allowed: false, reason: 'Cet évènement a été annulé : les commentaires sont réservés à son organisateur.' };
+    }
+    if (event.status !== 'FINISHED' && !this.isEnded()) {
+      return { allowed: true, reason: null };
+    }
+    if (event.commentsClosedAfterEnd) {
+      return { allowed: false, reason: 'Les commentaires sont fermés pour cet évènement terminé.' };
+    }
+    return privileged || this.myInscription()?.status === 'CONFIRMED'
+      ? { allowed: true, reason: null }
+      : { allowed: false, reason: 'Seuls les participants peuvent commenter un évènement terminé.' };
+  });
+
   protected readonly takenRatio = computed(() => {
     const event = this.eventDetail();
     if (!event || event.maxCapacity <= 0) {
