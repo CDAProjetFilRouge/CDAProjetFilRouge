@@ -447,7 +447,7 @@ class InscriptionControllerIntegrationTest {
                         .param("motif", "Tentative"))
                 .andExpect(status().isForbidden());
 
-        verify(emailService, org.mockito.Mockito.never()).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+        verify(emailService, org.mockito.Mockito.never()).sendInscriptionCancellationEmail(anyString(), org.mockito.ArgumentMatchers.any(fr.diginamic.hubevenementiel.services.MailEvent.class), anyString());
     }
 
     // canceledById reste null meme apres une annulation organisateur : bug connu
@@ -473,7 +473,7 @@ class InscriptionControllerIntegrationTest {
                         .param("motif", "Évènement annulé"))
                 .andExpect(status().isNoContent());
 
-        verify(emailService).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+        verify(emailService).sendInscriptionCancellationEmail(anyString(), org.mockito.ArgumentMatchers.any(fr.diginamic.hubevenementiel.services.MailEvent.class), anyString());
     }
 
     @Test
