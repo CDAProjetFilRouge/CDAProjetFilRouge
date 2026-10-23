@@ -28,3 +28,4 @@ app:
   jwt:
     expiration-ms: 900000
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  frontend-allowed-urls: ${ALLOWED_FRONT_URLS:}
