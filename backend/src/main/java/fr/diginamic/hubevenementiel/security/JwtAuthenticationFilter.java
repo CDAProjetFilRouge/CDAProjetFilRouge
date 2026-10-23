@@ -55,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .orElse(null);
 
                 if (account != null && keyBindingIsRespected(token, request)) {
-                    String email = jwtService.extractEmail(token);
+                    String email = account.getEmail();
                     String role = account.getRole().name();
 
                     AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
