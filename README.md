@@ -23,7 +23,11 @@ Projet fil rouge de formation (Diginamic), développé en équipe.
 - Suppression d'un évènement futur : un email prévient les inscrits.
 
 **Pour les administrateurs**
-- Clubs, utilisateurs (création, rôle, suspension définitive ou temporaire, suppression), évènements, **demandes d'anonymisation RGPD**, documents légaux versionnés (conditions d'utilisation, politique RGPD), exports PDF.
+- Clubs, utilisateurs (création, rôle, suspension définitive ou temporaire, suppression), évènements, **demandes d'anonymisation RGPD**, documents légaux versionnés (conditions d'utilisation, politique RGPD).
+
+**Emails et PDF**
+- Les emails (activation, mot de passe, place libérée, inscription ou évènement annulé…) sont mis en forme aux couleurs de l'appli, avec le billet de l'évènement et un bouton vers la bonne page ; une version texte brut accompagne chacun.
+- La fiche d'un évènement et les documents légaux se téléchargent en PDF, avec la même identité et une pagination.
 
 **Sécurité**
 - Mots de passe Argon2id, JWT de courte durée **lié à une clé du navigateur (DPoP, obligatoire)**, refresh token rotatif avec détection de réutilisation, limite progressive des tentatives de connexion, limite de fréquence des requêtes par adresse IP.
@@ -61,10 +65,13 @@ Variables de `.env` :
 | `DB_PASSWORD`, `DB_ROOT_PASSWORD` | Mots de passe de la base (obligatoires) |
 | `JWT_SECRET` | Clé de signature des jetons, chaîne aléatoire longue (obligatoire, `openssl rand -base64 48`) |
 | `API_URL` | Adresse publique de l'API, vue par le navigateur, sans `/` final |
-| `FRONTEND_URL` | Adresse publique du front, utilisée dans les liens des emails, sans `/` final |
+| `FRONTEND_URL` | Adresse publique du front (par défaut), utilisée dans les liens des emails, sans `/` final |
+| `ALLOWED_FRONT_URLS` | Autres fronts autorisés à appeler l'API (CORS) et à figurer dans les liens des emails, séparés par des virgules, sans `/` final. Facultatif |
 | `BREVO_SMTP_LOGIN`, `BREVO_SMTP_KEY` | Envoi des emails via Brevo. Sans eux, l'application tourne mais n'envoie rien |
 
-`API_URL` et `FRONTEND_URL` sont lues au démarrage : il n'y a pas d'image à reconstruire pour changer d'adresse.
+`API_URL`, `FRONTEND_URL` et `ALLOWED_FRONT_URLS` sont lues au démarrage : il n'y a pas d'image à reconstruire pour changer d'adresse.
+
+Un lien d'email (activation, mot de passe oublié…) reprend l'adresse du front qui a envoyé la demande **seulement si elle figure dans `ALLOWED_FRONT_URLS`** ; sinon, c'est `FRONTEND_URL`. Cela évite qu'un lien de réinitialisation pointe vers un site tiers.
 
 Pour charger le jeu de démonstration (mot de passe des comptes : `Password12345!`) :
 
