@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,8 @@ import fr.diginamic.hubevenementiel.exceptions.TooManyRequestsException;
 
 @Service
 public class LoginAttemptService {
+
+    private static final Logger log = LoggerFactory.getLogger(LoginAttemptService.class);
 
     private static final int MAX_TRACKED_KEYS = 10_000;
     private static final int MAX_DOUBLINGS = 20;
@@ -58,6 +62,7 @@ public class LoginAttemptService {
 
         if (retryAfterMillis > 0) {
             long seconds = Math.max(1, (retryAfterMillis + 999) / 1000);
+            log.warn("Connexion bloquée : trop de tentatives, réessayer dans {} s", seconds);
             throw new TooManyRequestsException(
                     "Trop de tentatives de connexion. Réessayez dans " + humanDuration(seconds) + ".", seconds);
         }

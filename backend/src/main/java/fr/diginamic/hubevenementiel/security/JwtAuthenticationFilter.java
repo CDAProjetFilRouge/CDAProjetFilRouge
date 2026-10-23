@@ -1,5 +1,9 @@
 package fr.diginamic.hubevenementiel.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import fr.diginamic.hubevenementiel.logging.RequestLoggingFilter;
 import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
@@ -22,6 +26,7 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String DPOP_HEADER = "DPoP";
@@ -54,8 +59,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .filter(user -> user.getStatus() == AccountStatus.ACTIVE)
                         .orElse(null);
 
-                if (account != null && keyBindingIsRespected(token, request)) {
-                    String email = jwtService.extractEmail(token);
+                boolean keyRespected = account != null && keyBindingIsRespected(token, request);
+                if (account != null && !keyRespected) {
+                    log.warn("Jeton refusé : preuve DPoP absente ou invalide userId={}", id);
+                }
+                if (account == null) {
+                    log.warn("Jeton refusé : compte introuvable ou non actif userId={}", id);
+                }
+                if (keyRespected) {
+                    String email = account.getEmail();
                     String role = account.getRole().name();
 
                     AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
@@ -64,6 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             principal, null, List.of(new RoleAuthority("ROLE_" + role)));
 
                     SecurityContextHolder.getContext().setAuthentication(auth);
+                    MDC.put(RequestLoggingFilter.USER_ID, id.toString());
                 }
             }
         }

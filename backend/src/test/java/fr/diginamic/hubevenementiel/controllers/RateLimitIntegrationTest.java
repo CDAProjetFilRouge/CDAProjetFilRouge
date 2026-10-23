@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -53,6 +55,21 @@ class RateLimitIntegrationTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().string("X-Error-Code", "TOO_MANY_REQUESTS"))
                 .andExpect(header().exists("Retry-After"));
+    }
+
+    @Test
+    void aRefusedRequest_isLoggedAsAWarning() throws Exception {
+        String ip = uniqueIp();
+        for (int i = 0; i < 3; i++) {
+            call(get("/events/filter"), ip).andExpect(status().isOk());
+        }
+
+        try (LogCapture logs = new LogCapture()) {
+            call(get("/events/filter"), ip).andExpect(status().isTooManyRequests());
+
+            assertThat(logs.warnings()).anyMatch(message -> message.startsWith("Limite de requêtes atteinte (SEARCH)"));
+            assertThat(logs.warnings()).anyMatch(message -> message.startsWith("GET /events/filter -> 429"));
+        }
     }
 
     @Test

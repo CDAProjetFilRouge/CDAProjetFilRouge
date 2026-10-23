@@ -1,6 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
 import static fr.diginamic.hubevenementiel.TestIds.uuid;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Comment;
 import fr.diginamic.hubevenementiel.entities.Event;
@@ -205,6 +206,19 @@ class CommentServiceTest {
     }
 
     @Test
+    void createComment_tooFast_isLoggedAsAWarning() throws HttpException {
+        givenEventAndAuthor();
+        when(rateLimiter.tryConsume(org.mockito.ArgumentMatchers.eq("comment:" + uuid(6)),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(12_000L);
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThrows(TooManyRequestsException.class, () -> commentService.createComment(uuid(2), uuid(6), "Encore un"));
+
+            assertThat(logs.warnings()).containsExactly("Commentaire refusé : trop de publications, réessayer dans 12 s");
+        }
+    }
+
+    @Test
     void createComment_linkOrInsult_isRefusedBeforeAnyOtherCheck() throws HttpException {
         givenEventAndAuthor();
 
@@ -315,6 +329,19 @@ class CommentServiceTest {
         commentService.deleteComment(uuid(2), uuid(1), principal);
 
         verify(commentRepo).delete(comment);
+    }
+
+    @Test
+    void deleteComment_isLoggedWithTheCommentAndTheEvent() throws HttpException {
+        Comment comment = commentBy(author);
+        when(commentRepo.findById(uuid(1))).thenReturn(Optional.of(comment));
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(6), "alice@example.com", "MEMBER");
+
+        try (LogCapture logs = new LogCapture()) {
+            commentService.deleteComment(uuid(2), uuid(1), principal);
+
+            assertThat(logs.messages()).containsExactly("Commentaire " + uuid(1) + " supprimé sur l'évènement " + uuid(2));
+        }
     }
 
     // ---------------------------------------------------------------

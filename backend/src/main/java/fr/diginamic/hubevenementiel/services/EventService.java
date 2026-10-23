@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import fr.diginamic.hubevenementiel.dtos.event.EventCalendarResponseDto;
 import fr.diginamic.hubevenementiel.entities.Address;
@@ -41,6 +43,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class EventService {
+
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
 
     private static final Duration MAX_CALENDAR_RANGE = Duration.ofDays(366);
 
@@ -405,7 +409,7 @@ public class EventService {
         eventToBeModified.setStatus(modifiedEvent.getStatus());
 
         Event saved = eventRepository.save(eventToBeModified);
-        notifyIfCancelled(saved, previousStatus);
+        afterStatusChange(saved, previousStatus);
 
         if (previousCapacity != null && saved.getMaxCapacity() != null && saved.getMaxCapacity() > previousCapacity) {
             waitingListService.fillFreeSpots(eventId);
@@ -440,8 +444,15 @@ public class EventService {
         EventStatus previousStatus = event.getStatus();
         event.setStatus(newStatus);
         Event saved = eventRepository.save(event);
-        notifyIfCancelled(saved, previousStatus);
+        afterStatusChange(saved, previousStatus);
         return saved;
+    }
+
+    private void afterStatusChange(Event event, EventStatus previousStatus) {
+        if (previousStatus != event.getStatus()) {
+            log.info("Évènement {} : statut {} -> {}", event.getId(), previousStatus, event.getStatus());
+        }
+        notifyIfCancelled(event, previousStatus);
     }
 
     private void notifyIfCancelled(Event event, EventStatus previousStatus) {
@@ -500,6 +511,7 @@ public class EventService {
 
         inscriptionRepo.deleteByEventId(eventId);
         eventRepository.delete(event);
+        log.info("Évènement {} supprimé ({} inscrits prévenus)", eventId, emails.size());
         eventPublisher.publishEvent(new EventDeletedEvent(emails, event.getTitle()));
     }
 

@@ -3,6 +3,8 @@ package fr.diginamic.hubevenementiel.security;
 import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import jakarta.servlet.FilterChain;
@@ -73,8 +75,9 @@ class JwtAuthenticationFilterTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
         when(jwtService.isTokenValid("token-valide")).thenReturn(true);
         when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
-        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.ACTIVE)));
-        when(jwtService.extractEmail("token-valide")).thenReturn("alice.martin@example.com");
+        AppUser user = userWithStatus(AccountStatus.ACTIVE);
+        user.setEmail("alice.martin@example.com");
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(user));
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -85,6 +88,26 @@ class JwtAuthenticationFilterTest {
         assertThat(principal.email()).isEqualTo("alice.martin@example.com");
         assertThat(principal.role()).isEqualTo("ORGANIZER");
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_roleAndEmailComeFromTheDatabaseNotFromTheToken() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        AppUser demoted = userWithStatus(AccountStatus.ACTIVE);
+        demoted.setEmail("nouvelle-adresse@example.com");
+        demoted.setRole(Role.MEMBER);
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(demoted));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        assertThat(principal.role()).isEqualTo("MEMBER");
+        assertThat(principal.email()).isEqualTo("nouvelle-adresse@example.com");
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                .extracting(org.springframework.security.core.GrantedAuthority::getAuthority).containsExactly("ROLE_MEMBER");
     }
 
     @Test
@@ -100,6 +123,38 @@ class JwtAuthenticationFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_validTokenOfADeletedAccount_isLoggedAndContinuesUnauthenticated() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.empty());
+
+        try (LogCapture logs = new LogCapture()) {
+            filter.doFilterInternal(request, response, filterChain);
+
+            assertThat(logs.warnings())
+                    .containsExactly("Jeton refusé : compte introuvable ou non actif userId=" + uuid(6));
+        }
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_validTokenOfSuspendedUser_isLogged() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.SUSPENDED)));
+
+        try (LogCapture logs = new LogCapture()) {
+            filter.doFilterInternal(request, response, filterChain);
+
+            assertThat(logs.warnings())
+                    .containsExactly("Jeton refusé : compte introuvable ou non actif userId=" + uuid(6));
+        }
     }
 
     @Test

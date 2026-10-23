@@ -46,7 +46,9 @@ class CommentContentFilterTest {
     void check_refusesBlankTooLongFloodAndShouting() {
         assertThrows(BadRequestException.class, () -> filter.check("   "));
         assertThrows(BadRequestException.class, () -> filter.check(null));
-        assertThrows(BadRequestException.class, () -> filter.check("a".repeat(CommentContentFilter.MAX_LENGTH + 1)));
+        String longButOrdinary = "ab ".repeat(CommentContentFilter.MAX_LENGTH / 3 + 1);
+        assertDoesNotThrow(() -> filter.check(longButOrdinary.substring(0, CommentContentFilter.MAX_LENGTH)));
+        assertThrows(BadRequestException.class, () -> filter.check(longButOrdinary));
         assertThrows(BadRequestException.class, () -> filter.check("Génial !!!!!!!!!!!!"));
         assertThrows(BadRequestException.class, () -> filter.check("VENEZ TOUS ICI C'EST VRAIMENT SUPER"));
     }

@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,6 +24,8 @@ import jakarta.transaction.Transactional;
  */
 @Service
 public class AccountStatusService {
+
+    private static final Logger log = LoggerFactory.getLogger(AccountStatusService.class);
 
     private final AppUserService appUserService;
     private final UserRepo userRepo;
@@ -53,6 +57,7 @@ public class AccountStatusService {
         user.setSuspensionEndDate(endDate);
 
         userRepo.save(user);
+        log.info("Compte {} suspendu (fin : {})", id, endDate == null ? "définitive" : endDate);
     }
 
     @Transactional
@@ -67,6 +72,7 @@ public class AccountStatusService {
         user.setSuspensionEndDate(null);
 
         userRepo.save(user);
+        log.info("Compte {} réactivé", id);
     }
 
     /**
