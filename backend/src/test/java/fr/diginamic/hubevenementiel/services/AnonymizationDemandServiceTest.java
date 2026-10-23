@@ -4,6 +4,7 @@ import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
 import fr.diginamic.hubevenementiel.exceptions.ConflictException;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.RequestStatus;
@@ -107,6 +108,25 @@ class AnonymizationDemandServiceTest {
         assertThat(result.getRequestStatus()).isEqualTo(RequestStatus.VALIDATE);
         assertThat(result.getAdmin()).isEqualTo(admin);
         assertThat(result.getApprovedDate()).isNotNull();
+    }
+
+    @Test
+    void validate_isLogged() throws HttpException {
+        AppUserPrincipal principal = new AppUserPrincipal(uuid(9), "emma@example.com", "ADMINISTRATOR");
+        AnonymizationDemand demand = new AnonymizationDemand();
+        demand.setId(uuid(1));
+        demand.setRequester(requester);
+        demand.setRequestStatus(RequestStatus.PENDING);
+        when(appUserService.findById(uuid(9))).thenReturn(admin);
+        when(anonymizationDemandRepository.findById(uuid(1))).thenReturn(Optional.of(demand));
+        when(anonymizationDemandRepository.save(any(AnonymizationDemand.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        try (LogCapture logs = new LogCapture()) {
+            anonymizationDemandService.validate(uuid(1), principal);
+
+            assertThat(logs.messages()).containsExactly("Demande d'anonymisation " + uuid(1) + " validée");
+        }
     }
 
     @Test

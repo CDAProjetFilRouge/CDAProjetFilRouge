@@ -3,6 +3,8 @@ package fr.diginamic.hubevenementiel.security;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,6 +20,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);
 
     public static final String ERROR_CODE = "TOO_MANY_REQUESTS";
     private static final long WINDOW_MILLIS = 60_000;
@@ -61,6 +65,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         if (retryAfterMillis > 0) {
             long seconds = Math.max(1, (retryAfterMillis + 999) / 1000);
+            log.warn("Limite de requêtes atteinte ({}) : réessayer dans {} s", policy, seconds);
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader(HttpHeaders.RETRY_AFTER, String.valueOf(seconds));
             response.setHeader("X-Error-Code", ERROR_CODE);

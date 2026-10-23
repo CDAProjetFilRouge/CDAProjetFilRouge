@@ -9,6 +9,9 @@ spring:
     show-sql: false
 
 logging:
+  structured:
+    format:
+      console: logstash
   level:
     org.hibernate.SQL: warn
 
