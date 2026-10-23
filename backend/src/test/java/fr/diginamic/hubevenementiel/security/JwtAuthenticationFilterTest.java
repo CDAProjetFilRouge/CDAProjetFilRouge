@@ -3,6 +3,7 @@ package fr.diginamic.hubevenementiel.security;
 import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.repositories.UserRepo;
 import fr.diginamic.hubevenementiel.services.JwtService;
 import jakarta.servlet.FilterChain;
@@ -100,6 +101,38 @@ class JwtAuthenticationFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_validTokenOfADeletedAccount_isLoggedAndContinuesUnauthenticated() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.empty());
+
+        try (LogCapture logs = new LogCapture()) {
+            filter.doFilterInternal(request, response, filterChain);
+
+            assertThat(logs.warnings())
+                    .containsExactly("Jeton refusé : compte introuvable ou non actif userId=" + uuid(6));
+        }
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_validTokenOfSuspendedUser_isLogged() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-valide");
+        when(jwtService.isTokenValid("token-valide")).thenReturn(true);
+        when(jwtService.extractUserId("token-valide")).thenReturn(uuid(6));
+        when(userRepo.findById(uuid(6))).thenReturn(Optional.of(userWithStatus(AccountStatus.SUSPENDED)));
+
+        try (LogCapture logs = new LogCapture()) {
+            filter.doFilterInternal(request, response, filterChain);
+
+            assertThat(logs.warnings())
+                    .containsExactly("Jeton refusé : compte introuvable ou non actif userId=" + uuid(6));
+        }
     }
 
     @Test
