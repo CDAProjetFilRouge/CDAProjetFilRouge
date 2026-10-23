@@ -672,7 +672,7 @@ class EventServiceTest {
         ArgumentCaptor<EventDeletedEvent> captor = ArgumentCaptor.forClass(EventDeletedEvent.class);
         verify(eventPublisher).publishEvent(captor.capture());
         assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
-        assertThat(captor.getValue().eventTitle()).isEqualTo(existing.getTitle());
+        assertThat(captor.getValue().event().title()).isEqualTo(existing.getTitle());
     }
 
     @Test
@@ -1035,7 +1035,7 @@ class EventServiceTest {
         ArgumentCaptor<EventCancelledEvent> captor = ArgumentCaptor.forClass(EventCancelledEvent.class);
         verify(eventPublisher).publishEvent(captor.capture());
         assertThat(captor.getValue().emails()).containsExactly("confirme@example.com", "attente@example.com");
-        assertThat(captor.getValue().eventTitle()).isEqualTo(event.getTitle());
+        assertThat(captor.getValue().event().title()).isEqualTo(event.getTitle());
         Inscription confirmed = inscriptions.get(0);
         Inscription waiting = inscriptions.get(1);
         assertThat(confirmed.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);

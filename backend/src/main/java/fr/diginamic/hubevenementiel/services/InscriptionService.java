@@ -347,7 +347,7 @@ public class InscriptionService {
         Inscription saved = inscriptionRepo.save(inscription);
 
         emailService.sendInscriptionCancellationEmail(
-                inscription.getUser().getEmail(), inscription.getEvent().getTitle(), motif);
+                inscription.getUser().getEmail(), MailEvent.of(inscription.getEvent()), motif);
 
         if (freesASpot) {
             waitingListService.promoteNext(inscription.getEvent().getId());

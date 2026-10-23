@@ -1,25 +1,25 @@
 package fr.diginamic.hubevenementiel.services;
 
-import fr.diginamic.hubevenementiel.config.FrontendUrls;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.MailPreparationException;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import fr.diginamic.hubevenementiel.config.FrontendUrls;
+import fr.diginamic.hubevenementiel.services.EmailTemplate.Tone;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.MailPreparationException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.web.util.HtmlUtils;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final FrontendUrls frontendUrls;
 
     @Value("${app.mail-sender}")
     private String senderAddress;
-
-    private final FrontendUrls frontendUrls;
 
     public EmailService(JavaMailSender mailSender, FrontendUrls frontendUrls) {
         this.mailSender = mailSender;
@@ -27,111 +27,103 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String toEmail, String tokenValue) {
-        sendLinkEmail(toEmail, "MyHubEvent - Vérifiez votre compte!",
-                "Bienvenue !\n\nCliquez sur ce lien pour activer votre compte :",
-                frontendUrls.current() + "/verify?token=" + tokenValue,
-                "Ce lien expire dans 24h.");
+        send(toEmail, "MyHubEvent - Vérifiez votre compte!",
+                EmailTemplate.of(Tone.INFO, "Bienvenue", "Activez votre compte MyHubEvent")
+                        .paragraph("Il reste une étape : confirmer votre adresse email pour pouvoir vous inscrire aux évènements de vos clubs.")
+                        .button("Activer mon compte", frontendUrls.current() + "/verify?token=" + tokenValue, false)
+                        .showUrl()
+                        .note("Ce lien expire dans 24 h. Si vous n'avez pas créé de compte, ignorez cet email."));
     }
 
     public void sendPasswordResetEmail(String toEmail, String tokenValue) {
-        sendLinkEmail(toEmail, "MyHubEvent - Confirmation de changement de mot de passe!",
-                "Une demande de changement de mot de passe a été effectuée.\n\nCliquez sur ce lien pour confirmer :",
-                frontendUrls.current() + "/reset-password?token=" + tokenValue,
-                "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\nCe lien expire dans 1h.");
+        send(toEmail, "MyHubEvent - Confirmation de changement de mot de passe!",
+                EmailTemplate.of(Tone.INFO, "Sécurité", "Choisissez un nouveau mot de passe")
+                        .paragraph("Une demande de changement de mot de passe a été faite pour votre compte. Cliquez sur le bouton pour en choisir un nouveau.")
+                        .button("Changer mon mot de passe", frontendUrls.current() + "/reset-password?token=" + tokenValue, false)
+                        .showUrl()
+                        .note("Ce lien expire dans 1 h. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe ne change pas."));
     }
 
     public void sendPasswordChangeConfirmationEmail(String toEmail, String tokenValue) {
-        sendLinkEmail(toEmail, "MyHubEvent - Confirmez votre nouveau mot de passe",
-                "Vous avez choisi un nouveau mot de passe.\n\nCliquez sur ce lien pour confirmer et l'appliquer définitivement :",
-                frontendUrls.current() + "/confirm-password-change?token=" + tokenValue,
-                "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\nCe lien expire dans 1h.");
+        send(toEmail, "MyHubEvent - Confirmez votre nouveau mot de passe",
+                EmailTemplate.of(Tone.INFO, "Sécurité", "Confirmez votre nouveau mot de passe")
+                        .paragraph("Vous avez choisi un nouveau mot de passe. Cliquez sur le bouton pour le confirmer et l'appliquer définitivement.")
+                        .button("Confirmer le changement", frontendUrls.current() + "/confirm-password-change?token=" + tokenValue, false)
+                        .showUrl()
+                        .note("Ce lien expire dans 1 h. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email."));
     }
 
-    public void sendInscriptionCancellationEmail(String toEmail, String eventTitle, String motif) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Votre inscription a été annulée");
-        message.setText("Votre inscription à l'évènement \"" + eventTitle + "\" a été annulée par l'organisateur.\n\n"
-                + "Motif : " + motif);
-
-        mailSender.send(message);
+    public void sendInscriptionCancellationEmail(String toEmail, MailEvent event, String motif) {
+        send(toEmail, "MyHubEvent - Votre inscription a été annulée",
+                EmailTemplate.of(Tone.WARN, "Inscription annulée", "L'organisateur a annulé votre inscription")
+                        .paragraph("Votre inscription à l'évènement ci-dessous a été annulée par l'organisateur.")
+                        .event(event, true)
+                        .quote(motif)
+                        .button("Voir l'évènement", eventUrl(event), false));
     }
 
-    public void sendEventDeletedEmail(String toEmail, String eventTitle) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Un évènement a été supprimé");
-        message.setText("L'évènement \"" + eventTitle + "\" a été supprimé par son organisateur.\n\n"
-                + "Votre inscription, ou votre place en liste d'attente, n'est donc plus valable.");
-
-        mailSender.send(message);
+    public void sendEventDeletedEmail(String toEmail, MailEvent event) {
+        send(toEmail, "MyHubEvent - Un évènement a été supprimé",
+                EmailTemplate.of(Tone.WARN, "Évènement supprimé", "Un évènement auquel vous étiez inscrit est supprimé")
+                        .paragraph("L'organisateur a supprimé cet évènement. Votre inscription, ou votre place en liste d'attente, n'est donc plus valable.")
+                        .event(event, true)
+                        .button("Voir le catalogue", frontendUrls.current() + "/catalogue", false));
     }
 
-    public void sendEventCancelledEmail(String toEmail, String eventTitle) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Un évènement a été annulé");
-        message.setText("L'évènement \"" + eventTitle + "\" a été annulé par son organisateur.\n\n"
-                + "Votre inscription, ou votre place en liste d'attente, n'est donc plus valable.");
-
-        mailSender.send(message);
+    public void sendEventCancelledEmail(String toEmail, MailEvent event) {
+        send(toEmail, "MyHubEvent - Un évènement a été annulé",
+                EmailTemplate.of(Tone.WARN, "Annulé", "L'évènement auquel vous étiez inscrit est annulé")
+                        .paragraph("L'organisateur a annulé cet évènement. Votre inscription, ou votre place en liste d'attente, n'est donc plus valable.")
+                        .event(event, true)
+                        .button("Retrouver mes évènements", frontendUrls.current() + "/my-past-events", true)
+                        .note("L'évènement reste consultable dans « Mes évènements passés »."));
     }
 
-    public void sendInscriptionPromotedEmail(String toEmail, String eventTitle) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Une place s'est libérée !");
-        message.setText("Bonne nouvelle : une place s'est libérée pour l'évènement \"" + eventTitle + "\".\n\n"
-                + "Votre inscription, jusqu'ici en liste d'attente, est maintenant confirmée.");
-
-        mailSender.send(message);
+    public void sendInscriptionPromotedEmail(String toEmail, MailEvent event) {
+        send(toEmail, "MyHubEvent - Une place s'est libérée !",
+                EmailTemplate.of(Tone.OK, "Place confirmée", "Bonne nouvelle, une place s'est libérée")
+                        .paragraph("Vous étiez en liste d'attente : votre inscription est maintenant confirmée. Vous n'avez rien à faire.")
+                        .event(event, false)
+                        .button("Voir l'évènement", eventUrl(event), false)
+                        .note("Un empêchement ? Vous pouvez vous désinscrire depuis la page de l'évènement pour libérer la place."));
     }
 
     public void sendAccountInfoUpdatedEmail(String toEmail) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(senderAddress);
-        message.setTo(toEmail);
-        message.setSubject("MyHubEvent - Vos informations ont été modifiées");
-        message.setText("Les informations générales de votre compte (nom, prénom, email, téléphone ou adresse) "
-                + "viennent d'être modifiées.\n\n"
-                + "Si vous n'êtes pas à l'origine de cette modification, contactez-nous au plus vite.");
-
-        mailSender.send(message);
+        send(toEmail, "MyHubEvent - Vos informations ont été modifiées",
+                EmailTemplate.of(Tone.INFO, "Sécurité", "Vos informations ont été modifiées")
+                        .paragraph("Les informations générales de votre compte (nom, prénom, email, téléphone ou adresse) viennent d'être modifiées.")
+                        .button("Voir mon compte", frontendUrls.current() + "/account", false)
+                        .note("Si vous n'êtes pas à l'origine de cette modification, contactez-nous au plus vite."));
     }
 
     public void sendAccountActivationEmail(String toEmail, String tokenValue, String temporaryPassword) {
-        sendLinkEmail(toEmail, "MyHubEvent - Activation de votre compte",
-                "Un compte a été créé pour vous sur MyHubEvent.\n\nMot de passe temporaire : " + temporaryPassword
-                        + "\n\nCliquez sur ce lien pour l'activer et choisir votre mot de passe définitif :",
-                frontendUrls.current() + "/activate-account?token=" + tokenValue,
-                "Ce lien expire dans 1h.");
+        send(toEmail, "MyHubEvent - Activation de votre compte",
+                EmailTemplate.of(Tone.INFO, "Compte créé", "Un compte a été créé pour vous")
+                        .paragraph("Un compte a été créé pour vous sur MyHubEvent. Voici votre mot de passe temporaire :")
+                        .highlight(temporaryPassword)
+                        .paragraph("Cliquez sur le bouton pour activer le compte et choisir votre mot de passe définitif.")
+                        .button("Activer mon compte", frontendUrls.current() + "/activate-account?token=" + tokenValue, false)
+                        .showUrl()
+                        .note("Ce lien expire dans 1 h."));
     }
 
-    /**
-     * Sends a mail whose link is clickable: an HTML body, with the same text as plain-text fallback.
-     */
-    private void sendLinkEmail(String toEmail, String subject, String intro, String link, String outro) {
+    private String eventUrl(MailEvent event) {
+        return frontendUrls.current() + "/event-details/" + event.id();
+    }
+
+    /** Un seul message : texte brut et HTML (clients qui n'affichent pas le HTML), logo joint en image intégrée. */
+    private void send(String toEmail, String subject, EmailTemplate template) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(senderAddress);
             helper.setTo(toEmail);
             helper.setSubject(subject);
-            String plain = intro + "\n" + link + "\n\n" + outro;
-            String html = "<p>" + toHtml(intro) + "</p>"
-                    + "<p><a href=\"" + HtmlUtils.htmlEscape(link) + "\">" + HtmlUtils.htmlEscape(link) + "</a></p>"
-                    + "<p>" + toHtml(outro) + "</p>";
-            helper.setText(plain, html);
+            helper.setText(template.text(), template.html());
+            helper.addInline(EmailTemplate.LOGO_CONTENT_ID, new ClassPathResource("mail/logo.png"), "image/png");
             mailSender.send(message);
         } catch (MessagingException e) {
             throw new MailPreparationException("Impossible de préparer l'email.", e);
         }
-    }
-
-    private static String toHtml(String text) {
-        return HtmlUtils.htmlEscape(text).replace("\n\n", "</p><p>").replace("\n", "<br>");
     }
 }

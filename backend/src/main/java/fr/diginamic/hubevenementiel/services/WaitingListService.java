@@ -129,6 +129,6 @@ public class WaitingListService {
             return;
         }
         eventPublisher.publishEvent(
-                new InscriptionPromotedEvent(promoted.getUser().getEmail(), promoted.getEvent().getTitle()));
+                new InscriptionPromotedEvent(promoted.getUser().getEmail(), MailEvent.of(promoted.getEvent())));
     }
 }
