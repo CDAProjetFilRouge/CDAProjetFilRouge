@@ -1,5 +1,6 @@
 package fr.diginamic.hubevenementiel.services;
 
+import fr.diginamic.hubevenementiel.config.FrontendUrls;
 import org.springframework.beans.factory.annotation.Value;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -15,34 +16,34 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
-
     @Value("${app.mail-sender}")
     private String senderAddress;
 
-    public EmailService(JavaMailSender mailSender) {
+    private final FrontendUrls frontendUrls;
+
+    public EmailService(JavaMailSender mailSender, FrontendUrls frontendUrls) {
         this.mailSender = mailSender;
+        this.frontendUrls = frontendUrls;
     }
 
     public void sendVerificationEmail(String toEmail, String tokenValue) {
         sendLinkEmail(toEmail, "MyHubEvent - Vérifiez votre compte!",
                 "Bienvenue !\n\nCliquez sur ce lien pour activer votre compte :",
-                frontendUrl + "/verify?token=" + tokenValue,
+                frontendUrls.current() + "/verify?token=" + tokenValue,
                 "Ce lien expire dans 24h.");
     }
 
     public void sendPasswordResetEmail(String toEmail, String tokenValue) {
         sendLinkEmail(toEmail, "MyHubEvent - Confirmation de changement de mot de passe!",
                 "Une demande de changement de mot de passe a été effectuée.\n\nCliquez sur ce lien pour confirmer :",
-                frontendUrl + "/reset-password?token=" + tokenValue,
+                frontendUrls.current() + "/reset-password?token=" + tokenValue,
                 "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\nCe lien expire dans 1h.");
     }
 
     public void sendPasswordChangeConfirmationEmail(String toEmail, String tokenValue) {
         sendLinkEmail(toEmail, "MyHubEvent - Confirmez votre nouveau mot de passe",
                 "Vous avez choisi un nouveau mot de passe.\n\nCliquez sur ce lien pour confirmer et l'appliquer définitivement :",
-                frontendUrl + "/confirm-password-change?token=" + tokenValue,
+                frontendUrls.current() + "/confirm-password-change?token=" + tokenValue,
                 "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.\nCe lien expire dans 1h.");
     }
 
@@ -105,7 +106,7 @@ public class EmailService {
         sendLinkEmail(toEmail, "MyHubEvent - Activation de votre compte",
                 "Un compte a été créé pour vous sur MyHubEvent.\n\nMot de passe temporaire : " + temporaryPassword
                         + "\n\nCliquez sur ce lien pour l'activer et choisir votre mot de passe définitif :",
-                frontendUrl + "/activate-account?token=" + tokenValue,
+                frontendUrls.current() + "/activate-account?token=" + tokenValue,
                 "Ce lien expire dans 1h.");
     }
 

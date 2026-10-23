@@ -38,8 +38,11 @@ public class SecurityConfig {
     private static final int ARGON2_MEMORY_KIB = 19456;
     private static final int ARGON2_ITERATIONS = 2;
 
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
+    private final FrontendUrls frontendUrls;
+
+    public SecurityConfig(FrontendUrls frontendUrls) {
+        this.frontendUrls = frontendUrls;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
@@ -118,7 +121,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendUrl));
+        config.setAllowedOrigins(frontendUrls.allowedOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization", "DPoP"));
         config.setExposedHeaders(List.of("X-Error-Code", "Retry-After"));

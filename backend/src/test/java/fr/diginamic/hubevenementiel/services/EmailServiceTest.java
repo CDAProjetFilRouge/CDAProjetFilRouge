@@ -10,6 +10,10 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import fr.diginamic.hubevenementiel.config.FrontendUrls;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -24,8 +28,7 @@ class EmailServiceTest {
     void setUp() {
         mailSender = mock(JavaMailSender.class);
         when(mailSender.createMimeMessage()).thenAnswer(invocation -> new MimeMessage((Session) null));
-        emailService = new EmailService(mailSender);
-        ReflectionTestUtils.setField(emailService, "frontendUrl", "https://hub.example.org");
+        emailService = new EmailService(mailSender, new FrontendUrls("https://hub.example.org", ""));
         ReflectionTestUtils.setField(emailService, "senderAddress", "no-reply@example.org");
     }
 
@@ -35,6 +38,34 @@ class EmailServiceTest {
 
         String html = htmlBodyOfSentMail();
         assertThat(html).contains("<a href=\"https://hub.example.org/verify?token=abc123\">");
+    }
+
+    @Test
+    void links_followTheFrontThatSentTheRequest_onlyWhenItIsAllowed() throws Exception {
+        emailService = new EmailService(mailSender, new FrontendUrls("https://hub.example.org", "https://autre.example.org"));
+        ReflectionTestUtils.setField(emailService, "senderAddress", "no-reply@example.org");
+        try {
+            requestFrom("https://autre.example.org");
+            emailService.sendPasswordResetEmail("membre@example.org", "r1");
+            requestFrom("https://evil.example.com");
+            emailService.sendPasswordResetEmail("membre@example.org", "r2");
+
+            ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+            verify(mailSender, org.mockito.Mockito.times(2)).send(captor.capture());
+            assertThat(findPart(captor.getAllValues().get(0), "text/html"))
+                    .contains("<a href=\"https://autre.example.org/reset-password?token=r1\">");
+            assertThat(findPart(captor.getAllValues().get(1), "text/html"))
+                    .contains("<a href=\"https://hub.example.org/reset-password?token=r2\">")
+                    .doesNotContain("evil");
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    private static void requestFrom(String origin) {
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.addHeader("Origin", origin);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
     @Test
