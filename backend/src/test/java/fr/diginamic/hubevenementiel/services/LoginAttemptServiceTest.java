@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.exceptions.TooManyRequestsException;
 
 class LoginAttemptServiceTest {
@@ -56,6 +57,19 @@ class LoginAttemptServiceTest {
 
         assertThatThrownBy(() -> service.checkAllowed(EMAIL, IP)).isInstanceOf(TooManyRequestsException.class);
         assertThat(retryAfter(EMAIL, IP)).isEqualTo(60);
+    }
+
+    @Test
+    void aBlockedAttempt_isLoggedAsAWarningWithoutTheEmailOrTheIp() {
+        fail(EMAIL, IP, 5);
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThatThrownBy(() -> service.checkAllowed(EMAIL, IP)).isInstanceOf(TooManyRequestsException.class);
+
+            assertThat(logs.warnings()).hasSize(1);
+            assertThat(logs.warnings().get(0)).startsWith("Connexion bloquée : trop de tentatives")
+                    .doesNotContain(EMAIL).doesNotContain(IP);
+        }
     }
 
     @Test

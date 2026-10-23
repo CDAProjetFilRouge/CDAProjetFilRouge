@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -22,6 +24,8 @@ import fr.diginamic.hubevenementiel.security.DpopProofVerifier;
 
 @Service
 public class RefreshTokenService {
+
+    private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
 
     private static final long SLIDING_DAYS = 7;
     private static final long ABSOLUTE_DAYS = 30;
@@ -63,6 +67,7 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new UnauthorizedException("Session invalide."));
 
         if (current.getRevokedAt() != null) {
+            log.warn("Jeton de rafraîchissement refusé : déjà révoqué userId={}", current.getUser().getId());
             throw new UnauthorizedException("Session invalide.");
         }
 
@@ -70,11 +75,15 @@ public class RefreshTokenService {
         boolean boundToAnotherKey = current.getKeyThumbprint() != null
                 && !current.getKeyThumbprint().equals(keyThumbprint);
         if (unboundButRequired || boundToAnotherKey) {
+            log.warn("Jeton de rafraîchissement refusé : clé DPoP absente ou différente, session révoquée userId={}",
+                    current.getUser().getId());
             refreshTokenRepo.revokeFamily(current.getFamilyId(), now);
             throw new UnauthorizedException("Session invalide.");
         }
 
         if (current.getUsedAt() != null && current.getUsedAt().plusSeconds(GRACE_SECONDS).isBefore(now)) {
+            log.warn("Jeton de rafraîchissement refusé : réutilisation d'un jeton déjà consommé, session révoquée userId={}",
+                    current.getUser().getId());
             refreshTokenRepo.revokeFamily(current.getFamilyId(), now);
             throw new UnauthorizedException("Session invalide.");
         }
@@ -86,6 +95,7 @@ public class RefreshTokenService {
 
         AppUser user = current.getUser();
         if (user.getStatus() != AccountStatus.ACTIVE) {
+            log.warn("Jeton de rafraîchissement refusé : compte non actif, session révoquée userId={}", user.getId());
             refreshTokenRepo.revokeFamily(current.getFamilyId(), now);
             throw new UnauthorizedException("Session invalide.");
         }

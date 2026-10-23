@@ -2,6 +2,7 @@ package fr.diginamic.hubevenementiel.services;
 
 import static fr.diginamic.hubevenementiel.TestIds.uuid;
 import java.util.UUID;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
 import fr.diginamic.hubevenementiel.exceptions.BadRequestException;
@@ -78,6 +79,21 @@ class AccountStatusServiceTest {
         assertThat(target.getStatus()).isEqualTo(AccountStatus.SUSPENDED);
         assertThat(target.getSuspensionEndDate()).isEqualTo(end);
         verify(userRepo).save(target);
+    }
+
+    @Test
+    void suspendAndReactivate_areLoggedWithTheAccount() throws HttpException {
+        AppUser target = userWithStatus(uuid(7), AccountStatus.ACTIVE);
+        when(userRepo.findById(uuid(7))).thenReturn(Optional.of(target));
+
+        try (LogCapture logs = new LogCapture()) {
+            accountStatusService.suspend(uuid(7), null, uuid(1));
+            accountStatusService.reactivate(uuid(7));
+
+            assertThat(logs.messages()).containsExactly(
+                    "Compte " + uuid(7) + " suspendu (fin : définitive)",
+                    "Compte " + uuid(7) + " réactivé");
+        }
     }
 
     @Test

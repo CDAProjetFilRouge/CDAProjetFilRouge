@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.RefreshToken;
 import fr.diginamic.hubevenementiel.enums.AccountStatus;
@@ -471,6 +472,105 @@ class RefreshTokenIntegrationTest {
 
         assertThat(getMe(newAccessToken, null)).isEqualTo(401);
         assertThat(getMe(newAccessToken, resourceProof(key, "/users/me", newAccessToken))).isEqualTo(200);
+    }
+
+    @Test
+    void logs_aSuccessfulLoginWithTheUserIdOnly() throws Exception {
+        try (LogCapture logs = new LogCapture()) {
+            login();
+
+            assertThat(logs.messages()).contains("Connexion réussie userId=" + user.getId());
+            assertThat(logs.messages()).noneMatch(message -> message.contains(user.getEmail()));
+        }
+    }
+
+    @Test
+    void logs_aReusedRefreshTokenAfterTheGraceWindow() throws Exception {
+        String first = (String) login().get("refreshToken");
+        refreshOk(first);
+        RefreshToken used = tokensOfUser().stream().filter(token -> token.getUsedAt() != null).findFirst().orElseThrow();
+        used.setUsedAt(LocalDateTime.now().minusMinutes(1));
+        syncWithDatabase();
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThat(refresh(first)).isEqualTo(401);
+
+            assertThat(logs.warnings()).contains("Jeton de rafraîchissement refusé : réutilisation d'un jeton déjà "
+                    + "consommé, session révoquée userId=" + user.getId());
+        }
+    }
+
+    @Test
+    void logs_aRevokedRefreshToken() throws Exception {
+        String refreshToken = (String) login().get("refreshToken");
+        mockMvc.perform(post("/auth/logout").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isNoContent());
+        syncWithDatabase();
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThat(refresh(refreshToken)).isEqualTo(401);
+
+            assertThat(logs.warnings()).contains("Jeton de rafraîchissement refusé : déjà révoqué userId=" + user.getId());
+        }
+    }
+
+    @Test
+    void logs_aRefreshWithAnotherKey() throws Exception {
+        String first = loginWithKey(newKey());
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThat(refreshStatus(first, newKey())).isEqualTo(401);
+
+            assertThat(logs.warnings()).contains("Jeton de rafraîchissement refusé : clé DPoP absente ou différente, "
+                    + "session révoquée userId=" + user.getId());
+        }
+    }
+
+    @Test
+    void logs_aRefreshOfASuspendedAccount() throws Exception {
+        String refreshToken = (String) login().get("refreshToken");
+        AppUser suspended = userRepo.findById(user.getId()).orElseThrow();
+        suspended.setStatus(AccountStatus.SUSPENDED);
+        syncWithDatabase();
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThat(refresh(refreshToken)).isEqualTo(401);
+
+            assertThat(logs.warnings()).contains("Jeton de rafraîchissement refusé : compte non actif, session "
+                    + "révoquée userId=" + user.getId());
+        }
+    }
+
+    @Test
+    void logs_anAccessTokenWithoutTheRequiredProof_andTheUserOfTheAcceptedOnes() throws Exception {
+        KeyPair key = newKey();
+        String accessToken = (String) loginTokensWithKey(key).get("token");
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThat(getMe(accessToken, null)).isEqualTo(401);
+            assertThat(logs.warnings()).contains("Jeton refusé : preuve DPoP absente ou invalide userId=" + user.getId());
+
+            assertThat(getMe(accessToken, resourceProof(key, "/users/me", accessToken))).isEqualTo(200);
+            assertThat(logs.events()).anySatisfy(event -> {
+                assertThat(event.getFormattedMessage()).startsWith("GET /users/me -> 200");
+                assertThat(event.getMDCPropertyMap()).containsEntry("userId", user.getId().toString());
+            });
+        }
+    }
+
+    @Test
+    void logs_anAccessTokenOfASuspendedAccount() throws Exception {
+        String accessToken = jwtService.generateToken(user, null);
+        AppUser suspended = userRepo.findById(user.getId()).orElseThrow();
+        suspended.setStatus(AccountStatus.SUSPENDED);
+        syncWithDatabase();
+
+        try (LogCapture logs = new LogCapture()) {
+            assertThat(getMe(accessToken, null)).isEqualTo(401);
+
+            assertThat(logs.warnings()).contains("Jeton refusé : compte introuvable ou non actif userId=" + user.getId());
+        }
     }
 
     private void setFamilyCreatedAt(RefreshToken token, LocalDateTime value) {

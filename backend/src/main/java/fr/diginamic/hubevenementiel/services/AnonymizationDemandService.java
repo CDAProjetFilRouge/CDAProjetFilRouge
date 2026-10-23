@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AnonymizationDemand;
 import fr.diginamic.hubevenementiel.entities.AppUser;
@@ -21,6 +23,8 @@ import java.util.Optional;
 
 @Service
 public class AnonymizationDemandService {
+
+    private static final Logger log = LoggerFactory.getLogger(AnonymizationDemandService.class);
 
     private final AnonymizationDemandRepo anonymizationDemandRepository;
 
@@ -73,6 +77,7 @@ public class AnonymizationDemandService {
         anonymizationDemand.setAdmin(admin);
         anonymizationDemand.setApprovedDate(LocalDateTime.now());
         anonymizationDemand.setRequestStatus(RequestStatus.VALIDATE);
+        log.info("Demande d'anonymisation {} validée", id);
 
         return updateDemand(id, anonymizationDemand);
     }

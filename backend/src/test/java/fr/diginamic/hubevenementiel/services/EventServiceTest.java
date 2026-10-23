@@ -16,6 +16,7 @@ import fr.diginamic.hubevenementiel.exceptions.ConflictException;
 import fr.diginamic.hubevenementiel.exceptions.ForbiddenException;
 import fr.diginamic.hubevenementiel.exceptions.HttpException;
 import fr.diginamic.hubevenementiel.exceptions.NotFoundException;
+import fr.diginamic.hubevenementiel.logging.LogCapture;
 import fr.diginamic.hubevenementiel.dtos.event.EventCalendarResponseDto;
 import fr.diginamic.hubevenementiel.repositories.EventInscriptionCount;
 import fr.diginamic.hubevenementiel.repositories.EventRepo;
@@ -622,6 +623,33 @@ class EventServiceTest {
         eventService.deleteEvent(uuid(1), owner);
 
         verify(eventRepository).delete(existing);
+    }
+
+    @Test
+    void deleteEvent_logsTheDeletionWithTheNumberOfNotifiedMembers() throws HttpException {
+        Event existing = cloneFutureEvent();
+        when(eventRepository.findById(uuid(1))).thenReturn(Optional.of(existing));
+        AppUserPrincipal owner = new AppUserPrincipal(uuid(8), "david@example.com", "ORGANIZER");
+
+        try (LogCapture logs = new LogCapture()) {
+            eventService.deleteEvent(uuid(1), owner);
+
+            assertThat(logs.messages()).containsExactly("Évènement " + uuid(1) + " supprimé (0 inscrits prévenus)");
+        }
+    }
+
+    @Test
+    void changeStatus_logsARealTransition_butNothingWhenTheStatusStaysTheSame() throws HttpException {
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        eventWithStatus(EventStatus.PUBLISHED).setId(uuid(1));
+
+        try (LogCapture logs = new LogCapture()) {
+            eventService.changeStatus(uuid(1), EventStatus.PUBLISHED, ownerPrincipal());
+            assertThat(logs.messages()).isEmpty();
+
+            eventService.changeStatus(uuid(1), EventStatus.FINISHED, ownerPrincipal());
+            assertThat(logs.messages()).containsExactly("Évènement " + uuid(1) + " : statut PUBLISHED -> FINISHED");
+        }
     }
 
     @Test
