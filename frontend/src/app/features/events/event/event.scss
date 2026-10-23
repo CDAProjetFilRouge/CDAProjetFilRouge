@@ -143,6 +143,22 @@
   }
 }
 
+.feedback {
+  padding: 20px;
+  margin-top: 24px;
+  text-align: center;
+  color: var(--color-muted);
+  background: #fff;
+  border: 1px dashed var(--color-field-border);
+  border-radius: var(--radius-lg);
+
+  &.feedback-error {
+    color: var(--color-danger);
+    background: var(--color-danger-bg);
+    border: 1px solid var(--color-danger);
+  }
+}
+
 .carousel {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 600px), 1fr));
@@ -173,6 +189,30 @@
 
   .title-section h1 {
     font-size: 26px;
+  }
+
+  .filter-section {
+    padding: 14px;
+  }
+
+  .filter,
+  .filter:first-child {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .filter-actions {
+    flex: 1 1 100%;
+    margin-left: 0;
+
+    .btn {
+      flex: 1;
+    }
+  }
+
+  .event-sub-section {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .carousel {

@@ -101,36 +101,22 @@ public class PDFService {
         String description = escape(event.getDescription()).replace("\n", "<br/>");
 
         String html = "<html><head><meta charset=\"UTF-8\"/><title>" + escape(event.getTitle()) + "</title><style>"
-                + "@page { size: A4; margin: 0; }"
-                + "body { font-family: sans-serif; color: #1f2430; font-size: 12px; margin: 0; }"
-                + ".header { background-color: #e2536b; color: #ffffff; padding: 18px 40px; font-size: 16px; font-weight: bold; }"
-                + ".content { padding: 32px 40px 0 40px; }"
-                + ".badge { display: inline-block; background-color: #fbd3d9; color: #cf445c; font-size: 10px; font-weight: bold; padding: 4px 10px; }"
-                + "h1 { font-size: 26px; margin: 14px 0 4px 0; color: #1f2430; }"
-                + ".club { color: #6b7280; font-size: 13px; margin: 0 0 24px 0; }"
-                + ".card { background-color: #f4f6f9; border-left: 4px solid #e2536b; padding: 12px 16px; margin-bottom: 12px; }"
-                + ".label { color: #6b7280; font-size: 9px; font-weight: bold; margin-bottom: 4px; }"
-                + ".value { font-size: 13px; line-height: 1.5; }"
-                + "table.grid { width: 100%; border-collapse: separate; border-spacing: 0; }"
-                + "table.grid td { width: 50%; vertical-align: top; padding: 0; }"
-                + "h2 { font-size: 15px; margin: 24px 0 8px 0; padding-bottom: 6px; border-bottom: 1px solid #d8dce3; }"
-                + ".description { font-size: 12px; line-height: 1.6; }"
-                + ".footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 40px; background-color: #fcf8f5; color: #6b7280; font-size: 9px; }"
+                + pdfCss("MyHubEvent · Fiche éditée le " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 + "</style></head><body>"
-                + "<div class=\"header\">MyHubEvent</div>"
-                + "<div class=\"content\">"
-                + "<span class=\"badge\">" + escape(category) + "</span>"
+                + pdfHeader("FICHE ÉVÈNEMENT")
+                + "<span class=\"cat\">" + escape(category) + "</span>"
                 + "<h1>" + escape(event.getTitle()) + "</h1>"
                 + (club.isEmpty() ? "" : "<p class=\"club\">Organisé par " + club + "</p>")
-                + "<div class=\"card\"><div class=\"label\">DATE ET HORAIRES</div><div class=\"value\">" + when + "</div></div>"
-                + (address.length() == 0 ? "" : "<div class=\"card\"><div class=\"label\">LIEU</div><div class=\"value\">" + address + "</div></div>")
-                + priceCards(event, userId)
-                + "<div class=\"card\"><div class=\"label\">CAPACITÉ</div><div class=\"value\">" + event.getMaxCapacity() + " places</div></div>"
+                + "<table class=\"grid\"><tr>"
+                + "<td class=\"cell left\"><div class=\"box\"><div class=\"label\">DATE ET HORAIRES</div><div class=\"value\">" + when + "</div></div></td>"
+                + "<td class=\"cell right\">" + (address.length() == 0 ? "" : "<div class=\"box\"><div class=\"label\">LIEU</div><div class=\"value\">" + address + "</div></div>") + "</td>"
+                + "</tr></table>"
+                + "<table class=\"grid\"><tr>"
+                + priceBox(event, userId)
+                + "<td class=\"cell right\"><div class=\"box\"><div class=\"label\">CAPACITÉ</div><div class=\"value\">" + event.getMaxCapacity() + " places</div></div></td>"
+                + "</tr></table>"
                 + "<h2>À propos</h2>"
                 + "<div class=\"description\">" + description + "</div>"
-                + "</div>"
-                + "<div class=\"footer\">MyHubEvent – Fiche événement éditée le "
-                + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "</div>"
                 + "</body></html>";
 
         return renderHtml(html);
@@ -147,20 +133,83 @@ public class PDFService {
         return name.isEmpty() ? "Event-" + eventId : name;
     }
 
-    private String priceCards(Event event, UUID userId) {
+    private String priceBox(Event event, UUID userId) {
         AppUser user = userId == null ? null : userRepo.findById(userId).orElse(null);
         if (user != null) {
             boolean affiliated = user.getClubs().stream().anyMatch(
                     club -> club.getEndValidityDate() == null || club.getEndValidityDate().isAfter(LocalDate.now()));
             BigDecimal price = affiliated ? event.getAffiliatePrice() : event.getNonAffiliatePrice();
-            return "<div class=\"card\"><div class=\"label\">VOTRE TARIF ("
-                    + (affiliated ? "ADHÉRENT" : "NON ADHÉRENT") + ")</div><div class=\"value\">"
-                    + formatPrice(price) + "</div></div>";
+            return "<td class=\"cell left\"><div class=\"box accent\"><div class=\"label\">VOTRE TARIF ("
+                    + (affiliated ? "ADHÉRENT" : "NON ADHÉRENT") + ")</div><div class=\"value price\">"
+                    + formatPrice(price) + "</div></div></td>";
         }
-        return "<table class=\"grid\"><tr>"
-                + "<td><div class=\"card\" style=\"margin-right: 6px;\"><div class=\"label\">TARIF ADHÉRENT</div><div class=\"value\">" + formatPrice(event.getAffiliatePrice()) + "</div></div></td>"
-                + "<td><div class=\"card\" style=\"margin-left: 6px;\"><div class=\"label\">TARIF NON ADHÉRENT</div><div class=\"value\">" + formatPrice(event.getNonAffiliatePrice()) + "</div></div></td>"
-                + "</tr></table>";
+        return "<td class=\"cell left\"><div class=\"box accent\"><div class=\"label\">TARIFS</div>"
+                + "<table class=\"prices\"><tr><td>Adhérent</td><td class=\"amount\">" + formatPrice(event.getAffiliatePrice()) + "</td></tr>"
+                + "<tr><td>Non adhérent</td><td class=\"amount\">" + formatPrice(event.getNonAffiliatePrice()) + "</td></tr></table>"
+                + "</div></td>";
+    }
+
+    /** Styles communs aux PDF : page A4, pied de page (texte et pagination), et les composants de l'identité visuelle. */
+    private static String pdfCss(String footerLeft) {
+        return "@page { size: A4; margin: 16mm 15mm 20mm 15mm;"
+                + " @bottom-left { content: \"" + cssString(footerLeft) + "\"; font-family: sans-serif; font-size: 8.5px; color: #5b5d73; }"
+                + " @bottom-right { content: \"Page \" counter(page) \" / \" counter(pages); font-family: sans-serif; font-size: 8.5px; color: #5b5d73; } }"
+                + "body { font-family: sans-serif; color: #17182b; font-size: 11.5px; line-height: 1.55; margin: 0; }"
+                + "table.head { width: 100%; background-color: #17182b; border-radius: 10px; }"
+                + "table.head td { padding: 13px 20px; vertical-align: middle; }"
+                + "td.brand { color: #ffffff; font-size: 19px; font-weight: bold; }"
+                + "td.brand img { vertical-align: middle; }"
+                + "span.word { padding-left: 8px; }"
+                + "span.ev { color: #8fa2ff; }"
+                + "td.kind { text-align: right; color: #ffd8a6; font-size: 9px; font-weight: bold; letter-spacing: 2px; }"
+                + "div.perf { border-bottom: 2px dashed #e2622b; margin: 8px 0 22px 0; height: 0; }"
+                + "span.cat { background-color: #ffd8a6; color: #7a3512; font-size: 9px; font-weight: bold; letter-spacing: 1px; padding: 4px 11px; border-radius: 10px; }"
+                + "h1 { font-size: 26px; line-height: 1.15; margin: 14px 0 4px 0; color: #17182b; }"
+                + "p.club { color: #5b5d73; font-size: 12.5px; margin: 0 0 22px 0; }"
+                + "table.grid { width: 100%; border-collapse: collapse; margin-bottom: 10px; }"
+                + "td.cell { width: 50%; vertical-align: top; padding: 0; }"
+                + "td.left { padding-right: 5px; }"
+                + "td.right { padding-left: 5px; }"
+                + "div.box { border: 1px solid #e3dcc8; border-radius: 9px; padding: 11px 15px; }"
+                + "div.accent { background-color: #dfe5ff; border-color: #dfe5ff; }"
+                + "div.label { color: #5b5d73; font-size: 8px; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 4px; }"
+                + "div.accent div.label { color: #1f37a8; }"
+                + "div.value { font-size: 12.5px; line-height: 1.5; }"
+                + "div.price { font-size: 17px; font-weight: bold; color: #1f37a8; }"
+                + "table.prices { width: 100%; border-collapse: collapse; }"
+                + "table.prices td { padding: 1px 0; font-size: 12px; }"
+                + "table.prices td.amount { text-align: right; font-weight: bold; }"
+                + "h2 { font-size: 14px; margin: 22px 0 8px 0; padding-bottom: 5px; border-bottom: 2px solid #2a46c9; }"
+                + "div.description { font-size: 11.5px; line-height: 1.65; }"
+                + "h1.doc { font-size: 24px; margin: 4px 0 6px 0; }"
+                + "p.version { color: #5b5d73; font-size: 10.5px; margin: 0 0 20px 0; }"
+                + "span.versionbadge { background-color: #d6ebe2; color: #14513c; font-weight: bold; padding: 2px 9px; border-radius: 9px; font-size: 9.5px; }"
+                + "div.legal h2 { font-size: 15px; border-bottom: 0; margin: 20px 0 6px 0; padding-bottom: 0; color: #17182b; }"
+                + "div.legal h3 { font-size: 13px; margin: 16px 0 5px 0; }"
+                + "div.legal p { margin: 0 0 9px 0; font-size: 11px; line-height: 1.65; }"
+                + "div.legal li { margin-bottom: 4px; font-size: 11px; line-height: 1.6; }"
+                + "div.legal a { color: #2a46c9; }";
+    }
+
+    /** En-tête commun : logo et nom sur fond sombre, type de document à droite, puis la perforation du billet. */
+    private String pdfHeader(String kind) {
+        return "<table class=\"head\"><tr>"
+                + "<td class=\"brand\"><img src=\"" + logoDataUri() + "\" width=\"34\" height=\"28\"/>"
+                + "<span class=\"word\">MyHub<span class=\"ev\">Event</span></span></td>"
+                + "<td class=\"kind\">" + kind + "</td></tr></table>"
+                + "<div class=\"perf\"></div>";
+    }
+
+    private String logoDataUri() {
+        try (java.io.InputStream in = new org.springframework.core.io.ClassPathResource("pdf/logo.png").getInputStream()) {
+            return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(in.readAllBytes());
+        } catch (IOException e) {
+            throw new IllegalStateException("Logo des PDF introuvable.", e);
+        }
+    }
+
+    private static String cssString(String value) {
+        return value.replace("\\", " ").replace("\"", "'").replaceAll("[\\r\\n]+", " ");
     }
 
     private static String escape(String value) {
@@ -212,13 +261,14 @@ public class PDFService {
 
         String date = legalDocument.getUpdateDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-        String html = "<html><head><style>"
-                + "body { font-family: sans-serif; font-size: 12px; }"
-                + ".footer { margin-top: 30px; color: #666; font-size: 10px; }"
+        String html = "<html><head><meta charset=\"UTF-8\"/><title>" + title + "</title><style>"
+                + pdfCss(title + " · Version " + legalDocument.getVersion())
                 + "</style></head><body>"
-                + "<h1>" + title + "</h1>"
-                + legalDocument.getContent()
-                + "<p class=\"footer\">Version " + legalDocument.getVersion() + " | Dernière mise à jour : " + date + "</p>"
+                + pdfHeader("DOCUMENT LÉGAL")
+                + "<h1 class=\"doc\">" + title + "</h1>"
+                + "<p class=\"version\"><span class=\"versionbadge\">Version " + legalDocument.getVersion() + "</span>"
+                + "  Dernière mise à jour le " + date + "</p>"
+                + "<div class=\"legal\">" + legalDocument.getContent() + "</div>"
                 + "</body></html>";
 
         return renderHtml(html);
