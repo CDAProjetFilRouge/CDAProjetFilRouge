@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import fr.diginamic.hubevenementiel.security.AppUserPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.UUID;
 import java.util.List;
 
@@ -79,7 +81,17 @@ public class ClubController implements ClubApi {
     @Override
     @GetMapping("/{id}")
     public ClubResponseDto getById(@PathVariable UUID id) throws HttpException {
-        return clubMapper.toDto(clubService.findById(id));
+        AppUserPrincipal principal = (AppUserPrincipal) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Club club = clubService.findById(id);
+        ClubResponseDto dto = clubMapper.toDto(club);
+
+        boolean isAdmin = "ADMINISTRATOR".equals(principal.role());
+        boolean isOwner = club.getOwner() != null && club.getOwner().getId().equals(principal.id());
+        if (!isAdmin && !isOwner) {
+            dto.setAppUsers(new java.util.ArrayList<>());
+        }
+        return dto;
     }
 
     @Override

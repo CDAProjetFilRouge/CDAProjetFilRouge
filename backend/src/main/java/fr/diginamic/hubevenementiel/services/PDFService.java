@@ -4,6 +4,8 @@ package fr.diginamic.hubevenementiel.services;
 import java.util.UUID;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
+import fr.diginamic.hubevenementiel.enums.Role;
+import fr.diginamic.hubevenementiel.enums.EventStatus;
 import fr.diginamic.hubevenementiel.entities.Address;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Event;
@@ -64,6 +66,16 @@ public class PDFService {
     public byte[] generateEventPDF(UUID eventId, UUID userId) throws IOException, NotFoundException {
 
         Event event = eventRepo.findById(eventId).orElseThrow(() -> new NotFoundException("No event found with id"+eventId));
+
+        if (event.getStatus() == EventStatus.DRAFT) {
+            AppUser caller = userId == null ? null : userRepo.findById(userId).orElse(null);
+            boolean isAdmin = caller != null && caller.getRole() == Role.ADMINISTRATOR;
+            boolean isOrganizer = caller != null && event.getOrganizer() != null
+                    && event.getOrganizer().getId().equals(caller.getId());
+            if (!isAdmin && !isOrganizer) {
+                throw new NotFoundException("No event found with id" + eventId);
+            }
+        }
 
         Address location = event.getLocation();
         StringBuilder address = new StringBuilder();

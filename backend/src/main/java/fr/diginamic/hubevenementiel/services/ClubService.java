@@ -148,13 +148,13 @@ public class ClubService {
         Club club = clubRepository.findById(idClub)
                 .orElseThrow(() -> new NotFoundException("No Club found with id: " + idClub));
 
+        if (!club.getOwner().getId().equals(appUserPrincipal.id())) {
+            throw new ForbiddenException("Seul le propriétaire du club peut effectuer cette manipulation!");
+        }
+
         if (user.getClubs().stream().anyMatch(c -> c.getId().equals(idClub))
                 || club.getAppUsers().stream().anyMatch(u -> u.getId().equals(idUser))) {
             throw new ForbiddenException("Le membre est déjà assigné à ce club!");
-        }
-
-        if (!club.getOwner().getId().equals(appUserPrincipal.id())) {
-            throw new ForbiddenException("Seul le propriétaire du club peut effectuer cette manipulation!");
         }
 
         club.getAppUsers().add(user);
