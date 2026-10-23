@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.warn("Jeton refusé : compte introuvable ou non actif userId={}", id);
                 }
                 if (keyRespected) {
-                    String email = jwtService.extractEmail(token);
+                    String email = account.getEmail();
                     String role = account.getRole().name();
 
                     AppUserPrincipal principal = new AppUserPrincipal(id, email, role);
