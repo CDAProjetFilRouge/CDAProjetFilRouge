@@ -1,17 +1,37 @@
 <div class="admin-layout">
-  <nav class="admin-sidebar">
+  <nav class="admin-sidebar" aria-label="Administration" [class.open]="menuOpen()">
     <p class="admin-sidebar-title">Administration</p>
 
-    <a routerLink="users" routerLinkActive="active">Comptes utilisateurs</a>
-    <a routerLink="clubs" routerLinkActive="active">Clubs Affiliés</a>
-    <a routerLink="events" routerLinkActive="active">Gérer les évènements</a>
-    <a routerLink="anonymization-demands" routerLinkActive="active">Demandes d'anonymisation
-      @if (demandService.pendingCount() > 0) {
+    <button type="button" class="menu-toggle" aria-controls="admin-links" [attr.aria-expanded]="menuOpen()"
+      (click)="toggleMenu()">
+      <svg class="burger" viewBox="0 0 24 24" aria-hidden="true">
+        @if (menuOpen()) {
+          <path d="M6 6l12 12M18 6L6 18" />
+        } @else {
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        }
+      </svg>
+      <span>Administration</span>
+      @if (demandService.pendingCount() > 0 && !menuOpen()) {
         <span class="badge">{{ demandService.pendingCount() }}</span>
       }
-    </a>
-    <a routerLink="terms-of-use" routerLinkActive="active">Conditions d'Utilisation</a>
-    <a routerLink="gdpr-policy" routerLinkActive="active">Politique RGPD</a>
+      <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+    </button>
+
+    <div class="admin-links" id="admin-links">
+      <div class="admin-links-inner">
+        <a (click)="closeMenu()" routerLink="users" routerLinkActive="active">Comptes utilisateurs</a>
+        <a (click)="closeMenu()" routerLink="clubs" routerLinkActive="active">Clubs Affiliés</a>
+        <a (click)="closeMenu()" routerLink="events" routerLinkActive="active">Gérer les évènements</a>
+        <a (click)="closeMenu()" routerLink="anonymization-demands" routerLinkActive="active">Demandes d'anonymisation
+          @if (demandService.pendingCount() > 0) {
+            <span class="badge">{{ demandService.pendingCount() }}</span>
+          }
+        </a>
+        <a (click)="closeMenu()" routerLink="terms-of-use" routerLinkActive="active">Conditions d'Utilisation</a>
+        <a (click)="closeMenu()" routerLink="gdpr-policy" routerLinkActive="active">Politique RGPD</a>
+      </div>
+    </div>
   </nav>
 
   <main class="admin-content">
