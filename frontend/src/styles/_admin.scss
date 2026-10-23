@@ -240,6 +240,7 @@
   td {
     padding: 12px;
     vertical-align: middle;
+    overflow-wrap: break-word;
     border-bottom: 1px solid var(--color-border);
 
     button + button {
@@ -268,6 +269,19 @@
   span {
     font-size: 13px;
     color: var(--color-muted);
+  }
+
+  // Les tableaux larges défilent horizontalement au lieu de déborder de la page.
+  @media (max-width: 900px) {
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+
+    input[type='search'] {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
   }
 
   .content {

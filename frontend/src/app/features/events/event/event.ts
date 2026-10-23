@@ -231,11 +231,17 @@ export class Event {
 
     this.eventService.search(this.currentPage - 1, this.eventsPerPage, filters).subscribe({
       next: (page) => {
+        this.errorMessage.set(null);
         this.events.set(page.content);
         this.totalElements = page.totalElements;
         this.totalPages = page.totalPages;
       },
-      error: (err) => this.handleError(err)
+      error: (err) => {
+        this.events.set([]);
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.handleError(err);
+      }
     });
   }
 
