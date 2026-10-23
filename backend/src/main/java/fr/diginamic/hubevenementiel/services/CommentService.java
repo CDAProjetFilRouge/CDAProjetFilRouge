@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import fr.diginamic.hubevenementiel.entities.AppUser;
 import fr.diginamic.hubevenementiel.entities.Comment;
@@ -27,6 +29,8 @@ import java.util.Optional;
 
 @Service
 public class CommentService {
+
+    private static final Logger log = LoggerFactory.getLogger(CommentService.class);
 
     private static final int MAX_COMMENTS_PER_EVENT = 20;
     private static final int MAX_COMMENTS_PER_WINDOW = 5;
@@ -125,6 +129,7 @@ public class CommentService {
                 WINDOW_MILLIS);
         if (retryAfterMillis > 0) {
             long seconds = Math.max(1, (retryAfterMillis + 999) / 1000);
+            log.warn("Commentaire refusé : trop de publications, réessayer dans {} s", seconds);
             throw new TooManyRequestsException("Vous publiez trop vite. Réessayez dans " + seconds + " s.", seconds);
         }
     }
@@ -180,6 +185,7 @@ public class CommentService {
         checkDeleteRights(comment, principal);
 
         commentRepo.delete(comment);
+        log.info("Commentaire {} supprimé sur l'évènement {}", commentId, eventId);
     }
 
     /**

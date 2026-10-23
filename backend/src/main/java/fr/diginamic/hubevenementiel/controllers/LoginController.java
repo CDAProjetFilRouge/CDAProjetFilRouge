@@ -1,5 +1,7 @@
 package fr.diginamic.hubevenementiel.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class LoginController implements LoginApi {
+
+    private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -68,12 +72,15 @@ public class LoginController implements LoginApi {
                     request.getPassword());
 
             if (explanation.isPresent()) {
+                log.warn("Connexion refusée : compte non actif");
                 throw new ForbiddenException(explanation.get());
             }
 
+            log.warn("Échec de connexion");
             loginAttemptService.recordFailure(request.getEmail(), clientIp);
             throw exception;
         } catch (BadCredentialsException exception) {
+            log.warn("Échec de connexion");
             loginAttemptService.recordFailure(request.getEmail(), clientIp);
             throw exception;
         }
@@ -81,6 +88,7 @@ public class LoginController implements LoginApi {
         loginAttemptService.recordSuccess(request.getEmail());
 
         AppUser user = ((AppUserDetails) authentication.getPrincipal()).getAppUser();
+        log.info("Connexion réussie userId={}", user.getId());
         String keyThumbprint = currentThumbprint();
         if (keyThumbprint == null && dpopProofVerifier.isRequired()) {
             throw new UnauthorizedException("Preuve DPoP requise.");
