@@ -208,7 +208,7 @@ class WaitingListServiceTest {
 
         waitingListService.promoteNext(uuid(2));
 
-        verify(eventPublisher).publishEvent(new InscriptionPromotedEvent("alice@example.com", "Marathon"));
+        verify(eventPublisher).publishEvent(new InscriptionPromotedEvent("alice@example.com", MailEvent.of(event)));
     }
 
     @Test

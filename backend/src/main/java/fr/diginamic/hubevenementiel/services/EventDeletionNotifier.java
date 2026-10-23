@@ -25,7 +25,7 @@ public class EventDeletionNotifier {
     public void onEventDeleted(EventDeletedEvent event) {
         for (String email : event.emails()) {
             try {
-                emailService.sendEventDeletedEmail(email, event.eventTitle());
+                emailService.sendEventDeletedEmail(email, event.event());
             } catch (RuntimeException e) {
                 LOGGER.warn("Notification de suppression non envoyée à {} : {}", email, e.getMessage());
             }

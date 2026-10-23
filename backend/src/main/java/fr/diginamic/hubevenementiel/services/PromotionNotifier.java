@@ -24,7 +24,7 @@ public class PromotionNotifier {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onInscriptionPromoted(InscriptionPromotedEvent event) {
         try {
-            emailService.sendInscriptionPromotedEmail(event.email(), event.eventTitle());
+            emailService.sendInscriptionPromotedEmail(event.email(), event.event());
         } catch (RuntimeException e) {
             LOGGER.warn("Notification de promotion non envoyée à {} : {}", event.email(), e.getMessage());
         }

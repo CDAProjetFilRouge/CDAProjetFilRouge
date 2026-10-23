@@ -21,7 +21,7 @@ public class EventCancellationNotifier {
     public void onEventCancelled(EventCancelledEvent event) {
         for (String email : event.emails()) {
             try {
-                emailService.sendEventCancelledEmail(email, event.eventTitle());
+                emailService.sendEventCancelledEmail(email, event.event());
             } catch (RuntimeException e) {
                 LOGGER.warn("Notification d'annulation non envoyée à {} : {}", email, e.getMessage());
             }

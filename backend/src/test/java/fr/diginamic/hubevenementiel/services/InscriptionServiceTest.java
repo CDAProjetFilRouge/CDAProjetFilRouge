@@ -465,7 +465,7 @@ class InscriptionServiceTest {
 
         assertThat(inscription.getStatus()).isEqualTo(InscriptionStatus.CONFIRMED);
         verify(inscriptionRepo, never()).save(any(Inscription.class));
-        verify(emailService, never()).sendInscriptionCancellationEmail(anyString(), anyString(), anyString());
+        verify(emailService, never()).sendInscriptionCancellationEmail(anyString(), any(MailEvent.class), anyString());
     }
 
     @Test
@@ -523,7 +523,7 @@ class InscriptionServiceTest {
         inscriptionService.cancelByOrganizer(uuid(1), "Motif", ADMIN);
 
         verify(emailService).sendInscriptionCancellationEmail(eq(user.getEmail()),
-                eq(publishedFutureEvent.getTitle()), eq("Motif"));
+                eq(MailEvent.of(publishedFutureEvent)), eq("Motif"));
     }
 
     // Bug documente : canceledById n'est jamais reellement renseigne (Inscription.cancel

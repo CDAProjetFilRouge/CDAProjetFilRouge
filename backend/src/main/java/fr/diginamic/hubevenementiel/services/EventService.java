@@ -469,7 +469,7 @@ public class EventService {
                 .toList();
         waitingList.forEach(inscription -> inscription.cancelPerOrganizer("Évènement annulé par son organisateur"));
         inscriptionRepo.saveAll(waitingList);
-        eventPublisher.publishEvent(new EventCancelledEvent(emails, event.getTitle()));
+        eventPublisher.publishEvent(new EventCancelledEvent(emails, MailEvent.of(event)));
     }
 
     private void checkStatusTransition(EventStatus from, EventStatus to) throws HttpException {
@@ -512,7 +512,7 @@ public class EventService {
         inscriptionRepo.deleteByEventId(eventId);
         eventRepository.delete(event);
         log.info("Évènement {} supprimé ({} inscrits prévenus)", eventId, emails.size());
-        eventPublisher.publishEvent(new EventDeletedEvent(emails, event.getTitle()));
+        eventPublisher.publishEvent(new EventDeletedEvent(emails, MailEvent.of(event)));
     }
 
     /**
