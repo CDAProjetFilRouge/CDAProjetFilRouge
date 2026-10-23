@@ -172,3 +172,62 @@
     color: var(--color-primary-hover);
   }
 }
+
+// Tablette et mobile : le logo et le compte restent sur la première ligne, la navigation passe dessous
+// (défilement horizontal si elle déborde).
+@media (max-width: 900px) {
+  .layout-header {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    height: auto;
+    padding: 12px 20px 0;
+  }
+
+  .logo {
+    --logo-height: 36px;
+  }
+
+  .login-space {
+    margin-left: auto;
+  }
+
+  .page-space {
+    order: 3;
+    flex: 0 0 100%;
+    justify-content: flex-start;
+    gap: 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .page-select {
+    padding: 8px 0 10px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 560px) {
+  .layout-header {
+    padding: 10px 16px 0;
+  }
+
+  // Seul l'avatar reste visible : le nom et le rôle sont dans « Mon compte ».
+  .identity,
+  .chevron {
+    display: none;
+  }
+
+  .account-trigger {
+    padding: 3px;
+  }
+
+  .login-space {
+    gap: 8px;
+
+    .btn {
+      height: 34px;
+      padding: 0 11px;
+      font-size: 13px;
+    }
+  }
+}

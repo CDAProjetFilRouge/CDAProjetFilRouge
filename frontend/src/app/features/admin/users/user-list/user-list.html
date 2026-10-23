@@ -48,19 +48,19 @@
   <tbody>
     @for (user of users(); track user.id) {
     <tr>
-      <td>{{ user.firstName }} {{ user.lastName }}</td>
-      <td>{{ user.email }}</td>
-      <td>{{ roleLabels[user.role] }}</td>
-      <td>
+      <td data-label="Nom">{{ user.firstName }} {{ user.lastName }}</td>
+      <td data-label="Adresse e-mail">{{ user.email }}</td>
+      <td data-label="Rôle">{{ roleLabels[user.role] }}</td>
+      <td data-label="Club affilié">
         @for (club of user.clubs; track club.id) {
         <span>{{ club.name }}</span>
         } @empty {
           —
         }
       </td>
-      <td>{{ accountStatusLabels[user.status] }}</td>
-      <td>{{ user.creationDate | date: 'dd/MM/yyyy' }}</td>
-      <td>
+      <td data-label="Statut">{{ accountStatusLabels[user.status] }}</td>
+      <td data-label="Créé le">{{ user.creationDate | date: 'dd/MM/yyyy' }}</td>
+      <td data-label="Actions">
         <div class="actions">
           <button [routerLink]="['/admin/users', user.id, 'edit']">Modifier</button>
 
@@ -74,6 +74,9 @@
         </div>
       </td>
     </tr>
+    }
+    @empty {
+    <tr><td colspan="7">Aucun utilisateur ne correspond à votre recherche.</td></tr>
     }
   </tbody>
 </table>
